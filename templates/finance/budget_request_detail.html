@@ -1,0 +1,16 @@
+{% extends "base/base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h1>Budget Request Detail</h1>
+    <div class="card p-4">
+        <p><strong>Department:</strong> {{ budget_request.department }}</p>
+        <p><strong>Amount Requested:</strong> {{ budget_request.amount_requested }}</p>
+        <p><strong>Justification:</strong> {{ budget_request.justification }}</p>
+        <p><strong>Status:</strong> {{ budget_request.status }}</p>
+        <p><strong>Requested By:</strong> {{ budget_request.requested_by }}</p>
+        {% if budget_request.date_processed %}
+            <p><strong>Date Processed:</strong> {{ budget_request.date_processed }}</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

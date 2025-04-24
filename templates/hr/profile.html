@@ -1,0 +1,308 @@
+{% extends 'base/base.html' %}
+{% block title %}My Profile{% endblock title %}
+
+{% block content %}
+
+
+            <div class="col-lg-12">
+                <!-- Profile Navigation -->
+                <div class="card">
+                    <div class="card-body p-0">
+                        <div class="iq-edit-list usr-edit">
+                            <ul class="iq-edit-profile d-flex nav nav-pills">
+                                <li class="col-md-2 p-0">
+                                    <a class="nav-link active" data-toggle="pill" href="#personal-info">Personal Info</a>
+                                </li>
+                                <li class="col-md-2 p-0">
+                                    <a class="nav-link" data-toggle="pill" href="#employee-docs">Documents</a>
+                                </li>
+                                <li class="col-md-2 p-0">
+                                    <a class="nav-link" data-toggle="pill" href="#employee-warnings">Warnings</a>
+                                </li>
+                                <li class="col-md-2 p-0">
+                                    <a class="nav-link" data-toggle="pill" href="#leave-requests">Leave Requests</a>
+                                </li>
+                                <li class="col-md-2 p-0">
+                                    <a class="nav-link" data-toggle="pill" href="#payslips">Payslips</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-12">
+                <!-- Tab Content -->
+                <div class="iq-edit-list-data">
+                  <div class="tab-content">
+              
+                    <!-- Personal Information -->
+                    <div class="tab-pane fade active show" id="personal-info" role="tabpanel">
+                      <div class="card mb-4 shadow-sm">
+                        <div class="card-header d-flex align-items-center">
+                          <h5 class="card-title mb-0">
+                            <i class="bi bi-person-fill me-1"></i> Personal Information
+                          </h5>
+                        </div>
+                        <div class="card-body p-0">
+                          <table class="table table-striped table-hover mb-0">
+                            <tbody>
+                              <tr>
+                                <th class="w-25">Name:</th>
+                                <td>{{ user.get_full_name }}</td>
+                              </tr>
+                              <tr>
+                                <th>Email:</th>
+                                <td>{{ user.email }}</td>
+                              </tr>
+                              <tr>
+                                <th>Phone:</th>
+                                <td>{{ user.phone }}</td>
+                              </tr>
+                              <tr>
+                                <th>Role:</th>
+                                <td>{{ user.role.title }}</td>
+                              </tr>
+                              <tr>
+                                <th>Department:</th>
+                                <td>{{ user.department.name }}</td>
+                              </tr>
+                              <tr>
+                                <th>Date of Joining:</th>
+                                <td>{{ user.date_of_joining }}</td>
+                              </tr>
+                              <tr>
+                                <th>Manager:</th>
+                                <td>{{ user.manager.get_full_name }}</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- /Personal Information -->
+              
+                    <!-- Documents -->
+                    <div class="tab-pane fade" id="employee-docs" role="tabpanel">
+                      <div class="card mb-4 shadow-sm">
+                        <div class="card-header d-flex align-items-center justify-content-between">
+                          <h5 class="card-title mb-0">
+                            <i class="bi bi-folder me-1"></i> Documents
+                          </h5>
+                          <a href="{% url 'manage_employee_document' profile.id %}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-upload"></i> Upload New
+                          </a>
+                        </div>
+                        <div class="card-body p-0">
+                          <table class="table table-hover table-striped mb-0 align-middle">
+                            <thead class="table-light">
+                              <tr>
+                                <th>Title</th>
+                                <th>Type</th>
+                                <th>Date Uploaded</th>
+                                <th>Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {% for document in documents %}
+                                <tr>
+                                  <td>{{ document.title }}</td>
+                                  <td>{{ document.get_document_type_display }}</td>
+                                  <td>{{ document.date_uploaded }}</td>
+                                  <td>
+                                    <a href="{{ document.file.url }}" class="btn btn-info btn-sm">
+                                      <i class="bi bi-download"></i> Download
+                                    </a>
+                                    <a href="{% url 'edit_employee_document' profile.id document.id %}" class="btn btn-warning btn-sm">
+                                      <i class="bi bi-pencil-square"></i> Edit
+                                    </a>
+                                    <form
+                                      method="POST"
+                                      action="{% url 'delete_employee_document' document.id %}"
+                                      class="d-inline"
+                                    >
+                                      {% csrf_token %}
+                                      <button
+                                        type="submit"
+                                        class="btn btn-danger btn-sm"
+                                        onclick="return confirm('Are you sure you want to delete this document?');"
+                                      >
+                                        <i class="bi bi-trash"></i> Delete
+                                      </button>
+                                    </form>
+                                  </td>
+                                </tr>
+                              {% empty %}
+                                <tr>
+                                  <td colspan="4" class="text-center text-muted">
+                                    No documents found.
+                                  </td>
+                                </tr>
+                              {% endfor %}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- /Documents -->
+              
+                    <!-- Warnings -->
+                    <div class="tab-pane fade" id="employee-warnings" role="tabpanel">
+                      <div class="card mb-4 shadow-sm">
+                        <div class="card-header">
+                          <h5 class="card-title mb-0">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i> Warnings
+                          </h5>
+                        </div>
+                        <div class="card-body p-0">
+                          <table class="table table-bordered table-striped mb-0 align-middle">
+                            <thead class="table-light">
+                              <tr>
+                                <th>Title</th>
+                                <th>Description</th>
+                                <th>Status</th>
+                                <th>Start Date</th>
+                                <th>Expiry Date</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {% for warning in warnings %}
+                                <tr>
+                                  <td>{{ warning.title }}</td>
+                                  <td>{{ warning.description }}</td>
+                                  <td>
+                                    {% if warning.status == "Active" %}
+                                      <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                      <span class="badge bg-secondary">{{ warning.status }}</span>
+                                    {% endif %}
+                                  </td>
+                                  <td>{{ warning.start_date }}</td>
+                                  <td>{{ warning.expiry_date }}</td>
+                                </tr>
+                              {% empty %}
+                                <tr>
+                                  <td colspan="5" class="text-center text-muted">
+                                    No warnings found.
+                                  </td>
+                                </tr>
+                              {% endfor %}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- /Warnings -->
+              
+                    <!-- Leave Requests -->
+                    <div class="tab-pane fade" id="leave-requests" role="tabpanel">
+                        <div class="card mb-4 shadow-sm">
+                        <div class="card-header d-flex align-items-center justify-content-between">
+                            <h5 class="card-title mb-0">
+                            <i class="bi bi-calendar2-check me-1"></i> Leave Requests
+                            </h5>
+                            <a href="{% url 'create_leave_request' %}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-plus-circle"></i> New Request
+                            </a>
+                        </div>
+                        <div class="card-body p-0">
+                            <table class="table table-striped table-hover mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                <th>Type</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Status</th>
+                                <th>HR Comment</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for leave in leave_requests %}
+                                <tr>
+                                    <td>{{ leave.leave_type.name }}</td>
+                                    <td>{{ leave.start_date }}</td>
+                                    <td>{{ leave.end_date }}</td>
+                                    <td>
+                                    {% if leave.status == "PENDING" %}
+                                        <span class="badge bg-warning text-dark">Pending</span>
+                                    {% elif leave.status == "APPROVED" %}
+                                        <span class="badge bg-success">Approved</span>
+                                    {% elif leave.status == "DECLINED" %}
+                                        <span class="badge bg-danger">Declined</span>
+                                    {% else %}
+                                        {{ leave.status }}
+                                    {% endif %}
+                                    </td>
+                                    <td>
+                                    {% if leave.status == "DECLINED" and leave.hr_comment %}
+                                        <span class="text-danger">
+                                        {{ leave.hr_comment }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">
+                                    No leave requests found.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            </table>
+                        </div>
+                        </div>
+                    </div>
+                    <!-- /Leave Requests -->
+                    
+              
+                    <!-- Payslips -->
+                    <div class="tab-pane fade" id="payslips" role="tabpanel">
+                      <div class="card mb-4 shadow-sm">
+                        <div class="card-header">
+                          <h5 class="card-title mb-0">
+                            <i class="bi bi-cash-stack me-1"></i> Payslips
+                          </h5>
+                        </div>
+                        <div class="card-body p-0">
+                          <table class="table table-hover table-striped mb-0 align-middle">
+                            <thead class="table-light">
+                              <tr>
+                                <th>Month</th>
+                                <th>Net Salary</th>
+                                <th>Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {% for payslip in payslips %}
+                                <tr>
+                                  <td>{{ payslip.month }}</td>
+                                  <td>{{ payslip.net_salary }}</td>
+                                  <td>
+                                    <a href="{{ payslip.document.url }}" class="btn btn-info btn-sm">
+                                      <i class="bi bi-download"></i> Download
+                                    </a>
+                                  </td>
+                                </tr>
+                              {% empty %}
+                                <tr>
+                                  <td colspan="3" class="text-center text-muted">
+                                    No payslips found.
+                                  </td>
+                                </tr>
+                              {% endfor %}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- /Payslips -->
+              
+                  </div>
+                </div>
+              </div>
+              
+
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% block content %}
+<div class="container py-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">{{ event.title }}</h3>
+    <div>
+      <a href="{% url 'edit_event' event.id %}" class="btn btn-warning btn-sm">
+        <i class="bi bi-pencil-square"></i> Edit
+      </a>
+      <form
+        method="POST"
+        action="{% url 'delete_event' event.id %}"
+        class="d-inline"
+      >
+        {% csrf_token %}
+        <button
+          type="submit"
+          class="btn btn-danger btn-sm"
+          onclick="return confirm('Are you sure you want to delete this event?');"
+        >
+          <i class="bi bi-trash"></i> Delete
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <p class="mb-2"><strong>Description:</strong> {{ event.description }}</p>
+      <p class="mb-2"><strong>Location:</strong> {{ event.location }}</p>
+      <p class="mb-2">
+        <strong>Start:</strong> {{ event.start_time }}<br>
+        <strong>End:</strong> {{ event.end_time }}
+      </p>
+      <p class="mb-2">
+        <strong>Mandatory?</strong>
+        {% if event.is_mandatory %}
+          <span class="badge bg-danger">Yes</span>
+        {% else %}
+          <span class="badge bg-secondary">No</span>
+        {% endif %}
+      </p>
+      <p class="mb-0">
+        <strong>Participants:</strong>
+        {% for user in event.participants.all %}
+          {{ user.get_full_name }}{% if not forloop.last %}, {% endif %}
+        {% empty %}
+          None
+        {% endfor %}
+      </p>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

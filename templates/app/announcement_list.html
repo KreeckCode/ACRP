@@ -1,0 +1,56 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% block content %}
+<div class="container py-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Announcements</h3>
+    <!-- If the user has permission to create announcements: -->
+    <a href="{% url 'create_announcement' %}" class="btn btn-sm btn-primary">
+      <i class="bi bi-plus-circle"></i> Create Announcement
+    </a>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <table class="table table-striped table-hover mb-0 align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Title</th>
+            <th>Date Posted</th>
+            <th>Urgent?</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for ann in announcements %}
+            <tr>
+              <td>{{ ann.title }}</td>
+              <td>{{ ann.date_posted }}</td>
+              <td>
+                {% if ann.is_urgent %}
+                  <span class="badge bg-danger">Yes</span>
+                {% else %}
+                  <span class="badge bg-secondary">No</span>
+                {% endif %}
+              </td>
+              <td class="text-center">
+                <a href="{% url 'announcement_detail' ann.id %}" class="btn btn-sm btn-outline-info">
+                  <i class="bi bi-eye"></i> View
+                </a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="4" class="text-center text-muted">
+                No announcements found.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

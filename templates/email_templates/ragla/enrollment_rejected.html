@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Enrollment Application Status</title>
+    <style>
+      body, html {
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f4;
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      }
+      .container {
+        max-width: 600px;
+        margin: 20px auto;
+        background-color: #ffffff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+      .header {
+        background-color: #a80000;
+        color: #ffffff;
+        padding: 20px;
+        text-align: center;
+      }
+      .header h1 {
+        margin: 0;
+        font-size: 24px;
+      }
+      .content {
+        padding: 20px;
+        line-height: 1.6;
+        color: #333333;
+      }
+      .btn {
+        display: inline-block;
+        padding: 10px 20px;
+        background-color: #a80000;
+        color: #ffffff;
+        text-decoration: none;
+        border-radius: 4px;
+        margin-top: 20px;
+      }
+      .footer {
+        background-color: #eeeeee;
+        text-align: center;
+        padding: 15px;
+        font-size: 12px;
+        color: #777777;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Reaching a Generation Leadership Academy</h1>
+      </div>
+      <div class="content">
+        <p>Dear {{ applicant_name }},</p>
+        <p>
+          We regret to inform you that after careful consideration, your
+          enrollment application for the <strong>{{ program }}</strong>
+          program has not been approved at this time.
+        </p>
+        <p>
+          We appreciate your interest in joining RaGLA.
+          If you have any questions or require further guidance, please do not
+          hesitate to contact our admissions office.
+        </p>
+        <p>
+          <a href="mailto:admissions@ragla.org" class="btn"
+            >Contact Admissions</a
+          >
+        </p>
+        <p>
+          Thank you for considering University of Excellence for your academic
+          journey.
+        </p>
+        <p>Best regards,<br />Reaching a Generation Leadership Academy Team</p>
+      </div>
+      <div class="footer">
+        &copy; 2025 RaGLA. All rights reserved.
+      </div>
+    </div>
+  </body>
+</html>

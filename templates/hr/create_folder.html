@@ -1,0 +1,18 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block content %}
+
+  <h2>Create Folder</h2>
+  <form method="POST">
+    {% csrf_token %}
+    {{ form|crispy }}
+    <button type="submit" class="btn btn-success">Create</button>
+    {% if parent_folder %}
+      <a href="{% url 'folder_detail' parent_folder.id %}" class="btn btn-secondary">Cancel</a>
+    {% else %}
+      <a href="{% url 'folder_list' %}" class="btn btn-secondary">Cancel</a>
+    {% endif %}
+  </form>
+
+{% endblock %}

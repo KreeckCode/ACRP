@@ -1,0 +1,28 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% block content %}
+
+  <h2>Access Logs for {{ document.title }}</h2>
+
+  <table class="table table-bordered mt-3">
+    <thead>
+      <tr>
+        <th>Accessed By</th>
+        <th>Date/Time</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for log in access_logs %}
+        <tr>
+          <td>{{ log.accessed_by.username }}</td>
+          <td>{{ log.access_date }}</td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="2" class="text-center">No access logs.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+{% endblock %}

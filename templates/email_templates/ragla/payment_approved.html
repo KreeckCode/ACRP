@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Approved</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 20px auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .header img { max-width: 150px; }
+        .content { margin-bottom: 20px; }
+        .footer { text-align: center; font-size: 0.9em; color: #777; }
+        .badge { background-color: #28a745; color: white; padding: 5px 10px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="https://yourcollege.ac.za/logo.png" alt="College Logo">
+            <h2>Payment Approved</h2>
+        </div>
+
+        <div class="content">
+            <p>Dear {{ student_name }},</p>
+            <p>Your payment of <strong>R{{ amount }}</strong> has been approved.</p>
+
+            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                <p><strong>Reference Number:</strong> {{ reference_number }}</p>
+                <p><strong>New Balance:</strong> <span class="badge">R{{ new_balance }}</span></p>
+                <p><strong>Date Processed:</strong> {{ date_processed }}</p>
+            </div>
+
+            <p>You can view your updated financial status through the student portal.</p>
+        </div>
+
+        <div class="footer">
+            <p>© {% now "Y" %} Your College Name<br>
+            Contact: finance@yourcollege.ac.za | Tel: +27 21 123 4567</p>
+        </div>
+    </div>
+</body>
+</html>

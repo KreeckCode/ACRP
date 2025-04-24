@@ -1,0 +1,12 @@
+{% extends "base/base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="alert alert-success text-center" role="alert">
+    <h4 class="alert-heading">Success!</h4>
+    <p>Your document has been attached successfully.</p>
+    <hr>
+    <a href="{% url 'document_request_list' %}" class="btn btn-primary">Return to Document Requests</a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% block content %}
+<div class="container py-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">{{ resource.title }}</h3>
+    <div>
+      <a href="{% url 'edit_resource' resource.id %}" class="btn btn-warning btn-sm">
+        <i class="bi bi-pencil-square"></i> Edit
+      </a>
+      <form
+        method="POST"
+        action="{% url 'delete_resource' resource.id %}"
+        class="d-inline"
+      >
+        {% csrf_token %}
+        <button
+          type="submit"
+          class="btn btn-danger btn-sm"
+          onclick="return confirm('Are you sure you want to delete this resource?');"
+        >
+          <i class="bi bi-trash"></i> Delete
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <p class="mb-2"><strong>Type:</strong> {{ resource.get_resource_type_display }}</p>
+      <p class="mb-2"><strong>Uploaded By:</strong>
+        {% if resource.created_by %}
+          {{ resource.created_by.get_full_name }}
+        {% else %}
+          <span class="text-muted">—</span>
+        {% endif %}
+      </p>
+      <p class="mb-2"><strong>Created At:</strong> {{ resource.created_at }}</p>
+      <hr>
+      <p class="mb-2"><strong>Description:</strong> {{ resource.description }}</p>
+      <p class="mb-2">
+        <strong>File:</strong>
+        {% if resource.file %}
+          <a href="{{ resource.file.url }}" download>{{ resource.file.name }}</a>
+        {% else %}
+          <span class="text-muted">No file</span>
+        {% endif %}
+      </p>
+      <p class="mb-0"><strong>URL:</strong>
+        {% if resource.url %}
+          <a href="{{ resource.url }}" target="_blank">Open Link</a>
+        {% else %}
+          <span class="text-muted">No URL</span>
+        {% endif %}
+      </p>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Order Notification</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            margin: 20px;
+            font-family: Arial, sans-serif;
+        }
+        .header {
+            background-color: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .content {
+            font-size: 1rem;
+        }
+        .footer {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>Order Request Notification</h2>
+    </div>
+    <div class="content">
+        <p>Dear Supplier,</p>
+        <p>An order request has been generated for the component <strong>{{ component_name }}</strong> for the product <strong>{{ product_name }}</strong>.</p>
+        <p>Quantity Ordered: <strong>{{ quantity_ordered }}</strong></p>
+        <p>Please review and respond to this order request at your earliest convenience.</p>
+        <p>Thank you,</p>
+        <p>Your ERP System</p>
+    </div>
+    <div class="footer">
+        <p>&copy; {{ now|date:"Y" }} ERP System. All rights reserved.</p>
+    </div>
+</body>
+</html>

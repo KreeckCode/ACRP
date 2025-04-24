@@ -1,0 +1,55 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% block content %}
+<div class="container py-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">{{ announcement.title }}</h3>
+    <div>
+      <!-- Edit if user has permission -->
+      <a href="{% url 'edit_announcement' announcement.id %}" class="btn btn-warning btn-sm">
+        <i class="bi bi-pencil-square"></i> Edit
+      </a>
+      <!-- Delete if user has permission -->
+      <form
+        method="POST"
+        action="{% url 'delete_announcement' announcement.id %}"
+        class="d-inline"
+      >
+        {% csrf_token %}
+        <button
+          type="submit"
+          class="btn btn-danger btn-sm"
+          onclick="return confirm('Are you sure you want to delete this announcement?');"
+        >
+          <i class="bi bi-trash"></i> Delete
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <p class="mb-2"><strong>Date Posted:</strong> {{ announcement.date_posted }}</p>
+      <p class="mb-2"><strong>Expires At:</strong>
+        {% if announcement.expires_at %}
+          {{ announcement.expires_at }}
+        {% else %}
+          <span class="text-muted">Not set</span>
+        {% endif %}
+      </p>
+      <p class="mb-2">
+        <strong>Urgent?</strong>
+        {% if announcement.is_urgent %}
+          <span class="badge bg-danger">Yes</span>
+        {% else %}
+          <span class="badge bg-secondary">No</span>
+        {% endif %}
+      </p>
+      <hr>
+      <p class="mb-0">{{ announcement.content }}</p>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

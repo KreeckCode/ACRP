@@ -1,0 +1,46 @@
+{% extends "base/base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h1 class="text-center mb-4">Company Assets</h1>
+  <a href="{% url 'finance:add_asset' %}" class="btn btn-primary mb-3">Add Asset</a>
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+          <thead class="thead-light">
+            <tr>
+              <th>Added By</th>
+              <th>Asset Name</th>
+              <th>Department</th>
+              <th>Purchase Date</th>
+              <th>Purchase Cost</th>
+              <th>Condition</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for asset in assets %}
+            <tr onclick="window.location='{% url 'finance:update_asset' asset.id %}'" style="cursor:pointer;">
+              <td>{{ asset.added_by }}</td>
+              <td>{{ asset.asset_name }}</td>
+              <td>{{ asset.department }}</td>
+              <td>{{ asset.purchase_date }}</td>
+              <td>R{{ asset.purchase_cost }}</td>
+              <td>{{ asset.condition }}</td>
+              <td>
+                <a href="{% url 'finance:update_asset' asset.id %}" class="btn btn-sm btn-success">Update</a>
+                <a href="{% url 'finance:delete_asset' asset.id %}" class="btn btn-sm btn-danger">Delete</a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="6" class="text-center text-muted">No assets found.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

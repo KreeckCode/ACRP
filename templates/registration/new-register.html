@@ -1,0 +1,296 @@
+{% load static %}
+{% block title %} Register - Kreeck Academy {% endblock title %}
+{% load crispy_forms_tags %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link href="https://fonts.cdnfonts.com/css/poppins" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/inter" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600&display=swap" rel="stylesheet">
+
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="author" content="kreeck.com" />
+    <link rel="shortcut icon" href="{% static 'img/kreeck_box_logo.svg' %}" />
+
+    <meta name="description" content="" />
+    <meta name="keywords" content="bootstrap, bootstrap4" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Open Graph meta tags for social media sharing -->
+    <meta property="og:title" content="Kreeck Academy">
+    <meta property="og:description" content="Your Path to Knowledge and Skills">
+    <meta property="og:url" content="https://academy.kreeck.com">
+    <meta property="og:image" content="{% static 'img/kreeck_box_logo.svg' %}">
+    <meta property="og:type" content="website">
+
+    <!-- Twitter Card meta tags for Twitter sharing -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Kreeck Academy">
+    <meta name="twitter:description" content="Your Path to Knowledge and Skills">
+    <meta name="twitter:image" content="{% static 'img/kreeck_box_logo.svg' %}">
+    <meta name="twitter:url" content="https://academy.kreeck.com">
+    <title>{% block title %}Signup | Kreeck Academy{% endblock title %}</title>
+    <link rel="stylesheet" href="{% static 'css/auth.bootstrap.css' %} ">
+
+    <style>
+        .mobile-logo {
+            display: none;
+        }
+
+        .inputContainer {
+            position: relative;
+            height: 45px;
+            width: 100%;
+            margin-bottom: 17px;
+        }
+
+        .twin-container {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        @media (max-width: 976px) {
+            body {
+                margin: 0rem;
+                padding: 0rem;
+            }
+
+            .right {
+                display: none;
+            }
+
+            .left {
+                display: flex;
+                justify-content: center;
+                height: 95vh;
+                margin: 1rem;
+                padding: 0rem;
+            }
+
+            .terms {}
+
+            .signin-title {
+                display: none;
+            }
+
+            .logo {
+                display: flex;
+            }
+
+            .signup {
+                margin-top: 1rem;
+            }
+
+            .mobile-logo {
+                display: block;
+                display: flex;
+                justify-content: center;
+                margin-bottom: 2rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main-container">
+        <div class="right">
+            <div class="header">
+                <div class="logo">
+                    <a href="">
+                        <svg id="Logo" xmlns="http://www.w3.org/2000/svg" width="155" height="88.898"
+                            viewBox="0 0 155 88.898">
+                            <text id="reeck." transform="translate(44.717 46)" fill="#121b18" font-size="33"
+                                font-family="Inter" font-weight="650">
+                                <tspan x="0" y="0">reeck</tspan>
+                                <tspan fill="#65a98f" font-size="47">.</tspan>
+                            </text>
+                            <text id="Academy" transform="translate(0 80.898)" fill="#65a98f" font-size="34"
+                                font-family="Inter" font-weight="600">
+                                <tspan x="0" y="0">Academy</tspan>
+                            </text>
+                            <g id="Layer_2_1_" transform="translate(-39.768 -115.365)">
+                                <g id="Group_10" data-name="Group 10" transform="translate(42.2 134.865)">
+                                    <circle id="Ellipse_52" data-name="Ellipse 52" cx="1.246" cy="1.246" r="1.246"
+                                        transform="translate(11.092 9.155)" fill="#121b18" />
+                                    <g id="Group_7" data-name="Group 7" transform="translate(0 0)">
+                                        <g id="Group_6" data-name="Group 6">
+                                            <path id="Path_107" data-name="Path 107"
+                                                d="M67.365,142.768c.459-.75.923-1.5,1.382-2.249a10.756,10.756,0,0,1,1.884-2.528c.068-.062.136-.124.2-.18.025-.019.254-.2.13-.105q.232-.177.483-.335c.143-.087.285-.167.428-.248.081-.043.167-.081.248-.124.056-.025.279-.118.112-.05a6.482,6.482,0,0,1,.967-.3c.155-.037.31-.062.465-.093.031-.006.062-.006.093-.012.118-.019-.155.012-.037.006.093-.006.186-.019.273-.025a7.156,7.156,0,0,1,.892-.019c.143.006.291.012.434.031l.2.019a.683.683,0,0,0,.112.012c-.081-.012-.155-.025-.031,0a11.4,11.4,0,0,1,1.5.341c.223.068.446.149.663.229.05.019.1.043.155.062s.2.081.043.019.093.043.149.068c.155.068.3.143.452.223-.1-.384-.2-.762-.3-1.14-.9,1.419-1.809,2.832-2.714,4.251q-2.166,3.393-4.325,6.779c-.328.521-.663,1.041-1,1.562a.837.837,0,0,0,0,.843c.868,1.481,1.729,2.968,2.6,4.449q2.064,3.542,4.127,7.083c.31.539.626,1.072.942,1.611.043-.335.087-.675.13-1.01a7.853,7.853,0,0,1-1.481,1.022c-.124.062-.248.124-.378.186-.235.105.081-.031-.062.025-.062.025-.124.05-.186.068a5.79,5.79,0,0,1-.713.2c-.056.012-.4.062-.192.037-.112.012-.223.025-.335.031a4.461,4.461,0,0,1-.644-.012l-.186-.019c.025,0,.186.031.037.006l-.3-.056a4.615,4.615,0,0,1-.57-.167c-.093-.031-.18-.068-.273-.105.223.081-.062-.031-.112-.056-.167-.081-.328-.167-.49-.26s-.3-.186-.446-.291c-.062-.043-.124-.093-.186-.136-.093-.068.161.136.031.025l-.112-.093a7.977,7.977,0,0,1-1.1-1.1c-.093-.112-.18-.248-.025-.025-.025-.037-.056-.074-.081-.112s-.043-.074-.068-.112c-.279-.483-.545-.979-.818-1.469q-1.868-3.346-3.749-6.686-1.162-2.064-2.324-4.115a25.115,25.115,0,0,0-2.181-3.47,12.386,12.386,0,0,0-4.722-3.563,14.617,14.617,0,0,0-5.565-1.177l-7.523-.112h-.217v1.667c.081,0,.161.006.235.012.093.006.18.012.266.025l.167.019c.155.019-.2-.031-.105-.012a.482.482,0,0,0,.1.012,9.848,9.848,0,0,1,2.095.552,1.518,1.518,0,0,1,.149.062c.136.056.056.043-.031-.012a2.19,2.19,0,0,0,.347.155c.211.1.421.2.62.322.217.124.434.26.644.409.1.068.192.143.291.211-.2-.143-.025-.019.019.019s.112.093.167.143a7.6,7.6,0,0,1,.607.576c.1.105.192.2.279.31.05.056.093.112.136.167.019.019.031.043.05.062.068.074-.105-.143-.012-.019a9.736,9.736,0,0,1,.979,1.661c.019.037.031.074.05.112-.012-.025-.068-.167-.012-.025.031.068.056.143.081.211.068.174.13.353.186.533a10.394,10.394,0,0,1,.291,1.128c.037.186.074.372.1.558.006.037.05.335.025.167.019.136.031.266.043.4.043.452.068.911.074,1.363a9.187,9.187,0,0,0,1.041,4.462,7.864,7.864,0,0,0,5.912,3.625,18.134,18.134,0,0,0,5.757-.167c.118-.019.235-.043.359-.068a.836.836,0,0,0-.446-1.611c-.273.056-.545.105-.824.143l-.26.037c-.174.025.229-.031.05-.006l-.161.019c-.2.025-.409.05-.613.062a16.445,16.445,0,0,1-2.974.019c-.13-.012-.266-.025-.4-.043-.211-.025.093.012-.025,0-.074-.012-.149-.019-.223-.031-.266-.043-.527-.093-.793-.155a7.432,7.432,0,0,1-.806-.229c-.118-.043-.235-.081-.359-.13l-.186-.074c-.105-.037.155.074.062.025-.037-.019-.074-.031-.112-.05a6.017,6.017,0,0,1-.713-.378c-.118-.068-.229-.143-.341-.217-.056-.037-.112-.081-.167-.118s-.118-.1.05.037a1.132,1.132,0,0,1-.1-.081,6.1,6.1,0,0,1-.62-.583c-.087-.1-.167-.2-.26-.3-.074-.081.093.136.031.043-.019-.031-.043-.056-.062-.087-.05-.068-.093-.136-.136-.2a5.4,5.4,0,0,1-.434-.787c-.031-.068-.1-.248-.031-.074-.031-.074-.062-.149-.087-.223-.062-.167-.112-.335-.161-.5a9.01,9.01,0,0,1-.229-1.078c.031.186-.012-.081-.012-.136-.012-.087-.019-.174-.025-.26-.019-.217-.025-.434-.031-.651a13.964,13.964,0,0,0-.849-4.988,9.273,9.273,0,0,0-4.815-5.1,9.838,9.838,0,0,0-3.817-.942h-.056a.837.837,0,1,0,0,1.673q3.569.056,7.139.105c.477.006.954,0,1.425.031q.307.019.613.056c.087.012.285-.012,0,0a1.793,1.793,0,0,1,.18.025l.446.074a13.545,13.545,0,0,1,2.039.545c.192.068.384.143.57.217.037.019.074.031.112.05-.2-.081,0,0,.031.019.1.043.2.087.291.136a11.536,11.536,0,0,1,1.215.663c.192.118.378.242.564.372.1.068.2.143.3.211.192.136-.074-.062.037.025.068.056.136.105.2.167a10.775,10.775,0,0,1,1.128,1.066c.174.192.347.384.508.589l.13.167c-.074-.093.012.019.025.031.1.143.2.279.3.421.378.558.7,1.146,1.029,1.735q1.162,2.054,2.324,4.115c1.332,2.355,2.652,4.716,3.978,7.083a17.918,17.918,0,0,0,1.357,2.311,7.9,7.9,0,0,0,2.77,2.28,6.059,6.059,0,0,0,2.627.638,6.491,6.491,0,0,0,3.117-.861,10.609,10.609,0,0,0,1.667-1.2.833.833,0,0,0,.13-1.01c-.868-1.481-1.729-2.968-2.6-4.449q-2.064-3.542-4.127-7.083c-.31-.539-.626-1.072-.942-1.611v.843c.9-1.419,1.809-2.832,2.714-4.251q2.166-3.393,4.325-6.779c.328-.521.663-1.041,1-1.562a.841.841,0,0,0-.3-1.14,10.033,10.033,0,0,0-4.97-1.227,7.353,7.353,0,0,0-4.232,1.388,10.3,10.3,0,0,0-2.6,3.018q-.827,1.348-1.655,2.689a.849.849,0,0,0,.3,1.14.916.916,0,0,0,1.165-.335Z"
+                                                transform="translate(-42.2 -134.865)" fill="#121b18" />
+                                        </g>
+                                    </g>
+                                    <g id="Group_9" data-name="Group 9" transform="translate(9.132 12.989)">
+                                        <g id="Group_8" data-name="Group 8">
+                                            <path id="Path_108" data-name="Path 108"
+                                                d="M190.875,350.192a8.311,8.311,0,0,1-.1-1.016c-.006-.161-.006-.322,0-.477,0-.074.006-.155.012-.229,0-.031.031-.266.012-.143a3.957,3.957,0,0,1,.192-.8c.006-.019.074-.2.043-.124s.031-.074.043-.093a2.292,2.292,0,0,1,.192-.341c.031-.05.062-.093.093-.143.056-.081-.074.074.037-.043.074-.081.143-.167.223-.242.037-.037.081-.074.124-.112s.143-.112.037-.037a3.249,3.249,0,0,1,.3-.2,2.281,2.281,0,0,1,.273-.143c.019-.012.186-.081.1-.05s.093-.037.124-.05a5.487,5.487,0,0,1,.694-.192c.062-.012.118-.019.174-.031a.478.478,0,0,1,.093-.012c.087-.012-.112.012-.025,0,.13-.012.26-.031.39-.037.26-.019.527-.019.787-.012s.545.037.818.068c.025,0,.118.019-.012,0a.542.542,0,0,0,.1.012c.068.012.136.019.2.031.136.019.266.05.4.074a12.259,12.259,0,0,1,1.636.446c.266.087.527.186.781.291l.093.037c.081.031-.087-.037-.006,0a1.586,1.586,0,0,1,.18.081c.124.056.248.112.372.173a10.471,10.471,0,0,1,1.425.818l.13.093c.037.025.2.155.062.05.087.068.174.136.254.211a3.686,3.686,0,0,1,.434.446.6.6,0,0,0,.843-.843,7.155,7.155,0,0,0-2.3-1.673,14.255,14.255,0,0,0-3.371-1.221c-2.107-.465-4.865-.552-6.327,1.345a5.642,5.642,0,0,0-.713,4.412.6.6,0,0,0,.731.415.617.617,0,0,0,.446-.737Z"
+                                                transform="translate(-189.559 -344.477)" fill="#121b18" />
+                                        </g>
+                                    </g>
+                                    <path id="Path_109" data-name="Path 109"
+                                        d="M110.9,240.378s6.129,2.875,5.218,8.533c0,0,3.836-4.14,11.377,0,0,0-1.884-6.978-8.521-8.663C118.981,240.255,112.2,238.966,110.9,240.378Z"
+                                        transform="translate(-106.643 -233.219)" fill="#121b18" />
+                                </g>
+                            </g>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+            <div class="center-content-left">
+                <h5 class="welcome">
+                    Welcome to <span class="link">Kreeck Academy</span>
+                    .
+                </h5>
+                <h1 class="signin">Create an Account</h1>
+            </div>
+        </div>
+        <div class="left">
+            <div class="header">
+
+                <div class="signup">
+                    <p>
+                        Have an account? <a href="{% url 'login' %}" class="link">Sign in</a>
+                    </p>
+                </div>
+            </div>
+            <div class="center-content">
+                <div class="mobile-logo">
+                    <h5 class="">Create a <span style="font-weight: 700;">Kreeck</span> account.</h5>
+                </div>
+                {% if messages %}
+                {% for message in messages %}
+                {% if message.tags == 'error' %}
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle"></i>{{ message }}
+                </div>
+                {% else %}
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle"></i>{{ message }}
+                </div>
+                {% endif %}
+                {% endfor %}
+                {% endif %}
+                <form action="" method="POST" id="login-form" class="form">
+                    {% csrf_token %}
+                    <!-- Section 1 of the slider -->
+                    <p class="small-text" style="font-weight: 600;">Login Details</p>
+                    <div class="twin-container">
+                        <div class="inputContainer">
+                            <input type="text" name="username" id="username_id" class="input" placeholder="a">
+                            <label for="" class="label">ID Number</label>
+                            <span class="alert-danger">{{ form.username.errors }}</span>
+                    <p class="text-muted-xs">Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.</p>
+                        </div>
+                        <div class="inputContainer">
+                            <input type="password" name="password1" id="password1_id" class="input" placeholder="a">
+                            <label for="" class="label">Password</label>
+                            <span class="alert-danger">{{ form.password1.errors }}</span>
+                    <p class="text-muted-xs">
+                        The password can't be too similar to other personal information.<br>
+                        The password must contain at least 8 characters.<br>
+                        The password can't be a commonly used password.<br>
+                        The password can't be entirely numeric.
+                    </p>
+                        </div>
+                    </div>
+                    <div class="inputContainer">
+                        <input type="password" name="password2" id="password2_id" required class="input"
+                            placeholder="a">
+                        <label for="" class="label">Password Confirmation</label>
+                    </div>
+
+
+                    <!-- Section 2 of the slider -->
+                    <p class="small-text mt-4" style="font-weight: 600;">Personal Details</p>
+                    <div class="twin-container">
+                        <div class="inputContainer">
+                            <input type="text" name="first_name" id="first_name_id" class="input" placeholder="a">
+                            <label for="" class="label">First Name</label>
+                        </div>
+                        <div class="inputContainer">
+                            <input type="text" name="last_name" id="last_name_id" class="input" placeholder="a">
+                            <label for="" class="label">Last Name</label>
+                        </div>
+                    </div>
+
+
+                    <div class="twin-container">
+                        <div class="inputContainer">
+                            <input type="email" name="email" id="email_id" class="input" placeholder="a">
+                            <label for="" class="label">Email Address</label>
+                        </div>
+                        <div class="inputContainer">
+                            <input type="text" name="address" id="address_id" class="input" placeholder="a">
+                            <label for="" class="label">Address</label>
+                        </div>
+                    </div>
+
+
+                    <div class="inputContainer">
+                        <input type="tel" name="phone" id="phone_id" class="input" placeholder="a">
+                        <label for="" class="label">Mobile Number</label>
+                    </div>
+
+                    <!-- Section 3 and final section of the slider -->
+                    <p class="small-text mt-4" style="font-weight: 600;">Course Details</p>
+                    <div class="twin-container">
+                        <div class="inputContainer">
+                            <label for="department_id" class="form-label">{{ form.department.label }}</label>
+                            {{ form.department }}
+                        </div>
+                        <div class="inputContainer">
+                            <label for="level_id" class="form-label">{{ form.level.label }}</label>
+                            {{ form.level }}
+                        </div>
+                    </div>
+                    {% if form.errors %}
+                    <p class="text-danger my-2"><i class="fas fa-exclamation-circle"></i> Invalid ID & Password.</p><br>
+                    {% endif %}
+                    <div class="buttons">
+                        <input type="submit" class="btn btn-secondary" value="Submit">
+                    </div>
+                </form>
+
+            </div>
+            <div class="bottom">
+                <div class="terms">
+                    <p class="text-center small-text">By continuing, you agree to the kreeck academy terms of service
+                        and privacy notice.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const loginFormEl = document.getElementById('login-form');
+        const loginBtnEl = document.getElementById('login-btn');
+
+        loginFormEl.addEventListener('submit', () => {
+            loginBtnEl.innerHTML = '<i class="fas fa-sign-in-alt"></i> Signining you in . . .';
+            loginBtnEl.classList.add("disabled");
+        })
+
+        $("#username_id").on("input", function () {
+            username = $(this).val();
+
+            $.ajax({
+                url: "/accounts/ajax/validate-username/",
+                data: {
+                    username: username
+                },
+                dataType: 'json',
+                success: function (data) {
+                    if (data.is_taken) {
+                        console.log(data.is_taken);
+                        $('#message-wrapper').html(`<p class="my-2 text-danger"><span class="bg-error p-2"><b>${username}</b> already taken :( try another one </span></p>`)
+                    }
+                    else {
+                        $('#message-wrapper').html(`<p class="my-2 text-success"><span class="bg-correct p-2"><b>${username}</b> is valid </span></p>`)
+                    }
+                }
+
+            })
+        })
+    </script>
+</body>
+
+</html>

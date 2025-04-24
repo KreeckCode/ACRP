@@ -1,0 +1,94 @@
+{% extends "base/base.html" %}
+{% block content %}
+
+    <h1 class="text-center mb-4">Document Requests</h1>
+    
+    <div class="mb-3">
+        <a href="{% url 'create_document_request' %}" class="btn btn-primary">Create New Request</a>
+    </div>
+    
+    <!-- Requests Submitted by the Employee -->
+    <div class="mb-5">
+        <h6>Requests You Submitted</h6>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead class="thead-light">
+                    <tr>
+                        <th>Title</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Requested On</th>
+                        <th>Recipient</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in my_requests %}
+                        <tr>
+                            <td>{{ req.title }}</td>
+                            <td>{{ req.get_request_type_display }}</td>
+                            <td>{{ req.status|title }}</td>
+                            <td>{{ req.request_date|date:"d M Y H:i" }}</td>
+                            <td>
+                                {% if req.request_type == 'internal' %}
+                                    {{ req.recipient.get_full_name|default:req.recipient }}
+                                {% else %}
+                                    {{ req.external_recipient_name }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'document_request_detail' req.id %}" class="btn btn-sm btn-info">View</a>
+                                
+                                    <a href="{% url 'delete_document_request' req.id %}" class="btn btn-sm btn-danger">Delete</a>
+                              
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">No requests submitted yet.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Incoming Requests to Process -->
+    <div>
+        <h6>Requests to Process (Incoming)</h6>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead class="thead-light">
+                    <tr>
+                        <th>Title</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Requested On</th>
+                        <th>Sender</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in incoming_requests %}
+                        <tr>
+                            <td>{{ req.title }}</td>
+                            <td>{{ req.get_request_type_display }}</td>
+                            <td>{{ req.status|title }}</td>
+                            <td>{{ req.request_date|date:"d M Y H:i" }}</td>
+                            <td>{{ req.requested_by.get_full_name|default:req.requested_by }}</td>
+                            <td>
+                                <a href="{% url 'document_request_detail' req.id %}" class="btn btn-sm btn-info">View</a>
+                                <a href="{% url 'process_document_request' req.id %}" class="btn btn-sm btn-primary">Process</a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">No incoming requests.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+{% endblock %}

@@ -5,6 +5,10 @@ credentials
 venv
 .staticfiles/
 staticfiles
+static
+/static
+static/
+.static
 .media/
 .media_root/
 media_root/

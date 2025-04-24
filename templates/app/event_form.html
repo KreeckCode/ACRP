@@ -1,0 +1,126 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% block content %}
+<div class="container py-4">
+  <h3 class="mb-3">
+    {% if event %}Edit{% else %}Create{% endif %} Event
+  </h3>
+
+  <!-- Display form errors / messages if needed -->
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="POST">
+    {% csrf_token %}
+    <div class="row">
+      {% for field in form.visible_fields %}
+        {% with widget_type=field.field.widget.input_type %}
+          <div class="col-md-6 mb-3">
+            <!-- Label -->
+            <label for="{{ field.id_for_label }}" class="form-label">
+              {{ field.label }}
+            </label>
+
+            {# 1) If it's a BooleanField (checkbox), e.g. is_all_day, is_mandatory #}
+            {% if widget_type == "checkbox" %}
+              <div class="form-check">
+                <input
+                  type="checkbox"
+                  name="{{ field.name }}"
+                  id="{{ field.id_for_label }}"
+                  class="form-check-input"
+                  {% if field.value %}checked{% endif %}
+                >
+                <label class="form-check-label" for="{{ field.id_for_label }}">
+                  {{ field.label }}
+                </label>
+              </div>
+
+            {# 2) If it's the participants field (many-to-many) => multiple select #}
+            {% elif field.name == "participants" %}
+              <select
+                name="{{ field.name }}[]"
+                id="{{ field.id_for_label }}"
+                class="form-control"
+                multiple
+              >
+                {% for val, txt in field.field.choices %}
+                  <option
+                    value="{{ val }}"
+                    {% if field.value and val in field.value %}selected{% endif %}
+                  >
+                    {{ txt }}
+                  </option>
+                {% endfor %}
+              </select>
+
+            {# 3) If field is start_time or end_time => date/time widget #}
+            {% elif field.name == "start_time" or field.name == "end_time" %}
+              <input
+                type="datetime-local"
+                name="{{ field.name }}"
+                id="{{ field.id_for_label }}"
+                value="{{ field.value|default_if_none:''|safe }}"
+                class="form-control"
+              >
+
+            {# 4) If it's a textarea #}
+            {% elif widget_type == "textarea" %}
+              <textarea
+                name="{{ field.name }}"
+                id="{{ field.id_for_label }}"
+                rows="4"
+                class="form-control"
+              >{{ field.value }}</textarea>
+
+            {# 5) If it's a normal <select> (not multiple) #}
+            {% elif widget_type == "select" %}
+              <select
+                name="{{ field.name }}"
+                id="{{ field.id_for_label }}"
+                class="form-control"
+              >
+                {% for val, txt in field.field.choices %}
+                  <option
+                    value="{{ val }}"
+                    {% if field.value and val == field.value %}selected{% endif %}
+                  >
+                    {{ txt }}
+                  </option>
+                {% endfor %}
+              </select>
+
+            {# 6) Otherwise default => text input #}
+            {% else %}
+              <input
+                type="{{ widget_type|default_if_none:'text' }}"
+                name="{{ field.name }}"
+                id="{{ field.id_for_label }}"
+                value="{{ field.value|default_if_none:'' }}"
+                class="form-control"
+              >
+            {% endif %}
+
+            {# Help text #}
+            {% if field.help_text %}
+              <small class="text-muted d-block">{{ field.help_text }}</small>
+            {% endif %}
+            {# Field-specific errors #}
+            {% for error in field.errors %}
+              <div class="text-danger">{{ error }}</div>
+            {% endfor %}
+          </div>
+        {% endwith %}
+      {% endfor %}
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+      {% if event %}Update{% else %}Create{% endif %}
+    </button>
+    <a href="{% url 'event_list' %}" class="btn btn-secondary ms-2">Cancel</a>
+  </form>
+</div>
+{% endblock %}

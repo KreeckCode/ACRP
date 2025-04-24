@@ -1,0 +1,27 @@
+{% extends "base/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="card shadow-lg">
+    <div class="card-header bg-info text-white">
+      <h3><i class="fas fa-paperclip"></i> Attach Document</h3>
+    </div>
+    <div class="card-body">
+      <p>Please attach the requested document for: <strong>{{ doc_req.title }}</strong></p>
+      {% widthratio doc_req.max_file_size 1048576 1 as max_mb %}
+      <p><small>The maximum allowed file size is: {{ max_mb|floatformat:2 }} MB</small></p>
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form|crispy }}
+        <button type="submit" class="btn btn-primary">Attach Document</button>
+      </form>
+    </div>
+    <div class="card-footer text-right">
+      <a href="#" onclick="window.history.back();" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

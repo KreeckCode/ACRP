@@ -1,0 +1,34 @@
+{% extends "base/base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h1 class="text-center mb-4">Payslips</h1>
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead class="thead-light">
+                <tr>
+                    <th>Month</th>
+                    <th>Basic Salary</th>
+                    <th>Net Salary</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for payslip in payslips %}
+                <tr>
+                    <td>{{ payslip.month|date:"F Y" }}</td>
+                    <td>${{ payslip.basic_salary }}</td>
+                    <td>${{ payslip.net_salary }}</td>
+                    <td>
+                        <a href="{% url 'view_payslip' payslip.id %}" class="btn btn-sm btn-primary">View</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center text-muted">No payslips available.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

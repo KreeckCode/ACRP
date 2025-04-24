@@ -1,0 +1,87 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% block content %}
+<div class="container py-4">
+  <h3 class="mb-4">Dashboard</h3>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="row g-3">
+    <!-- Example: Announcements card -->
+    <div class="col-md-6 col-lg-4">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i class="bi bi-exclamation-triangle-fill me-1"></i> Urgent Announcements
+          </h5>
+          {% if announcements %}
+            <ul class="list-group list-group-flush">
+              {% for ann in announcements %}
+                <li class="list-group-item">
+                  <a href="{% url 'announcement_detail' ann.id %}">
+                    {{ ann.title }}
+                  </a>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="text-muted">No urgent announcements.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Example: Events card -->
+    <div class="col-md-6 col-lg-4">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i class="bi bi-calendar2-check me-1"></i> Mandatory Events
+          </h5>
+          {% if events %}
+            <ul class="list-group list-group-flush">
+              {% for e in events %}
+                <li class="list-group-item">
+                  <a href="{% url 'event_detail' e.id %}">{{ e.title }}</a>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="text-muted">No mandatory events.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Example: Projects card -->
+    <div class="col-md-6 col-lg-4">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i class="bi bi-diagram-3 me-1"></i> Your Projects
+          </h5>
+          {% if projects %}
+            <ul class="list-group list-group-flush">
+              {% for p in projects %}
+                <li class="list-group-item">
+                  <a href="{% url 'project_detail' p.id %}">{{ p.name }}</a>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="text-muted">No projects found.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Add additional cards for HR/Finance/Database/Accounts data as needed -->
+    <!-- Example: if user.role.title == "HR", show stats, etc. -->
+
+  </div>
+</div>
+{% endblock %}

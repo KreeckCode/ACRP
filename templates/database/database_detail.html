@@ -1,0 +1,21 @@
+{% extends "base/base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h1 class="text-center mb-4" style="color: #b76e79;">{{ database.name }}</h1>
+    <div class="card shadow p-4" style="border: 1px solid #b76e79;">
+        <p><strong>Description:</strong> {{ database.description }}</p>
+        <p><strong>Owner:</strong> {{ database.owner }}</p>
+        <p><strong>Date Created:</strong> {{ database.date_created }}</p>
+        <p><strong>Public:</strong> {{ database.is_public }}</p>
+        <p><strong>Protected:</strong> {{ database.is_protected }}</p>
+        {% if database.is_protected %}
+        <p><strong>Password:</strong> {{ database.password }}</p>
+        {% endif %}
+    </div>
+    <div class="text-center mt-4">
+        <a href="{% url 'database:database_edit' database.id %}" class="btn btn-outline-secondary" style="color: #b76e79;">Edit</a>
+        <a href="{% url 'database:database_delete' database.id %}" class="btn btn-outline-danger">Delete</a>
+        <a href="{% url 'database:entry_list' database.id %}" class="btn btn-outline-primary" style="border-color: #b76e79; color: #b76e79;">View Entries</a>
+    </div>
+</div>
+{% endblock %}

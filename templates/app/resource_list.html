@@ -1,0 +1,57 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% block content %}
+<div class="container py-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Resources</h3>
+    <a href="{% url 'create_resource' %}" class="btn btn-sm btn-primary">
+      <i class="bi bi-plus-circle"></i> Add Resource
+    </a>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <table class="table table-striped table-hover mb-0 align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Title</th>
+            <th>Type</th>
+            <th>Uploaded By</th>
+            <th>Created</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in resources %}
+            <tr>
+              <td>{{ r.title }}</td>
+              <td>{{ r.get_resource_type_display }}</td>
+              <td>
+                {% if r.created_by %}
+                  {{ r.created_by.get_full_name }}
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              </td>
+              <td>{{ r.created_at }}</td>
+              <td class="text-center">
+                <a href="{% url 'resource_detail' r.id %}" class="btn btn-sm btn-outline-info">
+                  <i class="bi bi-eye"></i> View
+                </a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="5" class="text-center text-muted">
+                No resources found.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

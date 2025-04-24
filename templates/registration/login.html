@@ -1,0 +1,171 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="author" content="" />
+    <link rel="shortcut icon" href="{% static 'main_media/grace_box_logo.svg' %}" />
+    <meta name="description" content="" />
+    <meta name="keywords" content="bootstrap, bootstrap4" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Open Graph meta tags for social media sharing -->
+    <meta property="og:title" content="">
+    <meta property="og:description" content="">
+    <meta property="og:url" content="">
+    <meta property="og:image" content="{% static 'main_media/grace_box_logo.svg' %}">
+    <meta property="og:type" content="website">
+
+    <!-- Twitter Card meta tags for Twitter sharing -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="">
+    <meta name="twitter:description" content="">
+    <meta name="twitter:image" content="{% static 'main_media/grace_box_logo.svg' %}">
+    <meta name="twitter:url" content="">
+
+    <title>{% block title %}Grace Ministry Software{% endblock title %}</title>
+    <link rel="stylesheet" href="{% static 'css/auth.bootstrap.css' %}">
+    <link href="https://fonts.cdnfonts.com/css/poppins" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/inter" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600&display=swap" rel="stylesheet">
+
+    <style>
+        @import url('https://fonts.cdnfonts.com/css/inter');
+        .mobile-logo {
+            display: none;
+        }
+
+        @media (max-width: 976px) {
+            body {
+                margin: 0rem;
+                padding: 0rem;
+            }
+
+            .right {
+                display: none;
+            }
+
+            .left {
+                display: flex;
+                justify-content: center;
+                height: 95vh;
+                margin: 1rem;
+                padding: 0rem;
+            }
+
+            .terms {}
+
+            .signin-title {
+                display: none;
+            }
+
+            .logo {
+                display: flex;
+            }
+
+            .signup {
+                margin-top: 1rem;
+            }
+
+            .mobile-logo {
+                display: block;
+                display: flex;
+                justify-content: center;
+                margin-bottom: 2rem;
+            }
+        }
+    </style>
+</head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-ZWJJJPS1PT"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-ZWJJJPS1PT');
+</script>
+<body>
+    <div class="container">
+        <div class="main-container">
+            <div class="right">
+                <div class="header">
+                    <div class="logo">
+                        <a href="">
+                            <img src="{% static 'main_media/grace_box_logo.svg' %}" alt="s" width="50px">
+                        </a>
+                    </div>
+                </div>
+                <div class="center-content-left">
+                    <h5 class="welcome">
+                        Welcome to <span class="link">Grace Software</span>.
+                    </h5>
+                    <h1 class="signin">Sign In</h1>
+                </div>
+            </div>
+            <div class="left">
+                <div class="header">
+                    <div class="signup">
+                        <p>don't have an account? <a href="" class="link">Sign Up</a></p>
+                    </div>
+                </div>
+                <div class="center-content">
+                    <div class="mobile-logo">
+                        <h5 class="">Sign in to your <span style="font-weight: 700;">Kreeck</span> account.</h5>
+                    </div>
+                    <h5 class="signin-title pb-4">Sign in to your Grace account.</h5>
+                    <form action="{% url 'login' %}" class="form" method="post" id="login-form">
+                        {% csrf_token %}
+                        {% if form.errors %}
+                        <div class="alert alert-danger" role="alert">
+                            <ul>
+                                {% for field, errors in form.errors.items %}
+                                    {% for error in errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                        <div class="inputContainer">
+                            <input type="text" name="username" id="username_id" class="input" placeholder="a" required>
+                            <label for="username_id" class="label">Username or Email</label>
+                        </div>
+                        <div class="inputContainer">
+                            <input type="password" name="password" id="password_id" class="input" placeholder="a" required>
+                            <label for="password_id" class="label">Password</label>
+                        </div>
+                        <div class="buttons">
+                            <p class="small-text">Or sign in with</p>
+                            <div class="forgot">
+                                <p class="small-text mt-3 text-center">
+                                    Forgot password? <a href="{% url 'password_reset' %}" class="link">Reset Password</a>
+                                </p>
+                            </div>
+                            <input type="submit" class="btn btn-secondary" value="Sign in">
+                        </div>
+                    </form>
+                    
+                    <a href="" class="btn btn-outline-primary mt-2">Continue with Google</a>
+                </div>
+                <div class="bottom">
+                    <div class="terms">
+                        <p class="text-center small-text">By continuing, you agree to the kreeck terms of service and privacy notice.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            document.getElementById('login-form').addEventListener('submit', function () {
+                document.getElementById('login-btn').classList.add('disabled');
+                document.getElementById('login-btn').innerHTML = '<i class="fas fa-sign-in-alt"></i> Logging you in . . .';
+            });
+        });
+    </script>
+</body>
+
+</html>

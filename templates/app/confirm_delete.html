@@ -1,0 +1,13 @@
+<!-- apps/confirm_delete.html -->
+{% extends "base/base.html" %}
+{% block content %}
+<div class="container py-4">
+  <h4>Confirm Delete {{ type }}</h4>
+  <p>Are you sure you want to delete <strong>{{ object }}</strong>?</p>
+  <form method="POST">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Yes, Delete</button>
+    <a href="{% url cancel_url cancel_id %}" class="btn btn-secondary">Cancel</a>
+  </form>
+</div>
+{% endblock %}

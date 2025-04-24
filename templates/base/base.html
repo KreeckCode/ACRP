@@ -1,0 +1,1172 @@
+{% load static %}
+
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    
+    <!-- Title -->
+    <title>{% block title %}Grace ERP | Reaching a generation {% endblock title %}</title>
+    
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="{% static 'main_media/grace_box_logo.svg' %}">
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Grace ERP is a comprehensive Enterprise Resource Planning solution automating manual processes, streamlining budget management, file workflows and learner management for Reaching a generation.">
+    <meta name="keywords" content="ERP, Enterprise Resource Planning, Grace ERP, Reaching a generation, Ragla, School in a Box, workflow automation, budget management, file management, learner management, POPI Act">
+    <meta name="author" content="Grace ERP Team">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:title" content="Grace ERP | Reaching a generation">
+    <meta property="og:description" content="Grace ERP automates manual processes, manages budgets and files, and streamlines learner management, ensuring full compliance with the South African POPI Act.">
+    <meta property="og:image" content="{% static 'main_media/grace_box_logo.svg' %}">
+    <meta property="og:url" content="https://kreeck.com/">
+    <meta property="og:type" content="website">
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Grace ERP | Reaching a generation">
+    <meta name="twitter:description" content="Grace ERP provides an automated ERP solution for budget and file management as well as learner management for Reaching a generation.">
+    <meta name="twitter:image" content="{% static 'main_media/grace_box_logo.svg' %}">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://kreeck.com/">
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="{% static 'css/backend-plugin.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/backend.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    
+    <!-- Bootstrap Bundle (includes Popper) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Inline Styles -->
+    <style>
+        .card {
+            border-radius: 6px;
+        }
+        .table-hover tbody tr:hover {
+            background-color: #f9f9f9;
+        }
+    </style>
+    
+    <!-- Schema.org Structured Data for SEO -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Grace ERP",
+      "operatingSystem": "All",
+      "applicationCategory": "BusinessApplication",
+      "description": "Grace ERP automates manual processes and streamlines budget, file, and learner management for Reaching a generation, ensuring compliance with the South African POPI Act.",
+      "url": "https://kreeck.com/",
+      "author": {
+        "@type": "Organization",
+        "name": "Grace ERP Team"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.5",
+        "reviewCount": "10"
+      }
+    }
+    </script>
+</head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-ZWJJJPS1PT"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-ZWJJJPS1PT');
+</script>
+
+<body class=" color-light ">
+    <!-- Wrapper Start -->
+    <div class="wrapper">
+        <div class="iq-sidebar  sidebar-default  ">
+            <div class="iq-sidebar-logo d-flex align-items-end justify-content-between">
+                <a href="/static/backend/index.html" class="header-logo">
+                    <img src="{% static 'main_media/grace_box_logo.svg' %}" class="img-fluid rounded-normal light-logo"
+                        alt="logo">
+                    <img src="{% static 'main_media/GraceBlackLogo.svg' %}"
+                        class="img-fluid rounded-normal d-none sidebar-light-img" alt="logo">
+                    <span></span>
+                </a>
+                <div class="side-menu-bt-sidebar-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="text-light wrapper-menu" width="30" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </div>
+            </div>
+            <div class="data-scrollbar" data-scroll="1">
+                <nav class="iq-sidebar-menu">
+                    <ul id="iq-sidebar-toggle" class="side-menu">
+
+                        <!-- Item Start -->
+                        <li class="sidebar-layout" data-toggle="tooltip" data-placement="right" title="Dashboard">
+                            <a href="{% url 'dashboard' %}" class="svg-icon">
+                                <i class="">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" fill="none" viewBox="0 0 24 24"
+                                        stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                    </svg>
+                                </i>
+                                <span class="ml-2">Dashboard</span>
+                                <p class="mb-0 w-10 badge badge-pill badge-primary">6</p>
+                            </a>
+                        </li>
+                        
+
+                        <!-- Item End -->
+
+                        
+
+                        <!-- Item Start-->
+                        <li class=" sidebar-layout" data-toggle="tooltip" data-placement="right" title="My Profile">
+                            <a href="{% url 'my_profile' %}" class="svg-icon">
+                                <i class="">
+                                    <svg class="svg-icon" id="iq-user-1-1" xmlns="http://www.w3.org/2000/svg"
+                                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </i><span class="ml-2">My Profile</span>
+                            </a>
+                        </li>
+                        <!-- Item End-->
+
+                        <!-- Sidenav Divider Start -->
+                        <li class="px-3 pt-3 pb-2">
+                            <span class="text-uppercase small font-weight-bold">Pings</span>
+                        </li>
+                        <!-- Sidenav Divider End -->
+
+
+                        <!-- Item Start (Events)-->
+                        <li class=" sidebar-layout" data-toggle="tooltip" data-placement="right" title="Events">
+                            <a href="{% url 'event_list' %}" class="svg-icon">
+                                <i class="">
+                                    <svg fill="#8f9fbc" width="18px" height="18px" viewBox="0 0 52.00 52.00" xmlns="http://www.w3.org/2000/svg" stroke="#fff" stroke-width="0.0005200000000000001">
+
+                                        <g id="SVGRepo_bgCarrier" stroke-width="0"/>
+                                        
+                                        <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"/>
+                                        
+                                        <g id="SVGRepo_iconCarrier"> <g> <path d="m49.83 32.45a1.43 1.43 0 0 0 -1.39-1.45h-12a1.43 1.43 0 0 0 -1.44 1.44v1.44a1.43 1.43 0 0 0 1.4 1.44h6.14l-11 11a1.42 1.42 0 0 0 0 2l1 1a1.54 1.54 0 0 0 1.09.45 1.32 1.32 0 0 0 .94-.38l11-11v6a1.43 1.43 0 0 0 1.43 1.44h1.53a1.43 1.43 0 0 0 1.47-1.4z"/> <path d="m3.45 12.48h31.91a1.24 1.24 0 0 0 1.25-1.23v-1.25a3.8 3.8 0 0 0 -3.76-3.69h-3.06v-1.31a2.43 2.43 0 0 0 -4.86 0v1.28h-11.06v-1.28a2.44 2.44 0 0 0 -4.87 0v1.28h-3.12a3.69 3.69 0 0 0 -3.69 3.72v1.28a1.24 1.24 0 0 0 1.25 1.23z"/> <path d="m36.53 25.13v-7.79a1.25 1.25 0 0 0 -1.22-1.26h-31.86a1.24 1.24 0 0 0 -1.26 1.22v18.46a3.69 3.69 0 0 0 3.69 3.69h18.5a16.82 16.82 0 0 1 12.15-14.32zm-11-2.85a1.24 1.24 0 0 1 1.2-1.28h2.43a1.24 1.24 0 0 1 1.26 1.22v2.47a1.24 1.24 0 0 1 -1.17 1.31h-2.52a1.25 1.25 0 0 1 -1.25-1.23zm-12.23 11a1.23 1.23 0 0 1 -1.25 1.23h-2.49a1.24 1.24 0 0 1 -1.25-1.23v-2.46a1.25 1.25 0 0 1 1.23-1.25h2.46a1.25 1.25 0 0 1 1.26 1.22zm0-8.54a1.24 1.24 0 0 1 -1.22 1.26h-2.52a1.25 1.25 0 0 1 -1.25-1.23v-2.49a1.24 1.24 0 0 1 1.2-1.28h2.49a1.24 1.24 0 0 1 1.26 1.22zm8.54 8.54a1.25 1.25 0 0 1 -1.22 1.26h-2.51a1.24 1.24 0 0 1 -1.26-1.22v-2.5a1.24 1.24 0 0 1 1.23-1.25h2.46a1.25 1.25 0 0 1 1.25 1.23zm-1.3-7.28h-2.43a1.25 1.25 0 0 1 -1.26-1.22v-2.5a1.24 1.24 0 0 1 1.2-1.28h2.49a1.24 1.24 0 0 1 1.25 1.23v2.46a1.24 1.24 0 0 1 -1.17 1.31z"/> </g> </g>
+                                        
+                                        </svg>
+                                </i>
+                                <span class="ml-2">Events</span>
+                                <p class="mb-0 w-10 badge badge-pill badge-primary">2</p>
+                            </a>
+                        </li>
+                        <!-- Item End -->
+
+                        <!-- Item Start (Announcements) -->
+                        <li class=" sidebar-layout" data-toggle="tooltip" data-placement="right" title="Announcements">
+                            <a href="{% url 'announcement_list' %}" class="svg-icon">
+                                <i class="">
+                                    <svg fill="#8f9fbc" height="18px" width="18px" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 472.616 472.616" xml:space="preserve">
+
+                                        <g id="SVGRepo_bgCarrier" stroke-width="0"/>
+                                        
+                                        <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"/>
+                                        
+                                        <g id="SVGRepo_iconCarrier"> <g> <g> <path d="M289.966,231.969c0-59.62,10.963-111.865,29.163-149.142c-106.982,61.473-200.795,65.399-247.864,68.235 c-26.466,1.594-50.836,18.818-63.507,45.789c-10.328,21.985-10.267,47.902-0.288,70.044 c12.575,27.909,37.087,46.209,63.794,45.979c4.422-0.038,9.716,0.029,15.604,0.228c-9.535,42.911,15.044,88.307,59.25,107.464 c13.51,5.855,27.754,8.798,41.875,8.798c11.005,0,21.937-1.788,32.38-5.394c24.149-8.327,42.817-25.308,52.563-47.798 c2.269-5.231,3.807-10.71,4.981-16.27c13.534,6.253,27.315,13.293,41.251,21.284C300.946,343.904,289.966,291.633,289.966,231.969 z M254.87,368.344c-7.524,17.356-22.052,30.499-40.919,37.01c-19.177,6.615-40.494,5.596-60.004-2.866 c-36.58-15.848-56.599-53.562-47.13-88.204c37.589,3.05,91.884,12.199,152.715,37.529 C258.702,357.498,257.161,363.056,254.87,368.344z"/> </g> </g> <g> <g> <path d="M391.137,43.253c-32.566,0-60.587,44.358-73.632,108.315c43.489,1.036,78.566,36.668,78.566,80.402 c0,43.733-35.079,79.356-78.567,80.392c13.043,63.959,41.065,108.319,73.633,108.319c45,0,81.479-84.491,81.479-188.714 S436.137,43.253,391.137,43.253z"/> </g> </g> </g>
+                                        
+                                        </svg>
+                                </i>
+                                <span class="ml-2">Announcements</span>
+                                <p class="mb-0 w-10 badge badge-pill badge-primary">1</p>
+                            </a>
+                        </li>
+
+                        <!-- Item End -->
+
+                        <!-- Item Start (Project) -->
+                        <li class=" sidebar-layout" data-toggle="tooltip" data-placement="right" title="Projects">
+                            <a href="{% url 'project_list' %}" class="svg-icon">
+                                <i class="">
+                                    <svg width="18px" height="18px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path fill-rule="evenodd" clip-rule="evenodd" d="M5.4 2h13.2A3.4 3.4 0 0 1 22 5.4v13.2a3.4 3.4 0 0 1-3.4 3.4H5.4A3.4 3.4 0 0 1 2 18.6V5.4A3.4 3.4 0 0 1 5.4 2ZM7 5a1 1 0 0 1 1 1v8a1 1 0 1 1-2 0V6a1 1 0 0 1 1-1Zm5 0a1 1 0 0 1 1 1v6a1 1 0 1 1-2 0V6a1 1 0 0 1 1-1Zm6 1a1 1 0 1 0-2 0v10a1 1 0 1 0 2 0V6Z" fill="#8f9fbc"></path></g></svg>
+                                </i>
+                                <span class="ml-2">Projects</span>
+                                <p class="mb-0 w-10 badge badge-pill badge-primary">3</p>
+                            </a>
+                        </li>
+
+                        <!-- Item End -->
+
+                        <!-- Sidenav Divider Start -->
+                        <li class="px-3 pt-3 pb-2">
+                            <span class="text-uppercase small font-weight-bold">Finance Department</span>
+                        </li>
+                        <!-- Sidenav Divider End -->
+
+                        <!-- Item Start-->
+                        <li class=" sidebar-layout" data-toggle="tooltip" data-placement="right" title="Payslips">
+                            <a href="../app/user-profile.html" class="svg-icon">
+                                <i class="">
+                                    <svg fill="#8f9fbc" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 236 256" enable-background="new 0 0 236 256" xml:space="preserve" stroke="#8f9fbc"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M117.5,2c-12.47,0-22.63,10.16-22.63,22.63c0,12.46,10.06,22.62,22.63,22.62c12.37,0,22.62-10.16,22.62-22.62 C140.12,12.16,129.97,2,117.5,2z M146,52H89c-15.59,0-28,13.41-28,29v32h20V86c0-1.71,1.29-3,3-3s3,1.29,3,3v27h61V86 c0-1.71,1.29-3,3-3s3,1.29,3,3v27h20V81C174,65.51,161.49,52,146,52z M2,118v27h23v109h185V145h24v-27H2z M117.93,235.35 c-25.59,0-46.36-20.77-46.36-46.36c0-25.73,20.63-46.64,46.36-46.64s46.5,20.77,46.5,46.5S143.52,235.35,117.93,235.35z M122.43,184.31c-6.42-2.61-9.41-3.85-9.41-7.06c0-2.34,2.57-4.68,7.3-4.68c4.72,0,8.16,1.47,10.27,2.34l2.61-9.17 c-2.84-1.52-6.69-2.62-12.01-2.62v-7.29h-6.42v7.66c-8.58,1.74-13.26,7.29-13.26,14.35c0,7.66,5.32,11.97,13.85,14.95 c6.15,2.39,8.67,3.72,8.67,6.93c0,3.21-2.61,5.55-7.93,5.55c-4.96,0-9.63-1.75-12.61-3.21l-2.34,9.4c2.7,1.51,8.3,2.98,13.85,2.98 v7.06h6.42v-7.29c9.4-2.11,13.85-7.66,13.85-14.95C135.27,191.97,131.18,187.52,122.43,184.31z"></path> </g></svg>
+                                </i><span class="ml-2">Payslips</span>
+                            </a>
+                        </li>
+                        <!-- Item End-->
+
+                        <!-- Dropdown Item (Budget)-->
+                        <li class="sidebar-layout" data-toggle="tooltip" data-placement="right" title="Budget Requests">
+                            <a href="#app1" class="collapsed svg-icon" data-toggle="collapse" aria-expanded="false">
+                                <i>
+                                    <svg fill="#8f9fbc" height="18px" width="18px" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 425.773 425.773" xml:space="preserve"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M408.932,297.012c-1.575-2.252-3.26-4.359-5.051-6.316c2.25-3.305,3.962-7.022,5.026-11.037 c3.147-11.93-0.009-24.432-8.435-33.441c-5.438-5.82-11.85-10.504-19.17-14.016c-1.107-18.672-16.65-33.521-35.597-33.521 c-18.665,0-34.027,14.418-35.534,32.701c-2.203,0.973-4.314,2.049-6.334,3.219l-21.687-6.572c-0.002,0.008-0.003,0.018-0.005,0.025 l-40.472-12.266c-1.304-3.945-4.198-7.361-8.244-10.25c4.452-4.949,8.21-9.957,11.068-14.098c6.78-9.832,12.42-20.42,16.326-30.631 c1.926-4.309,3.566-8.635,4.894-12.879c5.26-4.408,8.355-10.992,8.355-17.898v-16.918c0-4.854-1.527-9.602-4.336-13.537V75.76 c0-41.777-33.987-75.76-75.759-75.76h-24.56c-41.775,0-75.763,33.982-75.763,75.76v23.818c-2.808,3.934-4.334,8.686-4.334,13.535 v16.918c0,6.9,3.096,13.482,8.354,17.896c1.326,4.238,2.968,8.564,4.893,12.885c3.909,10.213,9.552,20.797,16.327,30.621 c2.859,4.143,6.618,9.152,11.07,14.104c-4.048,2.889-6.941,6.305-8.246,10.25l-54.016,16.371 C29.676,243.088,6.886,407.402,6.886,407.402H6.89c-0.113,0.73-0.192,1.471-0.192,2.236c0,7.916,6.419,14.336,14.339,14.336h313.507 c3.514,1.162,7.265,1.799,11.163,1.799c19.662,0,35.659-15.994,35.659-35.656v-3.006c7.149-3.205,13.469-7.408,18.906-12.574 c12.302-11.684,18.805-26.932,18.805-44.092C419.076,317.892,415.662,306.647,408.932,297.012z M167.162,274.697 c-0.205,1.984-1.604,3.643-3.528,4.178c-0.431,0.119-0.869,0.178-1.303,0.178c-1.499,0-2.943-0.695-3.877-1.932l-13.646-18.1 c-0.636-0.844-0.979-1.871-0.979-2.928l0.018-29.019c0.001-1.699,0.893-3.279,2.352-4.156c1.458-0.879,3.27-0.928,4.773-0.133 c3.974,2.1,7.939,3.512,11.789,4.197c2.318,0.41,4.008,2.426,4.008,4.781v12.105c0.691,0.271,1.32,0.701,1.829,1.266 c0.92,1.021,1.364,2.385,1.225,3.752L167.162,274.697z M218.568,259.022l-13.626,18.088c-0.932,1.234-2.379,1.934-3.881,1.934 c-0.431,0-0.869-0.059-1.299-0.176c-1.922-0.537-3.322-2.197-3.527-4.184l-2.661-25.797c-0.142-1.367,0.305-2.73,1.226-3.752 c0.507-0.564,1.135-0.994,1.825-1.266v-12.105c0-2.355,1.691-4.371,4.01-4.781c3.847-0.686,7.812-2.098,11.784-4.195 c1.507-0.795,3.318-0.744,4.775,0.135c1.458,0.879,2.352,2.457,2.352,4.16l0.002,29.02 C219.548,257.152,219.205,258.178,218.568,259.022z M194.741,201.289h-26.087c-5.764,0-16.893-7.711-28.77-24.936 c-9.375-13.586-15.889-28.625-17.422-40.23l-0.262-2.008l-4.714-3.064c-1.378-0.895-2.209-2.426-2.209-4.07v-7.994 c0-2.68,2.174-4.855,4.855-4.855h1.983v-8.658c0-1.842,1.041-3.523,2.688-4.348c6.686-3.336,19.951-8.936,33.688-8.936 c10.961,0,20.048,3.646,27.012,10.836c8.676,8.965,18.673,13.512,29.722,13.512c6.252,0,12.717-1.475,19.211-4.385 c1.502-0.674,3.243-0.541,4.626,0.354c0.645,0.42,1.174,0.979,1.553,1.625h2.647c2.682,0,4.857,2.176,4.857,4.855v7.994 c0,1.645-0.834,3.176-2.212,4.072l-4.712,3.063l-0.262,2c-1.536,11.611-8.049,26.652-17.425,40.244 C211.635,193.58,200.507,201.289,194.741,201.289z M384.285,357.705c-6.555,6.23-15.328,10.387-26.134,12.393v20.02 c0,6.873-5.564,12.441-12.445,12.441c-6.877,0-12.443-5.568-12.443-12.441v-19.354c-15.767-2.135-27.564-8.967-35.056-20.34 c-2.293-3.482-2.693-7.879-1.064-11.717c1.634-3.836,5.08-6.604,9.181-7.357l9.395-1.748c4.797-0.897,9.684,1.115,12.479,5.123 c3.528,5.08,9.515,7.654,17.777,7.654c12.708,0,12.708-5.057,12.708-6.719c0-2.41-0.898-4.16-2.843-5.516 c-1.974-1.379-5.584-2.611-10.729-3.656c-20.656-4.215-33.974-9.68-39.565-16.254c-5.687-6.66-8.441-14.107-8.441-22.77 c0-9.406,3.105-17.867,9.228-25.164c5.927-7.057,14.998-11.641,26.931-13.637v-14.328c0-6.871,5.566-12.441,12.443-12.441 c6.881,0,12.445,5.57,12.445,12.441v14.596c10.686,2.037,19.03,6.357,25.36,13.133c2.924,3.127,4.041,7.533,2.95,11.674 c-1.099,4.139-4.233,7.424-8.318,8.695l-6.44,2.02c-4.674,1.469-9.781,0.047-13.03-3.617c-3.239-3.654-8.056-5.51-14.298-5.51 c-5.029,0-11.032,1.199-11.032,6.906c0,1.615,0.619,3.074,1.786,4.217c1.232,1.191,4.814,2.461,10.647,3.766 c13.455,2.941,23.289,5.633,29.168,7.975c5.972,2.375,11,6.451,14.959,12.117c3.95,5.654,5.959,12.432,5.959,20.139 C395.862,341.238,391.969,350.406,384.285,357.705z"></path> </g></svg>
+                                </i>
+                                <span class="ml-2">Budget Request</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="svg-icon iq-arrow-right arrow-active"
+                                    width="15" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 5l7 7-7 7" />
+                                </svg>
+                            </a>
+                            <ul id="app1" class="submenu collapse" data-parent="#iq-sidebar-toggle">
+                                
+                                <!-- Dropdown item start-->
+                                <li class=" sidebar-layout">
+                                    <a href="{% url 'finance:my_budget_request_list' %}" class="svg-icon">
+                                        <i class="">
+                                            <svg width="18px" height="18px" viewBox="0 0 48 48" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000" stroke="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <title>pull-requests</title> <desc>Created with Sketch.</desc> <g id="pull-requests" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" stroke-linejoin="round"> <rect width="48" height="48" fill="white" fill-opacity="0.01"></rect> <g id="编组" transform="translate(7.000000, 4.000000)" stroke="#8f9fbc" stroke-width="4"> <circle id="Oval" fill="#ffffff" fill-rule="nonzero" cx="30" cy="36" r="4"> </circle> <circle id="Oval-Copy" fill="#ffffff" fill-rule="nonzero" cx="4" cy="4" r="4"> </circle> <circle id="Oval-Copy-2" fill="#ffffff" fill-rule="nonzero" cx="4" cy="36" r="4"> </circle> <path d="M4,8 L4,32" id="Path-315" stroke-linecap="round"> </path> <path d="M17,6 L26,6 C28.209139,6 30,7.790861 30,10 L30,32" id="Path-317" stroke-linecap="round"> </path> <polyline id="Path-367" stroke-linecap="round" transform="translate(20.000000, 6.000000) rotate(180.000000) translate(-20.000000, -6.000000) " points="17 0 23 6 17 12"> </polyline> </g> </g> </g></svg>
+                                        </i><span class="">My Budget Requests</span>
+                                    </a>
+                                </li>
+                                <!-- Dropdown item end-->
+
+                                <!-- Dropdown item start-->
+                                <li class=" sidebar-layout">
+                                    <a href="{% url 'finance:submit_budget_request' %}" class="svg-icon">
+                                        <i class="">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" fill="none"
+                                                viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                            </svg>
+                                        </i><span class="">Submit Budget Request</span>
+                                    </a>
+                                </li>
+                                <!-- Dropdown item end-->
+
+                                <!-- Dropdown item start-->
+                                <li class=" sidebar-layout">
+                                    <a href="{% url 'finance:budget_request_list' %}" class="svg-icon">
+                                        <i class="">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" fill="none"
+                                                viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                            </svg>
+                                        </i><span class="">Requests</span>
+                                    </a>
+                                </li>
+                                <!-- Dropdown item end-->
+
+                            </ul>
+                        </li>
+                        <!-- Dropdown End-->
+                        <!-- Item Start -->
+                        <li class=" sidebar-layout" data-toggle="tooltip" data-placement="right" title="Expenditure">
+                            <a href="{% url 'finance:expenditure_list' %}" class="svg-icon">
+                                <i class="">
+                                    <svg fill="#8f9fbc" width="18px" height="18px" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M62,20H38a.89.89,0,0,0-.87.88v2.91a.89.89,0,0,0,.87.88H62a.9.9,0,0,0,.87-.88V20.88A.9.9,0,0,0,62,20Z"></path><path d="M43.29,27H38a.89.89,0,0,0-.87.88v1.74a.89.89,0,0,0,.87.88h5.25a.9.9,0,0,0,.88-.88V27.88A.9.9,0,0,0,43.29,27Z"></path><path d="M52.62,27H47.38a.9.9,0,0,0-.88.88v1.74a.9.9,0,0,0,.88.88h5.24a.9.9,0,0,0,.88-.88V27.88A.9.9,0,0,0,52.62,27Z"></path><path d="M62,27H56.71a.9.9,0,0,0-.88.88v1.74a.9.9,0,0,0,.88.88H62a.9.9,0,0,0,.87-.88V27.88A.9.9,0,0,0,62,27Z"></path><path d="M43.29,32.83H38a.89.89,0,0,0-.87.88v1.75a.89.89,0,0,0,.87.87h5.25a.9.9,0,0,0,.88-.87V33.71A.9.9,0,0,0,43.29,32.83Z"></path><path d="M52.62,32.83H47.38a.9.9,0,0,0-.88.88v1.75a.9.9,0,0,0,.88.87h5.24a.9.9,0,0,0,.88-.87V33.71A.9.9,0,0,0,52.62,32.83Z"></path><path d="M62,32.83H56.71a.9.9,0,0,0-.88.88v1.75a.9.9,0,0,0,.88.87H62a.9.9,0,0,0,.87-.87V33.71A.9.9,0,0,0,62,32.83Z"></path><path d="M43.29,38.67H38a.89.89,0,0,0-.87.87v1.75a.89.89,0,0,0,.87.88h5.25a.9.9,0,0,0,.88-.88V39.54A.9.9,0,0,0,43.29,38.67Z"></path><path d="M52.62,38.67H47.38a.9.9,0,0,0-.88.87v1.75a.9.9,0,0,0,.88.88h5.24a.9.9,0,0,0,.88-.88V39.54A.9.9,0,0,0,52.62,38.67Z"></path><path d="M62,38.67H56.71a.9.9,0,0,0-.88.87v1.75a.9.9,0,0,0,.88.88H62a.9.9,0,0,0,.87-.88V39.54A.9.9,0,0,0,62,38.67Z"></path><path d="M43.29,44.5H38a.89.89,0,0,0-.87.88v1.75A.89.89,0,0,0,38,48h5.25a.9.9,0,0,0,.88-.87V45.38A.9.9,0,0,0,43.29,44.5Z"></path><path d="M52.62,44.5H47.38a.9.9,0,0,0-.88.88v1.75a.9.9,0,0,0,.88.87h5.24a.9.9,0,0,0,.88-.87V45.38A.9.9,0,0,0,52.62,44.5Z"></path><path d="M62,44.5H56.71a.9.9,0,0,0-.88.88v1.75a.9.9,0,0,0,.88.87H62a.9.9,0,0,0,.87-.87V45.38A.9.9,0,0,0,62,44.5Z"></path><path d="M75.11,57.45H51.5V52.13a1.5,1.5,0,1,0-3,0v5.32H24.89a1.5,1.5,0,0,0-1.5,1.5v7.86a1.5,1.5,0,0,0,3,0V60.45H48.5v5.16a1.5,1.5,0,0,0,3,0V60.45H73.61v6.36a1.5,1.5,0,0,0,3,0V59A1.5,1.5,0,0,0,75.11,57.45Z"></path><circle cx="24.89" cy="74.71" r="4.89"></circle><circle cx="49.82" cy="74.71" r="4.89"></circle><circle cx="75.11" cy="74.71" r="4.89"></circle></g></svg>
+                                </i><span class="ml-2">Expenditure</span>
+                            </a>
+                        </li>
+                        <!-- Item End-->
+
+
+                        <!-- Item Start -->
+                        <li class=" sidebar-layout" data-toggle="tooltip" data-placement="right" title="Expenditure">
+                            <a href="{% url 'finance:invoice_list' %}" class="svg-icon">
+                                <i>
+                                    <svg fill="#8f9fbc" width="18px" height="18px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M18,2H6A2,2,0,0,0,4,4V22l3-3,2,3,3-3,3,3,2-3,3,3V4A2,2,0,0,0,18,2ZM12,16H8a1,1,0,0,1,0-2h4a1,1,0,0,1,0,2Zm0-4H8a1,1,0,0,1,0-2h4a1,1,0,0,1,0,2Zm4,4H15a1,1,0,0,1,0-2h1a1,1,0,0,1,0,2Zm0-4H15a1,1,0,0,1,0-2h1a1,1,0,0,1,0,2Zm0-5H8A1,1,0,0,1,8,5h8a1,1,0,0,1,0,2Z"></path></g></svg>
+                                </i>
+                                <span class="ml-2">Invoice</span>
+                            </a>
+                        </li>
+                        <!-- Item End-->
+
+                        
+
+                       
+                        <!-- Dropdown Item (Assets)-->
+                        <li class="sidebar-layout" data-toggle="tooltip" data-placement="right" title="Asset Management">
+                            <a href="#app3" class="collapsed svg-icon" data-toggle="collapse" aria-expanded="false">
+                                <i>
+                                    <svg fill="#8f9fbc" width="18px" height="18px" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" stroke="#8f9fbc"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><rect x="19" y="18.92" width="60" height="16" rx="4" ry="4"></rect><rect x="19" y="40.92" width="27" height="16" rx="4" ry="4"></rect><rect x="19" y="62.92" width="27" height="16" rx="4" ry="4"></rect><rect x="52" y="40.92" width="27" height="16" rx="4" ry="4"></rect><rect x="52" y="62.92" width="27" height="16" rx="4" ry="4"></rect></g></svg>
+                                </i>
+                                <span class="ml-2">Asset Management</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="svg-icon iq-arrow-right arrow-active"
+                                    width="15" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 5l7 7-7 7" />
+                                </svg>
+                            </a>
+                            <ul id="app3" class="submenu collapse" data-parent="#iq-sidebar-toggle">
+                                
+                                <!-- Dropdown item start-->
+                                <li class=" sidebar-layout">
+                                    <a href="{% url 'finance:asset_list' %}" class="svg-icon">
+                                        <i class="">
+                                            <svg fill="#8f9fbc" width="18px" height="18px" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><rect x="19" y="18.92" width="60" height="16" rx="4" ry="4"></rect><rect x="19" y="40.92" width="27" height="16" rx="4" ry="4"></rect><rect x="19" y="62.92" width="27" height="16" rx="4" ry="4"></rect><path d="M64.95,72.49a1.45,1.45,0,0,0,2.1,0l11.5-11.4a1.45,1.45,0,0,0,0-2.1L67,47.49a1.45,1.45,0,0,0-2.1,0l-2.1,2.1a1.45,1.45,0,0,0,0,2.1l3.6,3.6a1,1,0,0,1-.7,1.7H53.6a1.63,1.63,0,0,0-1.6,1.5v3A1.71,1.71,0,0,0,53.6,63H65.75a1,1,0,0,1,.7,1.7l-3.6,3.6a1.45,1.45,0,0,0,0,2.1Z"></path></g></svg>
+                                        </i><span class="">My Assets</span>
+                                    </a>
+                                </li>
+                                <!-- Dropdown item end-->
+
+                                <!-- Dropdown item start-->
+                                <li class=" sidebar-layout">
+                                    <a href="{% url 'finance:company_asset_list' %}" class="svg-icon">
+                                        <i class="">
+                                            <svg fill="#8f9fbc" width="18px" height="18px" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><rect x="19" y="18.92" width="60" height="16" rx="4" ry="4"></rect><rect x="19" y="40.92" width="27" height="16" rx="4" ry="4"></rect><rect x="19" y="62.92" width="27" height="16" rx="4" ry="4"></rect><path d="M64.95,72.49a1.45,1.45,0,0,0,2.1,0l11.5-11.4a1.45,1.45,0,0,0,0-2.1L67,47.49a1.45,1.45,0,0,0-2.1,0l-2.1,2.1a1.45,1.45,0,0,0,0,2.1l3.6,3.6a1,1,0,0,1-.7,1.7H53.6a1.63,1.63,0,0,0-1.6,1.5v3A1.71,1.71,0,0,0,53.6,63H65.75a1,1,0,0,1,.7,1.7l-3.6,3.6a1.45,1.45,0,0,0,0,2.1Z"></path></g></svg>
+                                        </i><span class="">Company Assets</span>
+                                    </a>
+                                </li>
+                                <!-- Dropdown item end-->
+
+
+                            </ul>
+                        </li>
+                        <!-- Dropdown End-->
+
+
+                        <!-- Item Start -->
+                        <li class=" sidebar-layout" data-toggle="tooltip" data-placement="right" title="Expenditure">
+                            <a href="{% url 'finance:recurring_expense_list' %}" class="svg-icon">
+                                <i>
+                                    <svg fill="#8f9fbc" width="18px" height="18px" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M39.3,32.1H60.7a2,2,0,0,0,2-2v-4a6,6,0,0,0-5.8-6H43.3a5.91,5.91,0,0,0-5.8,6v4A1.74,1.74,0,0,0,39.3,32.1Z"></path><path d="M71.4,25.2h-2a.94.94,0,0,0-1,1v4a7.9,7.9,0,0,1-7.8,7.9H39.3a7.9,7.9,0,0,1-7.8-7.9v-4a.94.94,0,0,0-1-1h-2a5.91,5.91,0,0,0-5.8,6V73.8a6,6,0,0,0,5.8,6H71.4a5.91,5.91,0,0,0,5.8-6V31.2A5.79,5.79,0,0,0,71.4,25.2ZM53,59.4h0v1.1a5.45,5.45,0,0,1-3.1,1,5.6,5.6,0,0,1,0-11.2,5.59,5.59,0,0,1,5.6,5.2A4.48,4.48,0,0,0,53,59.4ZM68,73.5a1.52,1.52,0,0,1-1.5,1.4h-9a1.43,1.43,0,0,1-1.4-1.4V72.1a1.43,1.43,0,0,1,1.4-1.4h9.1A1.43,1.43,0,0,1,68,72.1Zm0-6.3a1.52,1.52,0,0,1-1.5,1.4h-9a1.43,1.43,0,0,1-1.4-1.4V65.8a1.43,1.43,0,0,1,1.4-1.4h9.1A1.43,1.43,0,0,1,68,65.8Zm0-6.4a1.52,1.52,0,0,1-1.5,1.4h-9a1.43,1.43,0,0,1-1.4-1.4V59.4A1.43,1.43,0,0,1,57.5,58h9.1A1.43,1.43,0,0,1,68,59.4Zm.1-5.7a3.4,3.4,0,0,0-1.4-.2H63.8v-3a4,4,0,0,1-4-4H40a4,4,0,0,1-4,4v8.4a4,4,0,0,1,4,4H53.2a3.4,3.4,0,0,0-.2,1.4v1.4a6.64,6.64,0,0,0,.3,1.5h-18a3.37,3.37,0,0,1-3.4-3.4V47.1a3.37,3.37,0,0,1,3.4-3.4H64.7a3.37,3.37,0,0,1,3.4,3.4Z"></path></g></svg>
+                                </i>
+                                <span class="ml-2">Expenses</span>
+                            </a>
+                        </li>
+                        <!-- Item End-->
+
+                        
+                        <!-- Sidenav Divider Start -->
+                        <li class="px-3 pt-3 pb-2">
+                            <span class="text-uppercase small font-weight-bold">Human Resource Department</span>
+                        </li>
+                        <!-- Sidenav Divider End -->
+
+                        <!-- Dropdown Item (Profiles)-->
+                        <li class="sidebar-layout" data-toggle="tooltip" data-placement="right" title="Profiles">
+                            <a href="#app6" class="collapsed svg-icon" data-toggle="collapse" aria-expanded="false">
+                                <i>
+                                    <svg width="18px" height="18px" viewBox="0 0 512 512" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000" stroke="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <title>user-management</title> <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"> <g id="Mask" fill="#8f9fbc" transform="translate(64.000000, 64.000000)"> <path d="M298.666667,170.666667 C345.813333,170.666667 384,208.853333 384,256 L384,256 L384,384 L1.42108547e-14,384 L1.42108547e-14,298.666667 C1.42108547e-14,251.52 38.1866667,213.333333 85.3333333,213.333333 L85.3333333,213.333333 L160.853333,213.333333 C175.573333,187.733333 203.093333,170.666667 234.666667,170.666667 L234.666667,170.666667 Z M298.666667,213.333333 L234.666667,213.333333 C211.2,213.333333 192,232.533333 192,256 L192,256 L192,341.333333 L341.333333,341.333333 L341.333333,256 C341.333333,232.533333 322.133333,213.333333 298.666667,213.333333 L298.666667,213.333333 Z M149.333333,256 L85.3333333,256 C61.8666667,256 42.6666667,275.2 42.6666667,298.666667 L42.6666667,298.666667 L42.6666667,341.333333 L149.333333,341.333333 L149.333333,256 Z M106.666667,64 C141.952,64 170.666667,92.7146667 170.666667,128 C170.666667,163.285333 141.952,192 106.666667,192 C71.3813333,192 42.6666667,163.285333 42.6666667,128 C42.6666667,92.7146667 71.3813333,64 106.666667,64 Z M106.666667,104 C93.44,104 82.6666667,114.752 82.6666667,128 C82.6666667,141.248 93.44,152 106.666667,152 C119.893333,152 130.666667,141.248 130.666667,128 C130.666667,114.752 119.893333,104 106.666667,104 Z M266.666667,1.42108547e-14 C307.84,1.42108547e-14 341.333333,33.4933333 341.333333,74.6666667 C341.333333,115.84 307.84,149.333333 266.666667,149.333333 C225.493333,149.333333 192,115.84 192,74.6666667 C192,33.4933333 225.493333,1.42108547e-14 266.666667,1.42108547e-14 Z M266.666667,42.6666667 C249.024,42.6666667 234.666667,57.024 234.666667,74.6666667 C234.666667,92.3093333 249.024,106.666667 266.666667,106.666667 C284.309333,106.666667 298.666667,92.3093333 298.666667,74.6666667 C298.666667,57.024 284.309333,42.6666667 266.666667,42.6666667 Z"> </path> </g> </g> </g></svg>
+                                </i>
+                                <span class="ml-2">Profiles</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="svg-icon iq-arrow-right arrow-active"
+                                    width="15" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 5l7 7-7 7" />
+                                </svg>
+                            </a>
+                            <ul id="app6" class="submenu collapse" data-parent="#iq-sidebar-toggle">
+                                
+                                <!-- Dropdown item start-->
+                                <li class=" sidebar-layout">
+                                    <a href="{% url 'employee_profile_list' %}" class="svg-icon">
+                                        <i class="">
+                                            <svg fill="#8f9fbc" width="18px" height="18px" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" stroke="#8f9fbc"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><circle cx="63.3" cy="47.6" r="10.7"></circle><path d="M63.6,60.3h-.8A16.43,16.43,0,0,0,46.7,74.2c0,.7.2,2.4,2.7,2.4H76.6c2.5,0,2.7-1.5,2.7-2.4A15.65,15.65,0,0,0,63.6,60.3Z"></path><path d="M48.6,58.3c.4-.4.1-.7.1-.7h0a17.94,17.94,0,0,1-3.1-10,17.18,17.18,0,0,1,3.2-10.2.1.1,0,0,1,.1-.1,1.76,1.76,0,0,0,.4-1.1V25.4a2.15,2.15,0,0,0-2-2H22.5a2.18,2.18,0,0,0-2,2.1V71.7H40a24.12,24.12,0,0,1,8.6-13.4ZM31.6,66a2.18,2.18,0,0,1-2.1,2.1H27.4A2.18,2.18,0,0,1,25.3,66V63.9a2.18,2.18,0,0,1,2.1-2.1h2.1a2.18,2.18,0,0,1,2.1,2.1Zm0-10.5a2.18,2.18,0,0,1-2.1,2.1H27.4a2.18,2.18,0,0,1-2.1-2.1V53.4a2.18,2.18,0,0,1,2.1-2.1h2.1a2.18,2.18,0,0,1,2.1,2.1Zm0-10.5a2.18,2.18,0,0,1-2.1,2.1H27.4A2.18,2.18,0,0,1,25.3,45V42.9a2.18,2.18,0,0,1,2.1-2.1h2.1a2.18,2.18,0,0,1,2.1,2.1Zm0-10.5a2.18,2.18,0,0,1-2.1,2.1H27.4a2.18,2.18,0,0,1-2.1-2.1V32.4a2.18,2.18,0,0,1,2.1-2.1h2.1a2.18,2.18,0,0,1,2.1,2.1Zm11.9,21a2.18,2.18,0,0,1-2.1,2.1H39.3a2.18,2.18,0,0,1-2.1-2.1V53.4a2.18,2.18,0,0,1,2.1-2.1h2.1a2.18,2.18,0,0,1,2.1,2.1Zm0-10.5a2.18,2.18,0,0,1-2.1,2.1H39.3A2.18,2.18,0,0,1,37.2,45V42.9a2.18,2.18,0,0,1,2.1-2.1h2.1a2.18,2.18,0,0,1,2.1,2.1Zm0-10.5a2.18,2.18,0,0,1-2.1,2.1H39.3a2.18,2.18,0,0,1-2.1-2.1V32.4a2.18,2.18,0,0,1,2.1-2.1h2.1a2.18,2.18,0,0,1,2.1,2.1Z"></path></g></svg>
+                                        </i><span class="">Employee Profiles</span>
+                                    </a>
+                                </li>
+                                <!-- Dropdown item end-->
+
+                                <!-- Dropdown item start-->
+                                <li class=" sidebar-layout">
+                                    <a href="{% url 'create_employee_profile' %}" class="svg-icon">
+                                        <i class="">
+                                            <svg width="18px" height="18px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g id="Edit / Add_Plus_Square"> <path id="Vector" d="M8 12H12M12 12H16M12 12V16M12 12V8M4 16.8002V7.2002C4 6.08009 4 5.51962 4.21799 5.0918C4.40973 4.71547 4.71547 4.40973 5.0918 4.21799C5.51962 4 6.08009 4 7.2002 4H16.8002C17.9203 4 18.4801 4 18.9079 4.21799C19.2842 4.40973 19.5905 4.71547 19.7822 5.0918C20.0002 5.51962 20.0002 6.07967 20.0002 7.19978V16.7998C20.0002 17.9199 20.0002 18.48 19.7822 18.9078C19.5905 19.2841 19.2842 19.5905 18.9079 19.7822C18.4805 20 17.9215 20 16.8036 20H7.19691C6.07899 20 5.5192 20 5.0918 19.7822C4.71547 19.5905 4.40973 19.2842 4.21799 18.9079C4 18.4801 4 17.9203 4 16.8002Z" stroke="#8f9fbc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> </g> </g></svg>
+                                        </i><span class="">Add Profile</span>
+                                    </a>
+                                </li>
+                                <!-- Dropdown item end-->
+
+                            </ul>
+                        </li>
+                        <!-- Dropdown End-->
+
+                        <!-- Item Start-->
+                        <li class=" sidebar-layout" data-toggle="tooltip" data-placement="right" title="Company Documents">
+                            <a href="{% url 'folder_list' %}" class="svg-icon">
+                                <i class="">
+                                    <svg fill="#8f9fbc" height="18px" width="18px" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512" xml:space="preserve"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <g> <polygon points="332.108,12.159 332.108,41.513 332.108,70.868 332.108,138.376 399.617,138.376 428.972,138.376 458.329,138.376 "></polygon> </g> </g> <g> <g> <path d="M449.73,179.889h-20.757H311.351c-11.463,0-20.757-9.294-20.757-20.757V41.513V20.757V0H131.459 c-11.463,0-20.757,9.294-20.757,20.757v401.297c0,11.463,9.294,20.757,20.757,20.757h318.27c11.463,0,20.757-9.293,20.757-20.757 V179.889H449.73z M366.703,359.784H214.487c-11.463,0-20.757-9.294-20.757-20.757s9.294-20.757,20.757-20.757h152.216 c11.463,0,20.757,9.294,20.757,20.757S378.166,359.784,366.703,359.784z M366.703,276.757H214.487 c-11.463,0-20.757-9.294-20.757-20.757s9.294-20.757,20.757-20.757h152.216c11.463,0,20.757,9.294,20.757,20.757 S378.166,276.757,366.703,276.757z"></path> </g> </g> <g> <g> <path d="M380.541,470.487H83.027V89.946c0-11.463-9.294-20.757-20.757-20.757s-20.757,9.293-20.757,20.757v401.297 c0,11.463,9.294,20.757,20.757,20.757h318.27c11.463,0,20.757-9.293,20.757-20.757 C401.297,479.78,392.004,470.487,380.541,470.487z"></path> </g> </g> </g></svg>
+                                </i><span class="ml-2">Company Documents</span>
+                            </a>
+                        </li>
+                        <!-- Item End-->
+
+                        <!-- Item Start-->
+                        <li class=" sidebar-layout" data-toggle="tooltip" data-placement="right" title="Company Documents">
+                            <a href="{% url 'all_employee_warnings' %}" class="svg-icon">
+                                <i class="">
+                                    <svg fill="#8f9fbc" height="18px" width="18px" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512" xml:space="preserve"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <g> <polygon points="332.108,12.159 332.108,41.513 332.108,70.868 332.108,138.376 399.617,138.376 428.972,138.376 458.329,138.376 "></polygon> </g> </g> <g> <g> <path d="M449.73,179.889h-20.757H311.351c-11.463,0-20.757-9.294-20.757-20.757V41.513V20.757V0H131.459 c-11.463,0-20.757,9.294-20.757,20.757v401.297c0,11.463,9.294,20.757,20.757,20.757h318.27c11.463,0,20.757-9.293,20.757-20.757 V179.889H449.73z M366.703,359.784H214.487c-11.463,0-20.757-9.294-20.757-20.757s9.294-20.757,20.757-20.757h152.216 c11.463,0,20.757,9.294,20.757,20.757S378.166,359.784,366.703,359.784z M366.703,276.757H214.487 c-11.463,0-20.757-9.294-20.757-20.757s9.294-20.757,20.757-20.757h152.216c11.463,0,20.757,9.294,20.757,20.757 S378.166,276.757,366.703,276.757z"></path> </g> </g> <g> <g> <path d="M380.541,470.487H83.027V89.946c0-11.463-9.294-20.757-20.757-20.757s-20.757,9.293-20.757,20.757v401.297 c0,11.463,9.294,20.757,20.757,20.757h318.27c11.463,0,20.757-9.293,20.757-20.757 C401.297,479.78,392.004,470.487,380.541,470.487z"></path> </g> </g> </g></svg>
+                                </i><span class="ml-2">Employee Warnings</span>
+                            </a>
+                        </li>
+                        <!-- Item End-->
+
+                        
+
+                         <!-- Item Start-->
+                        <li class=" sidebar-layout" data-toggle="tooltip" data-placement="right" title="Leave Request">
+                            <a href="{% url 'leave_request_list' %}" class="svg-icon">
+                                <i class="">
+                                    <svg width="18px" height="18px" viewBox="0 0 1024 1024" class="icon" version="1.1" xmlns="http://www.w3.org/2000/svg" fill="#cedaf2" stroke="#cedaf2"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M106.666667 810.666667V298.666667h810.666666v512c0 46.933333-38.4 85.333333-85.333333 85.333333H192c-46.933333 0-85.333333-38.4-85.333333-85.333333z" fill="#8f9fbc"></path><path d="M917.333333 213.333333v128H106.666667v-128c0-46.933333 38.4-85.333333 85.333333-85.333333h640c46.933333 0 85.333333 38.4 85.333333 85.333333z" fill="<svg fill=" #8f9fbc"="" height="64px" width="64px" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512" xml:space="preserve"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <g> <polygon points="332.108,12.159 332.108,41.513 332.108,70.868 332.108,138.376 399.617,138.376 428.972,138.376 458.329,138.376 "></polygon> </g> </g> <g> <g> <path d="M449.73,179.889h-20.757H311.351c-11.463,0-20.757-9.294-20.757-20.757V41.513V20.757V0H131.459 c-11.463,0-20.757,9.294-20.757,20.757v401.297c0,11.463,9.294,20.757,20.757,20.757h318.27c11.463,0,20.757-9.293,20.757-20.757 V179.889H449.73z M366.703,359.784H214.487c-11.463,0-20.757-9.294-20.757-20.757s9.294-20.757,20.757-20.757h152.216 c11.463,0,20.757,9.294,20.757,20.757S378.166,359.784,366.703,359.784z M366.703,276.757H214.487 c-11.463,0-20.757-9.294-20.757-20.757s9.294-20.757,20.757-20.757h152.216c11.463,0,20.757,9.294,20.757,20.757 S378.166,276.757,366.703,276.757z"></path> </g> </g> <g> <g> <path d="M380.541,470.487H83.027V89.946c0-11.463-9.294-20.757-20.757-20.757s-20.757,9.293-20.757,20.757v401.297 c0,11.463,9.294,20.757,20.757,20.757h318.27c11.463,0,20.757-9.293,20.757-20.757 C401.297,479.78,392.004,470.487,380.541,470.487z"></path> </g> </g> </g>"&gt;</path><path d="M704 213.333333m-64 0a64 64 0 1 0 128 0 64 64 0 1 0-128 0Z" fill="#8f9fbc"></path><path d="M320 213.333333m-64 0a64 64 0 1 0 128 0 64 64 0 1 0-128 0Z" fill="#8f9fbc"></path><path d="M704 64c-23.466667 0-42.666667 19.2-42.666667 42.666667v106.666666c0 23.466667 19.2 42.666667 42.666667 42.666667s42.666667-19.2 42.666667-42.666667V106.666667c0-23.466667-19.2-42.666667-42.666667-42.666667zM320 64c-23.466667 0-42.666667 19.2-42.666667 42.666667v106.666666c0 23.466667 19.2 42.666667 42.666667 42.666667s42.666667-19.2 42.666667-42.666667V106.666667c0-23.466667-19.2-42.666667-42.666667-42.666667z" fill="#BDBDBD"></path><path d="M473.6 753.066667c0-4.266667 0-10.666667 2.133333-14.933334 2.133333-4.266667 4.266667-8.533333 8.533334-10.666666s6.4-6.4 10.666666-6.4c4.266667-2.133333 10.666667-2.133333 14.933334-2.133334s10.666667 0 14.933333 2.133334l12.8 6.4c4.266667 2.133333 6.4 6.4 8.533333 10.666666 2.133333 4.266667 2.133333 8.533333 2.133334 14.933334 0 4.266667 0 10.666667-2.133334 14.933333-2.133333 4.266667-4.266667 8.533333-8.533333 10.666667-4.266667 2.133333-6.4 6.4-12.8 6.4s-6.4 4.266667-12.8 4.266666-10.666667 0-14.933333-2.133333c-4.266667-2.133333-8.533333-4.266667-10.666667-6.4-4.266667-2.133333-6.4-6.4-8.533333-10.666667-2.133333-6.4-4.266667-10.666667-4.266667-17.066666z m66.133333-91.733334h-55.466666l-8.533334-234.666666h70.4l-6.4 234.666666z" fill="<svg fill=" #8f9fbc"="" height="64px" width="64px" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512" xml:space="preserve"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <g> <polygon points="332.108,12.159 332.108,41.513 332.108,70.868 332.108,138.376 399.617,138.376 428.972,138.376 458.329,138.376 "></polygon> </g> </g> <g> <g> <path d="M449.73,179.889h-20.757H311.351c-11.463,0-20.757-9.294-20.757-20.757V41.513V20.757V0H131.459 c-11.463,0-20.757,9.294-20.757,20.757v401.297c0,11.463,9.294,20.757,20.757,20.757h318.27c11.463,0,20.757-9.293,20.757-20.757 V179.889H449.73z M366.703,359.784H214.487c-11.463,0-20.757-9.294-20.757-20.757s9.294-20.757,20.757-20.757h152.216 c11.463,0,20.757,9.294,20.757,20.757S378.166,359.784,366.703,359.784z M366.703,276.757H214.487 c-11.463,0-20.757-9.294-20.757-20.757s9.294-20.757,20.757-20.757h152.216c11.463,0,20.757,9.294,20.757,20.757 S378.166,276.757,366.703,276.757z"></path> </g> </g> <g> <g> <path d="M380.541,470.487H83.027V89.946c0-11.463-9.294-20.757-20.757-20.757s-20.757,9.293-20.757,20.757v401.297 c0,11.463,9.294,20.757,20.757,20.757h318.27c11.463,0,20.757-9.293,20.757-20.757 C401.297,479.78,392.004,470.487,380.541,470.487z"></path> </g> </g> </g>"&gt;</path></g></svg>
+                                </i><span class="ml-2">Leave Request</span>
+                            </a>
+                        </li>
+                        <!-- Item End-->
+
+                        <!-- Dropdown Item (Accounts)-->
+                        <li class="sidebar-layout" data-toggle="tooltip" data-placement="right" title="Accounts">
+                            <a href="#app7" class="collapsed svg-icon" data-toggle="collapse" aria-expanded="false">
+                                <i>
+                                    <svg fill="#8f9fbc" width="18px" height="18px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" stroke="#8f9fbc" stroke-width="0.36"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M7.86872332,11.2987983 L3.81348725,13.3862352 C3.31395818,13.6433683 3,14.15809 3,14.7199144 L3,15.5 C3,16.3284353 3.67158104,17 4.50007042,17 C4.77621279,17 5.00007042,17.2238576 5.00007042,17.5 C5.00007042,17.7761424 4.77621279,18 4.50007042,18 C3.11930174,18 2,16.8807255 2,15.5 L2,14.7199144 C2,13.7835403 2.52326364,12.9256709 3.35581209,12.4971157 L6.71355663,10.7687133 C5.64186533,9.83428889 5,8.47230593 5,7 C5,4.23857625 7.23857625,2 10,2 C11.6765944,2 13.2132159,2.83194719 14.1379524,4.1925488 C14.2931758,4.42093513 14.2338655,4.73191224 14.0054791,4.88713561 C13.7770928,5.04235899 13.4661157,4.9830487 13.3108923,4.75466237 C12.5703998,3.66514623 11.3418627,3 10,3 C7.790861,3 6,4.790861 6,7 C6,8.41171278 6.73680464,9.69567406 7.92026949,10.4175913 C8.15601291,10.5613955 8.23054436,10.8690796 8.08674015,11.104823 C8.0329088,11.1930707 7.95611316,11.2587279 7.86872332,11.2987983 L7.86872332,11.2987983 Z M11.9612658,15.5668358 L7.87929558,17.4222768 C7.34380416,17.665682 7,18.1996113 7,18.7878265 L7,19.5 C7,20.3284271 7.67157288,21 8.5,21 L19.5,21 C20.3284271,21 21,20.3284271 21,19.5 L21,18.7878265 C21,18.1996113 20.6561958,17.665682 20.1207044,17.4222768 L16.0387342,15.5668358 C15.4161054,15.8452135 14.7261289,16 14,16 C13.2738711,16 12.5838946,15.8452135 11.9612658,15.5668358 L11.9612658,15.5668358 Z M10.9221582,14.9406987 C9.75209123,14.0255364 9,12.6005984 9,11 C9,8.23857625 11.2385763,6 14,6 C16.7614237,6 19,8.23857625 19,11 C19,12.6005984 18.2479088,14.0255364 17.0778418,14.9406987 L20.5345074,16.5119103 C21.4269931,16.9175857 22,17.8074678 22,18.7878265 L22,19.5 C22,20.8807119 20.8807119,22 19.5,22 L8.5,22 C7.11928813,22 6,20.8807119 6,19.5 L6,18.7878265 C6,17.8074678 6.57300693,16.9175857 7.46549264,16.5119103 L10.9221582,14.9406987 L10.9221582,14.9406987 Z M14,15 C16.209139,15 18,13.209139 18,11 C18,8.790861 16.209139,7 14,7 C11.790861,7 10,8.790861 10,11 C10,13.209139 11.790861,15 14,15 Z"></path> </g></svg>
+                                </i>
+                                <span class="ml-2">Accounts</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="svg-icon iq-arrow-right arrow-active"
+                                    width="15" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 5l7 7-7 7" />
+                                </svg>
+                            </a>
+                            <ul id="app7" class="submenu collapse" data-parent="#iq-sidebar-toggle">
+                                
+                                <!-- Dropdown item start-->
+                                <li class=" sidebar-layout">
+                                    <a href="../backend/auth-login.html" class="svg-icon">
+                                        <i class="">
+                                            <svg width="18px" height="18
+                                            px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#8f9fbc"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M11 15H8C6.13623 15 5.20435 15 4.46927 15.3045C3.48915 15.7105 2.71046 16.4892 2.30448 17.4693C2 18.2044 2 19.1362 2 21M15.5 3.29076C16.9659 3.88415 18 5.32131 18 7M11.9999 21.5L14.025 21.095C14.2015 21.0597 14.2898 21.042 14.3721 21.0097C14.4452 20.9811 14.5147 20.9439 14.579 20.899C14.6516 20.8484 14.7152 20.7848 14.8426 20.6574L21.5 14C22.0524 13.4477 22.0523 12.5523 21.5 12C20.9477 11.4477 20.0523 11.4477 19.5 12L12.8425 18.6575C12.7152 18.7848 12.6516 18.8484 12.601 18.921C12.5561 18.9853 12.5189 19.0548 12.4902 19.1278C12.458 19.2102 12.4403 19.2984 12.405 19.475L11.9999 21.5ZM13.5 7C13.5 9.20914 11.7091 11 9.5 11C7.29086 11 5.5 9.20914 5.5 7C5.5 4.79086 7.29086 3 9.5 3C11.7091 3 13.5 4.79086 13.5 7Z" stroke="#8f9fbc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>
+                                        </i><span class="">user Management</span>
+                                    </a>
+                                </li>
+                                <!-- Dropdown item end-->
+
+                                <!-- Dropdown item start-->
+                                <li class=" sidebar-layout">
+                                    <a href="../backend/auth-sign-up.html" class="svg-icon">
+                                        <i class="">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" fill="none"
+                                                viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                            </svg>
+                                        </i><span class="">Register User</span>
+                                    </a>
+                                </li>
+                                <!-- Dropdown item end-->
+
+                                <!-- Dropdown item start-->
+                                <li class=" sidebar-layout">
+                                    <a href="../backend/auth-sign-up.html" class="svg-icon">
+                                        <i class="">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" fill="none"
+                                                viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                            </svg>
+                                        </i><span class="">User Roles</span>
+                                    </a>
+                                </li>
+                                <!-- Dropdown item end-->
+
+                                
+
+                            </ul>
+                        </li>
+                        <!-- Dropdown End-->
+
+
+                        <!-- Sidenav Divider Start -->
+                        <li class="px-3 pt-3 pb-2">
+                            <span class="text-uppercase small font-weight-bold">Common Tools</span>
+                        </li>
+                         <!-- Item Start-->
+                        <li class=" sidebar-layout" data-toggle="tooltip" data-placement="right" title="Database">
+                            <a href="" class="svg-icon">
+                                <i class="">
+                                    <svg viewBox="0 0 600 600" version="1.1" id="svg9724" sodipodi:docname="database.svg" inkscape:version="1.2.2 (1:1.2.2+202212051550+b0a8486541)" width="18px" height="18px" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg" fill="#000000" stroke="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <defs id="defs9728"></defs> <sodipodi:namedview id="namedview9726" pagecolor="#ffffff" bordercolor="#ffffff" borderopacity="1.0" inkscape:showpageshadow="2" inkscape:pageopacity="0.0" inkscape:pagecheckerboard="0" inkscape:deskcolor="#ffffff" showgrid="true" inkscape:zoom="0.42059316" inkscape:cx="148.59966" inkscape:cy="296.01052" inkscape:window-width="1920" inkscape:window-height="1009" inkscape:window-x="0" inkscape:window-y="1080" inkscape:window-maximized="1" inkscape:current-layer="svg9724" showguides="true"> <inkscape:grid type="xygrid" id="grid9972" originx="0" originy="0"></inkscape:grid> <sodipodi:guide position="300,-90" orientation="1,0" id="guide385" inkscape:locked="false"></sodipodi:guide> <sodipodi:guide position="140,100" orientation="0,-1" id="guide1388" inkscape:locked="false"></sodipodi:guide> <sodipodi:guide position="140,100" orientation="0,-1" id="guide2256" inkscape:locked="false"></sodipodi:guide> <sodipodi:guide position="0,475" orientation="0,-1" id="guide1920" inkscape:locked="false"></sodipodi:guide> </sodipodi:namedview> <path id="path3428" style="color:#ffffff;fill:#8f9fbc;stroke-linejoin:round;-inkscape-stroke:none;paint-order:stroke fill markers" d="M 300 0 C 221.30245 0 150.09841 8.0113158 97.068359 21.535156 C 70.553346 28.297076 48.605538 36.277916 31.677734 46.484375 C 16.579982 55.587421 3.2445893 67.928721 0.53125 85 L 0 85 L 0 90 C 0 95.160045 3.6392602 102.94345 17.03125 112.83789 C 30.423241 122.73233 52.11942 133.00486 79.691406 141.62109 C 134.83535 158.85361 213.32376 170 300 170 C 386.67624 170 465.16467 158.85361 520.30859 141.62109 C 547.8806 133.00486 569.57675 122.73233 582.96875 112.83789 C 596.36075 102.94345 600 95.160045 600 90 L 599.87305 90 C 599.19452 70.318664 584.84711 56.447884 568.32227 46.484375 C 551.39442 36.277916 529.44664 28.297076 502.93164 21.535156 C 449.90159 8.0113158 378.69755 0 300 0 z M 0 149.67969 L 0 234.10742 C 0.70499641 239.21983 4.6599347 246.30446 16.722656 255.2168 C 30.11466 265.11125 51.810798 275.38376 79.382812 284 C 134.52681 301.23251 213.01506 312.37891 299.69141 312.37891 C 386.36774 312.37891 464.85602 301.23251 520 284 C 547.57201 275.38376 569.26815 265.11125 582.66016 255.2168 C 596.05215 245.32235 599.69141 237.53895 599.69141 232.37891 L 600 232.37891 L 600 149.67969 C 581.93283 161.57337 559.1282 171.3983 532.24023 179.80078 C 471.56758 198.761 390.05399 210 300 210 C 209.94601 210 128.43244 198.761 67.759766 179.80078 C 40.871811 171.3983 18.067172 161.57337 0 149.67969 z M 600 291.79688 C 590.25148 298.2521 579.18165 304.12941 566.75 309.46875 C 556.06951 314.05598 544.44003 318.27081 531.93164 322.17969 C 471.2589 341.13992 389.74549 352.37891 299.69141 352.37891 C 209.63733 352.37891 128.12391 341.13993 67.451172 322.17969 C 40.720883 313.82647 18.016718 304.0712 0 292.27148 L 0 380 C 0 385.16005 3.6392334 392.94343 17.03125 402.83789 C 30.423267 412.73235 52.119364 423.00484 79.691406 431.62109 C 134.83545 448.85363 213.32358 460 300 460 C 386.67642 460 465.16455 448.85363 520.30859 431.62109 C 547.88068 423.00484 569.57666 412.73235 582.96875 402.83789 C 596.36074 392.94343 600 385.16005 600 380 L 600 291.79688 z M 0 439.67969 L 0 508.59375 L 0 515 L 0.53125 515 C 3.2445947 532.0713 16.579952 544.41257 31.677734 553.51562 C 48.605572 563.7221 70.553292 571.70292 97.068359 578.46484 C 150.09851 591.98873 221.30229 600 300 600 C 378.69771 600 449.90149 591.98873 502.93164 578.46484 C 529.4467 571.70292 551.3944 563.7221 568.32227 553.51562 C 583.42003 544.41257 596.7554 532.0713 599.46875 515 L 600 515 L 600 508.59375 L 600 439.67969 C 581.93278 451.57339 559.1283 461.39828 532.24023 469.80078 C 471.56747 488.76104 390.05417 500 300 500 C 209.94583 500 128.43256 488.76104 67.759766 469.80078 C 40.871757 461.39828 18.067208 451.57339 0 439.67969 z "></path> </g></svg>
+                                </i><span class="ml-2">Database</span>
+                            </a>
+                        </li>
+                        <!-- Item End-->
+                         <!-- Dropdown item start-->
+                        <li class=" sidebar-layout">
+                            <a href="{% url 'document_request_list' %}" class="svg-icon">
+                                <i class="">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                    </svg>
+                                </i><span class="">Request Document</span>
+                            </a>
+                        </li>
+                        <!-- Dropdown item end-->
+
+                        <!-- Sidenav Divider Start -->
+                        <li class="px-3 pt-3 pb-2">
+                            <span class="text-uppercase small font-weight-bold">RaGLA Tools</span>
+                        </li>
+                        
+
+                        <!-- Dropdown Item (RaGLA Tools)-->
+                        <li class="sidebar-layout" data-toggle="tooltip" data-placement="right" title="RaGLA Tools">
+                            <a href="#app8" class="collapsed svg-icon" data-toggle="collapse" aria-expanded="false">
+                                <i class="">
+                                    <svg width="18px" height="18px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path fill-rule="evenodd" clip-rule="evenodd" d="M5.4 2h13.2A3.4 3.4 0 0 1 22 5.4v13.2a3.4 3.4 0 0 1-3.4 3.4H5.4A3.4 3.4 0 0 1 2 18.6V5.4A3.4 3.4 0 0 1 5.4 2ZM7 5a1 1 0 0 1 1 1v8a1 1 0 1 1-2 0V6a1 1 0 0 1 1-1Zm5 0a1 1 0 0 1 1 1v6a1 1 0 1 1-2 0V6a1 1 0 0 1 1-1Zm6 1a1 1 0 1 0-2 0v10a1 1 0 1 0 2 0V6Z" fill="#8f9fbc"></path></g></svg>
+                                </i>
+                                <span class="ml-2">RAGLA</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="svg-icon iq-arrow-right arrow-active"
+                                    width="15" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 5l7 7-7 7" />
+                                </svg>
+                            </a>
+                            <ul id="app8" class="submenu collapse" data-parent="#iq-sidebar-toggle">
+                                
+                                <!-- Dropdown item start-->
+                                <li class=" sidebar-layout">
+                                    <a href="{% url 'student_list' %}" class="svg-icon">
+                                        <i class="">
+                                            <svg width="18px" height="18
+                                            px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#8f9fbc"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M11 15H8C6.13623 15 5.20435 15 4.46927 15.3045C3.48915 15.7105 2.71046 16.4892 2.30448 17.4693C2 18.2044 2 19.1362 2 21M15.5 3.29076C16.9659 3.88415 18 5.32131 18 7M11.9999 21.5L14.025 21.095C14.2015 21.0597 14.2898 21.042 14.3721 21.0097C14.4452 20.9811 14.5147 20.9439 14.579 20.899C14.6516 20.8484 14.7152 20.7848 14.8426 20.6574L21.5 14C22.0524 13.4477 22.0523 12.5523 21.5 12C20.9477 11.4477 20.0523 11.4477 19.5 12L12.8425 18.6575C12.7152 18.7848 12.6516 18.8484 12.601 18.921C12.5561 18.9853 12.5189 19.0548 12.4902 19.1278C12.458 19.2102 12.4403 19.2984 12.405 19.475L11.9999 21.5ZM13.5 7C13.5 9.20914 11.7091 11 9.5 11C7.29086 11 5.5 9.20914 5.5 7C5.5 4.79086 7.29086 3 9.5 3C11.7091 3 13.5 4.79086 13.5 7Z" stroke="#8f9fbc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>
+                                        </i><span class="">Student Records</span>
+                                    </a>
+                                </li>
+                                <!-- Dropdown item end-->
+
+                                <!-- Dropdown item start-->
+                                <li class=" sidebar-layout">
+                                    <a href="{% url 'manage_payments' %}" class="svg-icon">
+                                        <i class="">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" fill="none"
+                                                viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                            </svg>
+                                        </i><span class="">Manage Payments</span>
+                                    </a>
+                                </li>
+                                <!-- Dropdown item end-->
+                                 
+                                <!-- Dropdown item start-->
+                                <li class=" sidebar-layout">
+                                    <a href="{% url 'enrollment_list' %}" class="svg-icon">
+                                        <i class="">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" fill="none"
+                                                viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                            </svg>
+                                        </i><span class="">Enrollments</span>
+                                    </a>
+                                </li>
+                                <!-- Dropdown item end-->
+                                  
+                                <!-- Dropdown item start-->
+                                <li class=" sidebar-layout">
+                                    <a href="{% url 'chat:chat_room_list' %}" class="svg-icon">
+                                        <i class="">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" fill="none"
+                                                viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                            </svg>
+                                        </i><span class="">Student Chat</span>
+                                    </a>
+                                </li>
+                                <!-- Dropdown item end-->
+
+                                <!-- Dropdown item start-->
+                                <li class=" sidebar-layout">
+                                    <a href="{% url 'submit_payment' %}" class="svg-icon">
+                                        <i class="">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" fill="none"
+                                                viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                            </svg>
+                                        </i><span class="">Submit Payment</span>
+                                    </a>
+                                </li>
+                                <!-- Dropdown item end-->
+
+                                 <!-- Dropdown item start-->
+                                <li class=" sidebar-layout">
+                                    <a href="{% url 'payment_status' %}" class="svg-icon">
+                                        <i class="">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" fill="none"
+                                                viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                            </svg>
+                                        </i><span class="">Payment status</span>
+                                    </a>
+                                </li>
+                                <!-- Dropdown item end-->
+
+
+                                <!-- Dropdown item start-->
+                                <li class=" sidebar-layout">
+                                    <a href="{% url 'student_logout' %}" class="svg-icon">
+                                        <i class="">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" fill="none"
+                                                viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                            </svg>
+                                        </i><span class="">Logout</span>
+                                    </a>
+                                </li>
+                                <!-- Dropdown item end-->
+
+
+                            </ul>
+                        </li>
+                        <!-- Dropdown End-->
+
+                        <!-- Sidenav Divider Start -->
+                        <li class="px-3 pt-3 pb-2">
+                            <span class="text-uppercase small font-weight-bold">SIAB Tools</span>
+                        </li>
+                        <!-- Dropdown Item (Accounts)-->
+                        <li class="sidebar-layout" data-toggle="tooltip" data-placement="right" title="SIAB">
+                            <a href="#app9" class="collapsed svg-icon" data-toggle="collapse" aria-expanded="false">
+                                <i>
+                                    <svg fill="#8f9fbc" width="18px" height="18px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" stroke="#8f9fbc" stroke-width="0.36"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M7.86872332,11.2987983 L3.81348725,13.3862352 C3.31395818,13.6433683 3,14.15809 3,14.7199144 L3,15.5 C3,16.3284353 3.67158104,17 4.50007042,17 C4.77621279,17 5.00007042,17.2238576 5.00007042,17.5 C5.00007042,17.7761424 4.77621279,18 4.50007042,18 C3.11930174,18 2,16.8807255 2,15.5 L2,14.7199144 C2,13.7835403 2.52326364,12.9256709 3.35581209,12.4971157 L6.71355663,10.7687133 C5.64186533,9.83428889 5,8.47230593 5,7 C5,4.23857625 7.23857625,2 10,2 C11.6765944,2 13.2132159,2.83194719 14.1379524,4.1925488 C14.2931758,4.42093513 14.2338655,4.73191224 14.0054791,4.88713561 C13.7770928,5.04235899 13.4661157,4.9830487 13.3108923,4.75466237 C12.5703998,3.66514623 11.3418627,3 10,3 C7.790861,3 6,4.790861 6,7 C6,8.41171278 6.73680464,9.69567406 7.92026949,10.4175913 C8.15601291,10.5613955 8.23054436,10.8690796 8.08674015,11.104823 C8.0329088,11.1930707 7.95611316,11.2587279 7.86872332,11.2987983 L7.86872332,11.2987983 Z M11.9612658,15.5668358 L7.87929558,17.4222768 C7.34380416,17.665682 7,18.1996113 7,18.7878265 L7,19.5 C7,20.3284271 7.67157288,21 8.5,21 L19.5,21 C20.3284271,21 21,20.3284271 21,19.5 L21,18.7878265 C21,18.1996113 20.6561958,17.665682 20.1207044,17.4222768 L16.0387342,15.5668358 C15.4161054,15.8452135 14.7261289,16 14,16 C13.2738711,16 12.5838946,15.8452135 11.9612658,15.5668358 L11.9612658,15.5668358 Z M10.9221582,14.9406987 C9.75209123,14.0255364 9,12.6005984 9,11 C9,8.23857625 11.2385763,6 14,6 C16.7614237,6 19,8.23857625 19,11 C19,12.6005984 18.2479088,14.0255364 17.0778418,14.9406987 L20.5345074,16.5119103 C21.4269931,16.9175857 22,17.8074678 22,18.7878265 L22,19.5 C22,20.8807119 20.8807119,22 19.5,22 L8.5,22 C7.11928813,22 6,20.8807119 6,19.5 L6,18.7878265 C6,17.8074678 6.57300693,16.9175857 7.46549264,16.5119103 L10.9221582,14.9406987 L10.9221582,14.9406987 Z M14,15 C16.209139,15 18,13.209139 18,11 C18,8.790861 16.209139,7 14,7 C11.790861,7 10,8.790861 10,11 C10,13.209139 11.790861,15 14,15 Z"></path> </g></svg>
+                                </i>
+                                <span class="ml-2">SIAB</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="svg-icon iq-arrow-right arrow-active"
+                                    width="15" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 5l7 7-7 7" />
+                                </svg>
+                            </a>
+                            <ul id="app9" class="submenu collapse" data-parent="#iq-sidebar-toggle">
+                                
+                                <!-- Dropdown item start-->
+                                <li class=" sidebar-layout">
+                                    <a href="{% url 'siab:product_list' %}" class="svg-icon">
+                                        <i class="">
+                                            <svg width="18px" height="18
+                                            px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#8f9fbc"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M11 15H8C6.13623 15 5.20435 15 4.46927 15.3045C3.48915 15.7105 2.71046 16.4892 2.30448 17.4693C2 18.2044 2 19.1362 2 21M15.5 3.29076C16.9659 3.88415 18 5.32131 18 7M11.9999 21.5L14.025 21.095C14.2015 21.0597 14.2898 21.042 14.3721 21.0097C14.4452 20.9811 14.5147 20.9439 14.579 20.899C14.6516 20.8484 14.7152 20.7848 14.8426 20.6574L21.5 14C22.0524 13.4477 22.0523 12.5523 21.5 12C20.9477 11.4477 20.0523 11.4477 19.5 12L12.8425 18.6575C12.7152 18.7848 12.6516 18.8484 12.601 18.921C12.5561 18.9853 12.5189 19.0548 12.4902 19.1278C12.458 19.2102 12.4403 19.2984 12.405 19.475L11.9999 21.5ZM13.5 7C13.5 9.20914 11.7091 11 9.5 11C7.29086 11 5.5 9.20914 5.5 7C5.5 4.79086 7.29086 3 9.5 3C11.7091 3 13.5 4.79086 13.5 7Z" stroke="#8f9fbc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>
+                                        </i><span class="">Products</span>
+                                    </a>
+                                </li>
+                                <!-- Dropdown item end-->
+
+                                <!-- Dropdown item start-->
+                                <li class=" sidebar-layout">
+                                    <a href="{% url 'siab:bomitem_list' %}" class="svg-icon">
+                                        <i class="">
+                                            <svg width="18px" height="18
+                                            px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#8f9fbc"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M11 15H8C6.13623 15 5.20435 15 4.46927 15.3045C3.48915 15.7105 2.71046 16.4892 2.30448 17.4693C2 18.2044 2 19.1362 2 21M15.5 3.29076C16.9659 3.88415 18 5.32131 18 7M11.9999 21.5L14.025 21.095C14.2015 21.0597 14.2898 21.042 14.3721 21.0097C14.4452 20.9811 14.5147 20.9439 14.579 20.899C14.6516 20.8484 14.7152 20.7848 14.8426 20.6574L21.5 14C22.0524 13.4477 22.0523 12.5523 21.5 12C20.9477 11.4477 20.0523 11.4477 19.5 12L12.8425 18.6575C12.7152 18.7848 12.6516 18.8484 12.601 18.921C12.5561 18.9853 12.5189 19.0548 12.4902 19.1278C12.458 19.2102 12.4403 19.2984 12.405 19.475L11.9999 21.5ZM13.5 7C13.5 9.20914 11.7091 11 9.5 11C7.29086 11 5.5 9.20914 5.5 7C5.5 4.79086 7.29086 3 9.5 3C11.7091 3 13.5 4.79086 13.5 7Z" stroke="#8f9fbc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>
+                                        </i><span class="">Bill of Material</span>
+                                    </a>
+                                </li>
+                                <!-- Dropdown item end-->
+
+                                <!-- Dropdown item start-->
+                                <li class=" sidebar-layout">
+                                    <a href="{% url 'siab:stockitem_list' %}" class="svg-icon">
+                                        <i class="">
+                                            <svg width="18px" height="18
+                                            px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#8f9fbc"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M11 15H8C6.13623 15 5.20435 15 4.46927 15.3045C3.48915 15.7105 2.71046 16.4892 2.30448 17.4693C2 18.2044 2 19.1362 2 21M15.5 3.29076C16.9659 3.88415 18 5.32131 18 7M11.9999 21.5L14.025 21.095C14.2015 21.0597 14.2898 21.042 14.3721 21.0097C14.4452 20.9811 14.5147 20.9439 14.579 20.899C14.6516 20.8484 14.7152 20.7848 14.8426 20.6574L21.5 14C22.0524 13.4477 22.0523 12.5523 21.5 12C20.9477 11.4477 20.0523 11.4477 19.5 12L12.8425 18.6575C12.7152 18.7848 12.6516 18.8484 12.601 18.921C12.5561 18.9853 12.5189 19.0548 12.4902 19.1278C12.458 19.2102 12.4403 19.2984 12.405 19.475L11.9999 21.5ZM13.5 7C13.5 9.20914 11.7091 11 9.5 11C7.29086 11 5.5 9.20914 5.5 7C5.5 4.79086 7.29086 3 9.5 3C11.7091 3 13.5 4.79086 13.5 7Z" stroke="#8f9fbc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>
+                                        </i><span class="">Stock</span>
+                                    </a>
+                                </li>
+                                <!-- Dropdown item end-->
+
+                                <!-- Dropdown item start-->
+                                <li class=" sidebar-layout">
+                                    <a href="{% url 'siab:supplier_list' %}" class="svg-icon">
+                                        <i class="">
+                                            <svg width="18px" height="18
+                                            px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#8f9fbc"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M11 15H8C6.13623 15 5.20435 15 4.46927 15.3045C3.48915 15.7105 2.71046 16.4892 2.30448 17.4693C2 18.2044 2 19.1362 2 21M15.5 3.29076C16.9659 3.88415 18 5.32131 18 7M11.9999 21.5L14.025 21.095C14.2015 21.0597 14.2898 21.042 14.3721 21.0097C14.4452 20.9811 14.5147 20.9439 14.579 20.899C14.6516 20.8484 14.7152 20.7848 14.8426 20.6574L21.5 14C22.0524 13.4477 22.0523 12.5523 21.5 12C20.9477 11.4477 20.0523 11.4477 19.5 12L12.8425 18.6575C12.7152 18.7848 12.6516 18.8484 12.601 18.921C12.5561 18.9853 12.5189 19.0548 12.4902 19.1278C12.458 19.2102 12.4403 19.2984 12.405 19.475L11.9999 21.5ZM13.5 7C13.5 9.20914 11.7091 11 9.5 11C7.29086 11 5.5 9.20914 5.5 7C5.5 4.79086 7.29086 3 9.5 3C11.7091 3 13.5 4.79086 13.5 7Z" stroke="#8f9fbc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>
+                                        </i><span class="">Suppliers</span>
+                                    </a>
+                                </li>
+                                <!-- Dropdown item end-->
+
+                                <!-- Dropdown item start-->
+                                <li class=" sidebar-layout">
+                                    <a href="{% url 'siab:order_list' %}" class="svg-icon">
+                                        <i class="">
+                                            <svg width="18px" height="18
+                                            px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#8f9fbc"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M11 15H8C6.13623 15 5.20435 15 4.46927 15.3045C3.48915 15.7105 2.71046 16.4892 2.30448 17.4693C2 18.2044 2 19.1362 2 21M15.5 3.29076C16.9659 3.88415 18 5.32131 18 7M11.9999 21.5L14.025 21.095C14.2015 21.0597 14.2898 21.042 14.3721 21.0097C14.4452 20.9811 14.5147 20.9439 14.579 20.899C14.6516 20.8484 14.7152 20.7848 14.8426 20.6574L21.5 14C22.0524 13.4477 22.0523 12.5523 21.5 12C20.9477 11.4477 20.0523 11.4477 19.5 12L12.8425 18.6575C12.7152 18.7848 12.6516 18.8484 12.601 18.921C12.5561 18.9853 12.5189 19.0548 12.4902 19.1278C12.458 19.2102 12.4403 19.2984 12.405 19.475L11.9999 21.5ZM13.5 7C13.5 9.20914 11.7091 11 9.5 11C7.29086 11 5.5 9.20914 5.5 7C5.5 4.79086 7.29086 3 9.5 3C11.7091 3 13.5 4.79086 13.5 7Z" stroke="#8f9fbc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>
+                                        </i><span class="">Orders</span>
+                                    </a>
+                                </li>
+                                <!-- Dropdown item end-->
+
+                                <!-- Dropdown item start-->
+                                <li class=" sidebar-layout">
+                                    <a href="{% url 'siab:component_list' %}" class="svg-icon">
+                                        <i class="">
+                                            <svg width="18px" height="18
+                                            px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#8f9fbc"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M11 15H8C6.13623 15 5.20435 15 4.46927 15.3045C3.48915 15.7105 2.71046 16.4892 2.30448 17.4693C2 18.2044 2 19.1362 2 21M15.5 3.29076C16.9659 3.88415 18 5.32131 18 7M11.9999 21.5L14.025 21.095C14.2015 21.0597 14.2898 21.042 14.3721 21.0097C14.4452 20.9811 14.5147 20.9439 14.579 20.899C14.6516 20.8484 14.7152 20.7848 14.8426 20.6574L21.5 14C22.0524 13.4477 22.0523 12.5523 21.5 12C20.9477 11.4477 20.0523 11.4477 19.5 12L12.8425 18.6575C12.7152 18.7848 12.6516 18.8484 12.601 18.921C12.5561 18.9853 12.5189 19.0548 12.4902 19.1278C12.458 19.2102 12.4403 19.2984 12.405 19.475L11.9999 21.5ZM13.5 7C13.5 9.20914 11.7091 11 9.5 11C7.29086 11 5.5 9.20914 5.5 7C5.5 4.79086 7.29086 3 9.5 3C11.7091 3 13.5 4.79086 13.5 7Z" stroke="#8f9fbc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>
+                                        </i><span class="">Components</span>
+                                    </a>
+                                </li>
+                                <!-- Dropdown item end-->
+
+                                <!-- Dropdown item start-->
+                                <li class=" sidebar-layout">
+                                    <a href="{% url 'siab:list' %}" class="svg-icon">
+                                        <i class="">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" fill="none"
+                                                viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                            </svg>
+                                        </i><span class="">Free Trials</span>
+                                    </a>
+                                </li>
+                                <!-- Dropdown item end-->
+
+                               
+
+                            </ul>
+                        </li>
+                        <!-- Dropdown End-->
+                         
+
+                       
+
+
+                        
+                    </ul>
+                </nav>
+                <div class="pt-5 pb-5"></div>
+            </div>
+        </div>
+        <div class="iq-top-navbar">
+            <div class="iq-navbar-custom">
+                <nav class="navbar navbar-expand-lg navbar-light p-0">
+                    <div class="side-menu-bt-sidebar">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="text-secondary wrapper-menu" width="30"
+                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <button class="navbar-toggler" type="button" data-toggle="collapse"
+                            data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                            aria-label="Toggle navigation">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="text-secondary" width="30" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 6h16M4 12h16m-7 6h7" />
+                            </svg>
+                        </button>
+                        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                            <ul class="navbar-nav ml-auto navbar-list align-items-center">
+                                <li class="nav-item nav-icon dropdown">
+                                    <a href="#" class="search-toggle dropdown-toggle" id="notification-dropdown"
+                                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25"
+                                            class="h-6 w-6 text-secondary" fill="none" viewBox="0 0 24 24"
+                                            stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                        </svg>
+                                        <span class="bg-primary"></span>
+                                    </a>
+                                    <div class="iq-sub-dropdown dropdown-menu" aria-labelledby="notification-dropdown">
+                                        <div class="card shadow-none m-0 border-0">
+                                            <div class="p-3 card-header-border">
+                                                <h6 class="text-center">
+                                                    Notifications
+                                                </h6>
+                                            </div>
+                                            <div class="card-body overflow-auto card-header-border p-0 card-body-list"
+                                                style="max-height: 500px;">
+                                                <ul class="dropdown-menu-1 overflow-auto list-style-1 mb-0">
+                                                    <li class="dropdown-item-1 float-none p-3">
+                                                        <div
+                                                            class="list-item d-flex justify-content-start align-items-start">
+                                                            <div class="avatar">
+                                                                <div class="avatar-img avatar-danger avatar-20">
+                                                                    <span>
+                                                                        <svg class="icon line" width="30" height="30"
+                                                                            id="cart-alt1" stroke="white"
+                                                                            xmlns="http://www.w3.org/2000/svg"
+                                                                            viewBox="0 0 24 24">
+                                                                            <path
+                                                                                d="M3,3H5.32a1,1,0,0,1,.93.63L10,13,8.72,15.55A1,1,0,0,0,9.62,17H19"
+                                                                                style="fill: none;stroke-linecap: round; stroke-linejoin: round; stroke-width: 2;">
+                                                                            </path>
+                                                                            <polyline points="10 13 18.2 13 21 6"
+                                                                                style="fill: none;stroke-linecap: round; stroke-linejoin: round; stroke-width: 2;">
+                                                                            </polyline>
+                                                                            <line x1="20.8" y1="6" x2="7.2" y2="6"
+                                                                                style="fill: none;stroke-linecap: round; stroke-linejoin: round; stroke-width: 2;">
+                                                                            </line>
+                                                                            <circle cx="10.5" cy="20.5" r="0.5"
+                                                                                style="fill: none;stroke-miterlimit: 10; stroke-width: 2;">
+                                                                            </circle>
+                                                                            <circle cx="16.5" cy="20.5" r="0.5"
+                                                                                style="fill: none;stroke-miterlimit: 10; stroke-width: 2;">
+                                                                            </circle>
+                                                                        </svg>
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            <div class="list-style-detail ml-2 mr-2">
+                                                                <h6 class="font-weight-bold">Your order is placed</h6>
+                                                                <p class="m-0">
+                                                                    <small class="text-secondary">If several languages
+                                                                        coalesce</small>
+                                                                </p>
+                                                                <p class="m-0">
+                                                                    <small class="text-secondary">
+                                                                        <svg xmlns="http://www.w3.org/2000/svg"
+                                                                            class="text-secondary mr-1" width="15"
+                                                                            fill="none" viewBox="0 0 24 24"
+                                                                            stroke="currentColor">
+                                                                            <path stroke-linecap="round"
+                                                                                stroke-linejoin="round" stroke-width="2"
+                                                                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                        </svg>
+                                                                        3 hours ago</small>
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                    <li class="dropdown-item-1 float-none p-3">
+                                                        <div
+                                                            class="list-item d-flex justify-content-start align-items-start">
+                                                            <div class="avatar">
+                                                                <div class="avatar-img avatar-success avatar-20">
+                                                                    <span><img class="avatar is-squared rounded-circle"
+                                                                            src="/static/assets/images/user/2.jpg"
+                                                                            alt="2.jpg"></span>
+                                                                </div>
+                                                            </div>
+                                                            <div class="list-style-detail ml-2 mr-2">
+                                                                <h6 class="font-weight-bold">New message form cate</h6>
+                                                                <p class="m-0">
+                                                                    <small class="text-secondary">You have 3 unreded
+                                                                        messages</small>
+                                                                </p>
+                                                                <p class="m-0">
+                                                                    <small class="text-secondary">
+                                                                        <svg xmlns="http://www.w3.org/2000/svg"
+                                                                            class="text-secondary mr-1" width="15"
+                                                                            fill="none" viewBox="0 0 24 24"
+                                                                            stroke="currentColor">
+                                                                            <path stroke-linecap="round"
+                                                                                stroke-linejoin="round" stroke-width="2"
+                                                                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                        </svg>
+                                                                        5 hours ago</small>
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                    <li class="dropdown-item-1 float-none p-3">
+                                                        <div
+                                                            class="list-item d-flex justify-content-start align-items-start">
+                                                            <div class="avatar">
+                                                                <div class="avatar-img avatar-warning avatar-20">
+                                                                    <span>
+                                                                        <svg xmlns="http://www.w3.org/2000/svg"
+                                                                            xmlns:xlink="http://www.w3.org/1999/xlink"
+                                                                            version="1.1" width="30" height="30"
+                                                                            stroke="white" id="Capa_1" x="0px" y="0px"
+                                                                            viewBox="0 0 512 512"
+                                                                            style="enable-background:new 0 0 512 512;"
+                                                                            xml:space="preserve">
+                                                                            <g>
+                                                                                <g>
+                                                                                    <path
+                                                                                        d="M386.689,304.403c-35.587,0-64.538,28.951-64.538,64.538s28.951,64.538,64.538,64.538    c35.593,0,64.538-28.951,64.538-64.538S422.276,304.403,386.689,304.403z M386.689,401.21c-17.796,0-32.269-14.473-32.269-32.269    c0-17.796,14.473-32.269,32.269-32.269c17.796,0,32.269,14.473,32.269,32.269C418.958,386.738,404.485,401.21,386.689,401.21z" />
+                                                                                </g>
+                                                                            </g>
+                                                                            <g>
+                                                                                <g>
+                                                                                    <path
+                                                                                        d="M166.185,304.403c-35.587,0-64.538,28.951-64.538,64.538s28.951,64.538,64.538,64.538s64.538-28.951,64.538-64.538    S201.772,304.403,166.185,304.403z M166.185,401.21c-17.796,0-32.269-14.473-32.269-32.269c0-17.796,14.473-32.269,32.269-32.269    c17.791,0,32.269,14.473,32.269,32.269C198.454,386.738,183.981,401.21,166.185,401.21z" />
+                                                                                </g>
+                                                                            </g>
+                                                                            <g>
+                                                                                <g>
+                                                                                    <path
+                                                                                        d="M430.15,119.675c-2.743-5.448-8.32-8.885-14.419-8.885h-84.975v32.269h75.025l43.934,87.384l28.838-14.5L430.15,119.675z" />
+                                                                                </g>
+                                                                            </g>
+                                                                            <g>
+                                                                                <g>
+                                                                                    <rect x="216.202" y="353.345"
+                                                                                        width="122.084"
+                                                                                        height="32.269" />
+                                                                                </g>
+                                                                            </g>
+                                                                            <g>
+                                                                                <g>
+                                                                                    <path
+                                                                                        d="M117.781,353.345H61.849c-8.912,0-16.134,7.223-16.134,16.134c0,8.912,7.223,16.134,16.134,16.134h55.933    c8.912,0,16.134-7.223,16.134-16.134C133.916,360.567,126.693,353.345,117.781,353.345z" />
+                                                                                </g>
+                                                                            </g>
+                                                                            <g>
+                                                                                <g>
+                                                                                    <path
+                                                                                        d="M508.612,254.709l-31.736-40.874c-3.049-3.937-7.755-6.239-12.741-6.239H346.891V94.655    c0-8.912-7.223-16.134-16.134-16.134H61.849c-8.912,0-16.134,7.223-16.134,16.134s7.223,16.134,16.134,16.134h252.773v112.941    c0,8.912,7.223,16.134,16.134,16.134h125.478l23.497,30.268v83.211h-44.639c-8.912,0-16.134,7.223-16.134,16.134    c0,8.912,7.223,16.134,16.134,16.134h60.773c8.912,0,16.134-7.223,16.135-16.134V264.605    C512,261.023,510.806,257.538,508.612,254.709z" />
+                                                                                </g>
+                                                                            </g>
+                                                                            <g>
+                                                                                <g>
+                                                                                    <path
+                                                                                        d="M116.706,271.597H42.487c-8.912,0-16.134,7.223-16.134,16.134c0,8.912,7.223,16.134,16.134,16.134h74.218    c8.912,0,16.134-7.223,16.134-16.134C132.84,278.82,125.617,271.597,116.706,271.597z" />
+                                                                                </g>
+                                                                            </g>
+                                                                            <g>
+                                                                                <g>
+                                                                                    <path
+                                                                                        d="M153.815,208.134H16.134C7.223,208.134,0,215.357,0,224.269s7.223,16.134,16.134,16.134h137.681    c8.912,0,16.134-7.223,16.134-16.134S162.727,208.134,153.815,208.134z" />
+                                                                                </g>
+                                                                            </g>
+                                                                            <g>
+                                                                                <g>
+                                                                                    <path
+                                                                                        d="M180.168,144.672H42.487c-8.912,0-16.134,7.223-16.134,16.134c0,8.912,7.223,16.134,16.134,16.134h137.681    c8.912,0,16.134-7.223,16.134-16.134C196.303,151.895,189.08,144.672,180.168,144.672z" />
+                                                                                </g>
+                                                                            </g>
+                                                                            <g></g>
+                                                                            <g></g>
+                                                                            <g></g>
+                                                                            <g></g>
+                                                                            <g></g>
+                                                                            <g></g>
+                                                                            <g></g>
+                                                                            <g></g>
+                                                                            <g></g>
+                                                                            <g></g>
+                                                                            <g></g>
+                                                                            <g></g>
+                                                                            <g></g>
+                                                                            <g></g>
+                                                                            <g></g>
+                                                                        </svg>
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            <div class="list-style-detail ml-2 mr-2">
+                                                                <h6 class="font-weight-bold">Your item is shipped</h6>
+                                                                <p class="m-0">
+                                                                    <small class="text-secondary">You got new order of
+                                                                        goods</small>
+                                                                </p>
+                                                                <p class="m-0">
+                                                                    <small class="text-secondary">
+                                                                        <svg xmlns="http://www.w3.org/2000/svg"
+                                                                            class="text-secondary mr-1" width="15"
+                                                                            fill="none" viewBox="0 0 24 24"
+                                                                            stroke="currentColor">
+                                                                            <path stroke-linecap="round"
+                                                                                stroke-linejoin="round" stroke-width="2"
+                                                                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                        </svg>
+                                                                        5 hours ago</small>
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                            <div class="card-footer text-muted p-3">
+                                                <p class="mb-0 text-primary text-center font-weight-bold">Show all
+                                                    notifications</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                                
+                                <li class="nav-item nav-icon search-content">
+                                    <a href="#" class="search-toggle rounded" id="dropdownSearch" data-toggle="dropdown"
+                                        aria-haspopup="true" aria-expanded="false">
+                                        <svg class="svg-icon text-secondary" id="h-suns" height="25" width="25"
+                                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                            stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                    </a>
+                                    <div class="iq-search-bar iq-sub-dropdown dropdown-menu"
+                                        aria-labelledby="dropdownSearch">
+                                        <form action="#" class="searchbox p-2">
+                                            <div class="form-group mb-0 position-relative">
+                                                <input type="text" class="text search-input font-size-12"
+                                                    placeholder="type here to search...">
+                                                <a href="#" class="search-link">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="" width="20"
+                                                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                                    </svg>
+                                                </a>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </li>
+                                <li class="nav-item nav-icon dropdown">
+                                    <a href="#" class="nav-item nav-icon dropdown-toggle pr-0 search-toggle"
+                                        id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true"
+                                        aria-expanded="false">
+                                        <img src="/static/assets/images/user/1.jpg" class="img-fluid avatar-rounded"
+                                            alt="user">
+                                        <span class="mb-0 ml-2 user-name">Dave</span>
+                                    </a>
+                                    <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
+                                        <li class="dropdown-item d-flex svg-icon">
+                                            <svg class="svg-icon mr-0 text-secondary" id="h-01-p" width="20"
+                                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                                stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            <a href="../app/user-profile.html">My Profile</a>
+                                        </li>
+                                        <li class="dropdown-item d-flex svg-icon">
+                                            <svg class="svg-icon mr-0 text-secondary" id="h-02-p" width="20"
+                                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                                stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                            <a href="../app/user-profile-edit.html">Edit Profile</a>
+                                        </li>
+                                        <li class="dropdown-item d-flex svg-icon">
+                                            <svg class="svg-icon mr-0 text-secondary" id="h-03-p" width="20"
+                                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                                stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            </svg>
+                                            <a href="../app/user-account-setting.html">Account Settings</a>
+                                        </li>
+                                        <li class="dropdown-item d-flex svg-icon">
+                                            <svg class="svg-icon mr-0 text-secondary" id="h-04-p" width="20"
+                                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                                stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                            </svg>
+                                            <a href="../app/user-privacy-setting.html">Privacy Settings</a>
+                                        </li>
+                                        <li class="dropdown-item  d-flex svg-icon border-top">
+                                            <svg class="svg-icon mr-0 text-secondary" id="h-05-p" width="20"
+                                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                                stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                            </svg>
+                                            <form method="POST" action="{% url 'logout' %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-link nav-link">
+                                                    Logout
+                                                </button>
+                                            </form>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </nav>
+            </div>
+        </div>
+        <div class="content-page ">
+            
+            <div class="container-fluid">
+                
+                <div class="row mt-5">
+                    
+                    <div class="col-lg-12">
+                        <!--MAIN CONTAINER Start-->
+
+
+
+                        {% block content %} 
+                        
+                        {% endblock content %}
+
+
+
+                        <!--MAIN CONTAINER End-->
+                        
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Wrapper End-->
+    <footer class="iq-footer">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-6">
+                    <ul class="list-inline mb-0">
+                        <li class="list-inline-item"><a href="../backend/privacy-policy.html">Privacy Policy</a></li>
+                        <li class="list-inline-item"><a href="../backend/terms-of-service.html">Terms of Use</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-6 text-right">
+                    <span class="mr-1">
+                        Copyright
+                        <script>document.write(new Date().getFullYear())</script>© <a href="#" class="">Grace</a>
+                        All Rights Reserved to kreeck.
+                    </span>
+                </div>
+            </div>
+        </div>
+    </footer> <!-- Backend Bundle JavaScript -->
+    <script src="/static/assets/js/backend-bundle.min.js"></script>
+    <!-- Chart Custom JavaScript -->
+    <script src="/static/assets/js/customizer.js"></script>
+
+    <script src="/static/assets/js/sidebar.js"></script>
+
+    <!-- Flextree Javascript-->
+    <script src="/static/assets/js/flex-tree.min.js"></script>
+    <script src="/static/assets/js/tree.js"></script>
+
+    <!-- Table Treeview JavaScript -->
+    <script src="/static/assets/js/table-treeview.js"></script>
+
+    <!-- SweetAlert JavaScript -->
+    <script src="/static/assets/js/sweetalert.js"></script>
+
+    <!-- Chart Custom JavaScript -->
+    <script src="/static/assets/js/chart-custom.js"></script>
+    <script src="/static/assets/js/charts/01.js"></script>
+    <script src="/static/assets/js/charts/02.js"></script>
+
+    <!-- slider JavaScript -->
+    <script src="/static/assets/js/slider.js"></script>
+
+    <!-- app JavaScript -->
+    <script src="/static/assets/js/app.js"></script>
+</body>
+
+</html>

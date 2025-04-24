@@ -1,0 +1,106 @@
+{% extends "base/base.html" %}
+
+{% block content %}
+
+<!-- Document Request Details Card -->
+<div class="container">
+  <div class="card shadow-lg mb-2">
+    <div class="card-header bg-secondary text-white">
+      <h5 class="mb-0">Requested Information</h5>
+    </div>
+    <div class="card-body">
+      <div class="row mb-3">
+        <div class="col-md-3 font-weight-bold">Description:</div>
+        <div class="col-md-9">{{ doc_req.description|default:"<em>No description provided</em>"|safe }}</div>
+      </div>
+      <div class="row mb-3">
+        <div class="col-md-3 font-weight-bold">Request Type:</div>
+        <div class="col-md-9">{{ doc_req.get_request_type_display }}</div>
+      </div>
+      {% if doc_req.request_type == 'internal' %}
+      <div class="row mb-3">
+        <div class="col-md-3 font-weight-bold">Recipient:</div>
+        <div class="col-md-9"><i class="fas fa-user"></i> {{ doc_req.recipient.get_full_name|default:doc_req.recipient }}</div>
+      </div>
+      {% else %}
+      <div class="row mb-3">
+        <div class="col-md-3 font-weight-bold">External Recipient:</div>
+        <div class="col-md-9">
+          <i class="fas fa-user-friends"></i> {{ doc_req.external_recipient_name }} <br>
+          <i class="fas fa-envelope"></i> {{ doc_req.external_recipient_email }}
+        </div>
+      </div>
+      {% endif %}
+      <div class="row mb-3">
+        <div class="col-md-3 font-weight-bold">Status:</div>
+        <div class="col-md-9">
+          {% if doc_req.status == 'pending' %}
+            <span class="badge badge-warning p-2">Pending</span>
+          {% elif doc_req.status == 'approved' %}
+            <span class="badge badge-success p-2">Approved</span>
+          {% elif doc_req.status == 'rejected' %}
+            <span class="badge badge-danger p-2">Rejected</span>
+          {% elif doc_req.status == 'completed' %}
+            <span class="badge badge-info p-2">Completed</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="row mb-3">
+        <div class="col-md-3 font-weight-bold">Requested on:</div>
+        <div class="col-md-9">{{ doc_req.request_date|date:"d M Y H:i" }}</div>
+      </div>
+      {% if doc_req.response_date %}
+      <div class="row mb-3">
+        <div class="col-md-3 font-weight-bold">Response Date:</div>
+        <div class="col-md-9">{{ doc_req.response_date|date:"d M Y H:i" }}</div>
+      </div>
+      {% endif %}
+      {% if doc_req.attached_file %}
+      <div class="row mb-3">
+        <div class="col-md-3 font-weight-bold">Attached File:</div>
+        <div class="col-md-9">
+          <a href="{{ doc_req.attached_file.url }}" class="btn btn-outline-info">
+            <i class="fas fa-download"></i> Download File
+          </a>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+    <div class="card-footer text-right">
+      <a href="{% url 'document_request_list' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to List
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- External Request Link Section -->
+{% if doc_req.request_type == 'external' and external_url %}
+  <div class="container mt-3">
+    <div class="card shadow-sm">
+      <div class="card-header bg-info text-white">
+        <h6 class="mb-0">External Request Link</h6>
+      </div>
+      <div class="card-body">
+        <p>This link can be sent to the external recipient to attach the requested document:</p>
+        <div class="input-group">
+          <input type="text" class="form-control" id="externalLink" value="{{ external_url }}" readonly>
+          <div class="input-group-append">
+            <button class="btn btn-outline-secondary" type="button" onclick="copyLink()">Copy</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endif %}
+
+<script>
+  function copyLink() {
+    var copyText = document.getElementById("externalLink");
+    copyText.select();
+    document.execCommand("copy");
+    alert("Link copied to clipboard");
+  }
+</script>
+
+{% endblock %}

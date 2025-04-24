@@ -1,0 +1,121 @@
+{% extends 'base/base.html' %}
+{% block title %}Leave Request{% endblock title %}
+
+{% block content %}
+
+
+    {% if messages %}
+    <div class="container mt-3">
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+
+
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h4 class="card-title">Request Leave</h4>
+                        <a href="{% url 'leave_request_list' %}" class="btn btn-secondary btn-sm">Back to Leave Requests</a>
+                    </div>
+                    <div class="card-body">
+                        <!-- Display the leave balance -->
+                        <h5>Leave Balance</h5>
+                        <hr>
+                        <p>Total Leave Days: {{ leave_balance.total_leave_days }}</p>
+                        <p>Remaining Leave Days: {{ leave_balance.leave_days_remaining }}</p>
+                        
+                        <hr>
+                        <!-- Display form -->
+                        <form method="POST" enctype="multipart/form-data" id="leaveRequestForm">
+                            {% csrf_token %}
+                            {{ form.non_field_errors }}
+                            
+                            <div class="form-group mb-3">
+                                <label for="leave_type">Leave Type</label>
+                                {{ form.leave_type }}
+                                {% for error in form.leave_type.errors %}
+                                    <small class="text-danger">{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                            
+                            <div class="form-group mb-3">
+                                <label for="start_date">Start Date</label>
+                                {{ form.start_date }}
+                                {% for error in form.start_date.errors %}
+                                    <small class="text-danger">{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                            
+                            <div class="form-group mb-3">
+                                <label for="end_date">End Date</label>
+                                {{ form.end_date }}
+                                {% for error in form.end_date.errors %}
+                                    <small class="text-danger">{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                            
+                            <div class="form-group mb-3">
+                                <label for="reason">Reason</label>
+                                {{ form.reason }}
+                                {% for error in form.reason.errors %}
+                                    <small class="text-danger">{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">Submit</button>
+                            <a href="{% url 'leave_request_list' %}" class="btn btn-secondary">Cancel</a>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+<script>
+    // Automatically calculate total days based on start_date and end_date, excluding weekends
+    document.addEventListener("DOMContentLoaded", function () {
+        const startDateInput = document.getElementById("id_start_date");
+        const endDateInput = document.getElementById("id_end_date");
+        const totalDaysInput = document.getElementById("calculatedTotalDays");
+
+        function calculateWeekdays(startDate, endDate) {
+            let totalDays = 0;
+            let currentDate = new Date(startDate);
+
+            while (currentDate <= endDate) {
+                // Exclude Saturdays (6) and Sundays (0)
+                if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
+                    totalDays++;
+                }
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+            return totalDays;
+        }
+
+        function calculateTotalDays() {
+            const startDate = new Date(startDateInput.value);
+            const endDate = new Date(endDateInput.value);
+
+            if (startDate && endDate && endDate >= startDate) {
+                const totalDays = calculateWeekdays(startDate, endDate);
+                totalDaysInput.value = totalDays;
+            } else {
+                totalDaysInput.value = "";
+            }
+        }
+
+        startDateInput.addEventListener("change", calculateTotalDays);
+        endDateInput.addEventListener("change", calculateTotalDays);
+    });
+</script>
+
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends 'base/chat_base.html' %}
+{% block title %}Your Chat Rooms{% endblock %}
+{% block content %}
+<div class="card mt-4">
+  <div class="card-header bg-dark text-white">
+    Chat Rooms
+    <a href="{% url 'chat:chat_room_create' %}" class="btn btn-sm btn-success float-right">Create New</a>
+  </div>
+  <div class="card-body">
+    {% if rooms %}
+      <div class="list-group">
+        {% for room in rooms %}
+          <a href="{% url 'chat:chat_room_detail' room.id %}" class="list-group-item list-group-item-action">
+            {{ room.name }}
+            <span class="badge badge-info float-right">{{ room.messages.count }} messages</span>
+          </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p>You are not in any chat rooms. Create one to start chatting!</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
