@@ -48,9 +48,7 @@ PROJECT_APPS = [
     'accounts',
     'finance',
     'hr',
-    'siab',
     'database',
-    'ragla',
     'chat'
 ]
 
