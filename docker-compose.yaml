@@ -1,0 +1,31 @@
+services:
+  app:
+    build:
+      context: DockerFile
+    image: erpdocker/kreeck-erp-app:v1.0
+    volumes:
+      - .:/graceerp
+    ports:
+      - "8000:8000"
+
+    command: >
+      SH -C "python manage.py makemigrations && python manage.py migrate"
+
+    networks:
+      - erp_network
+
+  nginx:
+    build: ./nginx
+    image: erpdocker/kreeck-erp-app:v1.0
+    ports:
+      - "80:80"
+
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    networks:
+      - erp_network
+
+networks:
+  erp_network:
+    driver: bridge
+

@@ -1,0 +1,17 @@
+django
+django-cleanup
+python-decouple
+Pillow
+whitenoise
+python-slugify
+django-tailwind
+djangorestframework
+django-cors-headers
+drf-spectacular
+crispy-bootstrap4
+django-environ
+django-debug-toolbar
+django-crispy-forms
+crispy-bootstrap5
+gunicorn 
+nginx
