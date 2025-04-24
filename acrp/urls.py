@@ -7,12 +7,10 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('', include('app.urls')),
     path('auth/', include('accounts.urls')),
-    path("gracedevadmin/", admin.site.urls),
+    path("acrpdevadmin/", admin.site.urls),
     path('finance/', include('finance.urls')),
     path('hr/', include('hr.urls')),
     path('app/', include('app.urls')),
-    path('ragla/', include('ragla.urls')),
-    path('siab/', include('siab.urls')),
     path('common/', include('common.urls')),
     path('db/', include('database.urls')),
    path('chat/', include('chat.urls')),

@@ -68,7 +68,7 @@ MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
-ROOT_URLCONF = "graceerp.urls"
+ROOT_URLCONF = "acrp.urls"
 
 TEMPLATES = [
     {
@@ -86,7 +86,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "graceerp.wsgi.application"
+WSGI_APPLICATION = "acrp.wsgi.application"
 
 
 # Debug Toolbar configuration:
