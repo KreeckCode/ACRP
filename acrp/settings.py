@@ -52,6 +52,7 @@ PROJECT_APPS = [
     'chat',
     'providers',
     'student',
+    'enrollments',
 ]
 
 

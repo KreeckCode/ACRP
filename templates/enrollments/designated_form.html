@@ -1,0 +1,17 @@
+{% extends "base/base.html" %}
+{% load crispy_forms_tags %}
+{% block title %}{% if form.instance.pk %}Edit{% else %}New{% endif %} Designated{% endblock %}
+{% block content %}
+  <h2 class="mb-4">{% if form.instance.pk %}Edit{% else %}New{% endif %} Designated Application</h2>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form|crispy }}
+    <h5 class="mt-4">Upload Documents</h5>
+    {{ formset.management_form }}
+    {% for f in formset %}
+      {{ f|crispy }}
+    {% endfor %}
+    <button class="btn btn-primary mt-3">Save</button>
+    <a href="{% url 'enrollments:designated_list' %}" class="btn btn-secondary mt-3">Cancel</a>
+  </form>
+{% endblock %}

@@ -16,6 +16,7 @@ urlpatterns = [
     path('chat/', include('chat.urls')),
     path('providers/', include('providers.urls')),
     path('students/', include('student.urls')),
+    path('enrollments/', include('enrollments.urls')),
 ]
 
 if settings.DEBUG:

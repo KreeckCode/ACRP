@@ -1,0 +1,40 @@
+{% extends "base/base.html" %}
+{% block title %}Associated Affiliations{% endblock %}
+{% block content %}
+  <h1 class="mb-4">Associated Affiliation Applications</h1>
+  <form method="get" class="row g-2 mb-3">
+    <div class="col-auto">
+      <input type="text" name="search" class="form-control" placeholder="Search…" value="{{ search_query }}">
+    </div>
+    <div class="col-auto">
+      <button class="btn btn-primary">Search</button>
+    </div>
+  </form>
+  <a href="{% url 'enrollments:associated_create' %}" class="btn btn-success mb-3">New Application</a>
+  <div class="table-responsive">
+    <table class="table table-striped table-hover">
+      <thead class="table-light"><tr>
+        <th>Name</th><th>Email</th><th>Category</th><th>Approved</th><th>Actions</th>
+      </tr></thead>
+      <tbody>
+        {% for obj in objects %}
+          <tr>
+            <td>{{ obj.full_names }}</td>
+            <td>{{ obj.email }}</td>
+            <td>{{ obj.get_category_display }}</td>
+            <td>{{ obj.approved }}</td>
+            <td>
+              <a href="{% url 'enrollments:associated_update' obj.pk %}" class="btn btn-sm btn-warning">Edit</a>
+              <a href="{% url 'enrollments:associated_delete' 'associated' obj.pk %}" class="btn btn-sm btn-danger">Delete</a>
+              {% if not obj.approved %}
+                <a href="{% url 'enrollments:associated_approve' obj.pk %}" class="btn btn-sm btn-success">Approve</a>
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="5" class="text-center text-muted">No applications found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}
