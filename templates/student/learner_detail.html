@@ -1,0 +1,40 @@
+{% extends "base/base.html" %}
+{% block title %} Student | {{ learner.user.get_full_name }} {% endblock title %}
+{% load static %}
+
+{% block content %}
+<div class="container py-4">
+  <h1 class="mb-3">{{ learner.user.get_full_name }}</h1>
+
+  <div class="row mb-4">
+    <div class="col-md-4">
+      <dl class="row">
+        <dt class="col-5">ID Number:</dt><dd class="col-7">{{ learner.id_number }}</dd>
+        <dt class="col-5">Date of Birth:</dt><dd class="col-7">{{ learner.date_of_birth }}</dd>
+        <dt class="col-5">Gender:</dt><dd class="col-7">{{ learner.get_gender_display }}</dd>
+        <dt class="col-5">Phone:</dt><dd class="col-7">{{ learner.phone }}</dd>
+        <dt class="col-5">Email:</dt><dd class="col-7">{{ learner.email }}</dd>
+        <dt class="col-5">Status:</dt><dd class="col-7">{{ learner.get_status_display }}</dd>
+      </dl>
+    </div>
+    <div class="col-md-8">
+      <h5>Emergency Contact</h5>
+      <dl class="row">
+        <dt class="col-5">Name:</dt><dd class="col-7">{{ learner.emergency_name }}</dd>
+        <dt class="col-5">Relation:</dt><dd class="col-7">{{ learner.emergency_relation }}</dd>
+        <dt class="col-5">Phone:</dt><dd class="col-7">{{ learner.emergency_phone }}</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="mb-4">
+    <a href="{% url 'student:academic_list' learner.pk %}" class="btn btn-outline-primary">Academic History</a>
+    <a href="{% url 'student:enrollment_list' learner.pk %}" class="btn btn-outline-primary">Enrollments</a>
+    <a href="{% url 'student:cpd_history_list' learner.pk %}" class="btn btn-outline-primary">CPD History</a>
+    <a href="{% url 'student:affiliation_list' learner.pk %}" class="btn btn-outline-primary">Affiliations</a>
+    <a href="{% url 'student:learner_document_list' learner.pk %}" class="btn btn-outline-primary">Documents</a>
+  </div>
+
+  <a href="{% url 'student:learner_list' %}" class="btn btn-secondary">Back to list</a>
+</div>
+{% endblock %}

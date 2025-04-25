@@ -1,0 +1,36 @@
+{% extends "base/base.html" %}
+{% block content %}
+<div class="container py-4">
+  <h1 class="mb-4">Affiliations: {{ learner.user.get_full_name }}</h1>
+
+  {% if perms.student.add_learneraffiliation %}
+  <a href="{% url 'student:affiliation_create' learner.pk %}" class="btn btn-success mb-3">+ Add Affiliation</a>
+  {% endif %}
+  <a href="{% url 'student:learner_detail' learner.pk %}" class="btn btn-secondary mb-3 ms-2">Back</a>
+
+  <table class="table table-striped">
+    <thead class="table-light">
+      <tr><th>Organization</th><th>Date</th><th>Status</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+      {% for af in affiliations %}
+      <tr>
+        <td>{{ af.organization_name }}</td>
+        <td>{{ af.affiliation_date }}</td>
+        <td>{{ af.get_status_display }}</td>
+        <td>
+          {% if perms.student.change_learneraffiliation %}
+          <a href="{% url 'student:affiliation_update' learner.pk af.pk %}" class="btn btn-sm btn-warning">Edit</a>
+          {% endif %}
+          {% if perms.student.delete_learneraffiliation %}
+          <a href="{% url 'student:affiliation_delete' learner.pk af.pk %}" class="btn btn-sm btn-danger">Delete</a>
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="4" class="text-center text-muted">No affiliations.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

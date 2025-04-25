@@ -1,0 +1,46 @@
+{% extends "base/base.html" %}
+{% block title %} Enrollment | List {% endblock title %}
+{% block content %}
+<div class="container py-4">
+  <h1 class="mb-4">Enrollments: {{ learner.user.get_full_name }}</h1>
+
+  {% if perms.student.add_learnerqualificationenrollment %}
+  <a href="{% url 'student:enrollment_create' learner.pk %}" class="btn btn-success mb-3">+ Add Enrollment</a>
+  {% endif %}
+  <a href="{% url 'student:learner_detail' learner.pk %}" class="btn btn-secondary mb-3 ms-2">Back</a>
+
+  <table class="table table-hover">
+    <thead class="table-light">
+      <tr>
+        <th>Qualification</th>
+        <th>Enrolled</th>
+        <th>Completed</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for en in enrollments %}
+      <tr>
+        <td>{{ en.qualification.name }}</td>
+        <td>{{ en.enrolled_date }}</td>
+        <td>{{ en.completion_date|default:"—" }}</td>
+        <td>{{ en.get_status_display }}</td>
+        <td>
+          {% if perms.student.change_learnerqualificationenrollment %}
+          <a href="{% url 'student:enrollment_update' learner.pk en.pk %}" class="btn btn-sm btn-warning">Edit</a>
+          {% endif %}
+          {% if perms.student.delete_learnerqualificationenrollment %}
+          <a href="{% url 'student:enrollment_delete' learner.pk en.pk %}" class="btn btn-sm btn-danger">Delete</a>
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="5" class="text-center text-muted">No enrollments.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

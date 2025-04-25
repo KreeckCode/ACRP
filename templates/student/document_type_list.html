@@ -1,0 +1,34 @@
+{% extends "base/base.html" %}
+{% block content %}
+<div class="container py-4">
+  <h1 class="mb-4">Document Types</h1>
+
+  {% if perms.student.add_documenttype %}
+  <a href="{% url 'student:document_type_create' %}" class="btn btn-success mb-3">+ Add Type</a>
+  {% endif %}
+
+  <table class="table table-hover">
+    <thead class="table-light">
+      <tr><th>Code</th><th>Description</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+      {% for dt in types %}
+      <tr>
+        <td>{{ dt.code }}</td>
+        <td>{{ dt.description }}</td>
+        <td>
+          {% if perms.student.change_documenttype %}
+          <a href="{% url 'student:document_type_update' dt.pk %}" class="btn btn-sm btn-warning">Edit</a>
+          {% endif %}
+          {% if perms.student.delete_documenttype %}
+          <a href="{% url 'student:document_type_delete' dt.pk %}" class="btn btn-sm btn-danger">Delete</a>
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="3" class="text-center text-muted">No document types.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

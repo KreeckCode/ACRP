@@ -1,0 +1,37 @@
+{% extends "base/base.html" %}
+{% block content %}
+<div class="container py-4">
+  <h1 class="mb-4">CPD History: {{ learner.user.get_full_name }}</h1>
+
+  {% if perms.student.add_cpdhistory %}
+  <a href="{% url 'student:cpd_history_create' learner.pk %}" class="btn btn-success mb-3">+ Add Record</a>
+  {% endif %}
+  <a href="{% url 'student:learner_detail' learner.pk %}" class="btn btn-secondary mb-3 ms-2">Back</a>
+
+  <table class="table table-hover">
+    <thead class="table-light">
+      <tr><th>Event</th><th>Date Attended</th><th>Points</th><th>Status</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+      {% for rec in history %}
+      <tr>
+        <td>{{ rec.event.topics }}</td>
+        <td>{{ rec.date_attended }}</td>
+        <td>{{ rec.points_awarded }}</td>
+        <td>{{ rec.get_verification_status_display }}</td>
+        <td>
+          {% if perms.student.change_cpdhistory %}
+          <a href="{% url 'student:cpd_history_update' learner.pk rec.pk %}" class="btn btn-sm btn-warning">Edit</a>
+          {% endif %}
+          {% if perms.student.delete_cpdhistory %}
+          <a href="{% url 'student:cpd_history_delete' learner.pk rec.pk %}" class="btn btn-sm btn-danger">Delete</a>
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" class="text-center text-muted">No CPD history.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

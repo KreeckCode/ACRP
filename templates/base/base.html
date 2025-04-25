@@ -73,7 +73,7 @@
     <div class="wrapper">
         <div class="iq-sidebar  sidebar-default  ">
             <div class="iq-sidebar-logo d-flex align-items-end justify-content-between">
-                <a href="/static/backend/index.html" class="header-logo">
+                <a href="{% static '' %}" class="header-logo">
                     <img src="{% static 'main_media/logo-white.png' %}" class="img-fluid rounded-normal light-logo"
                         alt="logo">
                     <img src="{% static 'main_media/logo-white-footer.png' %}"
@@ -202,6 +202,79 @@
                             </a>
                         </li>
                         <!-- Item End-->
+
+                        <li class="px-3 pt-3 pb-2">
+                        <span class="text-uppercase small font-weight-bold">Student</span>
+                        </li>
+
+                        <li class="sidebar-layout" data-toggle="tooltip" data-placement="right" title="Student">
+                        <a href="#app50" class="collapsed svg-icon" data-toggle="collapse" aria-expanded="false">
+                            <i class="fa fa-user-graduate"></i>
+                            <span class="ml-2">Student</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="svg-icon iq-arrow-right arrow-active" width="15" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                        <ul id="app50" class="submenu collapse" data-parent="#iq-sidebar-toggle">
+                            {% if request.user.acrp_role == 'LEARNER' %}
+                            <li class="sidebar-layout">
+                            <a href="{% url 'student:learner_detail' request.user.learner_profile.pk %}" class="svg-icon">
+                                <i class="fa fa-id-badge"></i><span class="ml-2">My Profile</span>
+                            </a>
+                            </li>
+                            <li class="sidebar-layout">
+                            <a href="{% url 'student:academic_list' request.user.learner_profile.pk %}" class="svg-icon">
+                                <i class="fa fa-book"></i><span class="ml-2">Academic History</span>
+                            </a>
+                            </li>
+                            <li class="sidebar-layout">
+                            <a href="{% url 'student:enrollment_list' request.user.learner_profile.pk %}" class="svg-icon">
+                                <i class="fa fa-graduation-cap"></i><span class="ml-2">My Enrollments</span>
+                            </a>
+                            </li>
+                            <li class="sidebar-layout">
+                            <a href="{% url 'student:cpd_history_list' request.user.learner_profile.pk %}" class="svg-icon">
+                                <i class="fa fa-clock"></i><span class="ml-2">CPD History</span>
+                            </a>
+                            </li>
+                            <li class="sidebar-layout">
+                            <a href="{% url 'student:affiliation_list' request.user.learner_profile.pk %}" class="svg-icon">
+                                <i class="fa fa-handshake"></i><span class="ml-2">Affiliations</span>
+                            </a>
+                            </li>
+                            <li class="sidebar-layout">
+                            <a href="{% url 'student:learner_document_list' request.user.learner_profile.pk %}" class="svg-icon">
+                                <i class="fa fa-file-upload"></i><span class="ml-2">Documents</span>
+                            </a>
+                            </li>
+                            {% endif %}
+
+                            {% if request.user.acrp_role == 'PROVIDER_ADMIN' %}
+                            <li class="sidebar-layout">
+                            <a href="{% url 'student:learner_list' %}" class="svg-icon">
+                                <i class="fa fa-users"></i><span class="ml-2">Manage Learners</span>
+                            </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                        </li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
                         <!-- Dropdown Item (Budget)-->
                         <li class="sidebar-layout" data-toggle="tooltip" data-placement="right" title="Budget Requests">
@@ -369,7 +442,7 @@
                                                             <div class="avatar">
                                                                 <div class="avatar-img avatar-success avatar-20">
                                                                     <span><img class="avatar is-squared rounded-circle"
-                                                                            src="/static/assets/images/user/2.jpg"
+                                                                            src="{% static 'assets/images/user/2.jpg' %}"
                                                                             alt="2.jpg"></span>
                                                                 </div>
                                                             </div>
@@ -544,7 +617,7 @@
                                     <a href="#" class="nav-item nav-icon dropdown-toggle pr-0 search-toggle"
                                         id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true"
                                         aria-expanded="false">
-                                        <img src="/static/assets/images/user/1.jpg" class="img-fluid avatar-rounded"
+                                        <img src="{% static 'assets/images/user/1.jpg' %}" class="img-fluid avatar-rounded"
                                             alt="user">
                                         <span class="mb-0 ml-2 user-name">Username</span>
                                     </a>
@@ -655,32 +728,32 @@
             </div>
         </div>
     </footer> <!-- Backend Bundle JavaScript -->
-    <script src="/static/assets/js/backend-bundle.min.js"></script>
+    <script src="{% static 'assets/js/backend-bundle.min.js' %}"></script>
     <!-- Chart Custom JavaScript -->
-    <script src="/static/assets/js/customizer.js"></script>
+    <script src="{% static 'assets/js/customizer.js' %}"></script>
 
-    <script src="/static/assets/js/sidebar.js"></script>
+    <script src="{% static 'assets/js/sidebar.js' %}"></script>
 
     <!-- Flextree Javascript-->
-    <script src="/static/assets/js/flex-tree.min.js"></script>
-    <script src="/static/assets/js/tree.js"></script>
+    <script src="{% static 'assets/js/flex-tree.min.js' %}"></script>
+    <script src="{% static 'assets/js/tree.js' %}"></script>
 
     <!-- Table Treeview JavaScript -->
-    <script src="/static/assets/js/table-treeview.js"></script>
+    <script src="{% static 'assets/js/table-treeview.js' %}"></script>
 
     <!-- SweetAlert JavaScript -->
-    <script src="/static/assets/js/sweetalert.js"></script>
+    <script src="{% static 'assets/js/sweetalert.js' %}"></script>
 
     <!-- Chart Custom JavaScript -->
-    <script src="/static/assets/js/chart-custom.js"></script>
-    <script src="/static/assets/js/charts/01.js"></script>
-    <script src="/static/assets/js/charts/02.js"></script>
+    <script src="{% static 'assets/js/chart-custom.js' %}"></script>
+    <script src="{% static 'assets/js/charts/01.js' %}"></script>
+    <script src="{% static 'assets/js/charts/02.js' %}"></script>
 
     <!-- slider JavaScript -->
-    <script src="/static/assets/js/slider.js"></script>
+    <script src="{% static 'assets/js/slider.js' %}"></script>
 
     <!-- app JavaScript -->
-    <script src="/static/assets/js/app.js"></script>
+    <script src="{% static 'assets/js/app.js' %}"></script>
 </body>
 
 </html>
