@@ -83,28 +83,38 @@ class ProfileUpdateForm(UserChangeForm):
         model = User
         fields = ['email', 'phone', 'address', 'picture', 'first_name', 'last_name']
 
-
 class EmailValidationOnForgotPassword(PasswordResetForm):
     def clean_email(self):
         email = self.cleaned_data['email']
         if not User.objects.filter(email__iexact=email, is_active=True).exists():
-            msg = "There is no user registered with the specified E-mail address. "
-            self.add_error('email', msg)
-            return email
-
-
+            raise forms.ValidationError("No active user with this email.")
+        return email
 
 class UserRegistrationForm(forms.ModelForm):
     """
-    Form for registering a new user with additional role and department fields.
+    Register new User with ACRP role + org role + dept + manager.
     """
-    password = forms.CharField(widget=forms.PasswordInput)
-    role = forms.ModelChoiceField(queryset=Role.objects.all())
+    password   = forms.CharField(widget=forms.PasswordInput)
+    acrp_role  = forms.ChoiceField(choices=User.ACRPRole.choices)
+    role       = forms.ModelChoiceField(queryset=Role.objects.all(), required=False)
     department = forms.ModelChoiceField(queryset=Department.objects.all(), required=False)
 
     class Meta:
-        model = User
-        fields = ['first_name', 'last_name', 'employee_code', 'email', 'phone', 'role', 'department', 'manager', 'password']
+        model  = User
+        fields = [
+            'username','first_name','last_name','employee_code',
+            'email','phone','acr p_role','role',
+            'department','manager','password'
+        ]
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.set_password(self.cleaned_data['password'])
+        if commit:
+            user.save()
+        return user
+    
+
 
 class RoleForm(forms.ModelForm):
     class Meta:
@@ -112,13 +122,20 @@ class RoleForm(forms.ModelForm):
         fields = ['title', 'description', 'parent_role']
 
 
+
 class UserUpdateForm(forms.ModelForm):
     """
-    Form for updating user information.
+    Update existing user; includes ACRP role.
     """
+    acrp_role = forms.ChoiceField(choices=User.ACRPRole.choices)
+
     class Meta:
-        model = User
-        fields = ['first_name', 'last_name', 'email', 'phone', 'role', 'department', 'manager', 'picture']
+        model  = User
+        fields = [
+            'first_name','last_name','email','phone','picture',
+            'acrpr_role','role','department','manager'
+        ]
+
 
 class DepartmentForm(forms.ModelForm):
     class Meta:

@@ -2,17 +2,13 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser, Group, Permission, UserManager
 from django.utils.translation import gettext_lazy as _
 from django.utils.timezone import now
-from PIL import Image
 from django.conf import settings
 from django.urls import reverse
+from PIL import Image
 from .validators import ASCIIUsernameValidator
 
-
 class Department(models.Model):
-    """
-    Represents a department within the organisation, such as Finance, HR, IT, etc.
-    """
-    name = models.CharField(max_length=50, unique=True, blank=False, null=False)
+    name        = models.CharField(max_length=50, unique=True)
     description = models.TextField(blank=True, null=True)
 
     def __str__(self):
@@ -20,14 +16,16 @@ class Department(models.Model):
 
 
 class Role(models.Model):
-    """
-    Defines roles such as Software Engineer, Manager, HR, each with specific responsibilities
-    within the organisation. Each role must be assigned to a department.
-    """
-    title = models.CharField(max_length=50, unique=True, blank=False, null=False)
-    description = models.TextField(blank=True, null=True)
-    department = models.ForeignKey(Department,null=True, on_delete=models.CASCADE, related_name='roles', help_text="The department to which this role belongs.")
-    parent_role = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='child_roles')
+    title        = models.CharField(max_length=50, unique=True)
+    description  = models.TextField(blank=True, null=True)
+    department   = models.ForeignKey(
+        Department, null=True, blank=True, on_delete=models.CASCADE,
+        related_name='roles', help_text="The department this role belongs to."
+    )
+    parent_role  = models.ForeignKey(
+        'self', null=True, blank=True, on_delete=models.SET_NULL,
+        related_name='child_roles'
+    )
 
     def __str__(self):
         return self.title
@@ -35,83 +33,107 @@ class Role(models.Model):
 
 class User(AbstractUser):
     """
-    Custom User model integrated with the Employee Profile.
-    When a User is created, an EmployeeProfile is also created automatically.
+    Extends Django’s AbstractUser with:
+     - employee_code, phone, picture
+     - org-role → Role + Department + manager hierarchy
+     - ACRP-wide role enum & built-in Group/Permission override
     """
-    employee_code = models.CharField(max_length=30, unique=True, null=False)
-    email = models.EmailField(unique=True, blank=False, null=False)
-    phone = models.CharField(max_length=60, blank=True, null=True)
-    picture = models.ImageField(upload_to='profile_pictures/%y/%m/%d/', default='default.png', null=True)
-    role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, related_name='users')
-    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, related_name='employees')
+    employee_code = models.CharField(max_length=30, unique=True)
+    email         = models.EmailField(unique=True)
+    phone         = models.CharField(max_length=60, blank=True, null=True)
+    picture       = models.ImageField(
+        upload_to='profile_pictures/%y/%m/%d/',
+        default='default.png', null=True, blank=True
+    )
+    role          = models.ForeignKey(
+        Role, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='users'
+    )
+    department    = models.ForeignKey(
+        Department, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='employees'
+    )
     date_of_joining = models.DateTimeField(_("date joined"), default=now)
-    is_active = models.BooleanField(default=True)
-    manager = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='subordinates')
+    manager       = models.ForeignKey(
+        'self', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='subordinates'
+    )
 
-    # Override groups and user_permissions to avoid conflicts
-    groups = models.ManyToManyField(
-        Group,
-        related_name='custom_user_groups',
-        blank=True,
-        help_text=_('The groups this user belongs to. A user will get all permissions granted to each of their groups.'),
-        verbose_name=_('groups'),
+    # override built-in groups/permissions to avoid name clash
+    groups           = models.ManyToManyField(
+        Group, related_name='custom_user_groups', blank=True
     )
     user_permissions = models.ManyToManyField(
-        Permission,
-        related_name='custom_user_permissions',
-        blank=True,
-        help_text=_('Specific permissions for this user.'),
-        verbose_name=_('user permissions'),
+        Permission, related_name='custom_user_permissions', blank=True
+    )
+
+    # ACRP-wide roles
+    class ACRPRole(models.TextChoices):
+        GLOBAL_SDP           = 'GLOBAL_SDP', 'Global (SDP)'
+        PROVIDER_ADMIN       = 'PROVIDER_ADMIN', 'Provider Administrator'
+        INTERNAL_FACILITATOR = 'INTERNAL_FACILITATOR', 'Internal Facilitator'
+        ASSESSOR             = 'ASSESSOR', 'Assessor'
+        LEARNER              = 'LEARNER', 'Learner'
+
+    acrp_role = models.CharField(
+        max_length=20,
+        choices=ACRPRole.choices,
+        default=ACRPRole.LEARNER,
+        help_text="ACRP-wide role"
     )
 
     username_validator = ASCIIUsernameValidator()
-    objects = UserManager()
+    objects            = UserManager()
 
     @property
     def get_full_name(self):
-        full_name = self.username
         if self.first_name and self.last_name:
-            full_name = self.first_name + " " + self.last_name
-        return full_name
-
-    def __str__(self):
-        return '{} ({})'.format(self.username, self.get_full_name)
+            return f"{self.first_name} {self.last_name}"
+        return self.username
 
     def get_picture(self):
         try:
             return self.picture.url
         except:
-            no_picture = settings.MEDIA_URL + 'default.png'
-            return no_picture
+            return settings.MEDIA_URL + 'default.png'
 
     def get_absolute_url(self):
-        return reverse('profile_single', kwargs={'id': self.id})
+        return reverse('accounts:user_profile', kwargs={'user_id': self.pk})
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        try:
-            img = Image.open(self.picture.path)
-            if img.height > 300 or img.width > 300:
-                output_size = (300, 300)
-                img.thumbnail(output_size)
-                img.save(self.picture.path)
-        except:
-            pass
+        # resize uploaded picture
+        if self.picture and hasattr(self.picture, 'path'):
+            try:
+                img = Image.open(self.picture.path)
+                if img.height > 300 or img.width > 300:
+                    img.thumbnail((300, 300))
+                    img.save(self.picture.path)
+            except:
+                pass
 
     def delete(self, *args, **kwargs):
+        # delete custom picture file
         if self.picture and self.picture.name != 'default.png':
-            self.picture.delete(save=False)
+            try:
+                self.picture.delete(save=False)
+            except:
+                pass
         super().delete(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.username} ({self.get_full_name})"
 
 
 class StaffUser(models.Model):
     """
-    Represents a detailed profile for internal staff members.
-    When a StaffUser is created, an EmployeeProfile and User are also created.
+    Detailed profile for internal staff.
     """
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='staff_profile')
+    user              = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name='staff_profile'
+    )
     emergency_contact = models.CharField(max_length=60, blank=True, null=True)
-    date_of_birth = models.DateField(null=True, blank=True)
+    date_of_birth     = models.DateField(blank=True, null=True)
 
     def __str__(self):
-        return f"{self.user.first_name} {self.user.last_name} - {self.user.department.name if self.user.department else 'No Department'}"
+        return f"{self.user.get_full_name} [{self.user.department or 'No Dept'}]"
