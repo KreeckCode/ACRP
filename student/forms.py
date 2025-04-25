@@ -1,4 +1,6 @@
 from django import forms
+
+from providers.models import Qualification
 from .models import (
     LearnerProfile, AcademicHistory,
     LearnerQualificationEnrollment,
@@ -18,9 +20,15 @@ class AcademicHistoryForm(forms.ModelForm):
         exclude=()
 
 class EnrollmentForm(forms.ModelForm):
+    # manually declare the qualification field
+    qualification = forms.ModelChoiceField(
+        queryset=Qualification.objects.all(),
+        label="Qualification"
+    )
+
     class Meta:
-        model  = LearnerQualificationEnrollment
-        exclude=()
+        model   = LearnerQualificationEnrollment
+        exclude = ('learner',)  # we set learner in the view, so exclude it here
 
 class CPDEventForm(forms.ModelForm):
     class Meta:

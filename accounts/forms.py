@@ -103,7 +103,7 @@ class UserRegistrationForm(forms.ModelForm):
         model  = User
         fields = [
             'username','first_name','last_name','employee_code',
-            'email','phone','acr p_role','role',
+            'email','phone','acrp_role','role',
             'department','manager','password'
         ]
 
@@ -133,7 +133,7 @@ class UserUpdateForm(forms.ModelForm):
         model  = User
         fields = [
             'first_name','last_name','email','phone','picture',
-            'acrpr_role','role','department','manager'
+            'acrp_role','role','department','manager'
         ]
 
 

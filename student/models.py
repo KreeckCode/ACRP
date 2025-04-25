@@ -1,20 +1,22 @@
 from django.db import models
 from django.conf import settings
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 class LearnerProfile(models.Model):
-    user              = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='learner_profile')
-    id_number         = models.CharField(max_length=50, unique=True)
-    date_of_birth     = models.DateField()
-    gender            = models.CharField(max_length=10, choices=[('M','Male'),('F','Female'),('O','Other')])
-    phone             = models.CharField(max_length=50)
-    email             = models.EmailField()
-    address           = models.TextField()
-    nationality       = models.CharField(max_length=100)
-    primary_language  = models.CharField(max_length=50)
-    emergency_name    = models.CharField(max_length=100)
-    emergency_relation= models.CharField(max_length=50)
-    emergency_phone   = models.CharField(max_length=50)
-    status            = models.CharField(
+    user               = models.OneToOneField(User, on_delete=models.CASCADE, related_name='learner_profile')
+    id_number          = models.CharField(max_length=50, unique=True)
+    date_of_birth      = models.DateField()
+    gender             = models.CharField(max_length=10, choices=[('M','Male'),('F','Female'),('O','Other')])
+    phone              = models.CharField(max_length=50)
+    email              = models.EmailField()
+    address            = models.TextField()
+    nationality        = models.CharField(max_length=100)
+    primary_language   = models.CharField(max_length=50)
+    emergency_name     = models.CharField(max_length=100)
+    emergency_relation = models.CharField(max_length=50)
+    emergency_phone    = models.CharField(max_length=50)
+    status             = models.CharField(
         max_length=10,
         choices=[('ENROLLED','Enrolled'),('GRADUATED','Graduated'),('WITHDRAWN','Withdrawn')],
         default='ENROLLED'
@@ -32,17 +34,23 @@ class AcademicHistory(models.Model):
     grade_or_result   = models.CharField(max_length=50)
     certificate_file  = models.FileField(upload_to='learner/academics/', blank=True, null=True)
 
+    def __str__(self):
+        return f"{self.institution_name} – {self.qualification_name}"
+
 
 class LearnerQualificationEnrollment(models.Model):
-    learner         = models.ForeignKey(LearnerProfile, on_delete=models.CASCADE, related_name='enrollments')
-    qualification    = models.ForeignKey('provider.Qualification', on_delete=models.CASCADE)
-    enrolled_date    = models.DateField()
-    completion_date  = models.DateField(blank=True, null=True)
-    status           = models.CharField(
+    learner          = models.ForeignKey(LearnerProfile, on_delete=models.CASCADE, related_name='enrollments')
+    qualification     = models.ForeignKey('provider.Qualification', on_delete=models.CASCADE, related_name='enrollments')
+    enrolled_date     = models.DateField()
+    completion_date   = models.DateField(blank=True, null=True)
+    status            = models.CharField(
         max_length=12,
         choices=[('IN_PROGRESS','In Progress'),('COMPLETED','Completed'),('CANCELLED','Cancelled')],
         default='IN_PROGRESS'
     )
+
+    def __str__(self):
+        return f"{self.learner.id_number} → {self.qualification.name}"
 
 
 class CPDEvent(models.Model):
@@ -52,17 +60,23 @@ class CPDEvent(models.Model):
     presenters     = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='cpd_presented')
     default_points = models.DecimalField(max_digits=4, decimal_places=2)
 
+    def __str__(self):
+        return f"{self.date} | {self.topics}"
+
 
 class CPDHistory(models.Model):
-    learner             = models.ForeignKey(LearnerProfile, on_delete=models.CASCADE, related_name='cpd_history')
-    event               = models.ForeignKey(CPDEvent, on_delete=models.CASCADE)
-    date_attended       = models.DateField()
-    points_awarded      = models.DecimalField(max_digits=4, decimal_places=2)
-    verification_status = models.CharField(
+    learner            = models.ForeignKey(LearnerProfile, on_delete=models.CASCADE, related_name='cpd_history')
+    event              = models.ForeignKey(CPDEvent, on_delete=models.CASCADE, related_name='histories')
+    date_attended      = models.DateField()
+    points_awarded     = models.DecimalField(max_digits=4, decimal_places=2)
+    verification_status= models.CharField(
         max_length=8,
         choices=[('PENDING','Pending'),('VERIFIED','Verified'),('REJECTED','Rejected')],
         default='PENDING'
     )
+
+    def __str__(self):
+        return f"{self.learner.id_number} – {self.event.topics}"
 
 
 class LearnerAffiliation(models.Model):
@@ -76,6 +90,9 @@ class LearnerAffiliation(models.Model):
         choices=[('VERIFIED','Verified'),('INVALID','Invalid'),('PENDING','Pending')],
         default='PENDING'
     )
+
+    def __str__(self):
+        return f"{self.organization_name} ({self.learner.id_number})"
 
 
 class DocumentType(models.Model):
@@ -99,3 +116,6 @@ class LearnerDocument(models.Model):
     reviewed_by   = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
     reviewed_at   = models.DateTimeField(null=True, blank=True)
     review_notes  = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.document_type.code} – {self.learner.id_number}"

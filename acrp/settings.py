@@ -49,7 +49,9 @@ PROJECT_APPS = [
     'finance',
     'hr',
     'database',
-    'chat'
+    'chat',
+    'providers',
+    'student',
 ]
 
 

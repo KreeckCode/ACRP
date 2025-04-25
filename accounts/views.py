@@ -5,7 +5,6 @@ from .forms import UserRegistrationForm, UserUpdateForm
 from .models import Department, Role, User
 
 
-
 @login_required
 @permission_required('accounts.view_user_list', raise_exception=True)
 def user_list(request):

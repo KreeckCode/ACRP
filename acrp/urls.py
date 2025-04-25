@@ -13,7 +13,9 @@ urlpatterns = [
     path('app/', include('app.urls')),
     path('common/', include('common.urls')),
     path('db/', include('database.urls')),
-   path('chat/', include('chat.urls')),
+    path('chat/', include('chat.urls')),
+    path('providers/', include('providers.urls')),
+    path('students/', include('student.urls')),
 ]
 
 if settings.DEBUG:

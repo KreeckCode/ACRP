@@ -8,35 +8,35 @@ from .models import (
 
 class ProviderForm(forms.ModelForm):
     class Meta:
-        model = Provider
+        model   = Provider
         exclude = ('created_at','updated_at','created_by','updated_by')
 
 class AccreditationForm(forms.ModelForm):
     class Meta:
-        model = ProviderAccreditation
-        fields = '__all__'
+        model   = ProviderAccreditation
+        fields  = '__all__'
 
 class QualificationForm(forms.ModelForm):
     class Meta:
-        model = Qualification
+        model   = Qualification
         exclude = ('created_at','updated_at',)
 
 class ModuleForm(forms.ModelForm):
     class Meta:
-        model = QualificationModule
+        model  = QualificationModule
         fields = '__all__'
 
 class ProviderUserForm(forms.ModelForm):
     class Meta:
-        model = ProviderUserProfile
+        model  = ProviderUserProfile
         fields = '__all__'
 
 class AssessorForm(forms.ModelForm):
     class Meta:
-        model = AssessorProfile
+        model   = AssessorProfile
         exclude = ('user',)
 
 class ProviderDocumentForm(forms.ModelForm):
     class Meta:
-        model = ProviderDocument
-        fields = ['name','file']
+        model   = ProviderDocument
+        fields  = ['name','file']
