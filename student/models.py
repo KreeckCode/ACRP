@@ -1,6 +1,8 @@
 from django.db import models
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from providers.models import Qualification
+
 User = get_user_model()
 
 class LearnerProfile(models.Model):
@@ -40,7 +42,8 @@ class AcademicHistory(models.Model):
 
 class LearnerQualificationEnrollment(models.Model):
     learner          = models.ForeignKey(LearnerProfile, on_delete=models.CASCADE, related_name='enrollments')
-    qualification     = models.ForeignKey('provider.Qualification', on_delete=models.CASCADE, related_name='enrollments')
+    qualification = models.ForeignKey(Qualification, on_delete=models.CASCADE, related_name='enrollments')
+
     enrolled_date     = models.DateField()
     completion_date   = models.DateField(blank=True, null=True)
     status            = models.CharField(
@@ -57,7 +60,7 @@ class CPDEvent(models.Model):
     date           = models.DateField()
     delivery_type  = models.CharField(max_length=10, choices=[('ONLINE','Online'),('ONSITE','Onsite'),('HYBRID','Hybrid')])
     topics         = models.CharField(max_length=200)
-    presenters     = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='cpd_presented')
+    presenters     = models.ManyToManyField(User, related_name='cpd_presented')
     default_points = models.DecimalField(max_digits=4, decimal_places=2)
 
     def __str__(self):
@@ -113,7 +116,7 @@ class LearnerDocument(models.Model):
         choices=[('PENDING','Pending'),('APPROVED','Approved'),('REJECTED','Rejected')],
         default='PENDING'
     )
-    reviewed_by   = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    reviewed_by   = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     reviewed_at   = models.DateTimeField(null=True, blank=True)
     review_notes  = models.TextField(blank=True, null=True)
 
