@@ -39,6 +39,8 @@ THIRED_PARTY_APPS = [
     'debug_toolbar',
     'crispy_forms',
     "crispy_bootstrap4",
+    'tailwind',
+    'theme'
 ]
 
 # Custom apps
@@ -181,7 +183,7 @@ else:
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-
+TAILWIND_APP_NAME = 'theme'
 # crispy config
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap4"
