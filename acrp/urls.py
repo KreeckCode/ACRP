@@ -17,6 +17,7 @@ urlpatterns = [
     path('providers/', include('providers.urls')),
     path('students/', include('student.urls')),
     path('enrollments/', include('enrollments.urls')),
+    path("__reload__/", include("django_browser_reload.urls")),
 ]
 
 if settings.DEBUG:

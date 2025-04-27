@@ -40,7 +40,8 @@ THIRED_PARTY_APPS = [
     'crispy_forms',
     "crispy_bootstrap4",
     'tailwind',
-    'theme'
+    'theme',
+    'django_browser_reload',
 ]
 
 # Custom apps
@@ -71,6 +72,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     'debug_toolbar.middleware.DebugToolbarMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    "django_browser_reload.middleware.BrowserReloadMiddleware",
 ]
 
 ROOT_URLCONF = "acrp.urls"
@@ -204,3 +206,5 @@ REST_FRAMEWORK = {
     #NOTE : Only enable this in production
     #'EXCEPTION_HANDLER': 'support.exception_handler.custom_exception_handler',
 }
+
+NPM_BIN_PATH = r"C:\Program Files\nodejs\npm.cmd"
