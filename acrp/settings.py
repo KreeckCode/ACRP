@@ -42,6 +42,7 @@ THIRED_PARTY_APPS = [
     'tailwind',
     'theme',
     'django_browser_reload',
+    "widget_tweaks",
 ]
 
 # Custom apps
