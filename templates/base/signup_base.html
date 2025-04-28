@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{% block title %}ACRP Signup{% endblock %}</title>
+
+  <!-- Tailwind CSS & Inter font -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Fade-in animation & global styles -->
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #F3F4F6;
+    }
+    .fade-in {
+      animation: fadeIn 0.5s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0 }
+      to   { opacity: 1 }
+    }
+    /* Global form field styling */
+    input, select, textarea {
+      width: 100%;
+      padding: 0.5rem 1rem;
+      border: 1px solid #D1D5DB;
+      border-radius: 0.375rem;
+      outline: none;
+    }
+    input:focus, select:focus, textarea:focus {
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+    }
+  </style>
+
+  {% block extra_css %}{% endblock %}
+</head>
+<body class="min-h-screen flex items-center justify-center">
+  <div class="w-full max-w-3xl mx-4">
+    {% block content %}{% endblock %}
+  </div>
+
+  <!-- Alpine.js & Feather Icons -->
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://unpkg.com/feather-icons"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.feather) {
+        feather.replace();
+      }
+    });
+  </script>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

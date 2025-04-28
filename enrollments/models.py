@@ -43,8 +43,9 @@ class AssociatedAffiliation(models.Model):
         editable=False
     )
 
-    GENDER_CHOICES = [('male','Male'),('female','Female'),('other','Other')]
-    title           = models.CharField(max_length=20)
+    GENDER_CHOICES = [('male','Male'),('female','Female')]
+    TITLE_CHOICES = [('Mr', 'Mr'), ('Mrs', 'Mrs'), ('Miss', 'Miss')]
+    title           = models.CharField(max_length=20, choices=TITLE_CHOICES)
     gender          = models.CharField(max_length=10, choices=GENDER_CHOICES)
     surname         = models.CharField(max_length=50)
     initials        = models.CharField(max_length=10)

@@ -1,0 +1,154 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  
+  <!-- Title -->
+  <title>{% block title %} Join ACRO {% endblock title %}</title>
+  
+  <!-- Favicon -->
+  <link rel="shortcut icon" href="{% static 'main_media/logo-white-footer.png' %}">
+  
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="ACRP Africa Management System streamlines manual processes and simplifies affiliation management by integrating key features such as course delivery, CPD tracking, and payment processing for ministry professionals and affiliates.">
+  <meta name="keywords" content="ACRP, Pastoral Training, Ministry Professionals, CPD, Learner Management, Course Management, Payment Processing, Ministry Development, Africa">
+  <meta name="author" content="ACRP Africa Team">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:title" content="ACRP Management System | Empowering Ministry Training">
+  <meta property="og:description" content="ACRP Africa Management System streamlines manual processes and simplifies affiliation management by integrating key features such as course delivery, CPD tracking, and payment processing for ministry professionals and affiliates.">
+  <meta name="twitter:image" content="{% static 'main_media/logo.png' %}">
+
+  <!-- Canonical URL -->
+  <link rel="canonical" href="https://acrpafrica.co.za/">
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@300;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Schema.org Structured Data for SEO -->
+  <script type="application/ld+json">
+      {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "ACRP Africa Management System",
+      "operatingSystem": "All",
+      "applicationCategory": "BusinessApplication",
+      "description": "ACRP Africa Management System streamlines manual processes and simplifies affiliation management by integrating key features such as course delivery, CPD tracking, and payment processing for ministry professionals and affiliates.",
+      "url": "https://acrpafrica.co.za/",
+      "author": {
+          "@type": "Organization",
+          "name": "ACRP Africa Team"
+      },
+      "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": "4.5",
+          "reviewCount": "10"
+      }
+      }
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .fade-in { animation: fadeIn 0.6s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    
+      @import url('https://fonts.cdnfonts.com/css/inter');
+      .mobile-logo {
+          display: none;
+      }
+
+      @media (max-width: 976px) {
+          body {
+              margin: 0rem;
+              padding: 0rem;
+          }
+
+          .right {
+              display: none;
+          }
+
+          .left {
+              display: flex;
+              justify-content: center;
+              height: 95vh;
+              margin: 1rem;
+              padding: 0rem;
+          }
+
+          .terms {}
+
+          .signin-title {
+              display: none;
+          }
+
+          .logo {
+              display: flex;
+          }
+
+          .signup {
+              margin-top: 1rem;
+          }
+
+          .mobile-logo {
+              display: block;
+              display: flex;
+              justify-content: center;
+              margin-bottom: 2rem;
+          }
+      }
+  </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen flex items-center justify-center">
+  <div class="w-full max-w-md mx-4 p-8 bg-white rounded-xl shadow-lg fade-in">
+    <div class="text-center mb-6">
+      <h1 class="text-2xl font-bold text-gray-800">Welcome to ACRP</h1>
+      <p class="text-gray-600 mt-1">Tell us how you'd like to join</p>
+    </div>
+    <form method="post" action="{% url 'enrollments:onboarding' %}" class="space-y-4">
+      {% csrf_token %}
+      <label class="flex items-start bg-gray-100 p-4 rounded-lg hover:bg-gray-200 transition cursor-pointer">
+        <input type="radio" name="registration_type" value="associated" class="mt-1 mr-3 text-blue-600 focus:ring-blue-500">
+        <div>
+          <p class="text-lg font-semibold text-gray-800">Associated Affiliation</p>
+          <p class="text-gray-600 text-sm">Register as an associate of an organization or ministry.</p>
+        </div>
+      </label>
+      <label class="flex items-start bg-gray-100 p-4 rounded-lg hover:bg-gray-200 transition cursor-pointer">
+        <input type="radio" name="registration_type" value="student" class="mt-1 mr-3 text-green-600 focus:ring-green-500">
+        <div>
+          <p class="text-lg font-semibold text-gray-800">Student</p>
+          <p class="text-gray-600 text-sm">I have an invitation link from my training provider.</p>
+        </div>
+      </label>
+      <label class="flex items-start bg-gray-100 p-4 rounded-lg hover:bg-gray-200 transition cursor-pointer">
+        <input type="radio" name="registration_type" value="provider" class="mt-1 mr-3 text-purple-600 focus:ring-purple-500">
+        <div>
+          <p class="text-lg font-semibold text-gray-800">Provider</p>
+          <p class="text-gray-600 text-sm">I represent a training provider and wish to sign up.</p>
+        </div>
+      </label>
+      <button type="submit"
+              class="w-full py-3 mt-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition">
+        Continue
+      </button>
+    </form>
+    {% if messages %}
+      <div class="mt-6 space-y-2">
+        {% for message in messages %}
+          {% if message.tags == 'error' %}
+            <div class="px-4 py-2 rounded bg-red-100 text-red-800">
+          {% else %}
+            <div class="px-4 py-2 rounded bg-green-100 text-green-800">
+          {% endif %}
+              {{ message }}
+            </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+  </div>
+</body>
+</html>

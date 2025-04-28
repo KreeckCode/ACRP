@@ -11,6 +11,39 @@ from .forms import (
 )
 from accounts.models import User
 
+
+def onboarding(request):
+    """
+    Let a brand-new visitor choose how they want to join:
+      • Associated Affiliation
+      • Student (via invitation link)
+      • Provider
+    """
+    if request.method == 'POST':
+        choice = request.POST.get('registration_type')
+        if choice == 'associated':
+            return redirect('enrollments:associated_create')
+        elif choice == 'student':
+            return redirect('enrollments:learner_apply_prompt')
+        elif choice == 'provider':
+            # you need to create a provider_self_register view or adjust this URL
+            return redirect('providers:provider_self_register')
+        messages.error(request, "Please select one of the options above.")
+    return render(request, 'enrollments/onboarding.html')
+
+
+def learner_apply_prompt(request):
+    """
+    Simple form asking the applicant to paste their application link token,
+    then redirecting them to the real student apply page.
+    """
+    if request.method == 'POST':
+        token = request.POST.get('token','').strip()
+        if token:
+            return redirect(reverse('student:learner_apply', args=[token]))
+        messages.error(request, "Please enter your registration link token.")
+    return render(request, 'enrollments/learner_apply_prompt.html')
+
 # Only GLOBAL_SDP or PROVIDER_ADMIN may approve :contentReference[oaicite:5]{index=5}
 def is_admin(user):
     return user.acrp_role in {
@@ -57,8 +90,8 @@ def _crud(request, pk, model, form_class, formset_class, list_url, form_template
     return render(request, form_template, {'form': form, 'formset': fs})
 
 # Associated CRUD
-@login_required
-@permission_required('enrollments.add_associatedaffiliation', raise_exception=True)
+#@login_required
+#@permission_required('enrollments.add_associatedaffiliation', raise_exception=True)
 def associated_create(request):
     return _crud(request, None, AssociatedAffiliation, AssociatedForm, AssocDocFormSet,
                  'enrollments:associated_list', "enrollments/associated_form.html")

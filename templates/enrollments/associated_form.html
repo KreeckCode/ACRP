@@ -1,17 +1,311 @@
-{% extends "base/base.html" %}
-{% load crispy_forms_tags %}
-{% block title %}{% if form.instance.pk %}Edit{% else %}New{% endif %} Associated{% endblock %}
+{% extends "base/signup_base.html" %}
+{% load widget_tweaks %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}New{% endif %} Associated Application{% endblock %}
+
 {% block content %}
-  <h2 class="mb-4">{% if form.instance.pk %}Edit{% else %}New{% endif %} Associated Application</h2>
-  <form method="post" enctype="multipart/form-data">
+<div x-data="{ step: 1, total: 5 }" class="bg-white p-8 rounded-2xl shadow-lg fade-in">
+  <h1 class="text-3xl font-semibold mb-6 text-gray-800">
+    {% if form.instance.pk %}
+      Edit Associated Application
+    {% else %}
+      New Associated Application
+    {% endif %}
+  </h1>
+
+  <!-- Progress Bar -->
+  <div class="w-full bg-gray-200 rounded-full h-2 mb-8">
+    <div class="bg-blue-600 h-2 rounded-full transition-all" 
+         :style="`width: ${(step/total)*100}%`"></div>
+  </div>
+
+  <form method="post" enctype="multipart/form-data" class="space-y-6"
+        @submit.prevent="step < total ? step++ : $el.submit()">
     {% csrf_token %}
-    {{ form|crispy }}  {# filter syntax :contentReference[oaicite:4]{index=4} #}
-    <h5 class="mt-4">Upload Documents</h5>
-    {{ formset.management_form }}
-    {% for f in formset %}
-      {{ f|crispy }}
-    {% endfor %}
-    <button class="btn btn-primary mt-3">Save</button>
-    <a href="{% url 'enrollments:associated_list' %}" class="btn btn-secondary mt-3">Cancel</a>
+
+    <!-- Step Indicators -->
+    <div class="flex justify-between mb-8">
+      <template x-for="i in total" :key="i">
+        <div class="flex flex-col items-center space-y-1">
+          <div :class="step===i ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'"
+               class="w-10 h-10 flex items-center justify-center rounded-full transition-colors">
+            <span x-text="i"></span>
+          </div>
+          <span class="text-gray-600 text-sm" 
+                x-text="['Personal','Identity & Contact','Address','Qualifications & Ministry','Documents'][i-1]">
+          </span>
+        </div>
+      </template>
+    </div>
+
+    <!-- Step 1: Personal -->
+    <fieldset x-show="step===1" x-transition class="space-y-4">
+      <div>
+        <label class="block text-gray-700 mb-1">Title</label>
+        {{ form.title|add_class:"border border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+      </div>
+      <div>
+        <label class="block text-gray-700 mb-1">Gender</label>
+        {{ form.gender|add_class:"border border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-gray-700 mb-1">First Name</label>
+          {{ form.first_name|add_class:"border border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+        </div>
+        <div>
+          <label class="block text-gray-700 mb-1">Last Name</label>
+          {{ form.last_name|add_class:"border border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-gray-700 mb-1">Surname</label>
+          {{ form.surname|add_class:"border border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+        </div>
+        <div>
+          <label class="block text-gray-700 mb-1">Initials</label>
+          {{ form.initials|add_class:"border border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+        </div>
+      </div>
+      <div>
+        <label class="block text-gray-700 mb-1">Preferred Name</label>
+        {{ form.preferred_name|add_class:"border border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+      </div>
+    </fieldset>
+
+    <!-- Step 2: Identity & Contact -->
+    <fieldset x-show="step===2" x-transition class="space-y-4">
+      <div>
+        <label class="block text-gray-700 mb-1">ID Number</label>
+        {{ form.id_number|add_class:"border border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-gray-700 mb-1">Date of Birth</label>
+          {{ form.date_of_birth|add_class:"border border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+        </div>
+        <div>
+          <label class="block text-gray-700 mb-1">Race</label>
+          {{ form.race|add_class:"border border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+        </div>
+      </div>
+      <div>
+        <label class="block text-gray-700 mb-1">Disability (if any)</label>
+        {{ form.disability|add_class:"border border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+      </div>
+      <div>
+        <label class="block text-gray-700 mb-1">Passport Number</label>
+        {{ form.passport_number|add_class:"border border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-gray-700 mb-1">Email</label>
+          {{ form.email|add_class:"border border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+        </div>
+        <div>
+          <label class="block text-gray-700 mb-1">Cell Phone</label>
+          {{ form.cell|add_class:"border border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-gray-700 mb-1">Work Tel</label>
+          {{ form.tel_work|add_class:"border border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+        </div>
+        <div>
+          <label class="block text-gray-700 mb-1">Home Tel</label>
+          {{ form.tel_home|add_class:"border border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- Step 3: Address -->
+    <fieldset x-show="step===3" x-transition class="space-y-4">
+      <div>
+        <label class="block text-gray-700 mb-1">Street Address</label>
+        {{ form.street_address|add_class:"border border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+      </div>
+      <div>
+        <label class="block text-gray-700 mb-1">Postal Address</label>
+        {{ form.postal_address|add_class:"border border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-gray-700 mb-1">Postal Code</label>
+          {{ form.postal_code|add_class:"border border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+        </div>
+        <div>
+          <label class="block text-gray-700 mb-1">Province</label>
+          {{ form.province|add_class:"border border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-gray-700 mb-1">Country</label>
+          {{ form.country|add_class:"border border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+        </div>
+        <div>
+          <label class="block text-gray-700 mb-1">Religion</label>
+          {{ form.religious_affiliation|add_class:"border border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+        </div>
+      </div>
+      <div>
+        <label class="block text-gray-700 mb-1">Website</label>
+        {{ form.website|add_class:"border border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+      </div>
+    </fieldset>
+
+    <!-- Step 4: Qualifications & Ministry -->
+    <fieldset x-show="step===4" x-transition class="space-y-4">
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-gray-700 mb-1">Highest Qualification</label>
+          {{ form.highest_qualification|add_class:"border border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+        </div>
+        <div>
+          <label class="block text-gray-700 mb-1">Qualification Date</label>
+          {{ form.qualification_date|add_class:"border border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+        </div>
+      </div>
+      <div>
+        <label class="block text-gray-700 mb-1">Institution</label>
+        {{ form.qualification_institution|add_class:"border border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+      </div>
+      <div>
+        <label class="block text-gray-700 mb-1">Occupation</label>
+        {{ form.occupation|add_class:"border border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+      </div>
+      <div>
+        <label class="block text-gray-700 mb-1">Work Description</label>
+        {{ form.work_description|add_class:"border border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-gray-700 mb-1">Years in Ministry</label>
+          {{ form.years_ministry|add_class:"border border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+        </div>
+        <div>
+          <label class="block text-gray-700 mb-1">Months in Ministry</label>
+          {{ form.months_ministry|add_class:"border border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+        </div>
+      </div>
+      <div class="space-y-2">
+        <label class="inline-flex items-center">
+          {{ form.involved_pastoral|add_class:"form-checkbox h-5 w-5 text-blue-600" }}
+          <span class="ml-2">Involved in Pastoral</span>
+        </label>
+        <label class="inline-flex items-center">
+          {{ form.registered_elsewhere|add_class:"form-checkbox h-5 w-5 text-blue-600" }}
+          <span class="ml-2">Registered Elsewhere</span>
+        </label>
+        <label class="inline-flex items-center">
+          {{ form.suitably_trained|add_class:"form-checkbox h-5 w-5 text-blue-600" }}
+          <span class="ml-2">Suitably Trained</span>
+        </label>
+      </div>
+      <div class="space-y-2 mt-4">
+        <label class="inline-flex items-center">
+          {{ form.disciplinary_action|add_class:"form-checkbox h-5 w-5 text-blue-600" }}
+          <span class="ml-2">History of Disciplinary Action</span>
+        </label>
+        <label class="inline-flex items-center">
+          {{ form.felony_conviction|add_class:"form-checkbox h-5 w-5 text-blue-600" }}
+          <span class="ml-2">Felony Conviction</span>
+        </label>
+      </div>
+      <div>
+        <label class="block text-gray-700 mb-1">Disciplinary Description</label>
+        {{ form.disciplinary_description|add_class:"border border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+      </div>
+      <div>
+        <label class="block text-gray-700 mb-1">Felony Description</label>
+        {{ form.felony_description|add_class:"border border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+      </div>
+      <div>
+        <label class="block text-gray-700 mb-1">Other Languages</label>
+        {{ form.other_languages|add_class:"border border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+      </div>
+    </fieldset>
+
+
+
+
+    <!-- Step 5: Documents -->
+    <fieldset x-show="step===5" x-transition class="space-y-6">
+      <h2 class="text-xl font-semibold text-gray-800">Upload Documents</h2>
+
+      {# Management form for TOTAL_FORMS, INITIAL_FORMS, etc. #}
+      {{ formset.management_form }}
+
+      {% for f in formset %}
+        {# Hidden inputs for content_type, object_id, and DELETE #}
+        {% for hidden in f.hidden_fields %}
+          {{ hidden }}
+        {% endfor %}
+
+        <div class="border rounded-lg p-4 space-y-3">
+          <div>
+            <label class="block text-gray-700 mb-1">Category</label>
+            {{ f.category }}
+            {{ f.category.errors }}
+          </div>
+          <div>
+            <label class="block text-gray-700 mb-1">Select File</label>
+            {{ f.file }}
+            {{ f.file.errors }}
+          </div>
+
+          {% if f.instance.pk %}
+            <p class="text-sm text-gray-500">
+              Currently uploaded:
+              <a href="{{ f.instance.file.url }}" class="underline" target="_blank">View</a>
+            </p>
+          {% endif %}
+
+          {% if f.DELETE %}
+            <label class="inline-flex items-center text-red-600 mt-2">
+              {{ f.DELETE }}
+              <span class="">Remove this document</span>
+            </label>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </fieldset>
+
+
+
+
+
+
+
+    <!-- Navigation Buttons -->
+    <div class="flex justify-between items-center mt-8">
+      <button type="button" @click="step--" x-show="step>1"
+              class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition">
+        Previous
+      </button>
+
+      <button type="button" @click="step++" x-show="step<total"
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+        Next
+      </button>
+
+      <button type="submit" x-show="step===total"
+              class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+        Save
+      </button>
+    </div>
   </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+<script src="https://unpkg.com/feather-icons"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    feather.replace();
+  });
+</script>
 {% endblock %}

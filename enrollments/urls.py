@@ -7,4 +7,6 @@ urlpatterns = [
     path("associated/new/", views.associated_create, name="associated_create"),
     path("associated/<int:pk>/edit/", views.associated_update, name="associated_update"),
     path("associated/<int:pk>/approve/",views.associated_approve, name="associated_approve"),
+    path('onboarding/',        views.onboarding,             name='onboarding'),
+    path('onboarding/student/',views.learner_apply_prompt,   name='learner_apply_prompt'),
 ]
