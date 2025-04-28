@@ -18,6 +18,52 @@ from accounts.models import Department, User
 @login_required
 def dashboard(request):
     user = request.user
+
+    # 1) Everyone sees these three things:
+    context = {
+        'announcements': Announcement.objects.filter(is_urgent=True)[:5],
+        'events':        Event.objects.filter(is_mandatory=True,
+                                              start_time__gte=user.date_joined)[:5],
+        'projects':      Projects.objects.filter(manager=user)
+                                          .order_by('-start_date')[:5],
+    }
+
+    # 2) Figure out what role (if any) they actually have
+    role = getattr(user, 'role', None)
+    title = getattr(role, 'title', None)
+
+    # 3) Only add the extra bits for that one role
+    if title == "HR":
+        context.update({
+            'pending_leave_requests': LeaveRequest.objects.filter(status='PENDING').count(),
+            'employee_count':         EmployeeProfile.objects.count(),
+            'hr_documents':           HRDocumentStorage.objects.count(),
+        })
+    elif title == "Finance":
+        context.update({
+            'pending_budget_requests':  BudgetRequest.objects.filter(status='PENDING').count(),
+            'total_expenditure':        Expenditure.objects.aggregate(total=Sum('amount_spent'))['total'] or 0,
+            'unpaid_invoices':          Invoice.objects.filter(status='DRAFT').count(),
+        })
+    elif title == "Database Manager":
+        context.update({
+            'databases': Database.objects.filter(owner=user).count(),
+            'entries':   Entry.objects.filter(database__owner=user).count(),
+        })
+    elif title == "Accounts":
+        context.update({
+            'user_count':       User.objects.count(),
+            'department_count': Department.objects.count(),
+        })
+    # else: we do nothing extra
+
+    return render(request, 'app/dashboard.html', context)
+
+
+"""
+@login_required
+def dashboard(request):
+    user = request.user
     context = {}
 
     context['announcements'] = Announcement.objects.filter(is_urgent=True)[:5]
@@ -28,6 +74,9 @@ def dashboard(request):
         context['pending_leave_requests'] = LeaveRequest.objects.filter(status='PENDING').count()
         context['employee_count'] = EmployeeProfile.objects.count()
         context['hr_documents'] = HRDocumentStorage.objects.count()
+    
+    else:
+        pass
 
     if user.role.title == "Finance":
         context['pending_budget_requests'] = BudgetRequest.objects.filter(status='PENDING').count()
@@ -44,7 +93,7 @@ def dashboard(request):
 
     return render(request, 'app/dashboard.html', context)
 
-
+"""
 ### ========== EVENTS ========== ###
 
 @login_required

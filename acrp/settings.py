@@ -2,11 +2,16 @@ import os
 from pathlib import Path
 from django.conf import settings
 import posixpath
+from decouple import config
+import environ
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-o#c^y_f#qlo@472bri^1=q23#d7os!2a+dyuee4(c%9+c858_u"
+SECRET_KEY = config('SECRET_KEY')
+
+# Environment variables
+env = environ.Env()
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -108,12 +113,20 @@ DEBUG_TOOLBAR_CONFIG = {
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 if DEBUG == True:
+    # Debugging the port detailed
+    #print("→ DEC0UPLE DB_HOST:", repr(config('DB_HOST')))
+    #print("→ DEC0UPLE DB_PORT:", repr(config('DB_PORT')))
+
     DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': config('DB_NAME'),
+                'USER': config('DB_USER'),
+                'PASSWORD': config('DB_PASS'),
+                'HOST': config('DB_HOST'), 
+                'PORT': config('DB_PORT'),  
+            }
         }
-    }
 
 else:
     DATABASES = {

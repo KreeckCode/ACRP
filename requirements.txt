@@ -16,5 +16,4 @@ crispy-bootstrap5
 gunicorn 
 nginx
 django_browser_reload
-psycopg2
-psycopg2-binary
+psycopg[binary]

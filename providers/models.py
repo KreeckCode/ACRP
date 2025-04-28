@@ -108,11 +108,12 @@ class QualificationModule(models.Model):
         return f"{self.code}: {self.name}"
 
 
-class ProviderUserProfile(User):
+class ProviderUserProfile(models.Model):
     class RoleChoices(models.TextChoices):
         CENTER_ADMIN         = 'CENTER_ADMIN', 'Center Administrator'
         INTERNAL_FACILITATOR = 'INTERNAL_FACILITATOR', 'Internal Facilitator'
     provider        = models.ForeignKey(Provider, on_delete=models.CASCADE, related_name='users')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="provider_profile", primary_key=True,)
     alternate_email = models.EmailField(blank=True, null=True)
     bio             = models.TextField(blank=True, null=True)
 
@@ -120,12 +121,14 @@ class ProviderUserProfile(User):
         return f"{self.user.get_full_name} | {self.get_role_display()}"
 
 
-class AssessorProfile(User):
+class AssessorProfile(models.Model):
     provider          = models.ForeignKey(Provider, on_delete=models.CASCADE, related_name='assessors')
     class IDType(models.TextChoices):
         ID       = 'ID', 'ID'
         PASSPORT = 'PASSPORT', 'Passport'
         OTHER    = 'OTHER', 'Other'
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="assessor_profile", primary_key=True,)
     id_type           = models.CharField(max_length=20, choices=IDType.choices)
     id_number         = models.CharField(max_length=50, unique=True)
     date_of_birth     = models.DateField()
@@ -137,7 +140,7 @@ class AssessorProfile(User):
     )
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name} ({self.provider.code})"
+        return f"{self.user.first_name} {self.user.last_name} ({self.provider.code})"
 
 
 class ProviderDocument(models.Model):
