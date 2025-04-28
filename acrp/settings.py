@@ -2,7 +2,6 @@ import os
 from pathlib import Path
 from django.conf import settings
 import posixpath
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -108,13 +107,30 @@ DEBUG_TOOLBAR_CONFIG = {
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+if DEBUG == True:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        }
     }
-}
 
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        },
+
+        "enrollments": {
+            "ENGINE": "django.db.backends.sqlite3",
+            'NAME': os.path.join(BASE_DIR, 'enrollments.sqlite3'),
+        },
+    }
+
+    DATABASE_ROUTERS = [
+        "enrollments.router.EnrollmentsRouter"
+    ]
 
 
 # Password validation
