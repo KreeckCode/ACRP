@@ -9,3 +9,13 @@
 # drop tables in your Postgres database to accommodate your migrations
 '''bash
     DROP TABLE table_name;
+
+
+# Delete and Create a Database
+'''bash 
+    dropdb -h localhost -U postgres acrp_db
+    createdb -h localhost -U postgres acrp_db
+
+# Create a super user
+'''bash
+    python manage.py createsuperuser
