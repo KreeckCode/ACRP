@@ -4,10 +4,10 @@ from django.contrib import messages
 from django.db.models import Q
 from django.http import HttpResponseForbidden
 
-from .models import AssociatedAffiliation, DesignatedAffiliation, StudentAffiliation
+from .models import AssociatedAffiliation
 from .forms import (
-    AssociatedForm, DesignatedForm, StudentForm,
-    AssocDocFormSet, DesigDocFormSet, StudentDocFormSet
+    AssociatedForm,
+    AssocDocFormSet
 )
 from accounts.models import User
 
@@ -35,17 +35,8 @@ def associated_list(request):
     return _list(request, AssociatedAffiliation, "enrollments/associated_list.html",
                  ['full_names','surname','email'])
 
-@login_required
-@permission_required('enrollments.view_designatedaffiliation', raise_exception=True)
-def designated_list(request):
-    return _list(request, DesignatedAffiliation, "enrollments/designated_list.html",
-                 ['full_names','email'])
 
-@login_required
-@permission_required('enrollments.view_studentaffiliation', raise_exception=True)
-def student_list(request):
-    return _list(request, StudentAffiliation, "enrollments/student_list.html",
-                 ['full_names','email'])
+
 
 # Generic create/update handler
 def _crud(request, pk, model, form_class, formset_class, list_url, form_template):
@@ -79,31 +70,6 @@ def associated_update(request, pk):
     return _crud(request, pk, AssociatedAffiliation, AssociatedForm, AssocDocFormSet,
                  'enrollments:associated_list', "enrollments/associated_form.html")
 
-# Designated CRUD
-@login_required
-@permission_required('enrollments.add_designatedaffiliation', raise_exception=True)
-def designated_create(request):
-    return _crud(request, None, DesignatedAffiliation, DesignatedForm, DesigDocFormSet,
-                 'enrollments:designated_list', "enrollments/designated_form.html")
-
-@login_required
-@permission_required('enrollments.change_designatedaffiliation', raise_exception=True)
-def designated_update(request, pk):
-    return _crud(request, pk, DesignatedAffiliation, DesignatedForm, DesigDocFormSet,
-                 'enrollments:designated_list', "enrollments/designated_form.html")
-
-# Student CRUD
-@login_required
-@permission_required('enrollments.add_studentaffiliation', raise_exception=True)
-def student_create(request):
-    return _crud(request, None, StudentAffiliation, StudentForm, StudentDocFormSet,
-                 'enrollments:student_list', "enrollments/student_form.html")
-
-@login_required
-@permission_required('enrollments.change_studentaffiliation', raise_exception=True)
-def student_update(request, pk):
-    return _crud(request, pk, StudentAffiliation, StudentForm, StudentDocFormSet,
-                 'enrollments:student_list', "enrollments/student_form.html")
 
 # Single delete confirmation for all three models
 @login_required
@@ -111,8 +77,6 @@ def student_update(request, pk):
 def application_delete(request, model_name, pk):
     model_map = {
         'associated': AssociatedAffiliation,
-        'designated': DesignatedAffiliation,
-        'student':    StudentAffiliation
     }
     model = model_map.get(model_name)
     if not model:
@@ -132,19 +96,3 @@ def associated_approve(request, pk):
     obj.approved = True; obj.save()
     messages.success(request, "Associated application approved.")
     return redirect('enrollments:associated_list')
-
-@login_required
-@user_passes_test(is_admin, login_url='/', redirect_field_name=None)
-def designated_approve(request, pk):
-    obj = get_object_or_404(DesignatedAffiliation, pk=pk)
-    obj.approved = True; obj.save()
-    messages.success(request, "Designated application approved.")
-    return redirect('enrollments:designated_list')
-
-@login_required
-@user_passes_test(is_admin, login_url='/', redirect_field_name=None)
-def student_approve(request, pk):
-    obj = get_object_or_404(StudentAffiliation, pk=pk)
-    obj.approved = True; obj.save()
-    messages.success(request, "Student application approved.")
-    return redirect('enrollments:student_list')

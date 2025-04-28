@@ -1,9 +1,9 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
-from .models import AssociatedAffiliation, DesignatedAffiliation, StudentAffiliation
-from student.models import LearnerProfile     # your student app :contentReference[oaicite:13]{index=13}
-from accounts.models import User, Role         # your accounts app
+from .models import AssociatedAffiliation
+from student.models import LearnerProfile     
+from accounts.models import User, Role  
 
 # Helper to provision LearnerProfile once approved :contentReference[oaicite:14]{index=14}
 def _make_learner(instance):
@@ -23,8 +23,6 @@ def _make_learner(instance):
         )
 
 @receiver(post_save, sender=AssociatedAffiliation)
-@receiver(post_save, sender=DesignatedAffiliation)
-@receiver(post_save, sender=StudentAffiliation)
 def on_approve_create_user(sender, instance, created, **kwargs):
     # Only act on existing instance being approved :contentReference[oaicite:15]{index=15}
     if not created and instance.approved:
