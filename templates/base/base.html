@@ -153,7 +153,7 @@
                             </a>
                         </li>
                         <!-- Item End -->
-
+                        
                         <!-- Item Start (Announcements) -->
                         <li class=" sidebar-layout" data-toggle="tooltip" data-placement="right" title="Announcements">
                             <a href="{% url 'announcement_list' %}" class="svg-icon">
@@ -233,11 +233,7 @@
                                 <i class="fa fa-graduation-cap"></i><span class="ml-2">My Enrollments</span>
                             </a>
                             </li>
-                            <li class="sidebar-layout">
-                            <a href="{% url 'student:cpd_history_list' request.user.learner_profile.pk %}" class="svg-icon">
-                                <i class="fa fa-clock"></i><span class="ml-2">CPD History</span>
-                            </a>
-                            </li>
+                            
                             <li class="sidebar-layout">
                             <a href="{% url 'student:affiliation_list' request.user.learner_profile.pk %}" class="svg-icon">
                                 <i class="fa fa-handshake"></i><span class="ml-2">Affiliations</span>
@@ -252,9 +248,15 @@
 
                             {% if request.user.acrp_role == 'PROVIDER_ADMIN' %}
                             <li class="sidebar-layout">
-                            <a href="{% url 'student:learner_list' %}" class="svg-icon">
-                                <i class="fa fa-users"></i><span class="ml-2">Manage Students</span>
-                            </a>
+                            
+                                <a href="{% url 'student:learner_list' %}" class="svg-icon">
+                                    <i class="fa fa-users"></i><span class="ml-2">Manage Students</span>
+                                </a>
+                            </li>
+                            <li class="sidebar-layout">
+                                <a href="{% url 'student:cpd_history_list' request.user.learner_profile.pk %}" class="svg-icon">
+                                    <i class="fa fa-clock"></i><span class="ml-2">CPD History</span>
+                                </a>
                             </li>
                             {% endif %}
                         </ul>

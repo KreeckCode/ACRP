@@ -108,15 +108,11 @@ class QualificationModule(models.Model):
         return f"{self.code}: {self.name}"
 
 
-class ProviderUserProfile(models.Model):
+class ProviderUserProfile(User):
     class RoleChoices(models.TextChoices):
         CENTER_ADMIN         = 'CENTER_ADMIN', 'Center Administrator'
         INTERNAL_FACILITATOR = 'INTERNAL_FACILITATOR', 'Internal Facilitator'
-
-    user            = models.OneToOneField(User, on_delete=models.CASCADE)
     provider        = models.ForeignKey(Provider, on_delete=models.CASCADE, related_name='users')
-    role            = models.CharField(max_length=20, choices=RoleChoices.choices)
-    phone           = models.CharField(max_length=50, blank=True, null=True)
     alternate_email = models.EmailField(blank=True, null=True)
     bio             = models.TextField(blank=True, null=True)
 
@@ -124,11 +120,8 @@ class ProviderUserProfile(models.Model):
         return f"{self.user.get_full_name} | {self.get_role_display()}"
 
 
-class AssessorProfile(models.Model):
-    user              = models.OneToOneField(User, on_delete=models.SET_NULL, null=True, blank=True)
+class AssessorProfile(User):
     provider          = models.ForeignKey(Provider, on_delete=models.CASCADE, related_name='assessors')
-    first_name        = models.CharField(max_length=50)
-    last_name         = models.CharField(max_length=50)
     class IDType(models.TextChoices):
         ID       = 'ID', 'ID'
         PASSPORT = 'PASSPORT', 'Passport'
@@ -136,8 +129,6 @@ class AssessorProfile(models.Model):
     id_type           = models.CharField(max_length=20, choices=IDType.choices)
     id_number         = models.CharField(max_length=50, unique=True)
     date_of_birth     = models.DateField()
-    contact_phone     = models.CharField(max_length=50)
-    contact_email     = models.EmailField()
     has_system_access = models.BooleanField(default=False)
     status            = models.CharField(
         max_length=10,

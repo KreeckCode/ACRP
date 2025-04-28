@@ -23,5 +23,7 @@ __pycache__/
 .node_modules
 node_modules
 erp_ssh.pub
-
-
+theme/
+theme
+/theme
+.theme
