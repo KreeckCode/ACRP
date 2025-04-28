@@ -5,6 +5,16 @@ from .models import (
     ProviderUserProfile, AssessorProfile,
     ProviderDocument
 )
+from .models import ApplicationLink
+
+class ApplicationLinkForm(forms.ModelForm):
+    class Meta:
+        model = ApplicationLink
+        exclude = ('token', 'uses', 'created_at', 'created_by')
+        widgets = {
+            'expires_at': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+            'notes': forms.Textarea(attrs={'rows': 2}),
+        }
 
 class ProviderForm(forms.ModelForm):
     class Meta:

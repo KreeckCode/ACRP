@@ -6,7 +6,8 @@ from providers.models import Qualification
 User = get_user_model()
 
 class LearnerProfile(models.Model):
-    user               = models.OneToOneField(User, on_delete=models.CASCADE, related_name='learner_profile')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='learner_profile')
+    provider = models.OneToOneField('providers.Provider', on_delete=models.CASCADE, related_name='learners')
     id_number          = models.CharField(max_length=50, unique=True)
     date_of_birth      = models.DateField()
     gender             = models.CharField(max_length=10, choices=[('M','Male'),('F','Female'),('O','Other')])
@@ -23,18 +24,33 @@ class LearnerProfile(models.Model):
         choices=[('ENROLLED','Enrolled'),('GRADUATED','Graduated'),('WITHDRAWN','Withdrawn')],
         default='ENROLLED'
     )
+    verification_status= models.CharField(
+        max_length=8,
+        choices=[('PENDING','Pending'),('VERIFIED','Verified'),('REJECTED','Rejected')],
+        default='PENDING'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('provider','id_number')
 
     def __str__(self):
         return f"{self.user.get_full_name} ({self.id_number})"
 
 
 class AcademicHistory(models.Model):
-    learner           = models.ForeignKey(LearnerProfile, on_delete=models.CASCADE, related_name='academics')
+    learner           = models.ForeignKey(LearnerProfile, on_delete=models.CASCADE, related_name='academics', db_index=True)
     institution_name  = models.CharField(max_length=200)
     qualification_name= models.CharField(max_length=200)
     completion_date   = models.DateField()
     grade_or_result   = models.CharField(max_length=50)
     certificate_file  = models.FileField(upload_to='learner/academics/', blank=True, null=True)
+    verification_status= models.CharField(
+        max_length=8,
+        choices=[('PENDING','Pending'),('VERIFIED','Verified'),('REJECTED','Rejected')],
+        default='PENDING'
+    )
 
     def __str__(self):
         return f"{self.institution_name} – {self.qualification_name}"
@@ -51,6 +67,17 @@ class LearnerQualificationEnrollment(models.Model):
         choices=[('IN_PROGRESS','In Progress'),('COMPLETED','Completed'),('CANCELLED','Cancelled')],
         default='IN_PROGRESS'
     )
+    verification_status= models.CharField(
+        max_length=8,
+        choices=[('PENDING','Pending'),('VERIFIED','Verified'),('REJECTED','Rejected')],
+        default='PENDING'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+    class Meta:
+        unique_together = ('learner', 'qualification')
 
     def __str__(self):
         return f"{self.learner.id_number} → {self.qualification.name}"
@@ -62,6 +89,9 @@ class CPDEvent(models.Model):
     topics         = models.CharField(max_length=200)
     presenters     = models.ManyToManyField(User, related_name='cpd_presented')
     default_points = models.DecimalField(max_digits=4, decimal_places=2)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
 
     def __str__(self):
         return f"{self.date} | {self.topics}"
@@ -77,6 +107,9 @@ class CPDHistory(models.Model):
         choices=[('PENDING','Pending'),('VERIFIED','Verified'),('REJECTED','Rejected')],
         default='PENDING'
     )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
 
     def __str__(self):
         return f"{self.learner.id_number} – {self.event.topics}"
@@ -88,9 +121,9 @@ class LearnerAffiliation(models.Model):
     affiliation_code  = models.CharField(max_length=50, blank=True, null=True)
     affiliation_date  = models.DateField()
     document          = models.FileField(upload_to='learner/affiliations/')
-    status            = models.CharField(
+    verification_status= models.CharField(
         max_length=8,
-        choices=[('VERIFIED','Verified'),('INVALID','Invalid'),('PENDING','Pending')],
+        choices=[('PENDING','Pending'),('VERIFIED','Verified'),('REJECTED','Rejected')],
         default='PENDING'
     )
 
@@ -111,9 +144,9 @@ class LearnerDocument(models.Model):
     document_type = models.ForeignKey(DocumentType, on_delete=models.CASCADE)
     file          = models.FileField(upload_to='learner/documents/')
     uploaded_at   = models.DateTimeField(auto_now_add=True)
-    status        = models.CharField(
-        max_length=10,
-        choices=[('PENDING','Pending'),('APPROVED','Approved'),('REJECTED','Rejected')],
+    verification_status= models.CharField(
+        max_length=8,
+        choices=[('PENDING','Pending'),('VERIFIED','Verified'),('REJECTED','Rejected')],
         default='PENDING'
     )
     reviewed_by   = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)

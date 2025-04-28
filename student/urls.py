@@ -52,4 +52,5 @@ urlpatterns = [
     path('<int:learner_pk>/documents/',          views.learner_document_list,   name='learner_document_list'),
     path('<int:learner_pk>/documents/upload/',   views.learner_document_upload, name='learner_document_upload'),
     path('documents/<int:pk>/review/',           views.learner_document_review, name='learner_document_review'),
+    path('apply/<uuid:token>/', views.learner_apply, name='learner_apply'),
 ]

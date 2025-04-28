@@ -95,4 +95,8 @@ urlpatterns = [
         "<int:provider_pk>/docs/upload/", views.document_upload, name="document_upload"
     ),
     path("docs/<int:doc_pk>/review/", views.document_review, name="document_review"),
+
+    path('links/',          views.link_list,   name='link_list'),
+    path('links/new/',      views.link_create, name='link_create'),
+    path('links/<int:pk>/edit/', views.link_update, name='link_update'),
 ]

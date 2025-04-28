@@ -159,3 +159,37 @@ class ProviderDocument(models.Model):
 
     def __str__(self):
         return f"{self.provider.code} – {self.name}"
+
+
+import uuid
+from django.utils import timezone
+
+class ApplicationLink(models.Model):
+    provider    = models.ForeignKey(Provider, on_delete=models.CASCADE, related_name='application_links')
+    token       = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    created_at  = models.DateTimeField(auto_now_add=True)
+    expires_at  = models.DateTimeField()
+    is_active   = models.BooleanField(default=True)
+    max_uses    = models.PositiveIntegerField(null=True, blank=True, help_text="Optional max number of uses")
+    uses        = models.PositiveIntegerField(default=0)
+    created_by  = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    notes       = models.TextField(blank=True)
+
+    def __str__(self):
+        return f"{self.provider.code} → {self.token}"
+
+    def can_use(self):
+        now = timezone.now()
+        if not self.is_active:
+            return False
+        if self.expires_at and now > self.expires_at:
+            return False
+        if self.max_uses and self.uses >= self.max_uses:
+            return False
+        return True
+
+    def use(self):
+        self.uses += 1
+        if self.max_uses and self.uses >= self.max_uses:
+            self.is_active = False
+        self.save()

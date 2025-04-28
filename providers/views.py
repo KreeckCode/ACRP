@@ -6,7 +6,8 @@ from django.utils import timezone
 from django.conf import settings
 from django.http import Http404
 from django.contrib.auth import get_user_model
-
+from .models import Provider, ApplicationLink
+from .forms import ApplicationLinkForm
 from .models import (
     Provider, ProviderAccreditation,
     Qualification, QualificationModule,
@@ -369,3 +370,44 @@ def document_review(request, doc_pk):
         return redirect('provider:provider_detail', pk=doc.provider.pk)
 
     return render(request, 'provider/document_review.html', {'doc': doc})
+
+
+
+@login_required
+@permission_required('providers.view_applicationlink', raise_exception=True)
+def link_list(request):
+    # assume provider_profile exists on user
+    provider = request.user.provider_profile.provider
+    links = provider.application_links.all()
+    return render(request, 'providers/link_list.html', {'links': links})
+
+@login_required
+@permission_required('providers.add_applicationlink', raise_exception=True)
+def link_create(request):
+    if request.method == 'POST':
+        form = ApplicationLinkForm(request.POST)
+        if form.is_valid():
+            link = form.save(commit=False)
+            link.provider   = request.user.provider_profile.provider
+            link.created_by = request.user
+            link.save()
+            messages.success(request, 'Application link created.')
+            return redirect('providers:link_list')
+    else:
+        form = ApplicationLinkForm()
+    return render(request, 'providers/link_form.html', {'form': form})
+
+@login_required
+@permission_required('providers.change_applicationlink', raise_exception=True)
+def link_update(request, pk):
+    provider = request.user.provider_profile.provider
+    link = get_object_or_404(ApplicationLink, pk=pk, provider=provider)
+    if request.method == 'POST':
+        form = ApplicationLinkForm(request.POST, instance=link)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Link updated.')
+            return redirect('providers:link_list')
+    else:
+        form = ApplicationLinkForm(instance=link)
+    return render(request, 'providers/link_form.html', {'form': form, 'update': True})

@@ -37,7 +37,6 @@ def associated_list(request):
 
 
 
-
 # Generic create/update handler
 def _crud(request, pk, model, form_class, formset_class, list_url, form_template):
     instance = get_object_or_404(model, pk=pk) if pk else None
