@@ -3,7 +3,10 @@ from django.contrib.auth.decorators import login_required, permission_required, 
 from django.contrib import messages
 from django.db.models import Q
 from django.http import HttpResponseForbidden
-
+from django.urls import reverse
+from django.core.mail import send_mail
+from acrp.settings import DEBUG
+from acrp import settings
 from .models import AssociatedAffiliation
 from .forms import (
     AssociatedForm,
@@ -63,11 +66,52 @@ def _list(request, model, template, search_fields):
     return render(request, template, {'objects': qs, 'search_query': q})
 
 @login_required
+@user_passes_test(is_admin, login_url='/', redirect_field_name=None)
+def associated_reject(request, pk):
+    """
+    Admin rejects an AssociatedAffiliation, sends a notification email,
+    and redirects back to the list.
+    """
+    obj = get_object_or_404(AssociatedAffiliation, pk=pk)
+
+    if request.method == 'POST':
+        # Mark as not approved (optional: you could add a `rejected` flag to the model)
+        obj.approved = False
+        obj.save()
+
+        if DEBUG == True:
+            pass
+        else:
+            # Send rejection email
+            send_mail(
+                subject="Your ACRP associated application has been rejected",
+                message=(
+                    f"Dear {obj.first_name} {obj.last_name},\n\n"
+                    "We’re sorry to let you know that your associated-application "
+                    "has not been approved.\n\n"
+                    "If you believe this is in error or would like more information, "
+                    "please contact support@acrpafrica.co.za\n\n"
+                    "Kind regards,\n"
+                    "The ACRP Team"
+                ),
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[obj.email],
+                fail_silently=False,
+            )
+
+        messages.success(request, "Application rejected and email notification sent.")
+        return redirect('enrollments:associated_list')
+
+    # GET → show confirmation “Are you sure?”
+    return render(request,
+                  'enrollments/associated_reject_confirm.html',
+                  {'object': obj})
+
+@login_required
 @permission_required('enrollments.view_associatedaffiliation', raise_exception=True)
 def associated_list(request):
     return _list(request, AssociatedAffiliation, "enrollments/associated_list.html",
-                 ['full_names','surname','email'])
-
+                 ['first_name', 'last_name','surname','email'])
 
 
 # Generic create/update handler
@@ -89,12 +133,30 @@ def _crud(request, pk, model, form_class, formset_class, list_url, form_template
         fs   = formset_class(instance=instance)
     return render(request, form_template, {'form': form, 'formset': fs})
 
+def associated_success(request):
+    """
+    Display a thank-you page after an AssociatedAffiliation is created or updated.
+    """
+    return render(request, 'enrollments/associated_success.html')
+
 # Associated CRUD
 #@login_required
 #@permission_required('enrollments.add_associatedaffiliation', raise_exception=True)
 def associated_create(request):
-    return _crud(request, None, AssociatedAffiliation, AssociatedForm, AssocDocFormSet,
-                 'enrollments:associated_list', "enrollments/associated_form.html")
+    """
+    Create a new AssociatedAffiliation with documents.
+    Uses the generic _crud() under the hood.
+    """
+    return _crud(
+        request,
+        pk=None,
+        model=AssociatedAffiliation,
+        form_class=AssociatedForm,
+        formset_class=AssocDocFormSet,
+        success_url='enrollments:associated_success',
+        form_template='enrollments/associated_form.html'
+    )
+
 
 @login_required
 @permission_required('enrollments.change_associatedaffiliation', raise_exception=True)

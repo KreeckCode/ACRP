@@ -14,21 +14,24 @@
   <div class="table-responsive">
     <table class="table table-striped table-hover">
       <thead class="table-light"><tr>
-        <th>Name</th><th>Email</th><th>Category</th><th>Approved</th><th>Actions</th>
+        <th>First Name</th><th>Email</th><th>Category</th><th>Approved</th><th>Actions</th>
       </tr></thead>
       <tbody>
         {% for obj in objects %}
           <tr>
-            <td>{{ obj.full_names }}</td>
+            <td>{{ obj.first_name }} {{ obj.last_name }}</td>
             <td>{{ obj.email }}</td>
             <td>{{ obj.get_category_display }}</td>
             <td>{{ obj.approved }}</td>
             <td>
               <a href="{% url 'enrollments:associated_update' obj.pk %}" class="btn btn-sm btn-warning">Edit</a>
-              <a href="{% url 'enrollments:associated_delete' 'associated' obj.pk %}" class="btn btn-sm btn-danger">Delete</a>
-              {% if not obj.approved %}
-                <a href="{% url 'enrollments:associated_approve' obj.pk %}" class="btn btn-sm btn-success">Approve</a>
+              {% if request.user.acrp_role == 'GLOBAL_SDP' or request.user.acrp_role == 'PROVIDER_ADMIN' or request.user.acrp_role == 'INTERNAL_FACILITATOR' %}
+                {% if not obj.approved %}
+                  <a href="{% url 'enrollments:associated_approve' obj.pk %}" class="btn btn-sm btn-success">Approve</a>
+                {% endif %}
+                
               {% endif %}
+              
             </td>
           </tr>
         {% empty %}

@@ -40,6 +40,7 @@ class AssociatedForm(forms.ModelForm):
             'approved', 'approved_at', 'approved_by',
             'created_user', 'documents'
         ]
+        
         widgets = {
             'date_of_birth': DATE_WIDGET,
             'qualification_date': DATE_WIDGET,
