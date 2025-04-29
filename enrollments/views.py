@@ -13,7 +13,7 @@ from .forms import (
     AssocDocFormSet
 )
 from accounts.models import User
-
+from django.utils import timezone
 
 def onboarding(request):
     """
@@ -144,19 +144,31 @@ def associated_success(request):
 #@permission_required('enrollments.add_associatedaffiliation', raise_exception=True)
 def associated_create(request):
     """
-    Create a new AssociatedAffiliation with documents.
-    Uses the generic _crud() under the hood.
+    Create a new AssociatedAffiliation + documents.
+    On success, render the “thank you” page.
     """
-    return _crud(
-        request,
-        pk=None,
-        model=AssociatedAffiliation,
-        form_class=AssociatedForm,
-        formset_class=AssocDocFormSet,
-        success_url='enrollments:associated_success',
-        form_template='enrollments/associated_form.html'
-    )
+    if request.method == 'POST':
+        form    = AssociatedForm(request.POST, request.FILES)
+        formset = AssocDocFormSet(request.POST, request.FILES)
+        if form.is_valid() and formset.is_valid():
+            # Save the affiliation
+            obj = form.save(commit=False)
+            obj.created_user = request.user
+            obj.save()
+            # Save documents
+            formset.instance = obj
+            formset.save()
+            # Render success page
+            return render(request,
+                          'enrollments/associated_success.html',
+                          {'application': obj})
+    else:
+        form    = AssociatedForm()
+        formset = AssocDocFormSet()
 
+    return render(request,
+                  'enrollments/associated_form.html',
+                  {'form': form, 'formset': formset})
 
 @login_required
 @permission_required('enrollments.change_associatedaffiliation', raise_exception=True)
@@ -182,11 +194,21 @@ def application_delete(request, model_name, pk):
         return redirect(f'enrollments:{model_name}_list')
     return render(request, "enrollments/application_confirm_delete.html", {'object': obj})
 
-# Approval views
 @login_required
 @user_passes_test(is_admin, login_url='/', redirect_field_name=None)
 def associated_approve(request, pk):
+    """
+    Mark the affiliation approved, stamp who/when, then redirect.
+    Our post_save signal will pick up the approved=True change,
+    create the User + LearnerProfile and send the approval email.
+    """
     obj = get_object_or_404(AssociatedAffiliation, pk=pk)
-    obj.approved = True; obj.save()
-    messages.success(request, "Associated application approved.")
+
+    obj.approved     = True
+    obj.approved_by  = request.user
+    obj.approved_at  = timezone.now()
+    # Only these fields — avoids infinite loops
+    obj.save(update_fields=['approved', 'approved_by', 'approved_at'])
+
+    messages.success(request, "Associated application approved and user created.")
     return redirect('enrollments:associated_list')

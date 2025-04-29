@@ -1,13 +1,13 @@
 from django.db import models
 from django.conf import settings
-from django.contrib.contenttypes.models import ContentType       # for GenericForeignKey :contentReference[oaicite:4]{index=4}
+from django.contrib.contenttypes.models import ContentType       # for GenericForeignKey
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
-# — Generic Document upload for any affiliation type —
+# — Generic Document upload for any affiliation type
 class Document(models.Model):
     DOCUMENT_CATEGORIES = [
         ('supporting', 'Supporting Document'),
@@ -17,7 +17,7 @@ class Document(models.Model):
 
     content_type   = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id      = models.PositiveBigIntegerField()
-    content_object = GenericForeignKey('content_type', 'object_id')  # link to any affiliation instance :contentReference[oaicite:5]{index=5}
+    content_object = GenericForeignKey('content_type', 'object_id')  # link to any affiliation instance 
     category       = models.CharField(max_length=20, choices=DOCUMENT_CATEGORIES)
     file           = models.FileField(upload_to='enrollments/docs/%Y/%m/%d/')
     uploaded_at    = models.DateTimeField(auto_now_add=True)
@@ -27,21 +27,11 @@ class Document(models.Model):
 
 # — ASSOCIATED AFFILIATION —
 class AssociatedAffiliation(models.Model):
-    # Approval workflow (hidden from ModelForms via editable=False) :contentReference[oaicite:6]{index=6}
+    # Approval workflow (hidden from ModelForms via editable=False)
     approved       = models.BooleanField(default=False, editable=False)
     approved_at    = models.DateTimeField(null=True, blank=True, editable=False)
-    approved_by    = models.ForeignKey(
-        User, null=True, blank=True,
-        on_delete=models.SET_NULL,
-        related_name='approved_associated_affiliations',
-        editable=False
-    )
-    created_user   = models.ForeignKey(
-        User, null=True, blank=True,
-        on_delete=models.SET_NULL,
-        related_name='associated_enrollments',
-        editable=False
-    )
+    approved_by    = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='approved_associated_affiliations', editable=False)
+    created_user   = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='associated_enrollments', editable=False)
 
     GENDER_CHOICES = [('male','Male'),('female','Female')]
     TITLE_CHOICES = [('Mr', 'Mr'), ('Mrs', 'Mrs'), ('Miss', 'Miss')]
@@ -49,7 +39,7 @@ class AssociatedAffiliation(models.Model):
     gender          = models.CharField(max_length=10, choices=GENDER_CHOICES)
     surname         = models.CharField(max_length=50)
     initials        = models.CharField(max_length=10)
-    disability      = models.CharField(max_length=100, blank=True, null=True)  # optional :contentReference[oaicite:7]{index=7}
+    disability      = models.CharField(max_length=100, blank=True, null=True)
     first_name      = models.CharField(max_length=150, blank=True)
     last_name       = models.CharField(max_length=150, blank=True)
     id_number       = models.CharField(max_length=20)
@@ -61,7 +51,7 @@ class AssociatedAffiliation(models.Model):
     street_address  = models.TextField(blank=True)
     postal_code     = models.CharField(max_length=10, blank=True)
     province        = models.CharField(max_length=50, blank=True)
-    country         = models.CharField(max_length=50, default='South Africa')  # default value :contentReference[oaicite:8]{index=8}
+    country         = models.CharField(max_length=50, default='South Africa')
     tel_work        = models.CharField(max_length=20, blank=True)
     tel_home        = models.CharField(max_length=20, blank=True)
     fax             = models.CharField(max_length=20, blank=True)
@@ -77,7 +67,7 @@ class AssociatedAffiliation(models.Model):
     home_language   = models.CharField(max_length=50, blank=True)
     other_languages = models.CharField(max_length=100, blank=True)
 
-    disciplinary_action      = models.BooleanField(default=False)  # default False :contentReference[oaicite:9]{index=9}
+    disciplinary_action      = models.BooleanField(default=False)
     disciplinary_description = models.TextField(blank=True)
     felony_conviction        = models.BooleanField(default=False)
     felony_description       = models.TextField(blank=True)
@@ -91,7 +81,7 @@ class AssociatedAffiliation(models.Model):
     registered_elsewhere = models.BooleanField(default=False)
     suitably_trained     = models.BooleanField(default=False)
 
-    documents = GenericRelation(Document)  # reverse generic relation :contentReference[oaicite:10]{index=10}
+    documents = GenericRelation(Document)
 
     def __str__(self):
         return f"AssociatedAffiliation({self.first_name} {self.last_name})"

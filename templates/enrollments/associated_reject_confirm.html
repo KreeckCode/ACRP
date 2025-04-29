@@ -1,0 +1,32 @@
+{% extends "base/signup_base.html" %}
+
+{% block title %}Reject Application{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+  <div class="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full text-center">
+    <!-- Feather X-circle icon -->
+    <i data-feather="x-circle" class="w-16 h-16 text-red-500 mx-auto mb-4"></i>
+
+    <h1 class="text-2xl font-semibold text-gray-800 mb-2">Reject Application</h1>
+    <p class="text-gray-600 mb-6">
+      Are you sure you want to reject the associated-application for 
+      <strong>{{ object.first_name }} {{ object.last_name }}</strong>?
+    </p>
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="flex justify-center space-x-4">
+        <button type="submit"
+                class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+          Yes, reject and notify
+        </button>
+        <a href="{% url 'enrollments:associated_list' %}"
+           class="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition">
+          Cancel
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

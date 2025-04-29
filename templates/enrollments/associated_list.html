@@ -1,43 +1,125 @@
-{% extends "base/base.html" %}
-{% block title %}Associated Affiliations{% endblock %}
-{% block content %}
-  <h1 class="mb-4">Associated Affiliation Applications</h1>
-  <form method="get" class="row g-2 mb-3">
-    <div class="col-auto">
-      <input type="text" name="search" class="form-control" placeholder="Search…" value="{{ search_query }}">
-    </div>
-    <div class="col-auto">
-      <button class="btn btn-primary">Search</button>
-    </div>
-  </form>
-  <a href="{% url 'enrollments:associated_create' %}" class="btn btn-success mb-3">New Application</a>
-  <div class="table-responsive">
-    <table class="table table-striped table-hover">
-      <thead class="table-light"><tr>
-        <th>First Name</th><th>Email</th><th>Category</th><th>Approved</th><th>Actions</th>
-      </tr></thead>
-      <tbody>
-        {% for obj in objects %}
-          <tr>
-            <td>{{ obj.first_name }} {{ obj.last_name }}</td>
-            <td>{{ obj.email }}</td>
-            <td>{{ obj.get_category_display }}</td>
-            <td>{{ obj.approved }}</td>
-            <td>
-              <a href="{% url 'enrollments:associated_update' obj.pk %}" class="btn btn-sm btn-warning">Edit</a>
-              {% if request.user.acrp_role == 'GLOBAL_SDP' or request.user.acrp_role == 'PROVIDER_ADMIN' or request.user.acrp_role == 'INTERNAL_FACILITATOR' %}
-                {% if not obj.approved %}
-                  <a href="{% url 'enrollments:associated_approve' obj.pk %}" class="btn btn-sm btn-success">Approve</a>
-                {% endif %}
-                
-              {% endif %}
-              
-            </td>
-          </tr>
-        {% empty %}
-          <tr><td colspan="5" class="text-center text-muted">No applications found.</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
+{% extends "base/base.html" %} {% block title %}Associated Affiliations{%endblock %}
+{% block extra_css %} {# DataTables Bootstrap5 CSS #}
+<link
+  rel="stylesheet"
+  href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css"
+/>
+{% endblock %} {% block content %}
+<h1 class="mb-4">Associated Affiliation Applications</h1>
+
+<div class="row g-2 mb-3">
+  <div class="col-auto">
+    <input
+      type="text"
+      id="dt-search"
+      class="form-control"
+      placeholder="Search…"
+      value="{{ search_query }}"
+    />
   </div>
+  <div class="col-auto">
+    <a href="{% url 'enrollments:associated_create' %}" class="btn btn-success">
+      New Application
+    </a>
+  </div>
+</div>
+
+<div class="table-responsive">
+  <table
+    id="associated-table"
+    class="table table-striped table-hover table-bordered"
+    style="width: 100%"
+  >
+    <thead class="table-light">
+      <tr>
+        <th>Surname</th>
+        <th>First Name</th>
+        <th>Email</th>
+        <th>Date of Birth</th>
+        <th>Country</th>
+        <th>Approved</th>
+        <th>Approved At</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for obj in objects %}
+      <tr>
+        <td>{{ obj.surname }}</td>
+        <td>{{ obj.first_name }}</td>
+        <td>{{ obj.email }}</td>
+        <td>{{ obj.date_of_birth|date:"Y-m-d" }}</td>
+        <td>{{ obj.country }}</td>
+        <td>
+          {% if obj.approved %}
+          <span class="badge bg-success">Yes</span>
+          {% else %}
+          <span class="badge bg-warning text-dark">No</span>
+          {% endif %}
+        </td>
+        <td>{{ obj.approved_at|date:"Y-m-d H:i" | default:"—" }}</td>
+        <td class="text-nowrap">
+          <a
+            href="{% url 'enrollments:associated_update' obj.pk %}"
+            class="btn btn-sm btn-outline-primary"
+            title="Edit"
+            ><i class="bi bi-pencil-fill"></i
+          ></a>
+
+          {% if request.user.acrp_role == 'GLOBAL_SDP' or request.user.acrp_role == 'PROVIDER_ADMIN' or request.user.acrp_role == 'INTERNAL_FACILITATOR' %} 
+          
+            {% if not obj.approved %}
+            <a
+              href="{% url 'enrollments:associated_approve' obj.pk %}"
+              class="btn btn-sm btn-outline-success"
+              title="Approve"
+              ><i class="bi bi-check2-circle"></i
+            ></a>
+            <a
+              href="{% url 'enrollments:associated_reject' obj.pk %}"
+              class="btn btn-sm btn-outline-danger"
+              title="Reject"
+              ><i class="bi bi-x-circle"></i
+            ></a>
+            {% endif %}
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="8" class="text-center text-muted">
+          No applications found.
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %} {% block extra_js %} {# jQuery & DataTables scripts #}
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+  $(document).ready(function () {
+    // Initialize DataTable
+    var table = $("#associated-table").DataTable({
+      order: [[6, "desc"]], // sort by Approved At descending
+      pageLength: 10,
+      lengthChange: false,
+      language: {
+        search: "", // hide built-in search box
+        searchPlaceholder: "Filter records…",
+      },
+      columnDefs: [
+        { orderable: false, targets: 7 }, // disable sorting on Actions column
+      ],
+    });
+
+    // Tie our custom search field to DataTables
+    $("#dt-search").on("keyup", function () {
+      table.search(this.value).draw();
+    });
+  });
+</script>
 {% endblock %}

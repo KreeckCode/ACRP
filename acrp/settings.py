@@ -246,3 +246,18 @@ REST_FRAMEWORK = {
 }
 
 NPM_BIN_PATH = r"C:\Program Files\nodejs\npm.cmd"
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'WARNING',
+    },
+}

@@ -7,7 +7,7 @@ User = get_user_model()
 
 class LearnerProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='learner_profile')
-    provider = models.OneToOneField('providers.Provider', on_delete=models.CASCADE, related_name='learners')
+    provider = models.OneToOneField('providers.Provider', null=True, blank=True, on_delete=models.CASCADE, related_name='learners')
     id_number          = models.CharField(max_length=50, unique=True)
     date_of_birth      = models.DateField()
     gender             = models.CharField(max_length=10, choices=[('M','Male'),('F','Female'),('O','Other')])
