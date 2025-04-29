@@ -8,40 +8,98 @@ from .models import (
     LearnerAffiliation, DocumentType,
     LearnerDocument
 )
+from django.core.exceptions import ValidationError
 from providers.models import ApplicationLink
 
 class LearnerRegistrationForm(forms.ModelForm):
-    token = forms.UUIDField(widget=forms.HiddenInput)
+    first_name = forms.CharField(max_length=150, label="First name")
+    last_name  = forms.CharField(max_length=150, label="Last name")
+    email      = forms.EmailField(label="Email address")
+
+    # POPI Act consent (step 2)
+    popi_consent = forms.BooleanField(
+        label=(
+            "I consent to the processing and storage of my personal "
+            "information in accordance with the Protection of Personal "
+            "Information Act (POPI)."
+        ),
+        required=True
+    )
+
+    # hidden but validated
+    token      = forms.UUIDField(widget=forms.HiddenInput)
+    provider   = forms.IntegerField(widget=forms.HiddenInput)
 
     class Meta:
         model  = LearnerProfile
         fields = [
-            'provider','id_number','date_of_birth','gender','phone','email',
-            'address','nationality','primary_language',
-            'emergency_name','emergency_relation','emergency_phone','token'
+            'provider',
+            'id_number',
+            'date_of_birth',
+            'gender',
+            'phone',
+            'address',
+            'nationality',
+            'primary_language',
+            'emergency_name',
+            'emergency_relation',
+            'emergency_phone',
+            'token',
         ]
-        widgets = {'provider': forms.HiddenInput()}
+        widgets = {
+            'date_of_birth': forms.DateInput(attrs={'type':'date'}),
+        }
 
     def clean_token(self):
-        token = self.cleaned_data['token']
+        t = self.cleaned_data.get('token')
         try:
-            link = ApplicationLink.objects.get(token=token)
+            link = ApplicationLink.objects.get(token=t)
         except ApplicationLink.DoesNotExist:
-            raise forms.ValidationError("Invalid registration link.")
+            raise ValidationError("Invalid registration link.")
         if not link.can_use():
-            raise forms.ValidationError("This link has expired or is inactive.")
+            raise ValidationError("This link has expired or is inactive.")
         self.link = link
-        return token
+        return t
+
+    def clean_provider(self):
+        prov_id = self.cleaned_data.get('provider')
+        # ensure provider matches link
+        if hasattr(self, 'link') and self.link.provider_id != prov_id:
+            raise ValidationError("Mismatched provider.")
+        return prov_id
 
     def save(self, commit=True):
+        # 1) create the User
+        first_name = self.cleaned_data['first_name']
+        last_name  = self.cleaned_data['last_name']
+        email      = self.cleaned_data['email']
+        id_number  = self.cleaned_data['id_number']
+
+        # username = email, password = id_number
+        raw_password = id_number
+
+        user = User.objects.create_user(
+            username=email,
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+            password=raw_password,
+        )
+        # ensure learner only gets activated once you verify them
+        user.is_active = False
+        user.save()
+
+        # 2) create the LearnerProfile
         profile = super().save(commit=False)
-        profile.verification_status = 'PENDING'
+        profile.user = user
+        profile.verification_status = LearnerProfile.verification_status.field.default
+        profile.status = LearnerProfile.status.field.default
         if commit:
             profile.save()
             # consume the link
             self.link.use()
-        return profile
 
+        return profile
 class LearnerProfileForm(forms.ModelForm):
     class Meta:
         model  = LearnerProfile

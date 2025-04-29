@@ -10,7 +10,7 @@ class LearnerProfile(models.Model):
     provider = models.OneToOneField('providers.Provider', null=True, blank=True, on_delete=models.CASCADE, related_name='learners')
     id_number          = models.CharField(max_length=50, unique=True)
     date_of_birth      = models.DateField()
-    gender             = models.CharField(max_length=10, choices=[('M','Male'),('F','Female'),('O','Other')])
+    gender             = models.CharField(max_length=10, choices=[('M','Male'),('F','Female')])
     phone              = models.CharField(max_length=50)
     email              = models.EmailField()
     address            = models.TextField()

@@ -38,7 +38,7 @@ class User(AbstractUser):
      - org-role → Role + Department + manager hierarchy
      - ACRP-wide role enum & built-in Group/Permission override
     """
-    employee_code = models.CharField(max_length=30, unique=True)
+    employee_code = models.CharField(max_length=30, unique=True, blank=True, null=True)
     email         = models.EmailField(unique=True)
     phone         = models.CharField(max_length=60, blank=True, null=True)
     picture       = models.ImageField(

@@ -365,26 +365,29 @@ def learner_document_review(request, pk):
 
 
 def learner_apply(request, token):
-    link = get_object_or_404(ApplicationLink, token=token)
-    if not link.can_use():
-        return render(request, 'student/apply_closed.html', {
-            'reason': 'This application link is no longer valid.'
-        })
+     link = get_object_or_404(ApplicationLink, token=token)
+     if not link.can_use():
+         return render(request, 'student/apply_closed.html', {
+             'reason': 'This application link is no longer valid.'
+         })
 
-    if request.method == 'POST':
-        form = LearnerRegistrationForm(request.POST)
-        if form.is_valid():
+     if request.method == 'POST':
+         form = LearnerRegistrationForm(request.POST)
+         if form.is_valid():
             form.save()
-            messages.success(request, "Your application has been submitted. Please await approval.")
-            return redirect('login')
-    else:
-        form = LearnerRegistrationForm(initial={
-            'token': token,
-            'provider': link.provider.pk
-        })
+            # render same success page you use for associated applications
+            return render(request, 'enrollments/associated_success.html', {
+                'heading': 'Application Submitted',
+                'message': 'Thank you for applying! We will email you once your details have been approved.'
+            })
+     else:
+         form = LearnerRegistrationForm(initial={
+             'token': token,
+             'provider': link.provider.pk
+         })
 
-    return render(request, 'student/learner_apply.html', {
-        'form': form,
-        'provider': link.provider
-    })
+     return render(request, 'student/learner_apply.html', {
+         'form': form,
+         'provider': link.provider
+     })
 

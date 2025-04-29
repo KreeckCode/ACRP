@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib import messages
 from django.core.mail import send_mail
+from django.urls import reverse
 from django.utils import timezone
 from django.conf import settings
 from django.http import Http404
@@ -373,41 +374,87 @@ def document_review(request, doc_pk):
 
 
 
+def _get_user_provider(request):
+    """
+    Helper: return the Provider for the current user,
+    or redirect with an error if they have no provider_profile.
+    """
+    try:
+        profile = request.user.provider_profile
+    except ProviderUserProfile.DoesNotExist:
+        messages.error(request,
+            "You don’t yet have a Provider profile. Please create one first."
+        )
+        return None
+    return profile.provider
+
+
+
 @login_required
 @permission_required('providers.view_applicationlink', raise_exception=True)
 def link_list(request):
-    # assume provider_profile exists on user
-    provider = request.user.provider_profile.provider
+    provider = _get_user_provider(request)
+    if not provider:
+        return redirect('providers:provideruserprofile_create')
+
     links = provider.application_links.all()
-    return render(request, 'providers/link_list.html', {'links': links})
+    return render(request, 'providers/link_list.html', {
+        'links': links,
+        'provider': provider,
+    })
+
 
 @login_required
 @permission_required('providers.add_applicationlink', raise_exception=True)
 def link_create(request):
+    provider = _get_user_provider(request)
+    if not provider:
+        return redirect('providers:provideruserprofile_create')
+
     if request.method == 'POST':
         form = ApplicationLinkForm(request.POST)
         if form.is_valid():
             link = form.save(commit=False)
-            link.provider   = request.user.provider_profile.provider
+            link.provider   = provider
             link.created_by = request.user
             link.save()
-            messages.success(request, 'Application link created.')
-            return redirect('providers:link_list')
+            messages.success(request, '✅ Application link created.')
+            return redirect(reverse('providers:link_list'))
+        else:
+            messages.error(request, 'Please correct the errors below.')
     else:
         form = ApplicationLinkForm()
-    return render(request, 'providers/link_form.html', {'form': form})
+
+    return render(request, 'providers/link_form.html', {
+        'form': form,
+        'provider': provider,
+        'create': True,
+    })
+
 
 @login_required
 @permission_required('providers.change_applicationlink', raise_exception=True)
 def link_update(request, pk):
-    provider = request.user.provider_profile.provider
+    provider = _get_user_provider(request)
+    if not provider:
+        return redirect('providers:provideruserprofile_create')
+
     link = get_object_or_404(ApplicationLink, pk=pk, provider=provider)
+
     if request.method == 'POST':
         form = ApplicationLinkForm(request.POST, instance=link)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Link updated.')
-            return redirect('providers:link_list')
+            messages.success(request, '✅ Application link updated.')
+            return redirect(reverse('providers:link_list'))
+        else:
+            messages.error(request, 'Please correct the errors below.')
     else:
         form = ApplicationLinkForm(instance=link)
-    return render(request, 'providers/link_form.html', {'form': form, 'update': True})
+
+    return render(request, 'providers/link_form.html', {
+        'form': form,
+        'provider': provider,
+        'update': True,
+        'link': link,
+    })

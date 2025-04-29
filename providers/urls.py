@@ -1,8 +1,7 @@
-# provider/urls.py
 from django.urls import path
 from . import views
 
-app_name = "provider"
+app_name = "providers"
 
 urlpatterns = [
     path("dashboard/", views.dashboard, name="dashboard"),
@@ -28,9 +27,12 @@ urlpatterns = [
         views.accreditation_delete,
         name="accreditation_delete",
     ),
-    
     # Qualifications
-    path("<int:provider_pk>/qualifications/new/", views.qualification_create, name="qualification_create",),
+    path(
+        "<int:provider_pk>/qualifications/new/",
+        views.qualification_create,
+        name="qualification_create",
+    ),
     path(
         "qualifications/<int:pk>/",
         views.qualification_detail,
@@ -95,8 +97,7 @@ urlpatterns = [
         "<int:provider_pk>/docs/upload/", views.document_upload, name="document_upload"
     ),
     path("docs/<int:doc_pk>/review/", views.document_review, name="document_review"),
-
-    path('links/',          views.link_list,   name='link_list'),
-    path('links/new/',      views.link_create, name='link_create'),
-    path('links/<int:pk>/edit/', views.link_update, name='link_update'),
+    path("links/", views.link_list, name="link_list"),
+    path("links/new/", views.link_create, name="link_create"),
+    path("links/<int:pk>/edit/", views.link_update, name="link_update"),
 ]

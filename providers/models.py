@@ -112,6 +112,7 @@ class ProviderUserProfile(models.Model):
     class RoleChoices(models.TextChoices):
         CENTER_ADMIN         = 'CENTER_ADMIN', 'Center Administrator'
         INTERNAL_FACILITATOR = 'INTERNAL_FACILITATOR', 'Internal Facilitator'
+    role            = models.CharField(max_length=20,choices=RoleChoices.choices,default=RoleChoices.CENTER_ADMIN,help_text="The user’s role at this provider")
     provider        = models.ForeignKey(Provider, on_delete=models.CASCADE, related_name='users')
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="provider_profile", primary_key=True,)
     alternate_email = models.EmailField(blank=True, null=True)

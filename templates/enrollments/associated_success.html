@@ -24,6 +24,31 @@
       We’ve received your details and will email you as soon as they’ve been approved.
     </p>
 
+    <p class="text-gray-500">
+      You will be redirected to the login page in 
+      <span id="countdown" class="font-medium">15</span> seconds.
+    </p>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/feather-icons"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    feather.replace();
+
+    let seconds = 15;
+    const el = document.getElementById('countdown');
+
+    const timer = setInterval(() => {
+      seconds--;
+      el.textContent = seconds;
+      if (seconds <= 0) {
+        clearInterval(timer);
+        window.location.href = "{% url 'login' %}";
+      }
+    }, 1000);
+  });
+</script>
 {% endblock %}
