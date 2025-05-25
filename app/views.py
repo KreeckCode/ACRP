@@ -16,6 +16,21 @@ from database.models import Database, Entry
 from accounts.models import Department, User
 
 @login_required
+def kanban_board(request):
+    """
+    A simple Kanban board view that shows tasks grouped by their status.
+    """
+    projects = Projects.objects.prefetch_related('tasks').all()
+    tasks = Task.objects.select_related('project_task').all()
+    task_statuses = {
+        'To Do': tasks.filter(status='TODO'),
+        'In Progress': tasks.filter(status='IN_PROGRESS'),
+        'Done': tasks.filter(status='DONE'),
+        'Blocked': tasks.filter(status='BLOCKED'),
+    }
+    return render(request, 'app/kanban_board.html', {'task_statuses': task_statuses})
+
+@login_required
 def dashboard(request):
     user = request.user
 

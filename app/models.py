@@ -66,7 +66,7 @@ class Announcement(models.Model):
 
 
 ### 3. Notifications and Alerts ###
-
+'''
 class Notification(models.Model):
     """
     Represents notifications for users regarding actions like task deadlines or events.
@@ -90,9 +90,22 @@ class Notification(models.Model):
 
     class Meta:
         ordering = ['-created_at']
-
+'''
 
 ### 4. Project Management Overview ###
+class Tag(models.Model):
+    """
+    Represents a tag that can be associated with projects for categorization.
+    """
+    name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        ordering = ['name']
+        verbose_name_plural = "Tags"
+
 
 class Projects(models.Model):
     """
@@ -114,6 +127,9 @@ class Projects(models.Model):
     team_members = models.ManyToManyField(User, related_name="projects", blank=True)
     task = models.JSONField(blank=True, null=True)  # Replaced ArrayField with JSONField
     budget_allocated = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    attachment = models.FileField(upload_to='project_attachments/', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    tags = models.ManyToManyField(Tag, blank=True, related_name="projects")
     
     def __str__(self):
         return self.name
@@ -138,7 +154,13 @@ class Task(models.Model):
     description = models.TextField(blank=True)
     assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="tasks")
     due_date = models.DateField()
+    tags = models.ManyToManyField(Tag, blank=True, related_name="tasks")
+    priority = models.IntegerField(default=3, validators=[MinValueValidator(1), MaxValueValidator(5)])  # 1: High, 5: Low
     completed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="created_tasks")
+    updated_at = models.DateTimeField(auto_now=True)
+    attachment = models.FileField(upload_to='task_attachments/', blank=True, null=True)
 
     def __str__(self):
         return self.title
