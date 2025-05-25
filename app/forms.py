@@ -41,10 +41,9 @@ class TagField(forms.CharField):
 class ProjectForm(forms.ModelForm):
     class Meta:
         model = Projects
-        fields = ['name', 'description', 'start_date', 'end_date', 'status', 'manager', 'team_members', 'budget_allocated', 'tags', 'attachments']
+        fields = ['name', 'description', 'start_date', 'end_date', 'status', 'manager', 'team_members', 'budget_allocated', 'tags', 'attachment']
         widgets = {
             'team_members': forms.CheckboxSelectMultiple(),
-            'attachments': forms.ClearableFileInput(attrs={'multiple': True}),
             'description': TinyMCE(attrs={'cols': 80, 'rows': 30}),
             'start_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'end_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
@@ -67,7 +66,6 @@ class TaskForm(forms.ModelForm):
         model = Task
         fields = ['project_task', 'title', 'description', 'assigned_to', 'due_date', 'completed', 'priority', 'tags', 'attachment']
         widgets = {
-            'attachment': forms.ClearableFileInput(attrs={'multiple': True}),
             'tags': TagField(widget=forms.TextInput(attrs={'placeholder': 'Enter tags separated by commas'})),
             'assigned_to': forms.CheckboxSelectMultiple(),
             'description': TinyMCE(attrs={'cols': 80, 'rows': 30}),

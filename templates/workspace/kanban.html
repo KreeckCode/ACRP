@@ -1,0 +1,140 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% block content %}
+<link rel="stylesheet" href="{% static 'workspace/kanban.css' %}">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+
+<div class="container py-4">
+  <h3>{{ project.name }} Kanban</h3>
+  <a href="{% url 'edit_project' project.pk %}" class="btn btn-warning btn-sm">Edit Project</a>
+  <button id="add-task-btn" class="btn btn-primary btn-sm">Add Task</button>
+<!-- Embed tasks JSON -->
+{{ tasks_json|json_script:"tasks-data" }}
+
+  <div class="kanban-board mt-3">
+    <div class="kanban-column" data-status="NOT_STARTED">
+      <h5>To Do</h5>
+      <div class="column-body" id="col-NOT_STARTED"></div>
+    </div>
+    <div class="kanban-column" data-status="IN_PROGRESS">
+      <h5>In Progress</h5>
+      <div class="column-body" id="col-IN_PROGRESS"></div>
+    </div>
+    <div class="kanban-column" data-status="REVIEW">
+      <h5>Review</h5>
+      <div class="column-body" id="col-REVIEW"></div>
+    </div>
+    <div class="kanban-column" data-status="COMPLETED">
+      <h5>Done</h5>
+      <div class="column-body" id="col-COMPLETED"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const csrfToken = '{{ csrf_token }}';
+  const projectPk = {{ project.pk }};
+  // Parse task data
+  const tasks = JSON.parse(document.getElementById('tasks-data').textContent);
+
+  // Render each task card
+  tasks.forEach(t => {
+    const card = document.createElement('div');
+    card.className = 'kanban-card';
+    card.dataset.taskId = t.id;
+    card.innerHTML = `<h6>${t.title}</h6>`;
+    // Load detail on click
+    card.onclick = () => {
+      fetch(`{% url 'task_detail_ajax' 0 %}`.replace('/0/', `/${t.id}/`))
+        .then(r => r.json())
+        .then(d => {
+          // You can replace alert with a modal or side panel
+          alert(d.title + "\n" + d.description);
+        });
+    };
+    document.getElementById(`col-${t.status}`).appendChild(card);
+  });
+
+  // Initialize drag-and-drop
+  document.querySelectorAll('.column-body').forEach(el => {
+    new Sortable(el, {
+      group: 'shared',
+      animation: 150,
+      onEnd: e => {
+        const taskId = e.item.dataset.taskId;
+        const newStatus = e.to.parentElement.dataset.status;
+        fetch(`{% url 'move_task' 0 %}`.replace('/0/', `/${taskId}/`), {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrfToken,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ status: newStatus })
+        });
+      }
+    });
+  });
+
+  // Add Task modal handling
+  document.getElementById('add-task-btn').onclick = () => {
+    let modal = document.getElementById('add-task-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'add-task-modal';
+      Object.assign(modal.style, {
+        position: 'fixed', top: '0', left: '0', width: '100vw', height: '100vh',
+        background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center'
+      });
+      modal.innerHTML = `
+        <div style="background:#fff;padding:2rem;min-width:300px;max-width:90vw;position:relative;">
+          <button id="close-modal-btn" style="position:absolute;top:8px;right:8px;font-size:1.5rem;border:none;background:none;">&times;</button>
+          <form id="add-task-form">
+            <div class="mb-2"><label for="id_title">Title</label><input type="text" name="title" id="id_title" class="form-control" required></div>
+            <div class="mb-2"><label for="id_description">Description</label><textarea name="description" id="id_description" class="form-control"></textarea></div>
+            <div class="mb-2"><label for="id_status">Status</label><select name="status" id="id_status" class="form-control">
+              <option value="NOT_STARTED">To Do</option>
+              <option value="IN_PROGRESS">In Progress</option>
+              <option value="REVIEW">Review</option>
+              <option value="COMPLETED">Done</option>
+            </select></div>
+            <div class="mb-2"><label for="id_assigned_to">Assign To</label><select name="assigned_to" id="id_assigned_to" class="form-control">
+              {% for member in project.team_members.all %}
+                <option value="{{ member.pk }}">{{ member.get_full_name }}</option>
+              {% endfor %}
+            </select></div>
+            <div class="mb-2"><label for="id_tags">Tags (comma separated)</label><input type="text" name="tags" id="id_tags" class="form-control"></div>
+            <button type="submit" class="btn btn-primary mt-2">Add Task</button>
+          </form>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      document.getElementById('close-modal-btn').onclick = () => modal.remove();
+      modal.onclick = e => { if (e.target === modal) modal.remove(); };
+
+      // Handle form submission
+      document.getElementById('add-task-form').onsubmit = function(e) {
+        e.preventDefault();
+        const data = {
+          project: projectPk,
+          title: this.title.value,
+          description: this.description.value,
+          status: this.status.value,
+          assigned_to: this.assigned_to.value,
+          tag_input: this.tags.value
+        };
+        fetch(`{% url 'task_add' %}`, {
+          method: 'POST',
+          headers: { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        })
+        .then(r => r.json())
+        .then(resp => {
+          if (resp.status === 'ok') window.location.reload();
+          else alert('Error: ' + (resp.error || 'Could not add task.'));
+        });
+      };
+    }
+  };
+</script>
+{% endblock %}

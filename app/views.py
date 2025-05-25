@@ -1,3 +1,4 @@
+from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib import messages
@@ -14,6 +15,7 @@ from finance.models import BudgetRequest, Expenditure, Invoice
 from hr.models import EmployeeProfile, LeaveRequest, HRDocumentStorage
 from database.models import Database, Entry
 from accounts.models import Department, User
+from django.views.decorators.http import require_POST
 
 @login_required
 def kanban_board(request):
@@ -28,7 +30,10 @@ def kanban_board(request):
         'Done': tasks.filter(status='DONE'),
         'Blocked': tasks.filter(status='BLOCKED'),
     }
-    return render(request, 'app/kanban_board.html', {'task_statuses': task_statuses})
+    return render(request, 'app/kanban_board.html', {
+        'projects': projects,
+        'task_statuses': task_statuses,
+    })
 
 @login_required
 def dashboard(request):
@@ -224,8 +229,33 @@ def delete_announcement(request, announcement_id):
 
 @login_required
 def project_list(request):
-    projects = Projects.objects.all()
+    qs = Projects.objects.filter(team_members=request.user) | Projects.objects.filter(manager=request.user)
+    projects = qs.distinct()
     return render(request, 'app/project_list.html', {'projects': projects})
+
+@login_required
+def project_kanban(request, pk):
+    project = get_object_or_404(Projects, pk=pk)
+    if request.user not in project.team_members.all() and request.user != project.manager:
+        return HttpResponseForbidden()
+    form = TaskForm(initial={'project': project})
+    return render(request, 'workspace/kanban.html', {'project': project, 'form': form})
+
+@login_required
+def task_detail_ajax(request, pk):
+    task = get_object_or_404(Task, pk=pk)
+    if request.user not in task.project.team_members.all() and request.user != task.project.manager:
+        return HttpResponseForbidden()
+    data = {
+        'title': task.title,
+        'description': task.description,
+        'due_date': task.due_date.isoformat(),
+        'completed': task.completed,
+        'assigned_to': task.assigned_to.get_full_name() if task.assigned_to else None,
+        'attachment_url': task.attachment.url if task.attachment else None,
+        'tags': [t.name for t in task.tags.all()],
+    }
+    return JsonResponse(data)
 
 @login_required
 @permission_required('apps.manage_projects', raise_exception=True)
@@ -234,6 +264,7 @@ def create_project(request):
         form = ProjectForm(request.POST)
         if form.is_valid():
             form.save()
+            #notify_user(request.user, f'Project {proj.name} created.')
             messages.success(request, 'Project created successfully.')
             return redirect('project_list')
     else:
@@ -246,18 +277,16 @@ def project_detail(request, project_id):
     return render(request, 'app/project_detail.html', {'project': project})
 
 @login_required
-@permission_required('apps.manage_projects', raise_exception=True)
-def edit_project(request, project_id):
-    project = get_object_or_404(Projects, id=project_id)
-    if request.method == 'POST':
-        form = ProjectForm(request.POST, instance=project)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Project updated successfully.')
-            return redirect('project_detail', project_id=project.id)
-    else:
-        form = ProjectForm(instance=project)
-    return render(request, 'app/project_form.html', {'form': form})
+@permission_required('app.manage_projects', raise_exception=True)
+def edit_project(request, pk):
+    proj=get_object_or_404(Projects,pk=pk)
+    form=ProjectForm(request.POST or None, request.FILES or None, instance=proj)
+    if form.is_valid():
+        proj=form.save()
+        #notify_user(request.user, f'Project {proj.name} updated.')
+        messages.success(request,'Project updated.')
+        return redirect('app:project_kanban', pk=pk)
+    return render(request,'app/project_form.html',{'form':form,'project':proj})
 
 @login_required
 @permission_required('apps.manage_projects', raise_exception=True)
@@ -265,6 +294,7 @@ def delete_project(request, project_id):
     project = get_object_or_404(Projects, id=project_id)
     if request.method == 'POST':
         project.delete()
+        #notify_user(request.user, f'Project {proj.name} deleted.')
         messages.success(request, 'Project deleted successfully.')
         return redirect('project_list')
     return render(request, 'app/confirm_delete.html', {
@@ -286,6 +316,7 @@ def create_task(request):
         form = TaskForm(request.POST)
         if form.is_valid():
             form.save()
+            # notify_user(request.user, f'Task {task.title} created.')
             messages.success(request, 'Task created successfully.')
             return redirect('task_list')
     else:
@@ -322,6 +353,18 @@ def delete_task(request, task_id):
         'cancel_url': 'task_detail', 'cancel_id': task.id
     })
 
+@require_POST
+@login_required
+@permission_required('app.manage_tasks', raise_exception=True)
+def move_task(request, pk):
+    import json
+    task=get_object_or_404(Task,pk=pk)
+    payload=json.loads(request.body)
+    new_proj=Projects.objects.get(pk=payload.get('project'))
+    task.project=new_proj
+    task.save()
+    #notify_user(request.user, f'Task {task.title} moved to {new_proj.name}.')
+    return JsonResponse({'status':'ok'})
 
 ### ========== RESOURCES ========== ###
 

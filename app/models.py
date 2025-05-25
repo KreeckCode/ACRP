@@ -128,7 +128,7 @@ class Projects(models.Model):
     task = models.JSONField(blank=True, null=True)  # Replaced ArrayField with JSONField
     budget_allocated = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
     attachment = models.FileField(upload_to='project_attachments/', blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)
     tags = models.ManyToManyField(Tag, blank=True, related_name="projects")
     
     def __str__(self):
@@ -157,7 +157,7 @@ class Task(models.Model):
     tags = models.ManyToManyField(Tag, blank=True, related_name="tasks")
     priority = models.IntegerField(default=3, validators=[MinValueValidator(1), MaxValueValidator(5)])  # 1: High, 5: Low
     completed = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="created_tasks")
     updated_at = models.DateTimeField(auto_now=True)
     attachment = models.FileField(upload_to='task_attachments/', blank=True, null=True)
@@ -187,7 +187,7 @@ class Resource(models.Model):
     resource_type = models.CharField(max_length=20, choices=RESOURCE_TYPES)
     file = models.FileField(upload_to='training_resources/', blank=True, null=True)
     url = models.URLField(blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="uploaded_resources")
 
     def __str__(self):

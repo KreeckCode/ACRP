@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    # Dashboard
     path('', views.dashboard, name='dashboard'),
 
     # Events
@@ -20,22 +21,19 @@ urlpatterns = [
 
     # Projects
     path('projects/', views.project_list, name='project_list'),
-    path('projects/create/', views.create_project, name='create_project'),
-    path('projects/<int:project_id>/', views.project_detail, name='project_detail'),
+    path('projects/add/', views.create_project, name='create_project'),
     path('projects/<int:project_id>/edit/', views.edit_project, name='edit_project'),
     path('projects/<int:project_id>/delete/', views.delete_project, name='delete_project'),
+    path('projects/<int:project_id>/', views.project_detail, name='project_detail'),
+    # Kanban view per project
+    path('projects/<int:pk>/kanban/', views.project_kanban, name='project_kanban'),
 
     # Tasks
-    path('tasks/', views.task_list, name='task_list'),
-    path('tasks/create/', views.create_task, name='create_task'),
-    path('tasks/<int:task_id>/', views.task_detail, name='task_detail'),
-    path('tasks/<int:task_id>/edit/', views.edit_task, name='edit_task'),
-    path('tasks/<int:task_id>/delete/', views.delete_task, name='delete_task'),
+    path('tasks/add/', views.create_task, name='task_add'),
+    path('tasks/<int:pk>/edit/', views.edit_task, name='task_edit'),
+    path('tasks/<int:pk>/delete/', views.delete_task, name='task_delete'),
+    # AJAX detail and move
+    path('tasks/<int:pk>/detail/', views.task_detail_ajax, name='task_detail_ajax'),
+    path('tasks/<int:pk>/move/', views.move_task, name='move_task'),
 
-    # Resources
-    path('resources/', views.resource_list, name='resource_list'),
-    path('resources/create/', views.create_resource, name='create_resource'),
-    path('resources/<int:resource_id>/', views.resource_detail, name='resource_detail'),
-    path('resources/<int:resource_id>/edit/', views.edit_resource, name='edit_resource'),
-    path('resources/<int:resource_id>/delete/', views.delete_resource, name='delete_resource'),
 ]
