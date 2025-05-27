@@ -5,12 +5,13 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
 
 <div class="container py-4">
-  <div class="d-flex align-items-center mb-3">
-    <h3 class="me-auto">{{ project.name }} Kanban</h3>
-    <a href="{% url 'edit_project' project.pk %}" class="btn btn-sm btn-light">
-      <i class="fas fa-cog"></i> Settings
-    </a>
+  <div class="column-header d-flex align-items-center justify-content-between px-3 py-2">
+        <h5 class="mb-0">{{ project.name }} Kanban</h5>
+        <a href="{% url 'edit_project' project.pk %}" class="btn btn-sm btn-light">
+          <i class="fas fa-cog"></i> Settings
+        </a>
   </div>
+    
 
   <div class="kanban-board">
     {% for status_key, label, tasks in tasks_by_status %}

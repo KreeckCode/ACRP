@@ -55,7 +55,11 @@
                   <span class="text-muted">—</span>
                 {% endif %}
               </td>
+                
               <td class="text-center">
+                <a href="{% url 'project_kanban' p.id %}" class="btn btn-sm btn-outline-info">
+                  <i class="bi bi-eye"></i> Kanban
+                </a>
                 <a href="{% url 'project_detail' p.id %}" class="btn btn-sm btn-outline-info">
                   <i class="bi bi-eye"></i> View
                 </a>

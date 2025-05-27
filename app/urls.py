@@ -26,8 +26,7 @@ urlpatterns = [
     path('projects/<int:project_id>/delete/', views.delete_project, name='delete_project'),
     path('projects/<int:project_id>/', views.project_detail, name='project_detail'),
     # Kanban view per project
-    path('projects/<int:pk>/kanban/', views.project_kanban, name='project_kanban'),
-
+    path('projects/<int:project_id>/kanban/', views.project_kanban, name='project_kanban'),
     # Tasks
     path('tasks/add/', views.create_task, name='task_add'),
     path('tasks/<int:task_id>/edit/', views.edit_task, name='task_edit'),

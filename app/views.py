@@ -235,8 +235,8 @@ def project_list(request):
     return render(request, 'app/project_list.html', {'projects': projects})
 
 @login_required
-def project_kanban(request, pk):
-    project = get_object_or_404(Projects, pk=pk)
+def project_kanban(request, project_id):
+    project = get_object_or_404(Projects, id=project_id)
     if request.user not in project.team_members.all() and request.user != project.manager:
         return HttpResponseForbidden()
 
