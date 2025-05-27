@@ -1,3 +1,4 @@
+import json
 from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, permission_required
@@ -16,7 +17,7 @@ from hr.models import EmployeeProfile, LeaveRequest, HRDocumentStorage
 from database.models import Database, Entry
 from accounts.models import Department, User
 from django.views.decorators.http import require_POST
-
+from django.views.decorators.http import require_http_methods
 @login_required
 def kanban_board(request):
     """
@@ -238,8 +239,19 @@ def project_kanban(request, pk):
     project = get_object_or_404(Projects, pk=pk)
     if request.user not in project.team_members.all() and request.user != project.manager:
         return HttpResponseForbidden()
-    form = TaskForm(initial={'project': project})
-    return render(request, 'workspace/kanban.html', {'project': project, 'form': form})
+
+    # Prepare tasks per status as a list of tuples for template friendly iteration
+    tasks_by_status = []
+    for key, label in Task.STATUS_CHOICES:
+        tasks = project.tasks.filter(status=key).order_by('-priority', '-created_at')
+        tasks_by_status.append((key, label, tasks))
+
+    return render(request, 'workspace/kanban.html', {
+        'project': project,
+        'tasks_by_status': tasks_by_status,
+        'form': TaskForm(initial={'project_task': project.id}),
+    })
+
 
 @login_required
 def task_detail_ajax(request, pk):
@@ -278,14 +290,14 @@ def project_detail(request, project_id):
 
 @login_required
 @permission_required('app.manage_projects', raise_exception=True)
-def edit_project(request, pk):
-    proj=get_object_or_404(Projects,pk=pk)
+def edit_project(request, project_id):
+    proj=get_object_or_404(Projects,id=project_id)
     form=ProjectForm(request.POST or None, request.FILES or None, instance=proj)
     if form.is_valid():
         proj=form.save()
         #notify_user(request.user, f'Project {proj.name} updated.')
         messages.success(request,'Project updated.')
-        return redirect('app:project_kanban', pk=pk)
+        return redirect('project_kanban', id=project_id)
     return render(request,'app/project_form.html',{'form':form,'project':proj})
 
 @login_required
@@ -310,36 +322,59 @@ def task_list(request):
     tasks = Task.objects.select_related('project_task').all()
     return render(request, 'app/task_list.html', {'tasks': tasks})
 
+@require_http_methods(["POST"])
 @login_required
 def create_task(request):
-    if request.method == 'POST':
-        form = TaskForm(request.POST)
-        if form.is_valid():
-            form.save()
-            # notify_user(request.user, f'Task {task.title} created.')
-            messages.success(request, 'Task created successfully.')
-            return redirect('task_list')
-    else:
-        form = TaskForm()
-    return render(request, 'app/task_form.html', {'form': form})
+    try:
+        data = json.loads(request.body)
+        project = get_object_or_404(Projects, pk=data.get('project_task'))
+        
+        if request.user not in project.team_members.all() and request.user != project.manager:
+            return HttpResponseForbidden()
+
+        task = Task.objects.create(
+            project_task=project,
+            title=data['title'],
+            description=data.get('description', ''),
+            due_date=data['due_date'],
+            status=data.get('status', 'NOT_STARTED'),
+            assigned_to=request.user,
+            created_by=request.user
+        )
+        
+        return JsonResponse({
+            'status': 'ok',
+            'task': {
+                'id': task.id,
+                'title': task.title,
+                'due_date': task.due_date.strftime('%Y-%m-%d'),
+                'status': task.status
+            }
+        })
+    
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'error': str(e)}, status=400)
+
 
 @login_required
 def task_detail(request, task_id):
     task = get_object_or_404(Task, id=task_id)
     return render(request, 'app/task_detail.html', {'task': task})
 
+@require_http_methods(["POST"])
 @login_required
 def edit_task(request, task_id):
     task = get_object_or_404(Task, id=task_id)
-    if request.method == 'POST':
-        form = TaskForm(request.POST, instance=task)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Task updated successfully.')
-            return redirect('task_detail', task_id=task.id)
-    else:
-        form = TaskForm(instance=task)
-    return render(request, 'app/task_form.html', {'form': form})
+    try:
+        data = json.loads(request.body)
+        task.title = data.get('title', task.title)
+        task.description = data.get('description', task.description)
+        task.due_date = data.get('due_date', task.due_date)
+        task.status = data.get('status', task.status)
+        task.save()
+        return JsonResponse({'status': 'ok'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'error': str(e)}, status=400)
 
 @login_required
 def delete_task(request, task_id):
@@ -353,18 +388,23 @@ def delete_task(request, task_id):
         'cancel_url': 'task_detail', 'cancel_id': task.id
     })
 
-@require_POST
+@require_http_methods(["POST"])
 @login_required
-@permission_required('app.manage_tasks', raise_exception=True)
 def move_task(request, pk):
-    import json
-    task=get_object_or_404(Task,pk=pk)
-    payload=json.loads(request.body)
-    new_proj=Projects.objects.get(pk=payload.get('project'))
-    task.project=new_proj
-    task.save()
-    #notify_user(request.user, f'Task {task.title} moved to {new_proj.name}.')
-    return JsonResponse({'status':'ok'})
+    try:
+        task = get_object_or_404(Task, pk=pk)
+        data = json.loads(request.body)
+        new_status = data.get('status')
+        
+        if new_status not in dict(Task.STATUS_CHOICES).keys():
+            return JsonResponse({'status': 'error', 'error': 'Invalid status'}, status=400)
+        
+        task.status = new_status
+        task.save()
+        return JsonResponse({'status': 'ok'})
+    
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'error': str(e)}, status=400)
 
 ### ========== RESOURCES ========== ###
 
