@@ -256,16 +256,15 @@ def project_kanban(request, pk):
 @login_required
 def task_detail_ajax(request, pk):
     task = get_object_or_404(Task, pk=pk)
-    if request.user not in task.project.team_members.all() and request.user != task.project.manager:
-        return HttpResponseForbidden()
     data = {
         'title': task.title,
         'description': task.description,
-        'due_date': task.due_date.isoformat(),
-        'completed': task.completed,
+        'due_date': task.due_date.strftime('%Y-%m-%d'),
+        'status': task.get_status_display(),
         'assigned_to': task.assigned_to.get_full_name() if task.assigned_to else None,
         'attachment_url': task.attachment.url if task.attachment else None,
         'tags': [t.name for t in task.tags.all()],
+        'priority': task.get_priority_display(),
     }
     return JsonResponse(data)
 
@@ -325,36 +324,27 @@ def task_list(request):
 @require_http_methods(["POST"])
 @login_required
 def create_task(request):
-    try:
-        data = json.loads(request.body)
-        project = get_object_or_404(Projects, pk=data.get('project_task'))
-        
-        if request.user not in project.team_members.all() and request.user != project.manager:
-            return HttpResponseForbidden()
-
-        task = Task.objects.create(
-            project_task=project,
-            title=data['title'],
-            description=data.get('description', ''),
-            due_date=data['due_date'],
-            status=data.get('status', 'NOT_STARTED'),
-            assigned_to=request.user,
-            created_by=request.user
-        )
-        
-        return JsonResponse({
-            'status': 'ok',
-            'task': {
-                'id': task.id,
-                'title': task.title,
-                'due_date': task.due_date.strftime('%Y-%m-%d'),
-                'status': task.status
-            }
-        })
-    
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'error': str(e)}, status=400)
-
+    form = TaskForm(request.POST, request.FILES)
+    if form.is_valid():
+        try:
+            task = form.save(commit=False)
+            task.created_by = request.user
+            task.status = form.cleaned_data.get('status', 'NOT_STARTED')
+            task.save()
+            form.save_m2m()  # Save tags
+            
+            return JsonResponse({
+                'status': 'ok',
+                'task': {
+                    'id': task.id,
+                    'title': task.title,
+                    'status': task.status,
+                    'due_date': task.due_date.strftime('%Y-%m-%d')
+                }
+            })
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'error': str(e)}, status=400)
+    return JsonResponse({'status': 'error', 'error': form.errors}, status=400)
 
 @login_required
 def task_detail(request, task_id):
@@ -365,28 +355,33 @@ def task_detail(request, task_id):
 @login_required
 def edit_task(request, task_id):
     task = get_object_or_404(Task, id=task_id)
-    try:
-        data = json.loads(request.body)
-        task.title = data.get('title', task.title)
-        task.description = data.get('description', task.description)
-        task.due_date = data.get('due_date', task.due_date)
-        task.status = data.get('status', task.status)
-        task.save()
-        return JsonResponse({'status': 'ok'})
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'error': str(e)}, status=400)
+    form = TaskForm(request.POST, request.FILES, instance=task)
+    if form.is_valid():
+        try:
+            task = form.save()
+            return JsonResponse({
+                'status': 'ok',
+                'task': {
+                    'id': task.id,
+                    'title': task.title,
+                    'status': task.status,
+                    'due_date': task.due_date.strftime('%Y-%m-%d')
+                }
+            })
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'error': str(e)}, status=400)
+    return JsonResponse({'status': 'error', 'error': form.errors}, status=400)
 
+# Update delete_task view
+@require_http_methods(["POST"])
 @login_required
 def delete_task(request, task_id):
     task = get_object_or_404(Task, id=task_id)
-    if request.method == 'POST':
+    try:
         task.delete()
-        messages.success(request, 'Task deleted successfully.')
-        return redirect('task_list')
-    return render(request, 'app/confirm_delete.html', {
-        'object': task, 'type': 'Task',
-        'cancel_url': 'task_detail', 'cancel_id': task.id
-    })
+        return JsonResponse({'status': 'ok'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'error': str(e)}, status=400)
 
 @require_http_methods(["POST"])
 @login_required

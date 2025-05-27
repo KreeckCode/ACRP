@@ -30,9 +30,8 @@ urlpatterns = [
 
     # Tasks
     path('tasks/add/', views.create_task, name='task_add'),
-    path('tasks/<int:pk>/edit/', views.edit_task, name='task_edit'),
-    path('tasks/<int:pk>/delete/', views.delete_task, name='task_delete'),
-    # AJAX detail and move
+    path('tasks/<int:task_id>/edit/', views.edit_task, name='task_edit'),
+    path('tasks/<int:task_id>/delete/', views.delete_task, name='task_delete'),
     path('tasks/<int:pk>/detail/', views.task_detail_ajax, name='task_detail_ajax'),
     path('tasks/<int:pk>/move/', views.move_task, name='move_task'),
 
