@@ -388,16 +388,50 @@
       document.getElementById('councilModal').classList.add('hidden');
     }
 
+
+    // Replace the existing selectCouncil function with this:
     function selectCouncil(council) {
       selectedCouncil = council;
       closeModal();
       showSuccess(`${councilData[council].title} selected successfully!`);
       
-      // Here you would typically submit the form or redirect
-      setTimeout(() => {
-        alert(`This would proceed with ${councilData[council].title} registration`);
-      }, 1500);
+      // Get the URLs based on council selection
+      let redirectUrl;
+      try {
+        switch(council) {
+          case 'cgmp':
+            redirectUrl = "{% url 'enrollments:cgmp_create' %}";
+            break;
+          case 'cpsc':
+            redirectUrl = "{% url 'enrollments:cpsc_create' %}";
+            break;
+          case 'cmtp':
+            redirectUrl = "{% url 'enrollments:cmtp_create' %}";
+            break;
+          default:
+            throw new Error('Invalid council selected');
+        }
+
+        // Redirect after a brief delay to show the success message
+        setTimeout(() => {
+          window.location.href = redirectUrl;
+        }, 1000);
+
+      } catch (error) {
+        console.error('Error during redirect:', error);
+        showError('An error occurred while processing your request. Please try again.');
+      }
     }
+
+    // Add this new function for error handling
+    function showError(message) {
+      const errorDiv = document.getElementById('errorMessage');
+      const errorText = errorDiv.querySelector('div');
+      errorText.textContent = message;
+      errorDiv.classList.remove('hidden');
+      setTimeout(() => errorDiv.classList.add('hidden'), 3000);
+    }
+
 
     function selectFromModal() {
       // This will be set by the modal content
@@ -427,5 +461,6 @@
       }
     });
   </script>
+  
 </body>
 </html>
