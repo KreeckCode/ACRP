@@ -40,7 +40,6 @@ def is_admin_or_manager(user):
     return user.acrp_role in {
         User.ACRPRole.GLOBAL_SDP,
         User.ACRPRole.PROVIDER_ADMIN,
-        User.ACRPRole.MANAGER
     }
 
 def can_approve_applications(user):
@@ -578,6 +577,117 @@ def enrollment_dashboard(request):
         'recent_applications': recent_applications
     })
 
+# CPSC CRUD Operations
+@login_required
+@permission_required('enrollments.change_cpscaffiliation', raise_exception=True)
+@transaction.atomic
+def cpsc_update(request, pk):
+    """Update existing CPSC affiliation"""
+    cpsc = get_object_or_404(CPSCAffiliation, pk=pk)
+    
+    if request.method == 'POST':
+        form = CPSCForm(request.POST, instance=cpsc, request=request)
+        if form.is_valid():
+            form.save()
+            logger.info(f"CPSC application updated: ID {pk}")
+            messages.success(request, "CPSC application updated successfully.")
+            return redirect('enrollments:cpsc_list')
+        else:
+            messages.error(request, "Please correct the errors below.")
+    else:
+        form = CPSCForm(instance=cpsc)
+    
+    return render(request, 'enrollments/cpsc_form.html', {
+        'form': form,
+        'object': cpsc,
+        'is_update': True
+    })
+
+@login_required
+@permission_required('enrollments.view_cpscaffiliation', raise_exception=True)
+def cpsc_detail(request, pk):
+    """View CPSC affiliation details"""
+    cpsc = get_object_or_404(
+        CPSCAffiliation.objects.select_related('created_user', 'approved_by')
+        .prefetch_related('documents'),
+        pk=pk
+    )
+    return render(request, 'enrollments/cpsc_detail.html', {'object': cpsc})
+
+@login_required
+@permission_required('enrollments.delete_cpscaffiliation', raise_exception=True)
+@require_http_methods(["GET", "POST"])
+def cpsc_delete(request, pk):
+    """Delete CPSC affiliation with confirmation"""
+    cpsc = get_object_or_404(CPSCAffiliation, pk=pk)
+    
+    if request.method == 'POST':
+        with transaction.atomic():
+            cpsc.delete()
+            logger.info(f"CPSC application deleted: ID {pk}")
+            messages.success(request, "CPSC application deleted successfully.")
+            return redirect('enrollments:cpsc_list')
+    
+    return render(request, 'enrollments/confirm_delete.html', {
+        'object': cpsc,
+        'object_type': 'CPSC Application'
+    })
+
+# CMTP CRUD Operations
+@login_required
+@permission_required('enrollments.change_cmtpaffiliation', raise_exception=True)
+@transaction.atomic
+def cmtp_update(request, pk):
+    """Update existing CMTP affiliation"""
+    cmtp = get_object_or_404(CMTPAffiliation, pk=pk)
+    
+    if request.method == 'POST':
+        form = CMTPForm(request.POST, instance=cmtp, request=request)
+        if form.is_valid():
+            form.save()
+            logger.info(f"CMTP application updated: ID {pk}")
+            messages.success(request, "CMTP application updated successfully.")
+            return redirect('enrollments:cmtp_list')
+        else:
+            messages.error(request, "Please correct the errors below.")
+    else:
+        form = CMTPForm(instance=cmtp)
+    
+    return render(request, 'enrollments/cmtp_form.html', {
+        'form': form,
+        'object': cmtp,
+        'is_update': True
+    })
+
+@login_required
+@permission_required('enrollments.view_cmtpaffiliation', raise_exception=True)
+def cmtp_detail(request, pk):
+    """View CMTP affiliation details"""
+    cmtp = get_object_or_404(
+        CMTPAffiliation.objects.select_related('created_user', 'approved_by')
+        .prefetch_related('documents'),
+        pk=pk
+    )
+    return render(request, 'enrollments/cmtp_detail.html', {'object': cmtp})
+
+@login_required
+@permission_required('enrollments.delete_cmtpaffiliation', raise_exception=True)
+@require_http_methods(["GET", "POST"])
+def cmtp_delete(request, pk):
+    """Delete CMTP affiliation with confirmation"""
+    cmtp = get_object_or_404(CMTPAffiliation, pk=pk)
+    
+    if request.method == 'POST':
+        with transaction.atomic():
+            cmtp.delete()
+            logger.info(f"CMTP application deleted: ID {pk}")
+            messages.success(request, "CMTP application deleted successfully.")
+            return redirect('enrollments:cmtp_list')
+    
+    return render(request, 'enrollments/confirm_delete.html', {
+        'object': cmtp,
+        'object_type': 'CMTP Application'
+    })
 
 
 

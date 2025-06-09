@@ -1,4 +1,3 @@
-# enrollments/forms.py
 import os
 from django import forms
 from django.contrib.contenttypes.forms import generic_inlineformset_factory
@@ -546,14 +545,32 @@ class DocumentCategorySelectionForm(forms.Form):
         return categories
 
 
-# Batch Document Upload Form
+# Official Django solution from documentation
+from django import forms
+
+class MultipleFileInput(forms.ClearableFileInput):
+    allow_multiple_selected = True
+
+class MultipleFileField(forms.FileField):
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("widget", MultipleFileInput())
+        super().__init__(*args, **kwargs)
+    
+    def clean(self, data, initial=None):
+        single_file_clean = super().clean
+        if isinstance(data, (list, tuple)):
+            result = [single_file_clean(d, initial) for d in data]
+        else:
+            result = [single_file_clean(data, initial)]
+        return result
+
+# Your updated Batch Document Upload Form using official Django solution
 class BatchDocumentUploadForm(forms.Form):
     """Form for uploading multiple documents at once"""
 
-    files = forms.FileField(
-        widget=forms.ClearableFileInput(
+    files = MultipleFileField(
+        widget=MultipleFileInput(
             attrs={
-                "multiple": True,
                 "class": "form-control",
                 "accept": ".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif",
             }
@@ -563,27 +580,28 @@ class BatchDocumentUploadForm(forms.Form):
     )
 
     def clean_files(self):
-        files = self.files.getlist("files")  # Get list of uploaded files
-
+        files = self.cleaned_data.get('files', [])
+        
         if not files:
-            raise ValidationError("No files were uploaded.")
+            raise forms.ValidationError("No files were uploaded.")
 
         if len(files) > 10:
-            raise ValidationError("You can upload a maximum of 10 files at once.")
+            raise forms.ValidationError("You can upload a maximum of 10 files at once.")
 
         for file in files:
-            if file.size > 10 * 1024 * 1024:  # 10MB
-                raise ValidationError(
+            if file and file.size > 10 * 1024 * 1024:  # 10MB
+                raise forms.ValidationError(
                     f"File {file.name} exceeds the maximum size of 10MB."
                 )
 
             # Get file extension safely
-            file_parts = file.name.lower().split(".")
-            if len(file_parts) < 2:
-                raise ValidationError(f"File {file.name} has no extension.")
+            if file:
+                file_parts = file.name.lower().split(".")
+                if len(file_parts) < 2:
+                    raise forms.ValidationError(f"File {file.name} has no extension.")
 
-            ext = file_parts[-1]
-            if ext not in ["pdf", "doc", "docx", "jpg", "jpeg", "png", "gif"]:
-                raise ValidationError(f"File {file.name} has an invalid extension.")
+                ext = file_parts[-1]
+                if ext not in ["pdf", "doc", "docx", "jpg", "jpeg", "png", "gif"]:
+                    raise forms.ValidationError(f"File {file.name} has an invalid extension.")
 
         return files
