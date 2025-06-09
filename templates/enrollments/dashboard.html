@@ -1,190 +1,189 @@
-{% extends 'base/base.html' %}
-{% load static %}
-
-{% block title %}Enrollment Dashboard - ACRP{% endblock %}
-
-{% block extra_css %}
-<style>
-    :root {
-        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-        --warning-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        --info-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        --hover-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-    }
-
-    .dashboard-card {
-        background: white;
-        border-radius: 16px;
-        box-shadow: var(--card-shadow);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(10px);
-    }
-
-    .dashboard-card:hover {
-        transform: translateY(-4px);
-        box-shadow: var(--hover-shadow);
-    }
-
-    .stat-card {
-        position: relative;
-        overflow: hidden;
-    }
-
-    .stat-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: var(--primary-gradient);
-    }
-
-    .cgmp-card::before { background: var(--primary-gradient); }
-    .cpsc-card::before { background: var(--success-gradient); }
-    .cmtp-card::before { background: var(--info-gradient); }
-
-    .metric-number {
-        font-weight: 700;
-        font-size: 2.5rem;
-        line-height: 1;
-        background: var(--primary-gradient);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-
-    .metric-label {
-        font-size: 0.875rem;
-        font-weight: 500;
-        color: #6b7280;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-
-    .progress-bar {
-        height: 8px;
-        border-radius: 9999px;
-        overflow: hidden;
-        background-color: #f3f4f6;
-    }
-
-    .progress-fill {
-        height: 100%;
-        border-radius: 9999px;
-        transition: width 0.6s ease-in-out;
-    }
-
-    .cgmp-progress { background: var(--primary-gradient); }
-    .cpsc-progress { background: var(--success-gradient); }
-    .cmtp-progress { background: var(--info-gradient); }
-
-    .recent-item {
-        transition: all 0.2s ease;
-        border-radius: 12px;
-    }
-
-    .recent-item:hover {
-        background-color: #f8fafc;
-        transform: translateX(4px);
-    }
-
-    .status-badge {
-        font-size: 0.75rem;
-        font-weight: 600;
-        padding: 0.25rem 0.75rem;
-        border-radius: 9999px;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-
-    .status-approved {
-        background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-        color: #065f46;
-        border: 1px solid #34d399;
-    }
-
-    .status-pending {
-        background: linear-gradient(135deg, #fef3c7, #fde68a);
-        color: #92400e;
-        border: 1px solid #f59e0b;
-    }
-
-    .council-badge {
-        font-size: 0.75rem;
-        font-weight: 700;
-        padding: 0.375rem 0.75rem;
-        border-radius: 8px;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-    }
-
-    .council-cgmp {
-        background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
-        color: #3730a3;
-        border: 1px solid #8b5cf6;
-    }
-
-    .council-cpsc {
-        background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-        color: #065f46;
-        border: 1px solid #10b981;
-    }
-
-    .council-cmtp {
-        background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-        color: #1e40af;
-        border: 1px solid #3b82f6;
-    }
-
-    .dashboard-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 20px;
-        margin-bottom: 2rem;
-    }
-
-    .fade-in {
-        animation: fadeInUp 0.6s ease-out forwards;
-        opacity: 0;
-        transform: translateY(20px);
-    }
-
-    .fade-in:nth-child(1) { animation-delay: 0.1s; }
-    .fade-in:nth-child(2) { animation-delay: 0.2s; }
-    .fade-in:nth-child(3) { animation-delay: 0.3s; }
-    .fade-in:nth-child(4) { animation-delay: 0.4s; }
-
-    @keyframes fadeInUp {
-        to {
-            opacity: 1;
-            transform: translateY(0);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enrollment Dashboard - ACRP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            --warning-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --info-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            --hover-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
         }
-    }
 
-    .chart-placeholder {
-        background: linear-gradient(45deg, #f8fafc, #e2e8f0);
-        border: 2px dashed #cbd5e1;
-        border-radius: 12px;
-        min-height: 200px;
-    }
-
-    @media (max-width: 768px) {
-        .metric-number {
-            font-size: 2rem;
-        }
-        
         .dashboard-card {
-            margin-bottom: 1rem;
+            background: white;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
         }
-    }
-</style>
-{% endblock %}
 
-{% block content %}
-<div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-8">
+        .dashboard-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--hover-shadow);
+        }
+
+        .stat-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--primary-gradient);
+        }
+
+        .cgmp-card::before { background: var(--primary-gradient); }
+        .cpsc-card::before { background: var(--success-gradient); }
+        .cmtp-card::before { background: var(--info-gradient); }
+
+        .metric-number {
+            font-weight: 700;
+            font-size: 2.5rem;
+            line-height: 1;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .metric-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .progress-bar {
+            height: 8px;
+            border-radius: 9999px;
+            overflow: hidden;
+            background-color: #f3f4f6;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 9999px;
+            transition: width 0.6s ease-in-out;
+        }
+
+        .cgmp-progress { background: var(--primary-gradient); }
+        .cpsc-progress { background: var(--success-gradient); }
+        .cmtp-progress { background: var(--info-gradient); }
+
+        .recent-item {
+            transition: all 0.2s ease;
+            border-radius: 12px;
+        }
+
+        .recent-item:hover {
+            background-color: #f8fafc;
+            transform: translateX(4px);
+        }
+
+        .status-badge {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .status-approved {
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            color: #065f46;
+            border: 1px solid #34d399;
+        }
+
+        .status-pending {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            color: #92400e;
+            border: 1px solid #f59e0b;
+        }
+
+        .council-badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.375rem 0.75rem;
+            border-radius: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .council-cgmp {
+            background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+            color: #3730a3;
+            border: 1px solid #8b5cf6;
+        }
+
+        .council-cpsc {
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+
+        .council-cmtp {
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            color: #1e40af;
+            border: 1px solid #3b82f6;
+        }
+
+        .dashboard-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            margin-bottom: 2rem;
+        }
+
+        .fade-in {
+            animation: fadeInUp 0.6s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .fade-in:nth-child(1) { animation-delay: 0.1s; }
+        .fade-in:nth-child(2) { animation-delay: 0.2s; }
+        .fade-in:nth-child(3) { animation-delay: 0.3s; }
+        .fade-in:nth-child(4) { animation-delay: 0.4s; }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .chart-placeholder {
+            background: linear-gradient(45deg, #f8fafc, #e2e8f0);
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            min-height: 200px;
+        }
+
+        @media (max-width: 768px) {
+            .metric-number {
+                font-size: 2rem;
+            }
+            
+            .dashboard-card {
+                margin-bottom: 1rem;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-8">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <!-- Dashboard Header -->
@@ -196,12 +195,12 @@
                 </div>
                 <div class="mt-4 md:mt-0 flex space-x-4">
                     <div class="text-center">
-                        <div class="text-2xl font-bold">{{ stats.cgmp.total|add:stats.cpsc.total|add:stats.cmtp.total }}</div>
+                        <div class="text-2xl font-bold" id="totalApplications">247</div>
                         <div class="text-blue-200 text-sm">Total Applications</div>
                     </div>
                     <div class="w-px bg-blue-300"></div>
                     <div class="text-center">
-                        <div class="text-2xl font-bold">{{ stats.cgmp.approved|add:stats.cpsc.approved|add:stats.cmtp.approved }}</div>
+                        <div class="text-2xl font-bold" id="totalApproved">186</div>
                         <div class="text-blue-200 text-sm">Approved</div>
                     </div>
                 </div>
@@ -226,25 +225,25 @@
                 
                 <div class="grid grid-cols-3 gap-4 mb-4">
                     <div class="text-center">
-                        <div class="metric-number">{{ stats.cgmp.total }}</div>
+                        <div class="metric-number">89</div>
                         <div class="metric-label">Total</div>
                     </div>
                     <div class="text-center">
-                        <div class="metric-number text-green-600">{{ stats.cgmp.approved }}</div>
+                        <div class="metric-number text-green-600">72</div>
                         <div class="metric-label">Approved</div>
                     </div>
                     <div class="text-center">
-                        <div class="metric-number text-orange-600">{{ stats.cgmp.pending }}</div>
+                        <div class="metric-number text-orange-600">17</div>
                         <div class="metric-label">Pending</div>
                     </div>
                 </div>
 
                 <div class="progress-bar mb-3">
-                    <div class="progress-fill cgmp-progress" style="width: {% if stats.cgmp.total > 0 %}{{ stats.cgmp.approved|floatformat:0 }}{% widthratio stats.cgmp.approved stats.cgmp.total 100 %}%{% else %}0%{% endif %}"></div>
+                    <div class="progress-fill cgmp-progress" style="width: 81%"></div>
                 </div>
                 <div class="flex justify-between text-sm text-gray-600">
                     <span>Approval Rate</span>
-                    <span class="font-semibold">{% if stats.cgmp.total > 0 %}{% widthratio stats.cgmp.approved stats.cgmp.total 100 %}%{% else %}0%{% endif %}</span>
+                    <span class="font-semibold">81%</span>
                 </div>
             </div>
 
@@ -264,25 +263,25 @@
                 
                 <div class="grid grid-cols-3 gap-4 mb-4">
                     <div class="text-center">
-                        <div class="metric-number">{{ stats.cpsc.total }}</div>
+                        <div class="metric-number">96</div>
                         <div class="metric-label">Total</div>
                     </div>
                     <div class="text-center">
-                        <div class="metric-number text-green-600">{{ stats.cpsc.approved }}</div>
+                        <div class="metric-number text-green-600">78</div>
                         <div class="metric-label">Approved</div>
                     </div>
                     <div class="text-center">
-                        <div class="metric-number text-orange-600">{{ stats.cpsc.pending }}</div>
+                        <div class="metric-number text-orange-600">18</div>
                         <div class="metric-label">Pending</div>
                     </div>
                 </div>
 
                 <div class="progress-bar mb-3">
-                    <div class="progress-fill cpsc-progress" style="width: {% if stats.cpsc.total > 0 %}{% widthratio stats.cpsc.approved stats.cpsc.total 100 %}%{% else %}0%{% endif %}"></div>
+                    <div class="progress-fill cpsc-progress" style="width: 81%"></div>
                 </div>
                 <div class="flex justify-between text-sm text-gray-600">
                     <span>Approval Rate</span>
-                    <span class="font-semibold">{% if stats.cpsc.total > 0 %}{% widthratio stats.cpsc.approved stats.cpsc.total 100 %}%{% else %}0%{% endif %}</span>
+                    <span class="font-semibold">81%</span>
                 </div>
             </div>
 
@@ -302,25 +301,25 @@
                 
                 <div class="grid grid-cols-3 gap-4 mb-4">
                     <div class="text-center">
-                        <div class="metric-number">{{ stats.cmtp.total }}</div>
+                        <div class="metric-number">62</div>
                         <div class="metric-label">Total</div>
                     </div>
                     <div class="text-center">
-                        <div class="metric-number text-green-600">{{ stats.cmtp.approved }}</div>
+                        <div class="metric-number text-green-600">36</div>
                         <div class="metric-label">Approved</div>
                     </div>
                     <div class="text-center">
-                        <div class="metric-number text-orange-600">{{ stats.cmtp.pending }}</div>
+                        <div class="metric-number text-orange-600">26</div>
                         <div class="metric-label">Pending</div>
                     </div>
                 </div>
 
                 <div class="progress-bar mb-3">
-                    <div class="progress-fill cmtp-progress" style="width: {% if stats.cmtp.total > 0 %}{% widthratio stats.cmtp.approved stats.cmtp.total 100 %}%{% else %}0%{% endif %}"></div>
+                    <div class="progress-fill cmtp-progress" style="width: 58%"></div>
                 </div>
                 <div class="flex justify-between text-sm text-gray-600">
                     <span>Approval Rate</span>
-                    <span class="font-semibold">{% if stats.cmtp.total > 0 %}{% widthratio stats.cmtp.approved stats.cmtp.total 100 %}%{% else %}0%{% endif %}</span>
+                    <span class="font-semibold">58%</span>
                 </div>
             </div>
         </div>
@@ -333,120 +332,191 @@
                     <p class="text-gray-600">Latest enrollment submissions across all councils</p>
                 </div>
                 <div class="flex space-x-2">
-                    <a href="{% url 'enrollments:cgmp_list' %}" class="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors text-sm font-medium">
+                    <button class="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors text-sm font-medium">
                         View CGMP
-                    </a>
-                    <a href="{% url 'enrollments:cpsc_list' %}" class="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm font-medium">
+                    </button>
+                    <button class="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm font-medium">
                         View CPSC
-                    </a>
-                    <a href="{% url 'enrollments:cmtp_list' %}" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium">
+                    </button>
+                    <button class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium">
                         View CMTP
-                    </a>
+                    </button>
                 </div>
             </div>
 
-            {% if recent_applications %}
-            <div class="space-y-4">
-                {% for app in recent_applications %}
+            <div class="space-y-4" id="recentApplications">
                 <div class="recent-item p-4 border border-gray-200 hover:border-gray-300 transition-all duration-200">
                     <div class="flex items-center justify-between">
                         <div class="flex-1">
                             <div class="flex items-center space-x-3 mb-2">
-                                <span class="council-badge council-{{ app.type|lower }}">{{ app.type }}</span>
-                                <h3 class="font-semibold text-gray-800">{{ app.name }}</h3>
-                                {% if app.approved %}
-                                    <span class="status-badge status-approved">Approved</span>
-                                {% else %}
-                                    <span class="status-badge status-pending">Pending</span>
-                                {% endif %}
+                                <span class="council-badge council-cgmp">CGMP</span>
+                                <h3 class="font-semibold text-gray-800">Dr. Sarah Johnson</h3>
+                                <span class="status-badge status-approved">Approved</span>
                             </div>
                             <div class="flex items-center space-x-4 text-sm text-gray-600">
                                 <div class="flex items-center space-x-1">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                                     </svg>
-                                    <span>{{ app.email }}</span>
+                                    <span>sarah.johnson@email.com</span>
                                 </div>
                                 <div class="flex items-center space-x-1">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                     </svg>
-                                    <span>{{ app.created_at|timesince }} ago</span>
+                                    <span>2 hours ago</span>
                                 </div>
                             </div>
                         </div>
                         <div class="flex items-center space-x-2">
-                            {% if app.type == 'CGMP' %}
-                                <a href="{% url 'enrollments:cgmp_detail' app.id %}" class="px-3 py-1 text-purple-600 border border-purple-300 rounded-lg hover:bg-purple-50 transition-colors text-sm">
-                                    View Details
-                                </a>
-                            {% elif app.type == 'CPSC' %}
-                                <a href="{% url 'enrollments:cpsc_detail' app.id %}" class="px-3 py-1 text-green-600 border border-green-300 rounded-lg hover:bg-green-50 transition-colors text-sm">
-                                    View Details
-                                </a>
-                            {% elif app.type == 'CMTP' %}
-                                <a href="{% url 'enrollments:cmtp_detail' app.id %}" class="px-3 py-1 text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors text-sm">
-                                    View Details
-                                </a>
-                            {% endif %}
+                            <button class="px-3 py-1 text-purple-600 border border-purple-300 rounded-lg hover:bg-purple-50 transition-colors text-sm">
+                                View Details
+                            </button>
                         </div>
                     </div>
                 </div>
-                {% endfor %}
+
+                <div class="recent-item p-4 border border-gray-200 hover:border-gray-300 transition-all duration-200">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-3 mb-2">
+                                <span class="council-badge council-cpsc">CPSC</span>
+                                <h3 class="font-semibold text-gray-800">Michael Thompson</h3>
+                                <span class="status-badge status-pending">Pending</span>
+                            </div>
+                            <div class="flex items-center space-x-4 text-sm text-gray-600">
+                                <div class="flex items-center space-x-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                    </svg>
+                                    <span>m.thompson@email.com</span>
+                                </div>
+                                <div class="flex items-center space-x-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <span>5 hours ago</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button class="px-3 py-1 text-green-600 border border-green-300 rounded-lg hover:bg-green-50 transition-colors text-sm">
+                                View Details
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="recent-item p-4 border border-gray-200 hover:border-gray-300 transition-all duration-200">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-3 mb-2">
+                                <span class="council-badge council-cmtp">CMTP</span>
+                                <h3 class="font-semibold text-gray-800">Lisa Rodriguez</h3>
+                                <span class="status-badge status-approved">Approved</span>
+                            </div>
+                            <div class="flex items-center space-x-4 text-sm text-gray-600">
+                                <div class="flex items-center space-x-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                    </svg>
+                                    <span>lisa.rodriguez@email.com</span>
+                                </div>
+                                <div class="flex items-center space-x-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <span>1 day ago</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button class="px-3 py-1 text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors text-sm">
+                                View Details
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
-            {% else %}
-            <div class="text-center py-12">
-                <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                </svg>
-                <h3 class="text-lg font-medium text-gray-700 mb-2">No Applications Yet</h3>
-                <p class="text-gray-500">Recent enrollment applications will appear here once submitted.</p>
-            </div>
-            {% endif %}
         </div>
 
         <!-- Quick Actions -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
-            <div class="dashboard-card p-4 text-center hover:bg-purple-50 transition-colors fade-in">
+            <div class="dashboard-card p-4 text-center hover:bg-purple-50 transition-colors cursor-pointer fade-in">
                 <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
                     <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                     </svg>
                 </div>
                 <h3 class="font-semibold text-gray-800 mb-1">New CGMP</h3>
-                <a href="{% url 'enrollments:cgmp_create' %}" class="text-purple-600 hover:text-purple-800 text-sm">Create Application</a>
+                <p class="text-purple-600 hover:text-purple-800 text-sm cursor-pointer">Create Application</p>
             </div>
 
-            <div class="dashboard-card p-4 text-center hover:bg-green-50 transition-colors fade-in">
+            <div class="dashboard-card p-4 text-center hover:bg-green-50 transition-colors cursor-pointer fade-in">
                 <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
                     <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                     </svg>
                 </div>
                 <h3 class="font-semibold text-gray-800 mb-1">New CPSC</h3>
-                <a href="{% url 'enrollments:cpsc_create' %}" class="text-green-600 hover:text-green-800 text-sm">Create Application</a>
+                <p class="text-green-600 hover:text-green-800 text-sm cursor-pointer">Create Application</p>
             </div>
 
-            <div class="dashboard-card p-4 text-center hover:bg-blue-50 transition-colors fade-in">
+            <div class="dashboard-card p-4 text-center hover:bg-blue-50 transition-colors cursor-pointer fade-in">
                 <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
                     <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                     </svg>
                 </div>
                 <h3 class="font-semibold text-gray-800 mb-1">New CMTP</h3>
-                <a href="{% url 'enrollments:cmtp_create' %}" class="text-blue-600 hover:text-blue-800 text-sm">Create Application</a>
+                <p class="text-blue-600 hover:text-blue-800 text-sm cursor-pointer">Create Application</p>
             </div>
 
-            <div class="dashboard-card p-4 text-center hover:bg-gray-50 transition-colors fade-in">
+            <div class="dashboard-card p-4 text-center hover:bg-gray-50 transition-colors cursor-pointer fade-in">
                 <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
                     <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 00-2-2m0 0V5a2 2 0 012-2h2a2 2 0 00-2-2m0 0V9a2 2 0 012-2h2a2 2 0 012 2v10"></path>
                     </svg>
                 </div>
                 <h3 class="font-semibold text-gray-800 mb-1">View Reports</h3>
-                <a href="#" class="text-gray-600 hover:text-gray-800 text-sm">Generate Report</a>
+                <p class="text-gray-600 hover:text-gray-800 text-sm cursor-pointer">Generate Report</p>
             </div>
         </div>
     </div>
-</div>
-{% endblock %}
+
+    <script>
+        // Add some basic interactivity
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate progress bars on load
+            const progressBars = document.querySelectorAll('.progress-fill');
+            progressBars.forEach(bar => {
+                const width = bar.style.width;
+                bar.style.width = '0%';
+                setTimeout(() => {
+                    bar.style.width = width;
+                }, 500);
+            });
+
+            // Add click handlers for quick action cards
+            const quickActionCards = document.querySelectorAll('.dashboard-card.cursor-pointer');
+            quickActionCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    const title = this.querySelector('h3').textContent;
+                    alert(`${title} functionality would be implemented here!`);
+                });
+            });
+
+            // Add click handlers for view buttons
+            const viewButtons = document.querySelectorAll('button[class*="bg-"]');
+            viewButtons.forEach(button => {
+                if (button.textContent.includes('View')) {
+                    button.addEventListener('click', function() {
+                        const councilType = this.textContent.replace('View ', '');
+                        alert(`${councilType} list view would be implemented here!`);
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
