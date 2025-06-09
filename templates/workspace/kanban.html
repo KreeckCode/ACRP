@@ -112,7 +112,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   const csrfToken = '{{ csrf_token }}';
-  const projectPk = {{ project.pk }};
+  const projectPk = "{{ project.pk }}";
   const taskModal = new bootstrap.Modal('#taskModal');
   const detailModal = new bootstrap.Modal('#taskDetailModal');
   let currentTaskId = null;
