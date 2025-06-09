@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CGMP Registration - Council for General Ministry Professionals</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center">
+                    <i class="fas fa-church text-2xl text-blue-600 mr-3"></i>
+                    <h1 class="text-xl font-semibold text-gray-900">CGMP Registration</h1>
+                </div>
+                <div class="text-sm text-gray-500">
+                    Council for General Ministry Professionals
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Progress Bar -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-gray-700">Registration Progress</span>
+                <span class="text-sm text-gray-500" id="progress-text">Step 1 of 5</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" id="progress-bar" style="width: 20%"></div>
+            </div>
+        </div>
+
+        <!-- Form Container -->
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <form id="cgmp-form" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <!-- Section 1: Personal Information -->
+                <div class="form-section active" id="section-1">
+                    <div class="p-6 border-b border-gray-200">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-user text-blue-600 text-xl mr-3"></i>
+                            <h2 class="text-xl font-semibold text-gray-900">Personal Information</h2>
+                        </div>
+                        <p class="text-gray-600 text-sm">Please provide your basic personal details</p>
+                    </div>
+                    
+                    <div class="p-6 space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-user mr-2"></i>First Name *
+                                </label>
+                                <input type="text" name="first_name" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-user mr-2"></i>Last Name *
+                                </label>
+                                <input type="text" name="last_name" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-id-card mr-2"></i>ID Number *
+                                </label>
+                                <input type="text" name="id_number" required maxlength="13" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <p class="text-xs text-gray-500 mt-1">13-digit South African ID number</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-calendar mr-2"></i>Date of Birth *
+                                </label>
+                                <input type="date" name="date_of_birth" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-venus-mars mr-2"></i>Gender *
+                                </label>
+                                <select name="gender" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="">Select Gender</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-globe mr-2"></i>Nationality *
+                                </label>
+                                <input type="text" name="nationality" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Contact Information -->
+                <div class="form-section" id="section-2">
+                    <div class="p-6 border-b border-gray-200">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-address-book text-blue-600 text-xl mr-3"></i>
+                            <h2 class="text-xl font-semibold text-gray-900">Contact Information</h2>
+                        </div>
+                        <p class="text-gray-600 text-sm">How can we reach you?</p>
+                    </div>
+                    
+                    <div class="p-6 space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-envelope mr-2"></i>Email Address *
+                                </label>
+                                <input type="email" name="email" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-phone mr-2"></i>Phone Number *
+                                </label>
+                                <input type="tel" name="phone_number" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-map-marker-alt mr-2"></i>Street Address *
+                            </label>
+                            <textarea name="street_address" required rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-mail-bulk mr-2"></i>Postal Address
+                            </label>
+                            <textarea name="postal_address" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                            <p class="text-xs text-gray-500 mt-1">Leave blank if same as street address</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 3: Ministry Information -->
+                <div class="form-section" id="section-3">
+                    <div class="p-6 border-b border-gray-200">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-cross text-blue-600 text-xl mr-3"></i>
+                            <h2 class="text-xl font-semibold text-gray-900">Ministry Information</h2>
+                        </div>
+                        <p class="text-gray-600 text-sm">Tell us about your ministry background</p>
+                    </div>
+                    
+                    <div class="p-6 space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-graduation-cap mr-2"></i>Ordination Status *
+                                </label>
+                                <select name="ordination_status" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="">Select Status</option>
+                                    <option value="ordained">Ordained</option>
+                                    <option value="licensed">Licensed</option>
+                                    <option value="lay">Lay Minister</option>
+                                    <option value="student">Student</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-calendar-alt mr-2"></i>Ordination Date
+                                </label>
+                                <input type="date" name="ordination_date" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <p class="text-xs text-gray-500 mt-1">Leave blank if not ordained</p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-church mr-2"></i>Ordaining Body
+                            </label>
+                            <input type="text" name="ordaining_body" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+
+                        <div class="border rounded-lg p-4 bg-gray-50">
+                            <label class="flex items-center">
+                                <input type="checkbox" name="involved_pastoral" class="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <span class="text-sm font-medium text-gray-700">
+                                    <i class="fas fa-hands-helping mr-2"></i>Currently involved in pastoral work
+                                </span>
+                            </label>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-list mr-2"></i>Pastoral Responsibilities
+                            </label>
+                            <textarea name="pastoral_responsibilities" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Describe your pastoral duties and responsibilities"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 4: Qualifications & Background -->
+                <div class="form-section" id="section-4">
+                    <div class="p-6 border-b border-gray-200">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-certificate text-blue-600 text-xl mr-3"></i>
+                            <h2 class="text-xl font-semibold text-gray-900">Qualifications & Background</h2>
+                        </div>
+                        <p class="text-gray-600 text-sm">Educational and professional background</p>
+                    </div>
+                    
+                    <div class="p-6 space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-university mr-2"></i>Highest Qualification *
+                                </label>
+                                <select name="highest_qualification" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="">Select Qualification</option>
+                                    <option value="certificate">Certificate</option>
+                                    <option value="diploma">Diploma</option>
+                                    <option value="degree">Bachelor's Degree</option>
+                                    <option value="honours">Honours Degree</option>
+                                    <option value="masters">Master's Degree</option>
+                                    <option value="doctorate">Doctorate</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-calendar mr-2"></i>Qualification Date
+                                </label>
+                                <input type="date" name="qualification_date" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-briefcase mr-2"></i>Work Experience
+                            </label>
+                            <textarea name="work_description" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Describe your relevant work experience"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-award mr-2"></i>Other Professional Registrations
+                            </label>
+                            <textarea name="other_registrations" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="List other professional registrations or memberships"></textarea>
+                        </div>
+
+                        <!-- Background Checks -->
+                        <div class="space-y-4 border-t pt-6">
+                            <h3 class="text-lg font-medium text-gray-900">Background Verification</h3>
+                            
+                            <div class="space-y-3">
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="disciplinary_action" class="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                    <span class="text-sm text-gray-700">I have been subject to disciplinary action by any professional body</span>
+                                </label>
+                                
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="felony_conviction" class="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                    <span class="text-sm text-gray-700">I have been convicted of a felony</span>
+                                </label>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-exclamation-triangle mr-2"></i>Disciplinary Action Details
+                                </label>
+                                <textarea name="disciplinary_description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="If checked above, please provide details"></textarea>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-gavel mr-2"></i>Felony Conviction Details
+                                </label>
+                                <textarea name="felony_description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="If checked above, please provide details"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 5: Documents & Submission -->
+                <div class="form-section" id="section-5">
+                    <div class="p-6 border-b border-gray-200">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-file-upload text-blue-600 text-xl mr-3"></i>
+                            <h2 class="text-xl font-semibold text-gray-900">Documents & Submission</h2>
+                        </div>
+                        <p class="text-gray-600 text-sm">Upload required documents and review your application</p>
+                    </div>
+                    
+                    <div class="p-6 space-y-6">
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <h3 class="font-medium text-blue-900 mb-2">Required Documents</h3>
+                            <ul class="text-sm text-blue-800 space-y-1">
+                                <li><i class="fas fa-check mr-2"></i>Copy of ID Document</li>
+                                <li><i class="fas fa-check mr-2"></i>Academic Qualifications</li>
+                                <li><i class="fas fa-check mr-2"></i>Ordination Certificate (if applicable)</li>
+                                <li><i class="fas fa-check mr-2"></i>Professional References (2 required)</li>
+                            </ul>
+                        </div>
+
+                        <div id="document-upload-area">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-paperclip mr-2"></i>Upload Documents
+                            </label>
+                            <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
+                                <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                                <p class="text-gray-600">Drag and drop files here or click to browse</p>
+                                <input type="file" name="documents" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" class="hidden" id="file-input">
+                                <button type="button" onclick="document.getElementById('file-input').click()" class="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                                    Select Files
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="border-t pt-6">
+                            <div class="flex items-center mb-4">
+                                <input type="checkbox" name="terms_accepted" required class="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <label class="text-sm text-gray-700">
+                                    I agree to the <a href="#" class="text-blue-600 hover:underline">Terms and Conditions</a> and <a href="#" class="text-blue-600 hover:underline">Privacy Policy</a> *
+                                </label>
+                            </div>
+                            
+                            <div class="flex items-center">
+                                <input type="checkbox" name="information_accurate" required class="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <label class="text-sm text-gray-700">
+                                    I certify that all information provided is true and accurate *
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation Buttons -->
+                <div class="p-6 bg-gray-50 border-t flex justify-between">
+                    <button type="button" id="prev-btn" class="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 transition-colors hidden">
+                        <i class="fas fa-chevron-left mr-2"></i>Previous
+                    </button>
+                    <div class="flex space-x-3">
+                        <button type="button" id="next-btn" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                            Next <i class="fas fa-chevron-right ml-2"></i>
+                        </button>
+                        <button type="submit" id="submit-btn" class="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors hidden">
+                            <i class="fas fa-paper-plane mr-2"></i>Submit Application
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentSection = 1;
+        const totalSections = 5;
+
+        function showSection(sectionNumber) {
+            // Hide all sections
+            document.querySelectorAll('.form-section').forEach(section => {
+                section.classList.remove('active');
+                section.style.display = 'none';
+            });
+
+            // Show current section
+            document.getElementById(`section-${sectionNumber}`).style.display = 'block';
+            document.getElementById(`section-${sectionNumber}`).classList.add('active');
+
+            // Update progress
+            const progress = (sectionNumber / totalSections) * 100;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+            document.getElementById('progress-text').textContent = `Step ${sectionNumber} of ${totalSections}`;
+
+            // Update buttons
+            document.getElementById('prev-btn').classList.toggle('hidden', sectionNumber === 1);
+            document.getElementById('next-btn').classList.toggle('hidden', sectionNumber === totalSections);
+            document.getElementById('submit-btn').classList.toggle('hidden', sectionNumber !== totalSections);
+        }
+
+        function validateSection(sectionNumber) {
+            const section = document.getElementById(`section-${sectionNumber}`);
+            const requiredFields = section.querySelectorAll('[required]');
+            let isValid = true;
+
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    field.classList.add('border-red-500');
+                    isValid = false;
+                } else {
+                    field.classList.remove('border-red-500');
+                }
+            });
+
+            return isValid;
+        }
+
+        document.getElementById('next-btn').addEventListener('click', () => {
+            if (validateSection(currentSection)) {
+                if (currentSection < totalSections) {
+                    currentSection++;
+                    showSection(currentSection);
+                }
+            } else {
+                alert('Please fill in all required fields before proceeding.');
+            }
+        });
+
+        document.getElementById('prev-btn').addEventListener('click', () => {
+            if (currentSection > 1) {
+                currentSection--;
+                showSection(currentSection);
+            }
+        });
+
+        // Initialize
+        showSection(1);
+
+        // File upload handling
+        document.getElementById('file-input').addEventListener('change', function(e) {
+            const files = e.target.files;
+            if (files.length > 0) {
+                const fileList = Array.from(files).map(file => file.name).join(', ');
+                const uploadArea = document.getElementById('document-upload-area');
+                const fileInfo = document.createElement('div');
+                fileInfo.className = 'mt-2 text-sm text-green-600';
+                fileInfo.innerHTML = `<i class="fas fa-check mr-2"></i>Selected files: ${fileList}`;
+                uploadArea.appendChild(fileInfo);
+            }
+        });
+    </script>
+</body>
+</html>
