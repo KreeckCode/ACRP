@@ -1,154 +1,431 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   
   <!-- Title -->
-  <title>{% block title %} Join ACRO {% endblock title %}</title>
-  
-  <!-- Favicon -->
-  <link rel="shortcut icon" href="{% static 'main_media/logo-white-footer.png' %}">
+  <title>Join ACRP</title>
   
   <!-- SEO Meta Tags -->
   <meta name="description" content="ACRP Africa Management System streamlines manual processes and simplifies affiliation management by integrating key features such as course delivery, CPD tracking, and payment processing for ministry professionals and affiliates.">
   <meta name="keywords" content="ACRP, Pastoral Training, Ministry Professionals, CPD, Learner Management, Course Management, Payment Processing, Ministry Development, Africa">
   <meta name="author" content="ACRP Africa Team">
 
-  <!-- Open Graph / Facebook -->
-  <meta property="og:title" content="ACRP Management System | Empowering Ministry Training">
-  <meta property="og:description" content="ACRP Africa Management System streamlines manual processes and simplifies affiliation management by integrating key features such as course delivery, CPD tracking, and payment processing for ministry professionals and affiliates.">
-  <meta name="twitter:image" content="{% static 'main_media/logo.png' %}">
-
-  <!-- Canonical URL -->
-  <link rel="canonical" href="https://acrpafrica.co.za/">
-
+  <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@300;500&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Schema.org Structured Data for SEO -->
-  <script type="application/ld+json">
-      {
-      "@context": "https://schema.org",
-      "@type": "SoftwareApplication",
-      "name": "ACRP Africa Management System",
-      "operatingSystem": "All",
-      "applicationCategory": "BusinessApplication",
-      "description": "ACRP Africa Management System streamlines manual processes and simplifies affiliation management by integrating key features such as course delivery, CPD tracking, and payment processing for ministry professionals and affiliates.",
-      "url": "https://acrpafrica.co.za/",
-      "author": {
-          "@type": "Organization",
-          "name": "ACRP Africa Team"
-      },
-      "aggregateRating": {
-          "@type": "AggregateRating",
-          "ratingValue": "4.5",
-          "reviewCount": "10"
-      }
-      }
-  </script>
   <style>
     body { font-family: 'Inter', sans-serif; }
     .fade-in { animation: fadeIn 0.6s ease-out; }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     
-      @import url('https://fonts.cdnfonts.com/css/inter');
-      .mobile-logo {
-          display: none;
-      }
-
-      @media (max-width: 976px) {
-          body {
-              margin: 0rem;
-              padding: 0rem;
-          }
-
-          .right {
-              display: none;
-          }
-
-          .left {
-              display: flex;
-              justify-content: center;
-              height: 95vh;
-              margin: 1rem;
-              padding: 0rem;
-          }
-
-          .terms {}
-
-          .signin-title {
-              display: none;
-          }
-
-          .logo {
-              display: flex;
-          }
-
-          .signup {
-              margin-top: 1rem;
-          }
-
-          .mobile-logo {
-              display: block;
-              display: flex;
-              justify-content: center;
-              margin-bottom: 2rem;
-          }
-      }
+    .slide-in { animation: slideIn 0.4s ease-out; }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+    
+    .modal-backdrop { backdrop-filter: blur(4px); }
+    
+    .council-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+    .council-card { transition: all 0.3s ease; }
+    
+    @media (max-width: 976px) {
+      body { margin: 0; padding: 0; }
+      .container { margin: 1rem; }
+    }
   </style>
 </head>
 
-<body class="bg-gray-50 min-h-screen flex items-center justify-center">
-  <div class="w-full max-w-md mx-4 p-8 bg-white rounded-xl shadow-lg fade-in">
-    <div class="text-center mb-6">
-      <h1 class="text-2xl font-bold text-gray-800">Welcome to ACRP</h1>
-      <p class="text-gray-600 mt-1">Tell us how you'd like to join</p>
-    </div>
-    <form method="post" action="{% url 'enrollments:onboarding' %}" class="space-y-4">
-      {% csrf_token %}
-      <label class="flex items-start bg-gray-100 p-4 rounded-lg hover:bg-gray-200 transition cursor-pointer">
-        <input type="radio" name="registration_type" value="associated" class="mt-1 mr-3 text-blue-600 focus:ring-blue-500">
-        <div>
-          <p class="text-lg font-semibold text-gray-800">Associated Affiliation</p>
-          <p class="text-gray-600 text-sm">Register as an associate of an organization or ministry.</p>
+<body class="bg-gradient-to-br from-blue-50 via-white to-purple-50 min-h-screen">
+  
+  <!-- Main Onboarding Page -->
+  <div id="mainOnboarding" class="min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-md mx-auto p-8 bg-white rounded-xl shadow-xl fade-in border border-gray-100">
+      <div class="text-center mb-8">
+        <div class="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+          </svg>
         </div>
-      </label>
-      <label class="flex items-start bg-gray-100 p-4 rounded-lg hover:bg-gray-200 transition cursor-pointer">
-        <input type="radio" name="registration_type" value="student" class="mt-1 mr-3 text-green-600 focus:ring-green-500">
-        <div>
-          <p class="text-lg font-semibold text-gray-800">Invited Affiliate</p>
-          <p class="text-gray-600 text-sm">I have an invitation link from my training provider.</p>
-        </div>
-      </label>
-      <label class="flex items-start bg-gray-100 p-4 rounded-lg hover:bg-gray-200 transition cursor-pointer">
-        <input type="radio" name="registration_type" value="provider" class="mt-1 mr-3 text-purple-600 focus:ring-purple-500">
-        <div>
-          <p class="text-lg font-semibold text-gray-800">Provider</p>
-          <p class="text-gray-600 text-sm">I represent a training provider and wish to sign up.</p>
-        </div>
-      </label>
-      <button type="submit"
-              class="w-full py-3 mt-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition">
-        Continue
-      </button>
-    </form>
-    {% if messages %}
-      <div class="mt-6 space-y-2">
-        {% for message in messages %}
-          {% if message.tags == 'error' %}
-            <div class="px-4 py-2 rounded bg-red-100 text-red-800">
-          {% else %}
-            <div class="px-4 py-2 rounded bg-green-100 text-green-800">
-          {% endif %}
-              {{ message }}
-            </div>
-        {% endfor %}
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">Welcome to ACRP</h1>
+        <p class="text-gray-600">Tell us how you'd like to join our community</p>
       </div>
-    {% endif %}
-
+      
+      <form class="space-y-4">
+        <label class="flex items-start bg-gradient-to-r from-blue-50 to-blue-100 p-5 rounded-xl hover:from-blue-100 hover:to-blue-150 transition-all cursor-pointer border border-blue-200 group">
+          <input type="radio" name="registration_type" value="associated" class="mt-1 mr-4 text-blue-600 focus:ring-blue-500 scale-110">
+          <div class="flex-1">
+            <p class="text-lg font-semibold text-gray-800 group-hover:text-blue-800 transition-colors">Associated Affiliation</p>
+            <p class="text-gray-600 text-sm mt-1">Register as an associate of an organization or ministry through our specialized councils.</p>
+          </div>
+        </label>
+        
+        <label class="flex items-start bg-gradient-to-r from-green-50 to-green-100 p-5 rounded-xl hover:from-green-100 hover:to-green-150 transition-all cursor-pointer border border-green-200 group">
+          <input type="radio" name="registration_type" value="student" class="mt-1 mr-4 text-green-600 focus:ring-green-500 scale-110">
+          <div class="flex-1">
+            <p class="text-lg font-semibold text-gray-800 group-hover:text-green-800 transition-colors">Invited Affiliate</p>
+            <p class="text-gray-600 text-sm mt-1">I have an invitation link from my training provider.</p>
+          </div>
+        </label>
+        
+        <label class="flex items-start bg-gradient-to-r from-purple-50 to-purple-100 p-5 rounded-xl hover:from-purple-100 hover:to-purple-150 transition-all cursor-pointer border border-purple-200 group">
+          <input type="radio" name="registration_type" value="provider" class="mt-1 mr-4 text-purple-600 focus:ring-purple-500 scale-110">
+          <div class="flex-1">
+            <p class="text-lg font-semibold text-gray-800 group-hover:text-purple-800 transition-colors">Provider</p>
+            <p class="text-gray-600 text-sm mt-1">I represent a training provider and wish to sign up.</p>
+          </div>
+        </label>
+        
+        <button type="button" onclick="handleContinue()" 
+                class="w-full py-4 mt-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg">
+          Continue
+        </button>
+      </form>
+      
+      <div id="errorMessage" class="mt-4 px-4 py-3 rounded-lg bg-red-100 text-red-800 hidden">
+        <div class="flex items-center">
+          <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+          </svg>
+          Please select a registration type to continue.
+        </div>
+      </div>
+    </div>
   </div>
+
+  <!-- Council Selection Page -->
+  <div id="councilSelection" class="min-h-screen flex items-center justify-center p-4 hidden">
+    <div class="w-full max-w-4xl mx-auto">
+      <div class="text-center mb-8 fade-in">
+        <button onclick="goBack()" class="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4 transition-colors">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+          Back to main options
+        </button>
+        <h1 class="text-4xl font-bold text-gray-800 mb-3">Choose Your Council</h1>
+        <p class="text-xl text-gray-600 max-w-2xl mx-auto">Select the council that best matches your ministry focus and professional development needs.</p>
+      </div>
+      
+      <div class="grid md:grid-cols-3 gap-6 mb-8">
+        <!-- CGMP Council -->
+        <div class="council-card bg-white rounded-xl shadow-lg p-6 border border-gray-200 slide-in" style="animation-delay: 0.1s">
+          <div class="text-center mb-6">
+            <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+              </svg>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-2">CGMP</h3>
+            <p class="text-gray-600 mb-4">Council for General Ministry Professionals</p>
+            <button onclick="openModal('cgmp')" class="text-blue-600 hover:text-blue-800 font-medium transition-colors mb-4">
+              Learn More →
+            </button>
+          </div>
+          <button onclick="selectCouncil('cgmp')" 
+                  class="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+            Select CGMP
+          </button>
+        </div>
+
+        <!-- CPSC Council -->
+        <div class="council-card bg-white rounded-xl shadow-lg p-6 border border-gray-200 slide-in" style="animation-delay: 0.2s">
+          <div class="text-center mb-6">
+            <div class="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+              </svg>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-2">CPSC</h3>
+            <p class="text-gray-600 mb-4">Council for Pastoral & Spiritual Care</p>
+            <button onclick="openModal('cpsc')" class="text-green-600 hover:text-green-800 font-medium transition-colors mb-4">
+              Learn More →
+            </button>
+          </div>
+          <button onclick="selectCouncil('cpsc')" 
+                  class="w-full py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors">
+            Select CPSC
+          </button>
+        </div>
+
+        <!-- CMTP Council -->
+        <div class="council-card bg-white rounded-xl shadow-lg p-6 border border-gray-200 slide-in" style="animation-delay: 0.3s">
+          <div class="text-center mb-6">
+            <div class="w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+              </svg>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-2">CMTP</h3>
+            <p class="text-gray-600 mb-4">Council for Ministry Training Providers</p>
+            <button onclick="openModal('cmtp')" class="text-purple-600 hover:text-purple-800 font-medium transition-colors mb-4">
+              Learn More →
+            </button>
+          </div>
+          <button onclick="selectCouncil('cmtp')" 
+                  class="w-full py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors">
+            Select CMTP
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for Council Details -->
+  <div id="councilModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center p-4 hidden z-50">
+    <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-90vh overflow-y-auto">
+      <div class="p-6">
+        <div class="flex justify-between items-start mb-6">
+          <div id="modalHeader" class="flex items-center">
+            <div id="modalIcon" class="w-12 h-12 rounded-full flex items-center justify-center mr-4">
+              <!-- Icon will be populated by JavaScript -->
+            </div>
+            <div>
+              <h2 id="modalTitle" class="text-2xl font-bold text-gray-800"></h2>
+              <p id="modalSubtitle" class="text-gray-600"></p>
+            </div>
+          </div>
+          <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        
+        <div id="modalContent" class="text-gray-700 leading-relaxed">
+          <!-- Content will be populated by JavaScript -->
+        </div>
+        
+        <div class="mt-8 flex gap-4">
+          <button onclick="closeModal()" 
+                  class="flex-1 py-3 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 transition-colors">
+            Close
+          </button>
+          <button id="modalSelectButton" onclick="selectFromModal()" 
+                  class="flex-1 py-3 text-white rounded-lg font-semibold transition-colors">
+            Select This Council
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Message -->
+  <div id="successMessage" class="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg hidden z-50">
+    <div class="flex items-center">
+      <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+      </svg>
+      <span id="successText">Council selected successfully!</span>
+    </div>
+  </div>
+
+  <script>
+    let selectedCouncil = '';
+    
+    const councilData = {
+      cgmp: {
+        title: 'CGMP',
+        subtitle: 'Council for General Ministry Professionals',
+        icon: `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>`,
+        iconBg: 'bg-gradient-to-r from-blue-500 to-blue-600',
+        buttonBg: 'bg-blue-600 hover:bg-blue-700',
+        content: `
+          <div class="space-y-4">
+            <p class="text-lg font-semibold">About CGMP</p>
+            <p>The Council for General Ministry Professionals (CGMP) facilitates registration and management processes for pastors and people in general ministry roles.</p>
+            
+            <div class="bg-blue-50 p-4 rounded-lg">
+              <h4 class="font-semibold text-blue-800 mb-2">What CGMP Offers:</h4>
+              <ul class="list-disc list-inside text-blue-700 space-y-1">
+                <li>Professional registration for pastors and ministry leaders</li>
+                <li>Continuing Professional Development (CPD) tracking</li>
+                <li>Ministry credential management</li>
+                <li>Access to professional development resources</li>
+                <li>Networking opportunities with ministry professionals</li>
+              </ul>
+            </div>
+            
+            <div class="bg-gray-50 p-4 rounded-lg">
+              <h4 class="font-semibold text-gray-800 mb-2">Who Should Join CGMP:</h4>
+              <ul class="list-disc list-inside text-gray-700 space-y-1">
+                <li>Licensed or ordained pastors</li>
+                <li>Ministry leaders and coordinators</li>
+                <li>Church administrators</li>
+                <li>General ministry professionals seeking accreditation</li>
+              </ul>
+            </div>
+            
+            <p class="text-sm text-gray-600 italic">CGMP provides the foundational framework for professional ministry practice and ongoing development in the field of general ministry.</p>
+          </div>
+        `
+      },
+      cpsc: {
+        title: 'CPSC',
+        subtitle: 'Council for Pastoral & Spiritual Care',
+        icon: `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>`,
+        iconBg: 'bg-gradient-to-r from-green-500 to-green-600',
+        buttonBg: 'bg-green-600 hover:bg-green-700',
+        content: `
+          <div class="space-y-4">
+            <p class="text-lg font-semibold">About CPSC</p>
+            <p>The Council for Pastoral & Spiritual Care (CPSC) facilitates registration and designation of pastoral counsellors and spiritual care professionals.</p>
+            
+            <div class="bg-green-50 p-4 rounded-lg">
+              <h4 class="font-semibold text-green-800 mb-2">What CPSC Offers:</h4>
+              <ul class="list-disc list-inside text-green-700 space-y-1">
+                <li>Professional designation for pastoral counsellors</li>
+                <li>Spiritual care practitioner registration</li>
+                <li>Specialized training program accreditation</li>
+                <li>Ethics and standards oversight</li>
+                <li>Continuing education requirements management</li>
+                <li>Professional supervision frameworks</li>
+              </ul>
+            </div>
+            
+            <div class="bg-gray-50 p-4 rounded-lg">
+              <h4 class="font-semibold text-gray-800 mb-2">Who Should Join CPSC:</h4>
+              <ul class="list-disc list-inside text-gray-700 space-y-1">
+                <li>Pastoral counsellors and therapists</li>
+                <li>Chaplains and spiritual care providers</li>
+                <li>Mental health professionals in ministry contexts</li>
+                <li>Grief and trauma specialists in religious settings</li>
+                <li>Clinical pastoral education supervisors</li>
+              </ul>
+            </div>
+            
+            <p class="text-sm text-gray-600 italic">CPSC ensures the highest standards of care and professional competency in pastoral counselling and spiritual care ministries.</p>
+          </div>
+        `
+      },
+      cmtp: {
+        title: 'CMTP',
+        subtitle: 'Council for Ministry Training Providers',
+        icon: `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>`,
+        iconBg: 'bg-gradient-to-r from-purple-500 to-purple-600',
+        buttonBg: 'bg-purple-600 hover:bg-purple-700',
+        content: `
+          <div class="space-y-4">
+            <p class="text-lg font-semibold">About CMTP</p>
+            <p>The Council for Ministry Training Providers (CMTP) facilitates registration of people and institutions offering ministry training and educational programs.</p>
+            
+            <div class="bg-purple-50 p-4 rounded-lg">
+              <h4 class="font-semibold text-purple-800 mb-2">What CMTP Offers:</h4>
+              <ul class="list-disc list-inside text-purple-700 space-y-1">
+                <li>Institutional accreditation for training providers</li>
+                <li>Course and curriculum approval processes</li>
+                <li>Quality assurance and standards compliance</li>
+                <li>Trainer and educator certification</li>
+                <li>Learning outcome assessment frameworks</li>
+                <li>Resource sharing and collaboration platforms</li>
+              </ul>
+            </div>
+            
+            <div class="bg-gray-50 p-4 rounded-lg">
+              <h4 class="font-semibold text-gray-800 mb-2">Who Should Join CMTP:</h4>
+              <ul class="list-disc list-inside text-gray-700 space-y-1">
+                <li>Bible colleges and theological seminaries</li>
+                <li>Ministry training institutes</li>
+                <li>Independent ministry educators and trainers</li>
+                <li>Churches offering formal training programs</li>
+                <li>Online ministry education platforms</li>
+              </ul>
+            </div>
+            
+            <p class="text-sm text-gray-600 italic">CMTP ensures excellence in ministry education and training delivery across diverse learning environments and methodologies.</p>
+          </div>
+        `
+      }
+    };
+
+    function handleContinue() {
+      const selectedType = document.querySelector('input[name="registration_type"]:checked');
+      const errorDiv = document.getElementById('errorMessage');
+      
+      if (!selectedType) {
+        errorDiv.classList.remove('hidden');
+        setTimeout(() => errorDiv.classList.add('hidden'), 3000);
+        return;
+      }
+      
+      errorDiv.classList.add('hidden');
+      
+      if (selectedType.value === 'associated') {
+        // Show council selection page
+        document.getElementById('mainOnboarding').classList.add('hidden');
+        document.getElementById('councilSelection').classList.remove('hidden');
+      } else {
+        // Handle other registration types (student/provider)
+        showSuccess(`Proceeding with ${selectedType.value} registration...`);
+        // Here you would typically redirect to the appropriate page
+        setTimeout(() => {
+          alert(`This would redirect to ${selectedType.value} registration form`);
+        }, 1500);
+      }
+    }
+
+    function goBack() {
+      document.getElementById('councilSelection').classList.add('hidden');
+      document.getElementById('mainOnboarding').classList.remove('hidden');
+    }
+
+    function openModal(council) {
+      const modal = document.getElementById('councilModal');
+      const data = councilData[council];
+      
+      document.getElementById('modalTitle').textContent = data.title;
+      document.getElementById('modalSubtitle').textContent = data.subtitle;
+      document.getElementById('modalIcon').innerHTML = data.icon;
+      document.getElementById('modalIcon').className = `w-12 h-12 rounded-full flex items-center justify-center mr-4 ${data.iconBg}`;
+      document.getElementById('modalContent').innerHTML = data.content;
+      document.getElementById('modalSelectButton').className = `flex-1 py-3 text-white rounded-lg font-semibold transition-colors ${data.buttonBg}`;
+      document.getElementById('modalSelectButton').onclick = () => selectCouncil(council);
+      
+      modal.classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('councilModal').classList.add('hidden');
+    }
+
+    function selectCouncil(council) {
+      selectedCouncil = council;
+      closeModal();
+      showSuccess(`${councilData[council].title} selected successfully!`);
+      
+      // Here you would typically submit the form or redirect
+      setTimeout(() => {
+        alert(`This would proceed with ${councilData[council].title} registration`);
+      }, 1500);
+    }
+
+    function selectFromModal() {
+      // This will be set by the modal content
+      if (selectedCouncil) {
+        selectCouncil(selectedCouncil);
+      }
+    }
+
+    function showSuccess(message) {
+      const successDiv = document.getElementById('successMessage');
+      document.getElementById('successText').textContent = message;
+      successDiv.classList.remove('hidden');
+      setTimeout(() => successDiv.classList.add('hidden'), 3000);
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('councilModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeModal();
+      }
+    });
+
+    // Handle escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeModal();
+      }
+    });
+  </script>
 </body>
 </html>
