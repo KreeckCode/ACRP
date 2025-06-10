@@ -115,8 +115,6 @@ def enrollment_dash(request):
             name_parts.append(obj.first_name)
         if hasattr(obj, 'last_name') and obj.last_name:
             name_parts.append(obj.last_name)
-        elif hasattr(obj, 'surname') and obj.surname:
-            name_parts.append(obj.surname)
         
         return ' '.join(name_parts) if name_parts else obj.email
     
@@ -308,18 +306,6 @@ def _enhanced_list_view(request, model, template, search_fields, permission_requ
 
 
 
-# Generic list view with search
-def _list(request, model, template, search_fields):
-    qs = model.objects.all()
-    q  = request.GET.get('search', '').strip()
-    if q:
-        query = Q()
-        for f in search_fields:
-            query |= Q(**{f+"__icontains": q})
-        qs = qs.filter(query)
-    return render(request, template, {'objects': qs, 'search_query': q})
-
-
 # CGMP Views
 @login_required
 @permission_required('enrollments.view_cgmpaffiliation', raise_exception=True)
@@ -329,7 +315,7 @@ def cgmp_list(request):
         request, 
         CGMPAffiliation, 
         'enrollments/cgmp_list.html',
-        ['first_name', 'last_name', 'surname', 'email', 'current_ministry_role'],
+        ['first_name', 'last_name',  'email', 'current_ministry_role'],
         'enrollments.view_cgmpaffiliation'
     )
 
@@ -433,7 +419,7 @@ def cgmp_delete(request, pk):
         'object_type': 'CGMP Application'
     })
 
-# CPSC Views (similar pattern)
+# CPSC Views
 @login_required
 @permission_required('enrollments.view_cpscaffiliation', raise_exception=True)
 def cpsc_list(request):
@@ -442,7 +428,7 @@ def cpsc_list(request):
         request,
         CPSCAffiliation,
         'enrollments/cpsc_list.html', 
-        ['first_name', 'last_name', 'surname', 'email', 'counseling_certification'],
+        ['first_name', 'last_name','email', 'counseling_certification'],
         'enrollments.view_cpscaffiliation'
     )
 
@@ -488,7 +474,7 @@ def cmtp_list(request):
         request,
         CMTPAffiliation,
         'enrollments/cmtp_list.html',
-        ['first_name', 'last_name', 'surname', 'email', 'institution_name'],
+        ['first_name', 'last_name', 'email', 'institution_name'],
         'enrollments.view_cmtpaffiliation'
     )
 

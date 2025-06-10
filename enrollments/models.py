@@ -40,7 +40,7 @@ class BaseAffiliation(models.Model):
     )
     
     # Personal Information
-    GENDER_CHOICES = [('male', 'Male'), ('female', 'Female'), ('other', 'Other')]
+    GENDER_CHOICES = [('male', 'Male'), ('female', 'Female')]
     TITLE_CHOICES = [
         ('Mr', 'Mr'), ('Mrs', 'Mrs'), ('Miss', 'Miss'), 
         ('Dr', 'Dr'), ('Prof', 'Prof'), ('Rev', 'Rev'),
@@ -49,7 +49,6 @@ class BaseAffiliation(models.Model):
     
     title = models.CharField(max_length=20, choices=TITLE_CHOICES)
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
-    surname = models.CharField(max_length=50)
     initials = models.CharField(max_length=10)
     first_name = models.CharField(max_length=150)
     last_name = models.CharField(max_length=150)

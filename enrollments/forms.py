@@ -180,7 +180,7 @@ class CGMPForm(BaseAffiliationForm):
         # Explicitly list every field in the order you want them
         fields = [
             # --- Personal Information ---
-            'title', 'gender', 'surname', 'initials', 'first_name', 'last_name',
+            'title', 'gender', 'initials', 'first_name', 'last_name',
             'preferred_name', 'id_number', 'passport_number', 'date_of_birth',
             'race', 'disability',
             # --- Contact Information ---
