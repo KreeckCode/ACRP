@@ -354,15 +354,21 @@
         // Show council selection page
         document.getElementById('mainOnboarding').classList.add('hidden');
         document.getElementById('councilSelection').classList.remove('hidden');
-      } else {
-        // Handle other registration types (student/provider)
-        showSuccess(`Proceeding with ${selectedType.value} registration...`);
-        // Here you would typically redirect to the appropriate page
-        setTimeout(() => {
-          alert(`This would redirect to ${selectedType.value} registration form`);
-        }, 1500);
+      } else if (selectedType.value === 'student') {
+        showSuccess('Proceeding with provider registration...');
+        // Redirect to learner_apply_prompt
+        try {
+          window.location.href = "{% url 'enrollments:learner_apply_prompt' %}";
+        } catch (error) {
+          console.error('Error during redirect:', error);
+          showError('An error occurred while processing your request. Please try again.');
+        }
+      } else if (selectedType.value === 'provider') {
+        showSuccess('Proceeding with provider registration...');
+        // Handle provider registration redirect here
       }
     }
+
 
     function goBack() {
       document.getElementById('councilSelection').classList.add('hidden');

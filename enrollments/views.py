@@ -75,6 +75,97 @@ def rate_limit(max_requests=10, window=3600):
         return wrapper
     return decorator
 
+# Add this to your views.py file - enhanced dashboard view
+@login_required
+@user_passes_test(is_admin_or_manager, login_url='/', redirect_field_name=None)
+def enrollment_dash(request):
+    """
+    Administrative dashboard with enrollment statistics and metrics
+    """
+    # Calculate statistics for each council
+    stats = {
+        'cgmp': {
+            'total': CGMPAffiliation.objects.count(),
+            'approved': CGMPAffiliation.objects.filter(approved=True).count(),
+            'pending': CGMPAffiliation.objects.filter(approved=False).count(),
+        },
+        'cpsc': {
+            'total': CPSCAffiliation.objects.count(), 
+            'approved': CPSCAffiliation.objects.filter(approved=True).count(),
+            'pending': CPSCAffiliation.objects.filter(approved=False).count(),
+        },
+        'cmtp': {
+            'total': CMTPAffiliation.objects.count(),
+            'approved': CMTPAffiliation.objects.filter(approved=True).count(), 
+            'pending': CMTPAffiliation.objects.filter(approved=False).count(),
+        }
+    }
+    
+    # Get recent applications from all councils
+    recent_applications = []
+    
+    # Helper function to get display name safely
+    def get_display_name(obj):
+        """Get display name for any affiliation object"""
+        if hasattr(obj, 'get_display_name'):
+            return obj.get_display_name()
+        # Fallback to constructing name from available fields
+        name_parts = []
+        if hasattr(obj, 'first_name') and obj.first_name:
+            name_parts.append(obj.first_name)
+        if hasattr(obj, 'last_name') and obj.last_name:
+            name_parts.append(obj.last_name)
+        elif hasattr(obj, 'surname') and obj.surname:
+            name_parts.append(obj.surname)
+        
+        return ' '.join(name_parts) if name_parts else obj.email
+    
+    # Get recent CGMP applications
+    cgmp_recent = CGMPAffiliation.objects.select_related('created_user').order_by('-created_at')[:5]
+    for app in cgmp_recent:
+        recent_applications.append({
+            'type': 'CGMP',
+            'name': get_display_name(app),
+            'email': app.email,
+            'created_at': app.created_at,
+            'approved': app.approved
+        })
+    
+    # Get recent CPSC applications  
+    cpsc_recent = CPSCAffiliation.objects.select_related('created_user').order_by('-created_at')[:5]
+    for app in cpsc_recent:
+        recent_applications.append({
+            'type': 'CPSC',
+            'name': get_display_name(app),
+            'email': app.email,
+            'created_at': app.created_at,
+            'approved': app.approved
+        })
+    
+    # Get recent CMTP applications
+    cmtp_recent = CMTPAffiliation.objects.select_related('created_user').order_by('-created_at')[:5]
+    for app in cmtp_recent:
+        recent_applications.append({
+            'type': 'CMTP', 
+            'name': get_display_name(app),
+            'email': app.email,
+            'created_at': app.created_at,
+            'approved': app.approved
+        })
+    
+    # Sort all recent applications by creation date (newest first)
+    recent_applications.sort(key=lambda x: x['created_at'], reverse=True)
+    recent_applications = recent_applications[:10]  # Keep only the 10 most recent
+    
+    context = {
+        'stats': stats,
+        'recent_applications': recent_applications,
+        'page_title': 'Enrollment Dashboard'
+    }
+    
+    return render(request, 'enrollments/enrollment_dashboard.html', context)
+
+
 # Enhanced onboarding view
 @csrf_protect
 @rate_limit(max_requests=20, window=3600)

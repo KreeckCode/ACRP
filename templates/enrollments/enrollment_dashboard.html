@@ -1,0 +1,438 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Enrollment Dashboard - ACRP{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .dashboard-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    
+    .council-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .council-card.cgmp {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    
+    .council-card.cpsc {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    }
+    
+    .council-card.cmtp {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .recent-item {
+        border-left: 4px solid #dee2e6;
+        padding-left: 1rem;
+        margin-bottom: 1rem;
+        transition: border-color 0.2s ease;
+    }
+    
+    .recent-item:hover {
+        border-left-color: #007bff;
+    }
+    
+    .status-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+    }
+    
+    .status-approved {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    
+    .status-pending {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+    
+    .progress-bar {
+        height: 8px;
+        border-radius: 4px;
+        background-color: rgba(255,255,255,0.3);
+        overflow: hidden;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background-color: rgba(255,255,255,0.8);
+        border-radius: 4px;
+        transition: width 0.3s ease;
+    }
+    
+    .quick-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        text-decoration: none;
+        color: #495057;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        transition: all 0.2s ease;
+    }
+    
+    .quick-action:hover {
+        color: #007bff;
+        background-color: #e3f2fd;
+        border-color: #007bff;
+        text-decoration: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">Enrollment Dashboard</h1>
+            <p class="text-muted mb-0">Overview of all council registrations and applications</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'enrollments:onboarding' %}" class="btn btn-outline-primary">
+                <i class="fas fa-plus me-1"></i> New Registration
+            </a>
+        </div>
+    </div>
+
+    <!-- Council Statistics Cards -->
+    <div class="row mb-4">
+        <!-- CGMP Stats -->
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card dashboard-card council-card cgmp h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="card-title mb-0">CGMP</h5>
+                            <small class="stat-label">General Ministry Professionals</small>
+                        </div>
+                        <i class="fas fa-users fa-2x opacity-50"></i>
+                    </div>
+                    
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="stat-number">{{ stats.cgmp.total }}</div>
+                            <div class="stat-label">Total</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-number">{{ stats.cgmp.approved }}</div>
+                            <div class="stat-label">Approved</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-number">{{ stats.cgmp.pending }}</div>
+                            <div class="stat-label">Pending</div>
+                        </div>
+                    </div>
+                    
+                    {% if stats.cgmp.total > 0 %}
+                    <div class="progress-bar mt-3">
+                        <div class="progress-fill" style="width: {% widthratio stats.cgmp.approved stats.cgmp.total 100 %}%;"></div>
+                    </div>
+                    <small class="text-white-50 mt-1 d-block">
+                        {% widthratio stats.cgmp.approved stats.cgmp.total 100 %}% approval rate
+                    </small>
+                    {% endif %}
+                    
+                    <div class="mt-3 d-flex gap-2">
+                        <a href="{% url 'enrollments:cgmp_list' %}" class="btn btn-light btn-sm">View All</a>
+                        <a href="{% url 'enrollments:cgmp_create' %}" class="btn btn-outline-light btn-sm">New Application</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CPSC Stats -->
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card dashboard-card council-card cpsc h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="card-title mb-0">CPSC</h5>
+                            <small class="stat-label">Pastoral & Spiritual Care</small>
+                        </div>
+                        <i class="fas fa-heart fa-2x opacity-50"></i>
+                    </div>
+                    
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="stat-number">{{ stats.cpsc.total }}</div>
+                            <div class="stat-label">Total</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-number">{{ stats.cpsc.approved }}</div>
+                            <div class="stat-label">Approved</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-number">{{ stats.cpsc.pending }}</div>
+                            <div class="stat-label">Pending</div>
+                        </div>
+                    </div>
+                    
+                    {% if stats.cpsc.total > 0 %}
+                    <div class="progress-bar mt-3">
+                        <div class="progress-fill" style="width: {% widthratio stats.cpsc.approved stats.cpsc.total 100 %}%;"></div>
+                    </div>
+                    <small class="text-white-50 mt-1 d-block">
+                        {% widthratio stats.cpsc.approved stats.cpsc.total 100 %}% approval rate
+                    </small>
+                    {% endif %}
+                    
+                    <div class="mt-3 d-flex gap-2">
+                        <a href="{% url 'enrollments:cpsc_list' %}" class="btn btn-light btn-sm">View All</a>
+                        <a href="{% url 'enrollments:cpsc_create' %}" class="btn btn-outline-light btn-sm">New Application</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CMTP Stats -->
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card dashboard-card council-card cmtp h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="card-title mb-0">CMTP</h5>
+                            <small class="stat-label">Ministry Training Providers</small>
+                        </div>
+                        <i class="fas fa-graduation-cap fa-2x opacity-50"></i>
+                    </div>
+                    
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="stat-number">{{ stats.cmtp.total }}</div>
+                            <div class="stat-label">Total</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-number">{{ stats.cmtp.approved }}</div>
+                            <div class="stat-label">Approved</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-number">{{ stats.cmtp.pending }}</div>
+                            <div class="stat-label">Pending</div>
+                        </div>
+                    </div>
+                    
+                    {% if stats.cmtp.total > 0 %}
+                    <div class="progress-bar mt-3">
+                        <div class="progress-fill" style="width: {% widthratio stats.cmtp.approved stats.cmtp.total 100 %}%;"></div>
+                    </div>
+                    <small class="text-white-50 mt-1 d-block">
+                        {% widthratio stats.cmtp.approved stats.cmtp.total 100 %}% approval rate
+                    </small>
+                    {% endif %}
+                    
+                    <div class="mt-3 d-flex gap-2">
+                        <a href="{% url 'enrollments:cmtp_list' %}" class="btn btn-light btn-sm">View All</a>
+                        <a href="{% url 'enrollments:cmtp_create' %}" class="btn btn-outline-light btn-sm">New Application</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Applications and Quick Actions -->
+    <div class="row">
+        <!-- Recent Applications -->
+        <div class="col-lg-8 mb-4">
+            <div class="card dashboard-card">
+                <div class="card-header bg-white border-0 pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Recent Applications</h5>
+                        <small class="text-muted">Last 10 submissions</small>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if recent_applications %}
+                        {% for app in recent_applications %}
+                        <div class="recent-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <span class="badge badge-secondary">{{ app.type }}</span>
+                                        <strong>{{ app.name }}</strong>
+                                        {% if app.approved %}
+                                            <span class="status-badge status-approved">Approved</span>
+                                        {% else %}
+                                            <span class="status-badge status-pending">Pending</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="text-muted small">
+                                        <i class="fas fa-envelope me-1"></i>{{ app.email }}
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted">
+                                        <i class="fas fa-clock me-1"></i>
+                                        {{ app.created_at|timesince }} ago
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No recent applications</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="col-lg-4 mb-4">
+            <div class="card dashboard-card">
+                <div class="card-header bg-white border-0 pb-0">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'enrollments:cgmp_list' %}?status=pending" class="quick-action">
+                            <i class="fas fa-clock text-warning"></i>
+                            <span>Pending CGMP Applications</span>
+                            <span class="badge bg-warning ms-auto">{{ stats.cgmp.pending }}</span>
+                        </a>
+                        
+                        <a href="{% url 'enrollments:cpsc_list' %}?status=pending" class="quick-action">
+                            <i class="fas fa-clock text-warning"></i>
+                            <span>Pending CPSC Applications</span>
+                            <span class="badge bg-warning ms-auto">{{ stats.cpsc.pending }}</span>
+                        </a>
+                        
+                        <a href="{% url 'enrollments:cmtp_list' %}?status=pending" class="quick-action">
+                            <i class="fas fa-clock text-warning"></i>
+                            <span>Pending CMTP Applications</span>
+                            <span class="badge bg-warning ms-auto">{{ stats.cmtp.pending }}</span>
+                        </a>
+                        
+                        <hr class="my-3">
+                        
+                        <a href="{% url 'enrollments:cgmp_list' %}?status=approved" class="quick-action">
+                            <i class="fas fa-check-circle text-success"></i>
+                            <span>Approved Applications</span>
+                            <span class="badge bg-success ms-auto">{{ stats.cgmp.approved|add:stats.cpsc.approved|add:stats.cmtp.approved }}</span>
+                        </a>
+                        
+                        <a href="{% url 'enrollments:onboarding' %}" class="quick-action">
+                            <i class="fas fa-plus-circle text-primary"></i>
+                            <span>New Registration</span>
+                        </a>
+                        
+                        <a href="{% url 'enrollments:learner_apply_prompt' %}" class="quick-action">
+                            <i class="fas fa-user-graduate text-info"></i>
+                            <span>Student Application</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary Stats -->
+            <div class="card dashboard-card mt-4">
+                <div class="card-header bg-white border-0 pb-0">
+                    <h5 class="mb-0">Summary</h5>
+                </div>
+                <div class="card-body">
+                    {% with total_applications=stats.cgmp.total|add:stats.cpsc.total|add:stats.cmtp.total %}
+                    {% with total_approved=stats.cgmp.approved|add:stats.cpsc.approved|add:stats.cmtp.approved %}
+                    {% with total_pending=stats.cgmp.pending|add:stats.cpsc.pending|add:stats.cmtp.pending %}
+                    
+                    <div class="row text-center">
+                        <div class="col-12 mb-3">
+                            <div class="display-6 fw-bold text-primary">{{ total_applications }}</div>
+                            <small class="text-muted">Total Applications</small>
+                        </div>
+                    </div>
+                    
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="h4 text-success mb-0">{{ total_approved }}</div>
+                            <small class="text-muted">Approved</small>
+                        </div>
+                        <div class="col-6">
+                            <div class="h4 text-warning mb-0">{{ total_pending }}</div>
+                            <small class="text-muted">Pending</small>
+                        </div>
+                    </div>
+                    
+                    {% if total_applications > 0 %}
+                    <div class="mt-3">
+                        <div class="d-flex justify-content-between small text-muted mb-1">
+                            <span>Overall Approval Rate</span>
+                            <span>{% widthratio total_approved total_applications 100 %}%</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-success" 
+                                 style="width: {% widthratio total_approved total_applications 100 %}%;"></div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% endwith %}
+                    {% endwith %}
+                    {% endwith %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-refresh the dashboard every 5 minutes
+    setTimeout(function() {
+        location.reload();
+    }, 300000);
+    
+    // Add some interactive features
+    document.addEventListener('DOMContentLoaded', function() {
+        // Animate counters on page load
+        const counters = document.querySelectorAll('.stat-number');
+        counters.forEach(counter => {
+            const target = parseInt(counter.textContent);
+            counter.textContent = '0';
+            
+            const increment = target / 50;
+            const timer = setInterval(() => {
+                const current = parseInt(counter.textContent);
+                if (current < target) {
+                    counter.textContent = Math.min(current + Math.ceil(increment), target);
+                } else {
+                    clearInterval(timer);
+                }
+            }, 30);
+        });
+    });
+</script>
+{% endblock %}

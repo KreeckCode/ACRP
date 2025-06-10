@@ -11,6 +11,7 @@ urlpatterns = [
     
     # Administrative dashboard
     path('dashboard/', views.enrollment_dashboard, name='dashboard'),
+    path('dash/', views.enrollment_dash, name='dash'),
     
     # CGMP Council URLs - Full CRUD
     path('cgmp/', views.cgmp_list, name='cgmp_list'),
