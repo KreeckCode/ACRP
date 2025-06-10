@@ -10,6 +10,7 @@ from .models import (
     Document,
     RegistrationSession,
 )
+from django.utils.translation import gettext_lazy as _
 
 # Enhanced HTML5 widgets
 DATE_WIDGET = forms.DateInput( attrs={"type": "date", "class": "form-control", "placeholder": "Select date"})
@@ -36,7 +37,9 @@ class BaseAffiliationForm(forms.ModelForm):
     Implements DRY principles and ensures consistency across council forms.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, request=None, **kwargs):
+        # capture request if passed, then remove it
+        self.request = request
         super().__init__(*args, **kwargs)
 
         # Apply common styling to all fields
@@ -161,82 +164,88 @@ class BaseAffiliationForm(forms.ModelForm):
 
 
 # CGMP Form
+
 class CGMPForm(BaseAffiliationForm):
-    """Form for Council for General Ministry Professionals"""
+    """Form for Council for General Ministry Professionals with all required fields."""
+
+    popi_act = forms.BooleanField(
+        required=True,
+        label=_("I agree to the Protection of Personal Information Act (POPIA)"),
+        widget=CHECKBOX_WIDGET,
+        error_messages={'required': _("You must agree to the POPIA Act to continue.")}
+    )
 
     class Meta:
         model = CGMPAffiliation
-        exclude = [
-            "approved",
-            "approved_at",
-            "approved_by",
-            "created_user",
-            "created_at",
-            "updated_at",
-            "documents",
+        # Explicitly list every field in the order you want them
+        fields = [
+            # --- Personal Information ---
+            'title', 'gender', 'surname', 'initials', 'first_name', 'last_name',
+            'preferred_name', 'id_number', 'passport_number', 'date_of_birth',
+            'race', 'disability',
+            # --- Contact Information ---
+            'email', 'cell', 'tel_work', 'tel_home', 'fax', 'website',
+            'postal_address', 'street_address', 'postal_code', 'province', 'country',
+            # --- Background Info ---
+            'religious_affiliation', 'home_language', 'other_languages',
+            # --- Qualifications & Work ---
+            'highest_qualification', 'qualification_date', 'qualification_institution',
+            'occupation', 'work_description',
+            # --- Ministry Experience ---
+            'years_ministry', 'months_ministry',
+            # --- Background Checks ---
+            'disciplinary_action', 'disciplinary_description',
+            'felony_conviction', 'felony_description',
+            # --- CGMP‑Specific Ministry Fields ---
+            'ordination_status', 'ordination_date', 'ordaining_body',
+            'current_ministry_role', 'congregation_name', 'denomination',
+            'involved_pastoral', 'pastoral_responsibilities', 'preaching_frequency',
+            'registered_elsewhere', 'other_registrations', 'continuing_education',
+            # --- POPIA Confirmation ---
+            'popi_act',
         ]
         widgets = {
             **BaseAffiliationForm.Meta.widgets,
-            "ordination_date": DATE_WIDGET,
-            "pastoral_responsibilities": TEXTAREA_WIDGET,
-            "other_registrations": TEXTAREA_WIDGET,
+            'ordination_date': DATE_WIDGET,
+            'pastoral_responsibilities': TEXTAREA_WIDGET,
+            'other_registrations': TEXTAREA_WIDGET,
         }
 
     def __init__(self, *args, **kwargs):
+        # allow request to be passed in
         super().__init__(*args, **kwargs)
 
-        # Add help text to specific fields
-        if "ordination_date" in self.fields:
-            self.fields["ordination_date"].help_text = "Leave blank if not ordained"
-            self.fields["ordination_date"].required = False
+        # Make ordination_date, pastoral_responsibilities, other_registrations optional
+        self.fields['ordination_date'].required = False
+        self.fields['ordination_date'].help_text = _("Leave blank if not ordained")
 
-        if "pastoral_responsibilities" in self.fields:
-            self.fields["pastoral_responsibilities"].help_text = (
-                "Describe your pastoral duties and responsibilities"
-            )
-            self.fields["pastoral_responsibilities"].required = False
+        self.fields['pastoral_responsibilities'].required = False
+        self.fields['pastoral_responsibilities'].help_text = _("Describe your pastoral duties")
 
-        if "other_registrations" in self.fields:
-            self.fields["other_registrations"].help_text = (
-                "List other professional registrations or memberships"
-            )
-            self.fields["other_registrations"].required = False
+        self.fields['other_registrations'].required = False
+        self.fields['other_registrations'].help_text = _("List other professional registrations")
 
     def clean(self):
-        cleaned_data = super().clean()
+        cleaned = super().clean()
 
-        # Custom CGMP validations
-        ordination_status = cleaned_data.get("ordination_status")
-        ordination_date = cleaned_data.get("ordination_date")
-        ordaining_body = cleaned_data.get("ordaining_body")
+        # POPIA enforcement
+        if not cleaned.get('popi_act'):
+            self.add_error('popi_act', _("You must agree to the POPIA Act to proceed."))
 
-        if ordination_status in ["ordained", "licensed"]:
-            if not ordination_date:
-                raise ValidationError(
-                    {
-                        "ordination_date": f"Ordination date is required for {ordination_status} status."
-                    }
-                )
-            if not ordaining_body:
-                raise ValidationError(
-                    {
-                        "ordaining_body": f"Ordaining body is required for {ordination_status} status."
-                    }
-                )
+        # ordination logic
+        status = cleaned.get('ordination_status')
+        if status in ('ordained', 'licensed'):
+            if not cleaned.get('ordination_date'):
+                self.add_error('ordination_date', _("Ordination date is required for this status."))
+            if not cleaned.get('ordaining_body'):
+                self.add_error('ordaining_body', _("Ordaining body is required for this status."))
 
-        # Validate pastoral involvement
-        involved_pastoral = cleaned_data.get("involved_pastoral")
-        pastoral_responsibilities = cleaned_data.get("pastoral_responsibilities")
+        # pastoral involvement
+        if cleaned.get('involved_pastoral') and not cleaned.get('pastoral_responsibilities'):
+            self.add_error('pastoral_responsibilities', _("Please describe your pastoral responsibilities."))
 
-        if involved_pastoral and not pastoral_responsibilities:
-            raise ValidationError(
-                {
-                    "pastoral_responsibilities": "Please describe your pastoral responsibilities."
-                }
-            )
-
-        return cleaned_data
-
+        return cleaned
+    
 
 # CPSC Form
 class CPSCForm(BaseAffiliationForm):

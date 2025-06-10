@@ -116,9 +116,6 @@ class BaseAffiliation(models.Model):
         """Custom validation logic"""
         super().clean()
         
-        # Validate birth date
-        if self.date_of_birth > timezone.now().date():
-            raise ValidationError("Date of birth cannot be in the future.")
             
         # If disciplinary action is True, description is required
         if self.disciplinary_action and not self.disciplinary_description.strip():

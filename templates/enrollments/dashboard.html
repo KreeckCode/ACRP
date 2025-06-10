@@ -485,38 +485,378 @@
     </div>
 
     <script>
-        // Add some basic interactivity
-        document.addEventListener('DOMContentLoaded', function() {
-            // Animate progress bars on load
-            const progressBars = document.querySelectorAll('.progress-fill');
-            progressBars.forEach(bar => {
-                const width = bar.style.width;
-                bar.style.width = '0%';
-                setTimeout(() => {
-                    bar.style.width = width;
-                }, 500);
-            });
+        // Dashboard Configuration
+        const DASHBOARD_CONFIG = {
+            refreshInterval: 30000, // 30 seconds
+            animationDuration: 600,
+            apiEndpoints: {
+                
+            }
+        };
 
-            // Add click handlers for quick action cards
-            const quickActionCards = document.querySelectorAll('.dashboard-card.cursor-pointer');
-            quickActionCards.forEach(card => {
-                card.addEventListener('click', function() {
-                    const title = this.querySelector('h3').textContent;
-                    alert(`${title} functionality would be implemented here!`);
+        // Dashboard Data Management
+        class DashboardManager {
+            constructor() {
+                this.isLoading = false;
+                this.lastUpdate = null;
+                this.init();
+            }
+
+            init() {
+                this.animateProgressBars();
+                this.setupEventListeners();
+                this.setupAutoRefresh();
+                this.setupRealTimeUpdates();
+            }
+
+            animateProgressBars() {
+                const progressBars = document.querySelectorAll('.progress-fill');
+                progressBars.forEach((bar, index) => {
+                    const targetWidth = bar.style.width;
+                    bar.style.width = '0%';
+                    
+                    // Stagger animations
+                    setTimeout(() => {
+                        bar.style.transition = `width ${DASHBOARD_CONFIG.animationDuration}ms cubic-bezier(0.4, 0, 0.2, 1)`;
+                        bar.style.width = targetWidth;
+                    }, index * 150);
                 });
-            });
+            }
 
-            // Add click handlers for view buttons
-            const viewButtons = document.querySelectorAll('button[class*="bg-"]');
-            viewButtons.forEach(button => {
-                if (button.textContent.includes('View')) {
-                    button.addEventListener('click', function() {
-                        const councilType = this.textContent.replace('View ', '');
-                        alert(`${councilType} list view would be implemented here!`);
+            setupEventListeners() {
+                // Quick action cards
+                this.setupQuickActions();
+                
+                // View buttons for council filters
+                this.setupCouncilFilters();
+                
+                // Application row interactions
+                this.setupApplicationInteractions();
+                
+                // Refresh button
+                this.setupRefreshButton();
+            }
+
+            setupQuickActions() {
+                const quickActionCards = document.querySelectorAll('.dashboard-card.cursor-pointer');
+                quickActionCards.forEach(card => {
+                    card.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const actionType = this.getActionType(card);
+                        this.executeQuickAction(actionType);
                     });
+                });
+            }
+
+            getActionType(card) {
+                const title = card.querySelector('h3').textContent.trim();
+                if (title.includes('CGMP')) return 'cgmp';
+                if (title.includes('CPSC')) return 'cpsc';
+                if (title.includes('CMTP')) return 'cmtp';
+                if (title.includes('Reports')) return 'reports';
+                return 'unknown';
+            }
+
+            executeQuickAction(actionType) {
+                const urls = {
+                    cgmp: '{% url "enrollments:cgmp_create" %}',
+                    cpsc: '{% url "enrollments:cpsc_create" %}',
+                    cmtp: '{% url "enrollments:cmtp_create" %}',
+                    reports: '{% url "enrollments:dashboard" %}?view=reports'
+                };
+
+                if (urls[actionType]) {
+                    // Add loading state
+                    this.showLoading(`Redirecting to ${actionType.toUpperCase()} application...`);
+                    
+                    // Simulate brief loading for UX
+                    setTimeout(() => {
+                        window.location.href = urls[actionType];
+                    }, 500);
                 }
-            });
+            }
+
+            setupCouncilFilters() {
+                const filterButtons = document.querySelectorAll('button[class*="bg-purple-100"], button[class*="bg-green-100"], button[class*="bg-blue-100"]');
+                filterButtons.forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const councilType = this.extractCouncilType(button.textContent);
+                        this.filterApplications(councilType);
+                    });
+                });
+            }
+
+            extractCouncilType(buttonText) {
+                if (buttonText.includes('CGMP')) return 'cgmp';
+                if (buttonText.includes('CPSC')) return 'cpsc';
+                if (buttonText.includes('CMTP')) return 'cmtp';
+                return 'all';
+            }
+
+            filterApplications(councilType) {
+                const applications = document.querySelectorAll('.recent-item');
+                const buttons = document.querySelectorAll('button[class*="bg-purple-100"], button[class*="bg-green-100"], button[class*="bg-blue-100"]');
+                
+                // Update button states
+                buttons.forEach(btn => {
+                    btn.classList.remove('ring-2', 'ring-offset-2');
+                    if (this.extractCouncilType(btn.textContent) === councilType) {
+                        btn.classList.add('ring-2', 'ring-offset-2');
+                        if (councilType === 'cgmp') btn.classList.add('ring-purple-300');
+                        if (councilType === 'cpsc') btn.classList.add('ring-green-300');
+                        if (councilType === 'cmtp') btn.classList.add('ring-blue-300');
+                    }
+                });
+
+                // Filter applications with smooth animation
+                applications.forEach(app => {
+                    const badge = app.querySelector('.council-badge');
+                    const appType = badge ? badge.textContent.toLowerCase() : '';
+                    
+                    if (councilType === 'all' || appType === councilType) {
+                        app.style.display = 'block';
+                        app.style.opacity = '0';
+                        app.style.transform = 'translateY(10px)';
+                        
+                        setTimeout(() => {
+                            app.style.transition = 'all 0.3s ease';
+                            app.style.opacity = '1';
+                            app.style.transform = 'translateY(0)';
+                        }, 50);
+                    } else {
+                        app.style.transition = 'all 0.3s ease';
+                        app.style.opacity = '0';
+                        app.style.transform = 'translateY(-10px)';
+                        
+                        setTimeout(() => {
+                            app.style.display = 'none';
+                        }, 300);
+                    }
+                });
+            }
+
+            setupApplicationInteractions() {
+                const applicationRows = document.querySelectorAll('.recent-item');
+                applicationRows.forEach(row => {
+                    const viewButton = row.querySelector('button');
+                    if (viewButton) {
+                        viewButton.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            this.viewApplicationDetails(row);
+                        });
+                    }
+                });
+            }
+
+            viewApplicationDetails(row) {
+                const councilBadge = row.querySelector('.council-badge');
+                const nameElement = row.querySelector('h3');
+                const emailElement = row.querySelector('span[class*="@"]');
+                
+                if (councilBadge && nameElement) {
+                    const councilType = councilBadge.textContent.toLowerCase();
+                    const applicantName = nameElement.textContent;
+                    
+                    // In a real implementation, you'd get the application ID and navigate
+                    this.showApplicationModal(councilType, applicantName);
+                }
+            }
+
+            showApplicationModal(councilType, applicantName) {
+                // Create modal overlay
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                modal.innerHTML = `
+                    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4 transform transition-all duration-300 scale-95">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-gray-800">Application Details</h3>
+                            <button class="text-gray-400 hover:text-gray-600" onclick="this.closest('.fixed').remove()">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex items-center space-x-2">
+                                <span class="council-badge council-${councilType}">${councilType.toUpperCase()}</span>
+                                <span class="font-medium">${applicantName}</span>
+                            </div>
+                            <p class="text-gray-600">Full application details would be loaded here.</p>
+                            <div class="flex space-x-3 pt-4">
+                                <button class="px-4 py-2 bg-${councilType === 'cgmp' ? 'purple' : councilType === 'cpsc' ? 'green' : 'blue'}-600 text-white rounded-lg hover:bg-${councilType === 'cgmp' ? 'purple' : councilType === 'cpsc' ? 'green' : 'blue'}-700 transition-colors">
+                                    View Full Details
+                                </button>
+                                <button class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors" onclick="this.closest('.fixed').remove()">
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+                
+                // Animate in
+                setTimeout(() => {
+                    modal.querySelector('.bg-white').classList.remove('scale-95');
+                    modal.querySelector('.bg-white').classList.add('scale-100');
+                }, 10);
+            }
+
+            setupRefreshButton() {
+                // Add refresh button to header
+                const header = document.querySelector('.dashboard-header .flex');
+                const refreshBtn = document.createElement('button');
+                refreshBtn.className = 'ml-4 px-3 py-2 bg-white bg-opacity-20 text-white rounded-lg hover:bg-opacity-30 transition-colors flex items-center space-x-2';
+                refreshBtn.innerHTML = `
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    <span>Refresh</span>
+                `;
+                
+                refreshBtn.addEventListener('click', () => this.refreshDashboard());
+                header.appendChild(refreshBtn);
+            }
+
+            setupAutoRefresh() {
+                setInterval(() => {
+                    if (!this.isLoading && document.visibilityState === 'visible') {
+                        this.refreshDashboard(true); // Silent refresh
+                    }
+                }, DASHBOARD_CONFIG.refreshInterval);
+            }
+
+            setupRealTimeUpdates() {
+                // Listen for page visibility changes
+                document.addEventListener('visibilitychange', () => {
+                    if (document.visibilityState === 'visible' && this.lastUpdate) {
+                        const timeSinceUpdate = Date.now() - this.lastUpdate;
+                        if (timeSinceUpdate > DASHBOARD_CONFIG.refreshInterval) {
+                            this.refreshDashboard(true);
+                        }
+                    }
+                });
+            }
+
+            async refreshDashboard(silent = false) {
+                if (this.isLoading) return;
+                
+                this.isLoading = true;
+                
+                if (!silent) {
+                    this.showLoading('Refreshing dashboard...');
+                }
+
+                try {
+                    // Simulate API call - in real implementation, fetch from Django endpoints
+                    await this.simulateDataFetch();
+                    
+                    if (!silent) {
+                        this.showSuccess('Dashboard updated successfully!');
+                    }
+                    
+                    this.lastUpdate = Date.now();
+                    
+                } catch (error) {
+                    console.error('Dashboard refresh failed:', error);
+                    if (!silent) {
+                        this.showError('Failed to update dashboard. Please try again.');
+                    }
+                } finally {
+                    this.isLoading = false;
+                    if (!silent) {
+                        setTimeout(() => this.hideMessages(), 3000);
+                    }
+                }
+            }
+
+            async simulateDataFetch() {
+                // Simulate network delay
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // In real implementation, this would be:
+                // const response = await fetch('/api/dashboard/stats/');
+                // const data = await response.json();
+                // this.updateDashboardWithNewData(data);
+            }
+
+            showLoading(message) {
+                this.showMessage(message, 'info', true);
+            }
+
+            showSuccess(message) {
+                this.showMessage(message, 'success');
+            }
+
+            showError(message) {
+                this.showMessage(message, 'error');
+            }
+
+            showMessage(message, type, isLoading = false) {
+                // Remove existing messages
+                this.hideMessages();
+                
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg transform transition-all duration-300 translate-x-full`;
+                
+                const colors = {
+                    info: 'bg-blue-500 text-white',
+                    success: 'bg-green-500 text-white', 
+                    error: 'bg-red-500 text-white'
+                };
+                
+                messageDiv.classList.add(...colors[type].split(' '));
+                
+                const icon = isLoading ? 
+                    '<svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>' :
+                    type === 'success' ? '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>' :
+                    type === 'error' ? '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>' :
+                    '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+                
+                messageDiv.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        ${icon}
+                        <span>${message}</span>
+                    </div>
+                `;
+                
+                messageDiv.setAttribute('data-message', 'true');
+                document.body.appendChild(messageDiv);
+                
+                // Animate in
+                setTimeout(() => {
+                    messageDiv.classList.remove('translate-x-full');
+                }, 10);
+            }
+
+            hideMessages() {
+                const messages = document.querySelectorAll('[data-message="true"]');
+                messages.forEach(msg => {
+                    msg.classList.add('translate-x-full');
+                    setTimeout(() => msg.remove(), 300);
+                });
+            }
+        }
+
+        // Initialize dashboard when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            window.dashboardManager = new DashboardManager();
         });
+
+        // Global utility functions
+        window.filterApplications = function(type) {
+            if (window.dashboardManager) {
+                window.dashboardManager.filterApplications(type);
+            }
+        };
+
+        window.refreshDashboard = function() {
+            if (window.dashboardManager) {
+                window.dashboardManager.refreshDashboard();
+            }
+        };
     </script>
 </body>
 </html>
