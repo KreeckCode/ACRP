@@ -1,29 +1,32 @@
-env
-migrations/
-credentials
-.venv
-venv
-.staticfiles/
-staticfiles
-static
-/static
-static/
-.static
-.media/
-.media_root/
-media_root/
-migrations/
-.migrations
+# Python
 __pycache__/
-.__pycache__/
-.__pycache__
-.vscode
-/.pyc
 *.pyc
-.node_modules
-node_modules
+*.pyo
+*.pyd
+.migrations/
+migrations/
+
+# Virtual environments
+.venv/
+venv/
+
+# Environment variables
+.env
+.env.*
+
+# macOS
+.DS_Store
+
+
+# Editor folders
+.vscode/
+.idea/
+
+
+# Credentials and keys
+credentials
 erp_ssh.pub
+
+# Themes
 theme/
-theme
-/theme
-.theme
+.theme/

@@ -13,7 +13,7 @@ django-environ
 django-debug-toolbar
 django-crispy-forms
 crispy-bootstrap5
-gunicorn 
-nginx
 django_browser_reload
 psycopg[binary]
+django-widget-tweaks
+django-tinymce
