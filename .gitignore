@@ -6,6 +6,15 @@ __pycache__/
 .migrations/
 migrations/
 
+
+.staticfiles/
+staticfiles
+static
+/static
+static/
+.static
+
+
 # Virtual environments
 .venv/
 venv/
