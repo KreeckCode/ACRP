@@ -1,13 +1,32 @@
+# enrollments/models.py - Updated with missing fields
 from django.db import models
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.utils import timezone
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator, FileExtensionValidator
 from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
+import os
+import uuid
 
 User = get_user_model()
+
+
+def get_document_upload_path(instance, filename):
+    """Generate dynamic upload path for documents"""
+    # Get the council type from the related object
+    council_type = 'unknown'
+    if hasattr(instance.content_object, '__class__'):
+        council_type = instance.content_object.__class__.__name__.lower().replace('affiliation', '')
+    
+    # Generate unique filename to prevent conflicts
+    ext = filename.split('.')[-1].lower()
+    unique_filename = f"{uuid.uuid4().hex}_{filename}"
+    
+    return f"enrollments/docs/{timezone.now().year}/{timezone.now().month:02d}/{council_type}/{unique_filename}"
+
 
 # Base Abstract Model for all Affiliations
 class BaseAffiliation(models.Model):
@@ -104,6 +123,20 @@ class BaseAffiliation(models.Model):
     felony_conviction = models.BooleanField(default=False)
     felony_description = models.TextField(blank=True)
     
+    # === LEGAL AGREEMENTS === (ADDED THESE MISSING FIELDS)
+    popi_act_accepted = models.BooleanField(
+        default=False,
+        help_text=_("Agreement to Protection of Personal Information Act (POPIA)")
+    )
+    terms_accepted = models.BooleanField(
+        default=False,
+        help_text=_("Agreement to Terms and Conditions")
+    )
+    information_accurate = models.BooleanField(
+        default=False,
+        help_text=_("Certification that all information provided is true and accurate")
+    )
+    
     # Generic relation to documents
     documents = GenericRelation('Document')
     
@@ -115,20 +148,69 @@ class BaseAffiliation(models.Model):
         """Custom validation logic"""
         super().clean()
         
-            
+        # Validate ID number format
+        if self.id_number:
+            id_clean = self.id_number.replace(' ', '').replace('-', '')
+            if not id_clean.isdigit() or len(id_clean) != 13:
+                raise ValidationError({'id_number': _("ID number must be exactly 13 digits")})
+        
+        # Validate age
+        if self.date_of_birth:
+            today = timezone.now().date()
+            age = today.year - self.date_of_birth.year - ((today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day))
+            if self.date_of_birth > today:
+                raise ValidationError({'date_of_birth': _("Date of birth cannot be in the future")})
+            elif age < 16:
+                raise ValidationError({'date_of_birth': _("Applicant must be at least 16 years old")})
+            elif age > 100:
+                raise ValidationError({'date_of_birth': _("Please verify the date of birth")})
+        
         # If disciplinary action is True, description is required
         if self.disciplinary_action and not self.disciplinary_description.strip():
-            raise ValidationError("Disciplinary description is required when disciplinary action is marked.")
+            raise ValidationError({'disciplinary_description': _("Details required when disciplinary action is indicated")})
             
         # If felony conviction is True, description is required
         if self.felony_conviction and not self.felony_description.strip():
-            raise ValidationError("Felony description is required when felony conviction is marked.")
+            raise ValidationError({'felony_description': _("Details required when felony conviction is indicated")})
+        
+        # Validate legal agreements
+        if not self.popi_act_accepted:
+            raise ValidationError({'popi_act_accepted': _("You must agree to the POPIA Act to continue")})
+            
+        if not self.terms_accepted:
+            raise ValidationError({'terms_accepted': _("You must agree to the Terms and Conditions")})
+            
+        if not self.information_accurate:
+            raise ValidationError({'information_accurate': _("You must certify that information is accurate")})
+    
+    def save(self, *args, **kwargs):
+        """Override save to ensure validation and normalization"""
+        # Normalize data
+        if self.email:
+            self.email = self.email.lower().strip()
+        if self.id_number:
+            self.id_number = self.id_number.replace(' ', '').replace('-', '')
+        
+        # Call full_clean to trigger validation
+        self.full_clean()
+        super().save(*args, **kwargs)
     
     def get_full_name(self):
         return f"{self.first_name} {self.last_name}".strip()
     
     def get_display_name(self):
         return self.preferred_name if self.preferred_name else self.get_full_name()
+    
+    def get_ministry_experience_display(self):
+        """Return formatted ministry experience"""
+        if self.years_ministry == 0 and self.months_ministry == 0:
+            return "No ministry experience"
+        elif self.years_ministry == 0:
+            return f"{self.months_ministry} months"
+        elif self.months_ministry == 0:
+            return f"{self.years_ministry} years"
+        else:
+            return f"{self.years_ministry} years, {self.months_ministry} months"
 
 
 # Council-specific models
@@ -173,6 +255,25 @@ class CGMPAffiliation(BaseAffiliation):
     class Meta:
         verbose_name = "CGMP Affiliation"
         verbose_name_plural = "CGMP Affiliations"
+    
+    def clean(self):
+        """CGMP-specific validation"""
+        super().clean()
+        errors = {}
+        
+        # Validate ordination requirements
+        if self.ordination_status in ['ordained', 'licensed']:
+            if not self.ordination_date:
+                errors['ordination_date'] = _("Ordination date is required for ordained/licensed status")
+            if not self.ordaining_body.strip():
+                errors['ordaining_body'] = _("Ordaining body is required for ordained/licensed status")
+        
+        # Validate pastoral responsibilities
+        if self.involved_pastoral and not self.pastoral_responsibilities.strip():
+            errors['pastoral_responsibilities'] = _("Please describe your pastoral responsibilities")
+        
+        if errors:
+            raise ValidationError(errors)
     
     def __str__(self):
         return f"CGMP: {self.get_display_name()}"
@@ -329,7 +430,14 @@ class Document(models.Model):
     content_object = GenericForeignKey('content_type', 'object_id')
     
     category = models.CharField(max_length=20, choices=DOCUMENT_CATEGORIES)
-    file = models.FileField(upload_to='enrollments/docs/%Y/%m/%d/')
+    file = models.FileField(
+        upload_to=get_document_upload_path,
+        validators=[
+            FileExtensionValidator(
+                allowed_extensions=['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png', 'gif']
+            )
+        ]
+    )
     uploaded_at = models.DateTimeField(auto_now_add=True)
     uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     
@@ -337,6 +445,7 @@ class Document(models.Model):
     original_filename = models.CharField(max_length=255, blank=True)
     file_size = models.PositiveIntegerField(default=0)
     mime_type = models.CharField(max_length=100, blank=True)
+    description = models.TextField(blank=True, help_text=_("Optional description of document contents"))
     
     # Verification status
     verified = models.BooleanField(default=False)
@@ -352,11 +461,43 @@ class Document(models.Model):
     class Meta:
         ordering = ['-uploaded_at']
     
+    def clean(self):
+        """Validate file size and type"""
+        if self.file:
+            # Check file size (10MB limit)
+            if self.file.size > 10 * 1024 * 1024:
+                raise ValidationError({'file': _("File size cannot exceed 10MB")})
+    
     def save(self, *args, **kwargs):
         if self.file:
             self.original_filename = self.file.name
             self.file_size = self.file.size
+            # Set mime type based on extension
+            ext = os.path.splitext(self.file.name)[1].lower()
+            mime_types = {
+                '.pdf': 'application/pdf',
+                '.doc': 'application/msword',
+                '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                '.jpg': 'image/jpeg',
+                '.jpeg': 'image/jpeg',
+                '.png': 'image/png',
+                '.gif': 'image/gif',
+            }
+            self.mime_type = mime_types.get(ext, 'application/octet-stream')
         super().save(*args, **kwargs)
+    
+    def get_file_extension(self):
+        """Return file extension"""
+        return os.path.splitext(self.original_filename)[1].lower()
+    
+    def get_file_size_display(self):
+        """Return human-readable file size"""
+        if self.file_size < 1024:
+            return f"{self.file_size} bytes"
+        elif self.file_size < 1024 * 1024:
+            return f"{self.file_size / 1024:.1f} KB"
+        else:
+            return f"{self.file_size / (1024 * 1024):.1f} MB"
     
     def __str__(self):
         return f"{self.get_category_display()} for {self.content_object}"
@@ -380,7 +521,7 @@ class RegistrationSession(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     completed = models.BooleanField(default=False)
     ip_address = models.GenericIPAddressField(null=True, blank=True)
-    user_agent = models.TextField(blank=True),
+    user_agent = models.TextField(blank=True)  # FIXED: Removed trailing comma
     status = models.CharField(max_length=20, choices=[
         ('pending', 'Pending'),
         ('approved', 'Approved'),

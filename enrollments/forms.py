@@ -1,7 +1,9 @@
+# enrollments/forms.py - Updated with enhanced functionality
 import os
 from django import forms
 from django.contrib.contenttypes.forms import generic_inlineformset_factory
 from django.core.exceptions import ValidationError
+from django.core.validators import FileExtensionValidator
 from django.utils import timezone
 from .models import (
     CGMPAffiliation,
@@ -13,21 +15,61 @@ from .models import (
 from django.utils.translation import gettext_lazy as _
 
 # Enhanced HTML5 widgets
-DATE_WIDGET = forms.DateInput( attrs={"type": "date", "class": "form-control", "placeholder": "Select date"})
+DATE_WIDGET = forms.DateInput(attrs={
+    "type": "date", 
+    "class": "form-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors",
+    "placeholder": "Select date"
+})
 
-TEXTAREA_WIDGET = forms.Textarea(
-    attrs={"class": "form-control", "rows": 4, "placeholder": "Enter details..."}
-)
+TEXTAREA_WIDGET = forms.Textarea(attrs={
+    "class": "form-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors",
+    "rows": 4, 
+    "placeholder": "Enter details..."
+})
 
-TEXT_INPUT_WIDGET = forms.TextInput(attrs={"class": "form-control"})
+TEXT_INPUT_WIDGET = forms.TextInput(attrs={
+    "class": "form-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+})
 
-EMAIL_WIDGET = forms.EmailInput(
-    attrs={"class": "form-control", "placeholder": "your.email@example.com"}
-)
+EMAIL_WIDGET = forms.EmailInput(attrs={
+    "class": "form-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors",
+    "placeholder": "your.email@example.com"
+})
 
-SELECT_WIDGET = forms.Select(attrs={"class": "form-control"})
+SELECT_WIDGET = forms.Select(attrs={
+    "class": "form-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+})
 
-CHECKBOX_WIDGET = forms.CheckboxInput(attrs={"class": "form-check-input"})
+CHECKBOX_WIDGET = forms.CheckboxInput(attrs={
+    "class": "h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+})
+
+# Multiple file upload widgets
+class MultipleFileInput(forms.ClearableFileInput):
+    allow_multiple_selected = True
+    
+    def __init__(self, attrs=None):
+        default_attrs = {
+            'class': 'form-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors',
+            'accept': '.pdf,.doc,.docx,.jpg,.jpeg,.png,.gif',
+            'multiple': True
+        }
+        if attrs:
+            default_attrs.update(attrs)
+        super().__init__(attrs=default_attrs)
+
+class MultipleFileField(forms.FileField):
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("widget", MultipleFileInput())
+        super().__init__(*args, **kwargs)
+    
+    def clean(self, data, initial=None):
+        single_file_clean = super().clean
+        if isinstance(data, (list, tuple)):
+            result = [single_file_clean(d, initial) for d in data]
+        else:
+            result = [single_file_clean(data, initial)]
+        return result
 
 
 # Base Form Class for common functionality
@@ -42,20 +84,33 @@ class BaseAffiliationForm(forms.ModelForm):
         self.request = request
         super().__init__(*args, **kwargs)
 
-        # Apply common styling to all fields
+        # Apply modern styling to all fields
         for field_name, field in self.fields.items():
             if isinstance(field.widget, forms.TextInput):
-                field.widget.attrs.update({"class": "form-control"})
+                field.widget.attrs.update({
+                    "class": "form-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                })
             elif isinstance(field.widget, forms.Textarea):
-                field.widget.attrs.update({"class": "form-control", "rows": 4})
+                field.widget.attrs.update({
+                    "class": "form-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors",
+                    "rows": 4
+                })
             elif isinstance(field.widget, forms.Select):
-                field.widget.attrs.update({"class": "form-control"})
+                field.widget.attrs.update({
+                    "class": "form-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                })
             elif isinstance(field.widget, forms.EmailInput):
-                field.widget.attrs.update({"class": "form-control"})
+                field.widget.attrs.update({
+                    "class": "form-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                })
             elif isinstance(field.widget, forms.CheckboxInput):
-                field.widget.attrs.update({"class": "form-check-input"})
+                field.widget.attrs.update({
+                    "class": "h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                })
             elif isinstance(field.widget, forms.DateInput):
-                field.widget.attrs.update({"class": "form-control"})
+                field.widget.attrs.update({
+                    "class": "form-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                })
 
         # Set required fields styling
         for field_name, field in self.fields.items():
@@ -147,6 +202,22 @@ class BaseAffiliationForm(forms.ModelForm):
                 }
             )
 
+        # Validate legal agreements
+        if not cleaned_data.get('popi_act_accepted'):
+            raise ValidationError(
+                {"popi_act_accepted": "You must agree to the POPIA Act to continue."}
+            )
+            
+        if not cleaned_data.get('terms_accepted'):
+            raise ValidationError(
+                {"terms_accepted": "You must agree to the Terms and Conditions."}
+            )
+            
+        if not cleaned_data.get('information_accurate'):
+            raise ValidationError(
+                {"information_accurate": "You must certify that all information is accurate."}
+            )
+
         return cleaned_data
 
     class Meta:
@@ -160,24 +231,56 @@ class BaseAffiliationForm(forms.ModelForm):
             "postal_address": TEXTAREA_WIDGET,
             "street_address": TEXTAREA_WIDGET,
             "email": EMAIL_WIDGET,
+            "title": SELECT_WIDGET,
+            "gender": SELECT_WIDGET,
+            "initials": TEXT_INPUT_WIDGET,
+            "first_name": TEXT_INPUT_WIDGET,
+            "last_name": TEXT_INPUT_WIDGET,
+            "preferred_name": TEXT_INPUT_WIDGET,
+            "id_number": TEXT_INPUT_WIDGET,
+            "passport_number": TEXT_INPUT_WIDGET,
+            "race": TEXT_INPUT_WIDGET,
+            "disability": TEXT_INPUT_WIDGET,
+            "cell": TEXT_INPUT_WIDGET,
+            "tel_work": TEXT_INPUT_WIDGET,
+            "tel_home": TEXT_INPUT_WIDGET,
+            "fax": TEXT_INPUT_WIDGET,
+            "website": TEXT_INPUT_WIDGET,
+            "postal_code": TEXT_INPUT_WIDGET,
+            "province": TEXT_INPUT_WIDGET,
+            "country": TEXT_INPUT_WIDGET,
+            "religious_affiliation": TEXT_INPUT_WIDGET,
+            "home_language": TEXT_INPUT_WIDGET,
+            "other_languages": TEXT_INPUT_WIDGET,
+            "highest_qualification": TEXT_INPUT_WIDGET,
+            "qualification_institution": TEXT_INPUT_WIDGET,
+            "occupation": TEXT_INPUT_WIDGET,
+            "popi_act_accepted": CHECKBOX_WIDGET,
+            "terms_accepted": CHECKBOX_WIDGET,
+            "information_accurate": CHECKBOX_WIDGET,
+            "disciplinary_action": CHECKBOX_WIDGET,
+            "felony_conviction": CHECKBOX_WIDGET,
         }
 
 
-# CGMP Form
-
+# CGMP Form - ENHANCED WITH FILE UPLOAD
 class CGMPForm(BaseAffiliationForm):
-    """Form for Council for General Ministry Professionals with all required fields."""
+    """Form for Council for General Ministry Professionals with integrated file upload."""
 
-    popi_act = forms.BooleanField(
-        required=True,
-        label=_("I agree to the Protection of Personal Information Act (POPIA)"),
-        widget=CHECKBOX_WIDGET,
-        error_messages={'required': _("You must agree to the POPIA Act to continue.")}
+    # INTEGRATED FILE UPLOAD FIELD
+    documents = MultipleFileField(
+        required=False,
+        help_text=_("Upload required documents (ID, qualifications, certificates, references). Max 10 files, 10MB each."),
+        validators=[
+            FileExtensionValidator(
+                allowed_extensions=['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png', 'gif']
+            )
+        ]
     )
 
     class Meta:
         model = CGMPAffiliation
-        # Explicitly list every field in the order you want them
+        # UPDATED FIELD LIST - Fixed field names to match model
         fields = [
             # --- Personal Information ---
             'title', 'gender', 'initials', 'first_name', 'last_name',
@@ -201,14 +304,23 @@ class CGMPForm(BaseAffiliationForm):
             'current_ministry_role', 'congregation_name', 'denomination',
             'involved_pastoral', 'pastoral_responsibilities', 'preaching_frequency',
             'registered_elsewhere', 'other_registrations', 'continuing_education',
-            # --- POPIA Confirmation ---
-            'popi_act',
+            # --- LEGAL AGREEMENTS - FIXED FIELD NAMES ---
+            'popi_act_accepted', 'terms_accepted', 'information_accurate',
         ]
         widgets = {
             **BaseAffiliationForm.Meta.widgets,
+            'ordination_status': SELECT_WIDGET,
             'ordination_date': DATE_WIDGET,
+            'ordaining_body': TEXT_INPUT_WIDGET,
+            'current_ministry_role': TEXT_INPUT_WIDGET,
+            'congregation_name': TEXT_INPUT_WIDGET,
+            'denomination': TEXT_INPUT_WIDGET,
             'pastoral_responsibilities': TEXTAREA_WIDGET,
+            'preaching_frequency': SELECT_WIDGET,
             'other_registrations': TEXTAREA_WIDGET,
+            'involved_pastoral': CHECKBOX_WIDGET,
+            'registered_elsewhere': CHECKBOX_WIDGET,
+            'continuing_education': CHECKBOX_WIDGET,
         }
 
     def __init__(self, *args, **kwargs):
@@ -217,20 +329,62 @@ class CGMPForm(BaseAffiliationForm):
 
         # Make ordination_date, pastoral_responsibilities, other_registrations optional
         self.fields['ordination_date'].required = False
-        self.fields['ordination_date'].help_text = _("Leave blank if not ordained")
+        self.fields['ordination_date'].help_text = _("Required for ordained/licensed status")
+
+        self.fields['ordaining_body'].required = False
+        self.fields['ordaining_body'].help_text = _("Required for ordained/licensed status")
 
         self.fields['pastoral_responsibilities'].required = False
-        self.fields['pastoral_responsibilities'].help_text = _("Describe your pastoral duties")
+        self.fields['pastoral_responsibilities'].help_text = _("Required if involved in pastoral work")
 
         self.fields['other_registrations'].required = False
         self.fields['other_registrations'].help_text = _("List other professional registrations")
 
+    def clean_documents(self):
+        """Validate uploaded documents"""
+        files = self.cleaned_data.get('documents', [])
+        
+        if not files:
+            return files
+        
+        # Ensure files is a list
+        if not isinstance(files, list):
+            files = [files]
+        
+        # Validate file count
+        if len(files) > 10:
+            raise ValidationError(
+                _("You can upload a maximum of 10 files."),
+                code='too_many_files'
+            )
+        
+        # Validate each file
+        for file in files:
+            if file:
+                # Check file size (10MB limit)
+                if file.size > 10 * 1024 * 1024:
+                    raise ValidationError(
+                        _("File '%(filename)s' exceeds the maximum size of 10MB.") % {'filename': file.name},
+                        code='file_too_large'
+                    )
+                
+                # Check file extension
+                allowed_extensions = ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png', 'gif']
+                file_extension = os.path.splitext(file.name)[1].lower().lstrip('.')
+                
+                if file_extension not in allowed_extensions:
+                    raise ValidationError(
+                        _("File '%(filename)s' has an invalid extension. Allowed: %(extensions)s") % {
+                            'filename': file.name,
+                            'extensions': ', '.join(allowed_extensions)
+                        },
+                        code='invalid_extension'
+                    )
+        
+        return files
+
     def clean(self):
         cleaned = super().clean()
-
-        # POPIA enforcement
-        if not cleaned.get('popi_act'):
-            self.add_error('popi_act', _("You must agree to the POPIA Act to proceed."))
 
         # ordination logic
         status = cleaned.get('ordination_status')
@@ -245,9 +399,57 @@ class CGMPForm(BaseAffiliationForm):
             self.add_error('pastoral_responsibilities', _("Please describe your pastoral responsibilities."))
 
         return cleaned
-    
 
-# CPSC Form
+    def save(self, commit=True):
+        """Enhanced save method with document handling"""
+        instance = super().save(commit=commit)
+        
+        if commit:
+            # Handle file uploads
+            documents = self.cleaned_data.get('documents', [])
+            if documents:
+                self._save_documents(instance, documents)
+        
+        return instance
+    
+    def _save_documents(self, instance, documents):
+        """Save uploaded documents"""
+        if not isinstance(documents, list):
+            documents = [documents]
+        
+        for file in documents:
+            if file:
+                # Determine document category based on filename
+                category = self._determine_document_category(file.name)
+                
+                # Create document instance
+                Document.objects.create(
+                    content_object=instance,
+                    category=category,
+                    file=file,
+                    uploaded_by=getattr(self.request, 'user', None) if self.request else None,
+                    description=f"Uploaded during CGMP application"
+                )
+    
+    def _determine_document_category(self, filename):
+        """Determine document category based on filename"""
+        filename_lower = filename.lower()
+        
+        if any(word in filename_lower for word in ['id', 'identity', 'passport']):
+            return 'id_document'
+        elif any(word in filename_lower for word in ['certificate', 'qualification', 'degree', 'diploma']):
+            return 'qualification'
+        elif any(word in filename_lower for word in ['ordination', 'ordain']):
+            return 'ordination'
+        elif any(word in filename_lower for word in ['reference', 'recommendation']):
+            return 'reference'
+        elif any(word in filename_lower for word in ['transcript']):
+            return 'transcript'
+        else:
+            return 'supporting'
+
+
+# CPSC Form - KEPT INTACT, JUST ENHANCED STYLING
 class CPSCForm(BaseAffiliationForm):
     """Form for Council for Pastoral & Spiritual Care"""
 
@@ -323,7 +525,7 @@ class CPSCForm(BaseAffiliationForm):
         return cleaned_data
 
 
-# CMTP Form
+# CMTP Form - KEPT INTACT, JUST ENHANCED STYLING
 class CMTPForm(BaseAffiliationForm):
     """Form for Council for Ministry Training Providers"""
 
@@ -394,15 +596,16 @@ class DocumentForm(forms.ModelForm):
 
     class Meta:
         model = Document
-        fields = ["category", "file"]
+        fields = ["category", "file", "description"]
         widgets = {
             "category": SELECT_WIDGET,
             "file": forms.FileInput(
                 attrs={
-                    "class": "form-control",
+                    "class": "form-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors",
                     "accept": ".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif",
                 }
             ),
+            "description": TEXTAREA_WIDGET,
         }
 
     def clean_file(self):
@@ -436,7 +639,7 @@ class RegistrationTypeForm(forms.Form):
 
     registration_type = forms.ChoiceField(
         choices=REGISTRATION_CHOICES,
-        widget=forms.RadioSelect(attrs={"class": "form-check-input"}),
+        widget=forms.RadioSelect(attrs={"class": "h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"}),
         required=True,
         error_messages={"required": "Please select a registration type to continue."},
     )
@@ -454,7 +657,7 @@ class CouncilSelectionForm(forms.Form):
 
     council_type = forms.ChoiceField(
         choices=COUNCIL_CHOICES,
-        widget=forms.RadioSelect(attrs={"class": "form-check-input"}),
+        widget=forms.RadioSelect(attrs={"class": "h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"}),
         required=True,
         error_messages={"required": "Please select a council to continue."},
     )
@@ -466,11 +669,11 @@ CGMPDocFormSet = generic_inlineformset_factory(
     form=DocumentForm,
     ct_field="content_type",
     fk_field="object_id",
-    extra=1,
+    extra=3,
     can_delete=True,
     max_num=10,
     validate_max=True,
-    fields=["category", "file"],
+    fields=["category", "file", "description"],
 )
 
 CPSCDocFormSet = generic_inlineformset_factory(
@@ -482,7 +685,7 @@ CPSCDocFormSet = generic_inlineformset_factory(
     can_delete=True,
     max_num=10,
     validate_max=True,
-    fields=["category", "file"],
+    fields=["category", "file", "description"],
 )
 
 CMTPDocFormSet = generic_inlineformset_factory(
@@ -494,7 +697,7 @@ CMTPDocFormSet = generic_inlineformset_factory(
     can_delete=True,
     max_num=10,
     validate_max=True,
-    fields=["category", "file"],
+    fields=["category", "file", "description"],
 )
 
 
@@ -532,15 +735,15 @@ class DocumentCategorySelectionForm(forms.Form):
             # Fallback to basic choices if method doesn't exist
             choices = [
                 ("qualification", "Academic Qualification"),
-                ("identity", "Identity Document"),
-                ("certificate", "Professional Certificate"),
+                ("id_document", "Identity Document"),
+                ("certification", "Professional Certificate"),
                 ("reference", "Reference Letter"),
-                ("other", "Other Documentation"),
+                ("supporting", "Other Documentation"),
             ]
 
         self.fields["categories"] = forms.MultipleChoiceField(
             choices=choices,
-            widget=forms.CheckboxSelectMultiple(attrs={"class": "form-check-input"}),
+            widget=forms.CheckboxSelectMultiple(attrs={"class": "h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"}),
             required=True,
             error_messages={
                 "required": "Please select at least one document category."
@@ -554,33 +757,14 @@ class DocumentCategorySelectionForm(forms.Form):
         return categories
 
 
-# Official Django solution from documentation
-from django import forms
-
-class MultipleFileInput(forms.ClearableFileInput):
-    allow_multiple_selected = True
-
-class MultipleFileField(forms.FileField):
-    def __init__(self, *args, **kwargs):
-        kwargs.setdefault("widget", MultipleFileInput())
-        super().__init__(*args, **kwargs)
-    
-    def clean(self, data, initial=None):
-        single_file_clean = super().clean
-        if isinstance(data, (list, tuple)):
-            result = [single_file_clean(d, initial) for d in data]
-        else:
-            result = [single_file_clean(data, initial)]
-        return result
-
-# Your updated Batch Document Upload Form using official Django solution
+# Batch Document Upload Form
 class BatchDocumentUploadForm(forms.Form):
     """Form for uploading multiple documents at once"""
 
     files = MultipleFileField(
         widget=MultipleFileInput(
             attrs={
-                "class": "form-control",
+                "class": "form-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors",
                 "accept": ".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif",
             }
         ),

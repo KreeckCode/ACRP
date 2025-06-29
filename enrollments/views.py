@@ -1,3 +1,4 @@
+from django.forms import ValidationError
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, permission_required, user_passes_test
 from django.contrib import messages
@@ -324,10 +325,11 @@ def cgmp_list(request):
 @transaction.atomic
 def cgmp_create(request):
     """
-    Create new CGMP affiliation with enhanced security and validation
+    Public CGMP registration - no login required
+    Enhanced with professional error handling and proper redirects
     """
     if request.method == 'POST':
-        form = CGMPForm(request.POST, request=request)
+        form = CGMPForm(request.POST, request.FILES, request=request)
         
         if form.is_valid():
             try:
@@ -337,31 +339,85 @@ def cgmp_create(request):
                     cgmp.created_user = request.user
                 cgmp.save()
                 
+                # Create registration session for tracking
+                try:
+                    session = RegistrationSession.objects.create(
+                        session_key=f"{request.session.session_key}_{timezone.now().timestamp()}",
+                        registration_type='cgmp',
+                        user=request.user if request.user.is_authenticated else None,
+                        ip_address=get_client_ip(request),
+                        user_agent=request.META.get('HTTP_USER_AGENT', '')[:500],
+                        completed=True,
+                        status='pending'
+                    )
+                except Exception as e:
+                    logger.warning(f"Failed to create registration session: {e}")
+                
                 # Log successful creation
-                logger.info(f"CGMP application created: ID {cgmp.id}, Email {cgmp.email}")
+                logger.info(f"CGMP application created: ID={cgmp.id}, Email={cgmp.email}")
                 
                 # Clear relevant caches
-                cache.delete_many([
-                    f"list_view:CGMPAffiliation:*",
-                    f"stats:cgmp:*"
-                ])
+                try:
+                    cache.delete_many([
+                        'cgmp_applications_count',
+                        'latest_cgmp_applications',
+                        'cgmp_statistics',
+                    ])
+                except Exception as e:
+                    logger.warning(f"Cache clearing failed: {e}")
                 
-                # Success message and redirect
-                messages.success(request, "Your CGMP application has been submitted successfully!")
+                # Success message and redirect to PUBLIC success page
+                messages.success(
+                    request, 
+                    "Your CGMP application has been submitted successfully! "
+                    "You will receive a confirmation email shortly."
+                )
+                
                 return render(request, 'enrollments/application_success.html', {
                     'application': cgmp,
-                    'council_type': 'CGMP'
+                    'council_type': 'CGMP',
+                    'next_steps': [
+                        'You will receive an email confirmation within 24 hours',
+                        'Review process typically takes 5-10 business days', 
+                        'We may contact you for additional information if needed',
+                        'You will be notified of the decision via email'
+                    ]
                 })
                 
+            except ValidationError as e:
+                logger.warning(f"Validation error in CGMP application: {e}")
+                messages.error(request, f"Validation error: {e}")
             except Exception as e:
-                logger.error(f"Error creating CGMP application: {str(e)}")
-                messages.error(request, "An error occurred. Please try again.")
+                logger.error(f"Error creating CGMP application: {e}")
+                messages.error(
+                    request, 
+                    "An error occurred while submitting your application. Please try again."
+                )
         else:
-            messages.error(request, "Please correct the errors below.")
+            # Form validation failed
+            logger.warning(f"CGMP form validation failed: {form.errors}")
+            messages.error(request, "Please correct the errors below and try again.")
     else:
-        form = CGMPForm()
+        form = CGMPForm(request=request)
     
-    return render(request, 'enrollments/cgmp_form.html', {'form': form})
+    context = {
+        'form': form,
+        'page_title': 'CGMP Registration',
+        'council_name': 'Council for General Ministry Professionals',
+        'council_abbreviation': 'CGMP',
+    }
+    
+    return render(request, 'enrollments/cgmp_form.html', context)
+
+def get_client_ip(request):
+    """Get client IP address"""
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
+
 
 @login_required
 @permission_required('enrollments.change_cgmpaffiliation', raise_exception=True)
