@@ -58,7 +58,7 @@ def get_client_ip(request):
     return request.META.get('REMOTE_ADDR')
 
 # Rate limiting decorator
-def rate_limit(max_requests=10, window=3600):
+def rate_limit(max_requests=50, window=3600):
     """Simple rate limiting decorator"""
     def decorator(view_func):
         def wrapper(request, *args, **kwargs):
@@ -329,15 +329,21 @@ def cgmp_create(request):
     Enhanced with professional error handling and proper redirects
     """
     if request.method == 'POST':
+        logger.info(f"CGMP form submitted. POST data keys: {list(request.POST.keys())}")
+        logger.info(f"FILES data keys: {list(request.FILES.keys())}")
+        
         form = CGMPForm(request.POST, request.FILES, request=request)
         
         if form.is_valid():
+            logger.info("CGMP form is valid, proceeding to save...")
             try:
                 # Save the affiliation
                 cgmp = form.save(commit=False)
                 if request.user.is_authenticated:
                     cgmp.created_user = request.user
                 cgmp.save()
+                
+                logger.info(f"CGMP application saved successfully: ID={cgmp.id}")
                 
                 # Create registration session for tracking
                 try:
@@ -350,11 +356,9 @@ def cgmp_create(request):
                         completed=True,
                         status='pending'
                     )
+                    logger.info(f"Registration session created: {session.id}")
                 except Exception as e:
                     logger.warning(f"Failed to create registration session: {e}")
-                
-                # Log successful creation
-                logger.info(f"CGMP application created: ID={cgmp.id}, Email={cgmp.email}")
                 
                 # Clear relevant caches
                 try:
@@ -373,17 +377,26 @@ def cgmp_create(request):
                     "You will receive a confirmation email shortly."
                 )
                 
-                return render(request, 'enrollments/application_success.html', {
-                    'application': cgmp,
-                    'council_type': 'CGMP',
-                    'next_steps': [
-                        'You will receive an email confirmation within 24 hours',
-                        'Review process typically takes 5-10 business days', 
-                        'We may contact you for additional information if needed',
-                        'You will be notified of the decision via email'
-                    ]
-                })
+                logger.info("About to render success page...")
                 
+                # Try redirect first, then render as fallback
+                try:
+                    return render(request, 'enrollments/application_success.html', {
+                        'application': cgmp,
+                        'council_type': 'CGMP',
+                        'next_steps': [
+                            'You will receive an email confirmation within 24 hours',
+                            'Review process typically takes 5-10 business days', 
+                            'We may contact you for additional information if needed',
+                            'You will be notified of the decision via email'
+                        ]
+                    })
+                except Exception as template_error:
+                    logger.error(f"Error rendering success template: {template_error}")
+                    # Fallback: redirect to a simple success page or show success message
+                    messages.success(request, "Application submitted successfully!")
+                    return redirect('enrollments:onboarding')  # or whatever your success URL is
+                    
             except ValidationError as e:
                 logger.warning(f"Validation error in CGMP application: {e}")
                 messages.error(request, f"Validation error: {e}")
@@ -394,9 +407,15 @@ def cgmp_create(request):
                     "An error occurred while submitting your application. Please try again."
                 )
         else:
-            # Form validation failed
-            logger.warning(f"CGMP form validation failed: {form.errors}")
+            # Form validation failed - LOG THE ERRORS
+            logger.warning(f"CGMP form validation failed. Errors: {form.errors}")
+            logger.warning(f"Non-field errors: {form.non_field_errors()}")
             messages.error(request, "Please correct the errors below and try again.")
+            
+            # Add form errors to context so they show up
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
     else:
         form = CGMPForm(request=request)
     

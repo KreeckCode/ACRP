@@ -1,287 +1,63 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ page_title|default:"CGMP Registration" }} - Professional Ministry Council</title>
-    
-    <!-- Modern CSS Framework -->
+    <title>{{ page_title|default:"CGMP Registration" }} - Council for General Ministry Professionals</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
-    <!-- Custom Tailwind Configuration -->
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: {
-                            50: '#eff6ff',
-                            100: '#dbeafe',
-                            500: '#3b82f6',
-                            600: '#2563eb',
-                            700: '#1d4ed8',
-                            900: '#1e3a8a'
-                        },
-                        accent: {
-                            50: '#f0f9ff',
-                            500: '#06b6d4',
-                            600: '#0891b2'
-                        }
-                    },
-                    fontFamily: {
-                        'sans': ['Inter', 'system-ui', 'sans-serif'],
-                        'display': ['Cal Sans', 'Inter', 'system-ui', 'sans-serif']
-                    },
-                    animation: {
-                        'fade-in': 'fadeIn 0.5s ease-in-out',
-                        'slide-up': 'slideUp 0.4s ease-out',
-                        'pulse-subtle': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                    }
-                }
-            }
-        }
-    </script>
-    
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Custom Styles -->
     <style>
-        /* Modern Glassmorphism Effects */
-        .glass-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 
-                0 25px 50px -12px rgba(0, 0, 0, 0.1),
-                0 0 0 1px rgba(255, 255, 255, 0.05);
-        }
-        
-        /* Modern Form Styling */
-        .form-input {
-            @apply w-full px-4 py-3 border border-gray-200 rounded-xl bg-white/50 backdrop-blur-sm
-                   focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-                   transition-all duration-200 placeholder-gray-400;
-        }
-        
-        .form-input:focus {
-            transform: translateY(-1px);
-            box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.1);
-        }
-        
-        .form-label {
-            @apply block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2;
-        }
-        
+        /* Form Section Styling */
         .form-section {
-            @apply opacity-0 translate-y-4 pointer-events-none absolute inset-0;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: none;
         }
         
         .form-section.active {
-            @apply opacity-100 translate-y-0 pointer-events-auto relative;
-        }
-        
-        /* Modern Button Styling */
-        .btn-primary {
-            @apply px-8 py-3 bg-gradient-to-r from-primary-600 to-primary-700 text-white
-                   rounded-xl font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5
-                   transition-all duration-200 flex items-center gap-2;
-        }
-        
-        .btn-secondary {
-            @apply px-8 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl font-medium
-                   shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200
-                   flex items-center gap-2;
-        }
-        
-        /* Progress Bar */
-        .progress-step {
-            @apply w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold
-                   transition-all duration-300 relative;
-        }
-        
-        .progress-step.completed {
-            @apply bg-primary-600 text-white shadow-lg;
-        }
-        
-        .progress-step.active {
-            @apply bg-primary-100 text-primary-700 ring-4 ring-primary-200;
-        }
-        
-        .progress-step.pending {
-            @apply bg-gray-100 text-gray-400;
-        }
-        
-        /* File Upload Area */
-        .file-upload-area {
-            @apply border-2 border-dashed border-gray-300 rounded-xl p-8 text-center
-                   hover:border-primary-400 hover:bg-primary-50/50 transition-all duration-300
-                   cursor-pointer relative overflow-hidden;
-        }
-        
-        .file-upload-area:hover {
-            transform: scale(1.02);
+            display: block;
         }
         
         /* Error States */
-        .form-input.error {
-            @apply border-red-300 ring-2 ring-red-100 bg-red-50/50;
+        .error {
+            border-color: #ef4444 !important;
         }
         
         .error-message {
-            @apply text-red-600 text-sm mt-1 flex items-center gap-1 animate-fade-in;
-        }
-        
-        /* Success States */
-        .form-input.success {
-            @apply border-green-300 ring-2 ring-green-100 bg-green-50/50;
-        }
-        
-        /* Modern Checkbox */
-        .modern-checkbox {
-            @apply h-5 w-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded
-                   transition-all duration-200;
-        }
-        
-        /* Background Pattern */
-        .bg-pattern {
-            background-image: 
-                radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.05) 0%, transparent 50%),
-                radial-gradient(circle at 75% 75%, rgba(6, 182, 212, 0.05) 0%, transparent 50%);
-        }
-        
-        /* Animations */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        @keyframes slideUp {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        
-        /* Loading Animation */
-        .loading-spinner {
-            @apply animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent;
-        }
-        
-        /* Modern Shadow */
-        .modern-shadow {
-            box-shadow: 
-                0 1px 3px 0 rgba(0, 0, 0, 0.1),
-                0 1px 2px 0 rgba(0, 0, 0, 0.06),
-                0 0 0 1px rgba(0, 0, 0, 0.05);
-        }
-        
-        /* Responsive Grid */
-        .responsive-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
-        }
-        
-        /* File Item */
-        .file-item {
-            @apply flex items-center justify-between p-4 bg-gray-50 rounded-lg border
-                   hover:bg-gray-100 transition-colors duration-200;
-        }
-        
-        /* Mobile optimizations */
-        @media (max-width: 640px) {
-            .glass-card {
-                margin: 1rem;
-                border-radius: 1rem;
-            }
-            
-            .form-input {
-                padding: 0.75rem 1rem;
-            }
-            
-            .btn-primary, .btn-secondary {
-                padding: 0.75rem 1.5rem;
-                font-size: 0.875rem;
-            }
+            color: #ef4444;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
         }
     </style>
 </head>
 
-<body class="min-h-screen bg-gradient-to-br from-gray-50 via-white to-primary-50 bg-pattern">
-    <!-- Modern Header -->
-    <header class="relative bg-white/80 backdrop-blur-md border-b border-white/20 sticky top-0 z-40">
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center py-4">
-                <div class="flex items-center space-x-4">
-                    <div class="w-12 h-12 bg-gradient-to-br from-primary-600 to-accent-600 rounded-xl flex items-center justify-center shadow-lg">
-                        <i class="fas fa-church text-white text-xl"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-xl font-bold text-gray-900">{{ council_name|default:"CGMP Registration" }}</h1>
-                        <p class="text-sm text-gray-600">Professional Ministry Council</p>
-                    </div>
+                <div class="flex items-center">
+                    <i class="fas fa-church text-2xl text-blue-600 mr-3"></i>
+                    <h1 class="text-xl font-semibold text-gray-900">CGMP Registration</h1>
                 </div>
-                <div class="hidden sm:flex items-center space-x-4">
-                    <span class="text-sm text-gray-500">Need help?</span>
-                    <a href="#" class="text-primary-600 hover:text-primary-700 text-sm font-medium">Contact Support</a>
+                <div class="text-sm text-gray-500">
+                    Council for General Ministry Professionals
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Progress Indicator -->
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Progress Bar -->
         <div class="mb-8">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-2xl font-bold text-gray-900">Application Progress</h2>
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-gray-700">Registration Progress</span>
                 <span class="text-sm text-gray-500" id="progress-text">Step 1 of 5</span>
             </div>
-            
-            <!-- Modern Progress Bar -->
-            <div class="flex items-center space-x-4 mb-4">
-                <div class="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div class="h-full bg-gradient-to-r from-primary-600 to-accent-600 rounded-full transition-all duration-500 ease-out" 
-                         id="progress-bar" style="width: 20%"></div>
-                </div>
-                <span class="text-sm font-medium text-gray-600" id="progress-percentage">20%</span>
-            </div>
-            
-            <!-- Step Indicators -->
-            <div class="flex justify-between items-center">
-                <div class="flex items-center space-x-8">
-                    <div class="flex flex-col items-center space-y-2">
-                        <div class="progress-step completed" id="step-1">
-                            <i class="fas fa-user text-xs"></i>
-                        </div>
-                        <span class="text-xs font-medium text-gray-600">Personal</span>
-                    </div>
-                    <div class="flex flex-col items-center space-y-2">
-                        <div class="progress-step pending" id="step-2">
-                            <i class="fas fa-address-book text-xs"></i>
-                        </div>
-                        <span class="text-xs font-medium text-gray-600">Contact</span>
-                    </div>
-                    <div class="flex flex-col items-center space-y-2">
-                        <div class="progress-step pending" id="step-3">
-                            <i class="fas fa-graduation-cap text-xs"></i>
-                        </div>
-                        <span class="text-xs font-medium text-gray-600">Education</span>
-                    </div>
-                    <div class="flex flex-col items-center space-y-2">
-                        <div class="progress-step pending" id="step-4">
-                            <i class="fas fa-cross text-xs"></i>
-                        </div>
-                        <span class="text-xs font-medium text-gray-600">Ministry</span>
-                    </div>
-                    <div class="flex flex-col items-center space-y-2">
-                        <div class="progress-step pending" id="step-5">
-                            <i class="fas fa-file-upload text-xs"></i>
-                        </div>
-                        <span class="text-xs font-medium text-gray-600">Documents</span>
-                    </div>
-                </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" id="progress-bar" style="width: 20%"></div>
             </div>
         </div>
 
@@ -289,7 +65,7 @@
         {% if messages %}
         <div class="mb-6 space-y-3">
             {% for message in messages %}
-            <div class="flex items-center p-4 rounded-xl border-l-4 {% if message.tags == 'error' %}bg-red-50 border-red-400 text-red-700{% elif message.tags == 'success' %}bg-green-50 border-green-400 text-green-700{% elif message.tags == 'warning' %}bg-yellow-50 border-yellow-400 text-yellow-700{% else %}bg-blue-50 border-blue-400 text-blue-700{% endif %} animate-fade-in">
+            <div class="flex items-center p-4 rounded-lg border-l-4 {% if message.tags == 'error' %}bg-red-50 border-red-400 text-red-700{% elif message.tags == 'success' %}bg-green-50 border-green-400 text-green-700{% elif message.tags == 'warning' %}bg-yellow-50 border-yellow-400 text-yellow-700{% else %}bg-blue-50 border-blue-400 text-blue-700{% endif %}">
                 <i class="fas {% if message.tags == 'error' %}fa-exclamation-triangle{% elif message.tags == 'success' %}fa-check-circle{% elif message.tags == 'warning' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %} mr-3"></i>
                 <span>{{ message }}</span>
             </div>
@@ -297,32 +73,27 @@
         </div>
         {% endif %}
 
-        <!-- Main Form Card -->
-        <div class="glass-card rounded-2xl overflow-hidden modern-shadow">
-            <form id="cgmp-form" method="post" enctype="multipart/form-data" novalidate class="relative">
+        <!-- Form Container -->
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <form id="cgmp-form" method="post" enctype="multipart/form-data" novalidate>
                 {% csrf_token %}
                 
                 <!-- Section 1: Personal Information -->
                 <div class="form-section active" id="section-1">
-                    <div class="bg-gradient-to-r from-primary-600 to-accent-600 p-8 text-white">
-                        <div class="flex items-center space-x-4">
-                            <div class="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center">
-                                <i class="fas fa-user text-2xl"></i>
-                            </div>
-                            <div>
-                                <h2 class="text-2xl font-bold">Personal Information</h2>
-                                <p class="text-primary-100 mt-1">Let's start with your basic details</p>
-                            </div>
+                    <div class="p-6 border-b border-gray-200">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-user text-blue-600 text-xl mr-3"></i>
+                            <h2 class="text-xl font-semibold text-gray-900">Personal Information</h2>
                         </div>
+                        <p class="text-gray-600 text-sm">Let's start with your basic details</p>
                     </div>
                     
-                    <div class="p-8 space-y-8">
+                    <div class="p-6 space-y-6">
                         <!-- Title, Gender, Initials Row -->
-                        <div class="responsive-grid">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div>
-                                <label class="form-label">
-                                    <i class="fas fa-address-card text-primary-600"></i>
-                                    Title *
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-address-card mr-2"></i>Title *
                                 </label>
                                 {{ form.title }}
                                 {% if form.title.errors %}
@@ -334,9 +105,8 @@
                             </div>
                             
                             <div>
-                                <label class="form-label">
-                                    <i class="fas fa-venus-mars text-primary-600"></i>
-                                    Gender *
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-venus-mars mr-2"></i>Gender *
                                 </label>
                                 {{ form.gender }}
                                 {% if form.gender.errors %}
@@ -348,9 +118,8 @@
                             </div>
                             
                             <div>
-                                <label class="form-label">
-                                    <i class="fas fa-signature text-primary-600"></i>
-                                    Initials *
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-signature mr-2"></i>Initials *
                                 </label>
                                 {{ form.initials }}
                                 {% if form.initials.errors %}
@@ -363,11 +132,10 @@
                         </div>
 
                         <!-- Names Row -->
-                        <div class="responsive-grid">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div>
-                                <label class="form-label">
-                                    <i class="fas fa-user text-primary-600"></i>
-                                    First Name *
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-user mr-2"></i>First Name *
                                 </label>
                                 {{ form.first_name }}
                                 {% if form.first_name.errors %}
@@ -379,9 +147,8 @@
                             </div>
                             
                             <div>
-                                <label class="form-label">
-                                    <i class="fas fa-user text-primary-600"></i>
-                                    Last Name *
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-user mr-2"></i>Last Name *
                                 </label>
                                 {{ form.last_name }}
                                 {% if form.last_name.errors %}
@@ -393,9 +160,8 @@
                             </div>
                             
                             <div>
-                                <label class="form-label">
-                                    <i class="fas fa-heart text-primary-600"></i>
-                                    Preferred Name
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-heart mr-2"></i>Preferred Name
                                 </label>
                                 {{ form.preferred_name }}
                                 <p class="text-xs text-gray-500 mt-1">How you'd like to be addressed</p>
@@ -403,11 +169,10 @@
                         </div>
 
                         <!-- ID and Birth Info -->
-                        <div class="responsive-grid">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div>
-                                <label class="form-label">
-                                    <i class="fas fa-id-card text-primary-600"></i>
-                                    ID Number *
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-id-card mr-2"></i>ID Number *
                                 </label>
                                 {{ form.id_number }}
                                 <p class="text-xs text-gray-500 mt-1">13-digit South African ID number</p>
@@ -420,18 +185,16 @@
                             </div>
                             
                             <div>
-                                <label class="form-label">
-                                    <i class="fas fa-passport text-primary-600"></i>
-                                    Passport Number
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-passport mr-2"></i>Passport Number
                                 </label>
                                 {{ form.passport_number }}
                                 <p class="text-xs text-gray-500 mt-1">For non-SA residents only</p>
                             </div>
                             
                             <div>
-                                <label class="form-label">
-                                    <i class="fas fa-calendar text-primary-600"></i>
-                                    Date of Birth *
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-calendar mr-2"></i>Date of Birth *
                                 </label>
                                 {{ form.date_of_birth }}
                                 {% if form.date_of_birth.errors %}
@@ -444,11 +207,10 @@
                         </div>
 
                         <!-- Additional Personal Info -->
-                        <div class="responsive-grid">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label class="form-label">
-                                    <i class="fas fa-users text-primary-600"></i>
-                                    Race *
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-users mr-2"></i>Race *
                                 </label>
                                 {{ form.race }}
                                 {% if form.race.errors %}
@@ -460,9 +222,8 @@
                             </div>
                             
                             <div>
-                                <label class="form-label">
-                                    <i class="fas fa-universal-access text-primary-600"></i>
-                                    Disability
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-universal-access mr-2"></i>Disability
                                 </label>
                                 {{ form.disability }}
                                 <p class="text-xs text-gray-500 mt-1">Please specify if applicable</p>
@@ -470,19 +231,17 @@
                         </div>
 
                         <!-- Languages -->
-                        <div class="responsive-grid">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label class="form-label">
-                                    <i class="fas fa-language text-primary-600"></i>
-                                    Home Language
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-language mr-2"></i>Home Language
                                 </label>
                                 {{ form.home_language }}
                             </div>
                             
                             <div>
-                                <label class="form-label">
-                                    <i class="fas fa-globe text-primary-600"></i>
-                                    Other Languages
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-globe mr-2"></i>Other Languages
                                 </label>
                                 {{ form.other_languages }}
                                 <p class="text-xs text-gray-500 mt-1">Separate multiple languages with commas</p>
@@ -491,9 +250,8 @@
 
                         <!-- Religious Affiliation -->
                         <div>
-                            <label class="form-label">
-                                <i class="fas fa-cross text-primary-600"></i>
-                                Religious Affiliation
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-cross mr-2"></i>Religious Affiliation
                             </label>
                             {{ form.religious_affiliation }}
                             <p class="text-xs text-gray-500 mt-1">Your denomination or religious background</p>
@@ -501,347 +259,784 @@
                     </div>
                 </div>
 
-                <!-- Additional sections would follow the same pattern -->
                 <!-- Section 2: Contact Information -->
-                <!-- Section 3: Education & Professional -->
-                <!-- Section 4: Ministry Information -->
-                <!-- Section 5: Documents & Legal -->
-
-                <!-- Navigation Footer -->
-                <div class="bg-gray-50 border-t border-gray-200 p-6 flex justify-between items-center">
-                    <button type="button" id="prev-btn" class="btn-secondary hidden">
-                        <i class="fas fa-chevron-left"></i>
-                        Previous
-                    </button>
+                <div class="form-section" id="section-2">
+                    <div class="p-6 border-b border-gray-200">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-address-book text-blue-600 text-xl mr-3"></i>
+                            <h2 class="text-xl font-semibold text-gray-900">Contact Information</h2>
+                        </div>
+                        <p class="text-gray-600 text-sm">How can we reach you?</p>
+                    </div>
                     
-                    <div class="flex space-x-4">
-                        <button type="button" id="next-btn" class="btn-primary">
-                            Next Step
-                            <i class="fas fa-chevron-right"></i>
+                    <div class="p-6 space-y-6">
+                        <!-- Email and Phone Numbers -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-envelope mr-2"></i>Email Address *
+                                </label>
+                                {{ form.email }}
+                                <p class="text-xs text-gray-500 mt-1">This will be your login email</p>
+                                {% if form.email.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        {{ form.email.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-mobile-alt mr-2"></i>Cell Phone *
+                                </label>
+                                {{ form.cell }}
+                                <p class="text-xs text-gray-500 mt-1">Primary contact number</p>
+                                {% if form.cell.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        {{ form.cell.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Additional Phone Numbers -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-phone mr-2"></i>Work Phone
+                                </label>
+                                {{ form.tel_work }}
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-home mr-2"></i>Home Phone
+                                </label>
+                                {{ form.tel_home }}
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-fax mr-2"></i>Fax Number
+                                </label>
+                                {{ form.fax }}
+                            </div>
+                        </div>
+
+                        <!-- Website -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-globe mr-2"></i>Website
+                            </label>
+                            {{ form.website }}
+                            <p class="text-xs text-gray-500 mt-1">Your personal or ministry website</p>
+                        </div>
+
+                        <!-- Address Information -->
+                        <div class="space-y-6">
+                            <h3 class="text-lg font-medium text-gray-900">Address Information</h3>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-home mr-2"></i>Street Address
+                                </label>
+                                {{ form.street_address }}
+                                <p class="text-xs text-gray-500 mt-1">Physical address</p>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-map-marker-alt mr-2"></i>Postal Address
+                                </label>
+                                {{ form.postal_address }}
+                                <p class="text-xs text-gray-500 mt-1">P.O. Box or postal address (leave blank if same as street address)</p>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fas fa-mail-bulk mr-2"></i>Postal Code
+                                    </label>
+                                    {{ form.postal_code }}
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fas fa-map mr-2"></i>Province
+                                    </label>
+                                    {{ form.province }}
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fas fa-flag mr-2"></i>Country
+                                    </label>
+                                    {{ form.country }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 3: Education & Professional -->
+                <div class="form-section" id="section-3">
+                    <div class="p-6 border-b border-gray-200">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-graduation-cap text-blue-600 text-xl mr-3"></i>
+                            <h2 class="text-xl font-semibold text-gray-900">Education & Professional</h2>
+                        </div>
+                        <p class="text-gray-600 text-sm">Your academic and professional background</p>
+                    </div>
+                    
+                    <div class="p-6 space-y-6">
+                        <!-- Educational Background -->
+                        <div class="space-y-6">
+                            <h3 class="text-lg font-medium text-gray-900">Educational Background</h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fas fa-certificate mr-2"></i>Highest Qualification *
+                                    </label>
+                                    {{ form.highest_qualification }}
+                                    <p class="text-xs text-gray-500 mt-1">Your highest academic qualification</p>
+                                    {% if form.highest_qualification.errors %}
+                                        <div class="error-message">
+                                            <i class="fas fa-exclamation-circle"></i>
+                                            {{ form.highest_qualification.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fas fa-calendar-alt mr-2"></i>Qualification Date *
+                                    </label>
+                                    {{ form.qualification_date }}
+                                    <p class="text-xs text-gray-500 mt-1">When you obtained this qualification</p>
+                                    {% if form.qualification_date.errors %}
+                                        <div class="error-message">
+                                            <i class="fas fa-exclamation-circle"></i>
+                                            {{ form.qualification_date.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-university mr-2"></i>Institution *
+                                </label>
+                                {{ form.qualification_institution }}
+                                <p class="text-xs text-gray-500 mt-1">Institution where you obtained your qualification</p>
+                                {% if form.qualification_institution.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        {{ form.qualification_institution.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Professional Information -->
+                        <div class="space-y-6">
+                            <h3 class="text-lg font-medium text-gray-900">Professional Information</h3>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-briefcase mr-2"></i>Current Occupation
+                                </label>
+                                {{ form.occupation }}
+                                <p class="text-xs text-gray-500 mt-1">Your current job title or occupation</p>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-clipboard-list mr-2"></i>Work Description
+                                </label>
+                                {{ form.work_description }}
+                                <p class="text-xs text-gray-500 mt-1">Describe your current work responsibilities and duties</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 4: Ministry Information -->
+                <div class="form-section" id="section-4">
+                    <div class="p-6 border-b border-gray-200">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-cross text-blue-600 text-xl mr-3"></i>
+                            <h2 class="text-xl font-semibold text-gray-900">Ministry Information</h2>
+                        </div>
+                        <p class="text-gray-600 text-sm">Your ministry experience and background</p>
+                    </div>
+                    
+                    <div class="p-6 space-y-6">
+                        <!-- Ministry Experience -->
+                        <div class="space-y-6">
+                            <h3 class="text-lg font-medium text-gray-900">Ministry Experience</h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fas fa-calendar mr-2"></i>Years in Ministry
+                                    </label>
+                                    {{ form.years_ministry }}
+                                    <p class="text-xs text-gray-500 mt-1">Total years of ministry experience</p>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fas fa-calendar-alt mr-2"></i>Additional Months
+                                    </label>
+                                    {{ form.months_ministry }}
+                                    <p class="text-xs text-gray-500 mt-1">Additional months (0-11)</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CGMP-Specific Ministry Fields -->
+                        <div class="space-y-6">
+                            <h3 class="text-lg font-medium text-gray-900">Ministry Details</h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fas fa-certificate mr-2"></i>Ordination Status
+                                    </label>
+                                    {{ form.ordination_status }}
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fas fa-calendar-check mr-2"></i>Ordination Date
+                                    </label>
+                                    {{ form.ordination_date }}
+                                    <p class="text-xs text-gray-500 mt-1">Required for ordained/licensed status</p>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-church mr-2"></i>Ordaining Body
+                                </label>
+                                {{ form.ordaining_body }}
+                                <p class="text-xs text-gray-500 mt-1">Organization that ordained/licensed you</p>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fas fa-user-tie mr-2"></i>Current Ministry Role
+                                    </label>
+                                    {{ form.current_ministry_role }}
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fas fa-home mr-2"></i>Congregation Name
+                                    </label>
+                                    {{ form.congregation_name }}
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-cross mr-2"></i>Denomination
+                                </label>
+                                {{ form.denomination }}
+                            </div>
+                        </div>
+
+                        <!-- Pastoral Involvement -->
+                        <div class="space-y-6">
+                            <h3 class="text-lg font-medium text-gray-900">Pastoral Involvement</h3>
+                            
+                            <div class="space-y-4">
+                                <div class="flex items-center">
+                                    {{ form.involved_pastoral }}
+                                    <label class="ml-3 text-sm text-gray-700">
+                                        I am involved in pastoral responsibilities
+                                    </label>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fas fa-clipboard-list mr-2"></i>Pastoral Responsibilities
+                                    </label>
+                                    {{ form.pastoral_responsibilities }}
+                                    <p class="text-xs text-gray-500 mt-1">Describe your pastoral duties if applicable</p>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fas fa-microphone mr-2"></i>Preaching Frequency
+                                    </label>
+                                    {{ form.preaching_frequency }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Background Checks -->
+                        <div class="space-y-6 border-t pt-6">
+                            <h3 class="text-lg font-medium text-gray-900">Background Information</h3>
+                            
+                            <div class="space-y-4">
+                                <div class="flex items-center">
+                                    {{ form.disciplinary_action }}
+                                    <label class="ml-3 text-sm text-gray-700">
+                                        I have been subject to disciplinary action by any religious organization
+                                    </label>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fas fa-info-circle mr-2"></i>Disciplinary Action Details
+                                    </label>
+                                    {{ form.disciplinary_description }}
+                                    <p class="text-xs text-gray-500 mt-1">Provide details if you answered yes above</p>
+                                </div>
+                                
+                                <div class="flex items-center pt-4">
+                                    {{ form.felony_conviction }}
+                                    <label class="ml-3 text-sm text-gray-700">
+                                        I have been convicted of a felony
+                                    </label>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fas fa-info-circle mr-2"></i>Felony Conviction Details
+                                    </label>
+                                    {{ form.felony_description }}
+                                    <p class="text-xs text-gray-500 mt-1">Provide details if you answered yes above</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 5: Documents & Legal -->
+                <div class="form-section" id="section-5">
+                    <div class="p-6 border-b border-gray-200">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-file-upload text-blue-600 text-xl mr-3"></i>
+                            <h2 class="text-xl font-semibold text-gray-900">Documents & Submission</h2>
+                        </div>
+                        <p class="text-gray-600 text-sm">Upload required documents and review your application</p>
+                    </div>
+                    
+                    <div class="p-6 space-y-6">
+                        <!-- Required Documents Info -->
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <h3 class="font-medium text-blue-900 mb-2">Required Documents</h3>
+                            <ul class="text-sm text-blue-800 space-y-1">
+                                <li><i class="fas fa-check mr-2"></i>Copy of ID Document</li>
+                                <li><i class="fas fa-check mr-2"></i>Highest Qualification Certificate</li>
+                                <li><i class="fas fa-check mr-2"></i>Ordination Certificate (if applicable)</li>
+                                <li><i class="fas fa-check mr-2"></i>Professional References</li>
+                                <li><i class="fas fa-check mr-2"></i>Police Clearance Certificate</li>
+                            </ul>
+                        </div>
+
+                        <!-- Document Upload Section -->
+                        <div class="space-y-6">
+                            <h3 class="text-lg font-medium text-gray-900">Upload Documents</h3>
+                            
+                            <!-- ID Document -->
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700">
+                                    <i class="fas fa-id-card mr-2"></i>ID Document / Passport *
+                                </label>
+                                <input type="file" 
+                                       name="id_document" 
+                                       accept=".pdf,.jpg,.jpeg,.png" 
+                                       required 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <p class="text-xs text-gray-500">Upload your ID document or passport (PDF, JPG, PNG - Max 10MB)</p>
+                            </div>
+
+                            <!-- Qualification Certificate -->
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700">
+                                    <i class="fas fa-certificate mr-2"></i>Highest Qualification Certificate *
+                                </label>
+                                <input type="file" 
+                                       name="qualification_certificate" 
+                                       accept=".pdf,.jpg,.jpeg,.png" 
+                                       required 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <p class="text-xs text-gray-500">Upload your highest qualification certificate (PDF, JPG, PNG - Max 10MB)</p>
+                            </div>
+
+                            <!-- Ordination Certificate -->
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700">
+                                    <i class="fas fa-scroll mr-2"></i>Ordination Certificate
+                                </label>
+                                <input type="file" 
+                                       name="ordination_certificate" 
+                                       accept=".pdf,.jpg,.jpeg,.png" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <p class="text-xs text-gray-500">Upload ordination certificate if ordained/licensed (PDF, JPG, PNG - Max 10MB)</p>
+                            </div>
+
+                            <!-- Additional Supporting Documents -->
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700">
+                                    <i class="fas fa-paperclip mr-2"></i>Additional Supporting Documents
+                                </label>
+                                <input type="file" 
+                                       name="supporting_documents" 
+                                       accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" 
+                                       multiple 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <p class="text-xs text-gray-500">Upload additional documents like references, CV, etc. (Multiple files allowed - Max 10MB each)</p>
+                            </div>
+                        </div>
+
+                        <!-- Legal Agreements -->
+                        <div class="space-y-6 border-t pt-6">
+                            <h3 class="text-lg font-medium text-gray-900">Legal Agreements</h3>
+                            
+                            <div class="space-y-4">
+                                <!-- POPIA Agreement -->
+                                <div class="bg-gray-50 rounded-lg p-4">
+                                    <div class="flex items-start">
+                                        {{ form.popi_act_accepted }}
+                                        <label class="ml-3 text-sm text-gray-700">
+                                            <span class="font-medium">Protection of Personal Information Act (POPIA) Agreement *</span>
+                                            <p class="mt-1">I consent to the collection, processing, and storage of my personal information in accordance with the Protection of Personal Information Act (POPIA). I understand that this information will be used for registration and professional development purposes only.</p>
+                                        </label>
+                                    </div>
+                                    {% if form.popi_act_accepted.errors %}
+                                        <div class="error-message mt-2">
+                                            <i class="fas fa-exclamation-circle"></i>
+                                            {{ form.popi_act_accepted.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Terms and Conditions -->
+                                <div class="bg-gray-50 rounded-lg p-4">
+                                    <div class="flex items-start">
+                                        {{ form.terms_accepted }}
+                                        <label class="ml-3 text-sm text-gray-700">
+                                            <span class="font-medium">Terms and Conditions Agreement *</span>
+                                            <p class="mt-1">I have read and agree to the <a href="#" class="text-blue-600 hover:underline">Terms and Conditions</a> of the Council for General Ministry Professionals. I understand my rights and responsibilities as a member.</p>
+                                        </label>
+                                    </div>
+                                    {% if form.terms_accepted.errors %}
+                                        <div class="error-message mt-2">
+                                            <i class="fas fa-exclamation-circle"></i>
+                                            {{ form.terms_accepted.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Information Accuracy -->
+                                <div class="bg-gray-50 rounded-lg p-4">
+                                    <div class="flex items-start">
+                                        {{ form.information_accurate }}
+                                        <label class="ml-3 text-sm text-gray-700">
+                                            <span class="font-medium">Information Accuracy Certification *</span>
+                                            <p class="mt-1">I certify that all information provided in this application is true, complete, and accurate to the best of my knowledge. I understand that providing false information may result in rejection of my application or termination of membership.</p>
+                                        </label>
+                                    </div>
+                                    {% if form.information_accurate.errors %}
+                                        <div class="error-message mt-2">
+                                            <i class="fas fa-exclamation-circle"></i>
+                                            {{ form.information_accurate.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Final Submission Notice -->
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <div class="flex items-start">
+                                <i class="fas fa-info-circle text-blue-600 mt-1 mr-3"></i>
+                                <div>
+                                    <h4 class="font-medium text-blue-900 mb-2">Before You Submit</h4>
+                                    <ul class="text-sm text-blue-800 space-y-1">
+                                        <li>• Review all sections for accuracy</li>
+                                        <li>• Ensure all required documents are uploaded</li>
+                                        <li>• Verify all legal agreements are accepted</li>
+                                        <li>• Once submitted, you cannot edit your application</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation Buttons -->
+                <div class="p-6 bg-gray-50 border-t flex justify-between">
+                    <button type="button" id="prev-btn" class="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 transition-colors hidden">
+                        <i class="fas fa-chevron-left mr-2"></i>Previous
+                    </button>
+                    <div class="flex space-x-3">
+                        <button type="button" id="next-btn" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                            Next <i class="fas fa-chevron-right ml-2"></i>
                         </button>
-                        
-                        <button type="submit" id="submit-btn" class="btn-primary bg-gradient-to-r from-green-600 to-green-700 hidden">
-                            <span class="submit-text">Submit Application</span>
+                        <button type="submit" id="submit-btn" class="px-6 py-2 bg-blue-700 text-white rounded-md hover:bg-blue-800 transition-colors hidden">
+                            <span class="submit-text">
+                                <i class="fas fa-paper-plane mr-2"></i>Submit Application
+                            </span>
                             <span class="loading-text hidden">
                                 <div class="loading-spinner"></div>
                                 Submitting...
                             </span>
-                            <i class="fas fa-paper-plane submit-icon"></i>
                         </button>
                     </div>
                 </div>
             </form>
         </div>
-
-        <!-- Help Section -->
-        <div class="mt-8 glass-card rounded-xl p-6">
-            <div class="flex items-start space-x-4">
-                <div class="w-12 h-12 bg-accent-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <i class="fas fa-question-circle text-accent-600 text-xl"></i>
-                </div>
-                <div>
-                    <h3 class="font-semibold text-gray-900 mb-2">Need Assistance?</h3>
-                    <p class="text-gray-600 text-sm mb-3">
-                        Our support team is here to help you complete your application successfully.
-                    </p>
-                    <div class="flex flex-wrap gap-4 text-sm">
-                        <a href="mailto:support@cgmp.org" class="flex items-center text-primary-600 hover:text-primary-700">
-                            <i class="fas fa-envelope mr-2"></i>
-                            Email Support
-                        </a>
-                        <a href="tel:+27123456789" class="flex items-center text-primary-600 hover:text-primary-700">
-                            <i class="fas fa-phone mr-2"></i>
-                            Call Us
-                        </a>
-                        <a href="#" class="flex items-center text-primary-600 hover:text-primary-700">
-                            <i class="fas fa-file-alt mr-2"></i>
-                            User Guide
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
+    </div>
 
     <!-- Loading Overlay -->
-    <div id="loading-overlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 hidden">
-        <div class="glass-card p-8 rounded-2xl text-center max-w-sm mx-4">
-            <div class="w-16 h-16 mx-auto mb-4 bg-primary-100 rounded-full flex items-center justify-center">
-                <div class="loading-spinner w-8 h-8 border-primary-600"></div>
+    <div id="loading-overlay" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white p-8 rounded-lg text-center max-w-sm mx-4">
+            <div class="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
+                <div class="loading-spinner w-8 h-8 border-blue-600"></div>
             </div>
             <h3 class="text-lg font-semibold text-gray-900 mb-2">Submitting Application</h3>
             <p class="text-gray-600 text-sm">Please don't close this window while we process your application...</p>
         </div>
     </div>
 
-    <!-- JavaScript -->
     <script>
-        // Professional form management
-        class ModernFormManager {
-            constructor() {
-                this.currentSection = 1;
-                this.totalSections = 5;
-                this.isSubmitting = false;
-                this.init();
+        // Modern form management matching CPSC style
+        let currentSection = 1;
+        const totalSections = 5;
+
+        function showSection(sectionNumber) {
+            console.log(`Switching to section ${sectionNumber}`);
+            
+            // Hide all sections
+            document.querySelectorAll('.form-section').forEach(section => {
+                section.classList.remove('active');
+                section.style.display = 'none';
+            });
+
+            // Show current section
+            const currentSectionEl = document.getElementById(`section-${sectionNumber}`);
+            if (currentSectionEl) {
+                currentSectionEl.style.display = 'block';
+                currentSectionEl.classList.add('active');
+                console.log(`Section ${sectionNumber} is now active`);
+            } else {
+                console.error(`Section ${sectionNumber} not found!`);
             }
 
-            init() {
-                this.setupEventListeners();
-                this.updateProgress();
-                this.setupValidation();
+            // Update progress
+            const progress = (sectionNumber / totalSections) * 100;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+            document.getElementById('progress-text').textContent = `Step ${sectionNumber} of ${totalSections}`;
+
+            // Update buttons
+            document.getElementById('prev-btn').classList.toggle('hidden', sectionNumber === 1);
+            document.getElementById('next-btn').classList.toggle('hidden', sectionNumber === totalSections);
+            document.getElementById('submit-btn').classList.toggle('hidden', sectionNumber !== totalSections);
+            
+            // Smooth scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function validateSection(sectionNumber) {
+            const section = document.getElementById(`section-${sectionNumber}`);
+            if (!section) {
+                console.error(`Section ${sectionNumber} not found for validation!`);
+                return false;
             }
+            
+            const requiredFields = section.querySelectorAll('[required]');
+            let isValid = true;
 
-            setupEventListeners() {
-                document.getElementById('next-btn')?.addEventListener('click', () => this.nextSection());
-                document.getElementById('prev-btn')?.addEventListener('click', () => this.prevSection());
-                document.getElementById('submit-btn')?.addEventListener('click', (e) => this.handleSubmit(e));
-                
-                // Real-time validation
-                document.querySelectorAll('input, select, textarea').forEach(field => {
-                    field.addEventListener('blur', () => this.validateField(field));
-                    field.addEventListener('input', () => this.clearFieldError(field));
-                });
-            }
-
-            setupValidation() {
-                // Add modern validation styles
-                document.querySelectorAll('.form-input').forEach(input => {
-                    input.addEventListener('focus', () => {
-                        input.classList.add('ring-2', 'ring-primary-200');
-                    });
-                    
-                    input.addEventListener('blur', () => {
-                        input.classList.remove('ring-2', 'ring-primary-200');
-                    });
-                });
-            }
-
-            validateField(field) {
-                const value = field.value.trim();
-                let isValid = true;
-
+            requiredFields.forEach(field => {
                 // Clear previous errors
-                this.clearFieldError(field);
+                field.classList.remove('error', 'border-red-500');
+                const existingError = field.parentElement.querySelector('.error-message');
+                if (existingError) existingError.remove();
 
-                // Required field validation
-                if (field.required && !value) {
-                    this.showFieldError(field, 'This field is required');
+                // Validate based on field type
+                let fieldValid = true;
+                if (field.type === 'file') {
+                    fieldValid = field.files && field.files.length > 0;
+                } else {
+                    fieldValid = field.value.trim() !== '';
+                }
+
+                if (!fieldValid) {
+                    field.classList.add('error', 'border-red-500');
+                    
+                    // Add error message
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'error-message';
+                    errorDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i>This field is required';
+                    field.parentElement.appendChild(errorDiv);
+                    
                     isValid = false;
+                } else {
+                    field.classList.remove('border-red-500');
                 }
+            });
 
-                // Email validation
-                if (field.type === 'email' && value) {
-                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                    if (!emailRegex.test(value)) {
-                        this.showFieldError(field, 'Please enter a valid email address');
-                        isValid = false;
-                    }
+            return isValid;
+        }
+
+        function validateField(field) {
+            // Real-time validation for individual fields
+            field.classList.remove('error', 'border-red-500');
+            const existingError = field.parentElement.querySelector('.error-message');
+            if (existingError) existingError.remove();
+
+            let isValid = true;
+            const value = field.value.trim();
+
+            // Required field validation
+            if (field.required) {
+                if (field.type === 'file') {
+                    isValid = field.files && field.files.length > 0;
+                } else {
+                    isValid = value !== '';
                 }
-
-                // ID number validation
-                if (field.name === 'id_number' && value) {
-                    if (!/^\d{13}$/.test(value)) {
-                        this.showFieldError(field, 'ID number must be exactly 13 digits');
-                        isValid = false;
-                    }
-                }
-
-                return isValid;
             }
 
-            showFieldError(field, message) {
-                field.classList.add('error');
-                
+            // Email validation
+            if (field.type === 'email' && value) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                isValid = emailRegex.test(value);
+            }
+
+            // ID number validation
+            if (field.name === 'id_number' && value) {
+                isValid = /^\d{13}$/.test(value);
+            }
+
+            // File size validation
+            if (field.type === 'file' && field.files) {
+                Array.from(field.files).forEach(file => {
+                    if (file.size > 10 * 1024 * 1024) { // 10MB
+                        isValid = false;
+                    }
+                });
+            }
+
+            if (!isValid && field.required) {
+                field.classList.add('error', 'border-red-500');
                 const errorDiv = document.createElement('div');
                 errorDiv.className = 'error-message';
-                errorDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i>${message}`;
-                
+                errorDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i>Please check this field';
                 field.parentElement.appendChild(errorDiv);
             }
 
-            clearFieldError(field) {
-                field.classList.remove('error');
-                const errorDiv = field.parentElement.querySelector('.error-message');
-                if (errorDiv) errorDiv.remove();
-            }
+            return isValid;
+        }
 
-            nextSection() {
-                if (this.validateCurrentSection()) {
-                    if (this.currentSection < this.totalSections) {
-                        this.currentSection++;
-                        this.showSection(this.currentSection);
-                    }
-                }
-            }
-
-            prevSection() {
-                if (this.currentSection > 1) {
-                    this.currentSection--;
-                    this.showSection(this.currentSection);
-                }
-            }
-
-            showSection(sectionNumber) {
-                // Hide all sections
-                document.querySelectorAll('.form-section').forEach(section => {
-                    section.classList.remove('active');
-                });
-
-                // Show current section
-                const currentSection = document.getElementById(`section-${sectionNumber}`);
-                if (currentSection) {
-                    setTimeout(() => {
-                        currentSection.classList.add('active');
-                    }, 150);
-                }
-
-                this.updateProgress();
-                this.updateNavigation();
-                
-                // Smooth scroll to top
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-
-            updateProgress() {
-                const percentage = (this.currentSection / this.totalSections) * 100;
-                
-                // Update progress bar
-                const progressBar = document.getElementById('progress-bar');
-                const progressText = document.getElementById('progress-text');
-                const progressPercentage = document.getElementById('progress-percentage');
-                
-                if (progressBar) progressBar.style.width = `${percentage}%`;
-                if (progressText) progressText.textContent = `Step ${this.currentSection} of ${this.totalSections}`;
-                if (progressPercentage) progressPercentage.textContent = `${Math.round(percentage)}%`;
-
-                // Update step indicators
-                for (let i = 1; i <= this.totalSections; i++) {
-                    const step = document.getElementById(`step-${i}`);
-                    if (step) {
-                        step.className = 'progress-step ';
-                        if (i < this.currentSection) {
-                            step.className += 'completed';
-                        } else if (i === this.currentSection) {
-                            step.className += 'active';
-                        } else {
-                            step.className += 'pending';
-                        }
-                    }
-                }
-            }
-
-            updateNavigation() {
-                const prevBtn = document.getElementById('prev-btn');
-                const nextBtn = document.getElementById('next-btn');
-                const submitBtn = document.getElementById('submit-btn');
-
-                if (prevBtn) {
-                    prevBtn.classList.toggle('hidden', this.currentSection === 1);
-                }
-
-                if (nextBtn && submitBtn) {
-                    const isLastSection = this.currentSection === this.totalSections;
-                    nextBtn.classList.toggle('hidden', isLastSection);
-                    submitBtn.classList.toggle('hidden', !isLastSection);
-                }
-            }
-
-            validateCurrentSection() {
-                const currentSectionEl = document.getElementById(`section-${this.currentSection}`);
-                const fields = currentSectionEl.querySelectorAll('input[required], select[required], textarea[required]');
-                let isValid = true;
-
-                fields.forEach(field => {
-                    if (!this.validateField(field)) {
-                        isValid = false;
-                    }
-                });
-
-                return isValid;
-            }
-
-            handleSubmit(e) {
-                e.preventDefault();
-                
-                if (this.isSubmitting) return;
-
-                // Validate all sections
-                let allValid = true;
-                for (let i = 1; i <= this.totalSections; i++) {
-                    const section = document.getElementById(`section-${i}`);
-                    const fields = section.querySelectorAll('input[required], select[required], textarea[required]');
+        function setupConditionalFields() {
+            // Show/hide ordination fields based on status
+            const ordinationStatus = document.querySelector('[name="ordination_status"]');
+            if (ordinationStatus) {
+                ordinationStatus.addEventListener('change', (e) => {
+                    const requiresOrdination = ['ordained', 'licensed'].includes(e.target.value);
+                    const ordinationDate = document.querySelector('[name="ordination_date"]');
+                    const ordinatingBody = document.querySelector('[name="ordaining_body"]');
+                    const ordinationCert = document.querySelector('[name="ordination_certificate"]');
                     
-                    fields.forEach(field => {
-                        if (!this.validateField(field)) {
-                            allValid = false;
-                        }
-                    });
-                }
+                    if (ordinationDate) ordinationDate.required = requiresOrdination;
+                    if (ordinatingBody) ordinatingBody.required = requiresOrdination;
+                    if (ordinationCert) ordinationCert.required = requiresOrdination;
+                });
+            }
 
-                if (!allValid) {
-                    this.showNotification('Please correct all errors before submitting', 'error');
-                    return;
-                }
+            // Show/hide disciplinary description
+            const disciplinaryAction = document.querySelector('[name="disciplinary_action"]');
+            if (disciplinaryAction) {
+                disciplinaryAction.addEventListener('change', (e) => {
+                    const description = document.querySelector('[name="disciplinary_description"]');
+                    if (description) description.required = e.target.checked;
+                });
+            }
 
-                if (confirm('Are you sure you want to submit your application? You will not be able to edit it afterwards.')) {
-                    this.submitForm();
+            // Show/hide felony description
+            const felonyConviction = document.querySelector('[name="felony_conviction"]');
+            if (felonyConviction) {
+                felonyConviction.addEventListener('change', (e) => {
+                    const description = document.querySelector('[name="felony_description"]');
+                    if (description) description.required = e.target.checked;
+                });
+            }
+        }
+
+        function handleSubmit(e) {
+            e.preventDefault();
+
+            // Final validation of all sections
+            let allValid = true;
+            for (let i = 1; i <= totalSections; i++) {
+                if (!validateSection(i)) {
+                    allValid = false;
                 }
             }
 
-            submitForm() {
-                this.isSubmitting = true;
-                
+            if (!allValid) {
+                alert('Please correct all errors before submitting.');
+                return;
+            }
+
+            if (confirm('Are you sure you want to submit your application? You will not be able to edit it afterwards.')) {
                 // Show loading state
                 document.getElementById('loading-overlay').classList.remove('hidden');
                 
                 const submitBtn = document.getElementById('submit-btn');
                 const submitText = submitBtn.querySelector('.submit-text');
                 const loadingText = submitBtn.querySelector('.loading-text');
-                const submitIcon = submitBtn.querySelector('.submit-icon');
                 
-                submitText.classList.add('hidden');
-                loadingText.classList.remove('hidden');
-                submitIcon.classList.add('hidden');
+                if (submitText) submitText.classList.add('hidden');
+                if (loadingText) loadingText.classList.remove('hidden');
                 submitBtn.disabled = true;
 
                 // Submit the form
                 document.getElementById('cgmp-form').submit();
             }
-
-            showNotification(message, type = 'info') {
-                // Create notification
-                const notification = document.createElement('div');
-                notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 max-w-sm transform translate-x-full transition-transform duration-300 ${
-                    type === 'error' ? 'bg-red-500 text-white' : 
-                    type === 'success' ? 'bg-green-500 text-white' : 
-                    'bg-blue-500 text-white'
-                }`;
-                
-                notification.innerHTML = `
-                    <div class="flex items-center space-x-3">
-                        <i class="fas ${type === 'error' ? 'fa-exclamation-triangle' : type === 'success' ? 'fa-check-circle' : 'fa-info-circle'}"></i>
-                        <span>${message}</span>
-                    </div>
-                `;
-                
-                document.body.appendChild(notification);
-                
-                // Show notification
-                setTimeout(() => {
-                    notification.classList.remove('translate-x-full');
-                }, 100);
-                
-                // Hide notification after 5 seconds
-                setTimeout(() => {
-                    notification.classList.add('translate-x-full');
-                    setTimeout(() => notification.remove(), 300);
-                }, 5000);
-            }
         }
 
-        // Initialize form manager when DOM is loaded
+        // Event listeners
+        document.getElementById('next-btn').addEventListener('click', () => {
+            if (validateSection(currentSection)) {
+                if (currentSection < totalSections) {
+                    currentSection++;
+                    showSection(currentSection);
+                }
+            } else {
+                alert('Please fill in all required fields before proceeding.');
+            }
+        });
+
+        document.getElementById('prev-btn').addEventListener('click', () => {
+            if (currentSection > 1) {
+                currentSection--;
+                showSection(currentSection);
+            }
+        });
+
+        document.getElementById('submit-btn').addEventListener('click', handleSubmit);
+
+        // Real-time validation for all fields
         document.addEventListener('DOMContentLoaded', () => {
-            new ModernFormManager();
+            // Initialize
+            showSection(1);
+            setupConditionalFields();
+
+            // Add real-time validation
+            document.querySelectorAll('input, select, textarea').forEach(field => {
+                field.addEventListener('blur', () => validateField(field));
+                field.addEventListener('change', () => validateField(field));
+            });
         });
     </script>
 </body>
