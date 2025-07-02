@@ -370,32 +370,19 @@ def cgmp_create(request):
                 except Exception as e:
                     logger.warning(f"Cache clearing failed: {e}")
                 
-                # Success message and redirect to PUBLIC success page
+                # Success message and redirect to dashboard
                 messages.success(
                     request, 
                     "Your CGMP application has been submitted successfully! "
                     "You will receive a confirmation email shortly."
                 )
-                
-                logger.info("About to render success page...")
-                
-                # Try redirect first, then render as fallback
-                try:
-                    return render(request, 'enrollments/application_success.html', {
-                        'application': cgmp,
-                        'council_type': 'CGMP',
-                        'next_steps': [
-                            'You will receive an email confirmation within 24 hours',
-                            'Review process typically takes 5-10 business days', 
-                            'We may contact you for additional information if needed',
-                            'You will be notified of the decision via email'
-                        ]
-                    })
-                except Exception as template_error:
-                    logger.error(f"Error rendering success template: {template_error}")
-                    # Fallback: redirect to a simple success page or show success message
-                    messages.success(request, "Application submitted successfully!")
-                    return redirect('enrollments:onboarding')  # or whatever your success URL is
+
+                logger.info("Redirecting to application dashboard...")
+
+                # Redirect to the new dashboard
+                return redirect('enrollments:application_dashboard', 
+                                council_type='cgmp', 
+                                application_id=cgmp.id)
                     
             except ValidationError as e:
                 logger.warning(f"Validation error in CGMP application: {e}")
@@ -438,6 +425,7 @@ def get_client_ip(request):
     else:
         ip = request.META.get('REMOTE_ADDR')
     return ip
+
 
 
 @login_required
@@ -841,4 +829,104 @@ def cmtp_delete(request, pk):
     return render(request, 'enrollments/confirm_delete.html', {
         'object': cmtp,
         'object_type': 'CMTP Application'
+    })
+
+
+def application_dashboard(request, council_type, application_id):
+    """
+    Display application dashboard showing status and details
+    Works for all council types (CGMP, CPSC, CMTP)
+    """
+    # Map council types to their respective models
+    model_map = {
+        'cgmp': CGMPAffiliation,
+        'cpsc': CPSCAffiliation, 
+        'cmtp': CMTPAffiliation
+    }
+    
+    # Get the appropriate model
+    model = model_map.get(council_type.lower())
+    if not model:
+        raise Http404("Invalid council type")
+    
+    # Get the application or 404
+    try:
+        application = get_object_or_404(model, pk=application_id)
+    except Exception:
+        raise Http404("Application not found")
+    
+    # Check if user has permission to view this application
+    # Allow if user is the creator, admin, or the email matches
+    user_can_view = (
+        request.user.is_authenticated and (
+            application.created_user == request.user or
+            application.email == request.user.email or
+            request.user.acrp_role in {User.ACRPRole.GLOBAL_SDP, User.ACRPRole.PROVIDER_ADMIN}
+        )
+    ) or not request.user.is_authenticated  # Allow anonymous access for immediate post-submission
+    
+    if not user_can_view:
+        return HttpResponseForbidden("You don't have permission to view this application")
+    
+    # Determine if this is a new user (created in last 10 minutes)
+    is_new_user = False
+    if request.user.is_authenticated:
+        is_new_user = (timezone.now() - request.user.date_joined).total_seconds() < 600
+    
+    # Get council display names
+    council_display_names = {
+        'cgmp': 'Council for General Ministry Professionals',
+        'cpsc': 'Council for Pastoral & Spiritual Care', 
+        'cmtp': 'Council for Ministry Training Providers'
+    }
+    
+    context = {
+        'application': application,
+        'council_type': council_display_names.get(council_type.lower(), council_type.upper()),
+        'council_abbreviation': council_type.upper(),
+        'is_new_user': is_new_user,
+        'page_title': f'{council_type.upper()} Application Dashboard'
+    }
+    
+    return render(request, 'enrollments/application_dashboard.html', context)
+
+
+
+@login_required
+@user_passes_test(can_approve_applications, login_url='/', redirect_field_name=None)
+@require_http_methods(["GET", "POST"])
+@transaction.atomic
+def reject_application(request, model_type, pk):
+    """Universal application rejection handler"""
+    model_map = {
+        'cgmp': CGMPAffiliation,
+        'cpsc': CPSCAffiliation,
+        'cmtp': CMTPAffiliation
+    }
+    
+    model = model_map.get(model_type)
+    if not model:
+        raise Http404("Invalid application type")
+    
+    application = get_object_or_404(model, pk=pk)
+    
+    if request.method == 'POST':
+        rejection_reason = request.POST.get('rejection_reason', '')
+        
+        # Mark as rejected
+        application.approved = False
+        application.rejected_at = timezone.now()
+        application.rejected_by = request.user
+        application.rejection_reason = rejection_reason
+        application.save(update_fields=['approved', 'rejected_at', 'rejected_by', 'rejection_reason'])
+        
+        # Send rejection email (implement as needed)
+        # send_rejection_email(application, rejection_reason)
+        
+        messages.success(request, f"{model_type.upper()} application rejected.")
+        return redirect(f'enrollments:{model_type}_list')
+    
+    return render(request, 'enrollments/confirm_reject.html', {
+        'object': application,
+        'model_type': model_type.upper()
     })

@@ -136,6 +136,18 @@ class BaseAffiliation(models.Model):
         default=False,
         help_text=_("Certification that all information provided is true and accurate")
     )
+
+    # Add these fields to your models.py BaseAffiliation class
+    rejected_at = models.DateTimeField(null=True, blank=True, editable=False)
+    rejected_by = models.ForeignKey(
+        User, 
+        null=True, 
+        blank=True, 
+        on_delete=models.SET_NULL, 
+        related_name='%(class)s_rejected_by',
+        editable=False
+    )
+    rejection_reason = models.TextField(blank=True, help_text="Reason for rejection")
     
     # Generic relation to documents
     documents = GenericRelation('Document')

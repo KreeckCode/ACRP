@@ -8,6 +8,10 @@ urlpatterns = [
     path('', views.onboarding, name='onboarding'),
     path('onboarding/', views.onboarding, name='onboarding_alt'),
     path('onboarding/student/', views.learner_apply_prompt, name='learner_apply_prompt'),
+    # Add this to your existing urlpatterns
+    path('application-dashboard/<str:council_type>/<int:application_id>/', 
+     views.application_dashboard, 
+     name='application_dashboard'),
     
     # Administrative dashboard
     path('dashboard/', views.enrollment_dashboard, name='dashboard'),
