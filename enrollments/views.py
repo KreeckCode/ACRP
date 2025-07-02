@@ -409,6 +409,8 @@ def cgmp_create(request):
     
     return render(request, 'enrollments/cgmp_form.html', context)
 
+
+
 def get_client_ip(request):
     """Get client IP address"""
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
