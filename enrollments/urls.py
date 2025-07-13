@@ -1,44 +1,100 @@
+# enrollments/urls.py - Complete URL configuration for new onboarding system
+
 from django.urls import path
+from django.shortcuts import redirect
 from . import views
 
-app_name = "enrollments"
+app_name = 'enrollments'
 
 urlpatterns = [
-    # Onboarding and main entry points
-    path('', views.onboarding, name='onboarding'),
-    path('onboarding/', views.onboarding, name='onboarding_alt'),
-    path('onboarding/student/', views.learner_apply_prompt, name='learner_apply_prompt'),
-    # Add this to your existing urlpatterns
-    path('application-dashboard/<str:council_type>/<int:application_id>/', 
-     views.application_dashboard, 
-     name='application_dashboard'),
+    # ============================================================================
+    # ONBOARDING FLOW URLS - New multi-step process
+    # ============================================================================
     
-    # Administrative dashboard
-    path('dashboard/', views.enrollment_dashboard, name='dashboard'),
-    path('dash/', views.enrollment_dash, name='dash'),
+    # Step 1: Select affiliation type (Associated, Designated, Student)
+    path('onboarding/', views.onboarding_start, name='onboarding_start'),
     
-    # CGMP Council URLs - Full CRUD
-    path('cgmp/', views.cgmp_list, name='cgmp_list'),
-    path('cgmp/new/', views.cgmp_create, name='cgmp_create'),
-    path('cgmp/<int:pk>/', views.cgmp_detail, name='cgmp_detail'),
-    path('cgmp/<int:pk>/edit/', views.cgmp_update, name='cgmp_update'),
-    path('cgmp/<int:pk>/delete/', views.cgmp_delete, name='cgmp_delete'),
+    # Step 2: Select council (CGMP, CPSC, CMTP)
+    path('onboarding/council/<uuid:session_id>/', views.onboarding_council, name='onboarding_council'),
     
-    # CPSC Council URLs - Full CRUD  
-    path('cpsc/', views.cpsc_list, name='cpsc_list'),
-    path('cpsc/new/', views.cpsc_create, name='cpsc_create'),
-    path('cpsc/<int:pk>/', views.cpsc_detail, name='cpsc_detail'),
-    path('cpsc/<int:pk>/edit/', views.cpsc_update, name='cpsc_update'),
-    path('cpsc/<int:pk>/delete/', views.cpsc_delete, name='cpsc_delete'),
+    # Step 3: Select designation category (only for designated affiliations)
+    path('onboarding/category/<uuid:session_id>/', views.onboarding_category, name='onboarding_category'),
     
-    # CMTP Council URLs - Full CRUD
-    path('cmtp/', views.cmtp_list, name='cmtp_list'),
-    path('cmtp/new/', views.cmtp_create, name='cmtp_create'),
-    path('cmtp/<int:pk>/', views.cmtp_detail, name='cmtp_detail'),
-    path('cmtp/<int:pk>/edit/', views.cmtp_update, name='cmtp_update'),
-    path('cmtp/<int:pk>/delete/', views.cmtp_delete, name='cmtp_delete'),
+    # Step 4: Select subcategory (only for CPSC designated affiliations)
+    path('onboarding/subcategory/<uuid:session_id>/', views.onboarding_subcategory, name='onboarding_subcategory'),
     
-    # Universal approval/rejection URLs
-    path('<str:model_type>/<int:pk>/approve/', views.approve_application, name='approve_application'),
-    path('<str:model_type>/<int:pk>/reject/', views.reject_application, name='reject_application'),
+    # ============================================================================
+    # APPLICATION CREATION AND MANAGEMENT
+    # ============================================================================
+    
+    # Create application based on onboarding session
+    path('application/create/<uuid:session_id>/', views.application_create, name='application_create'),
+    
+    # Application detail views (unified for all types: associated, designated, student)
+    path('application/<int:pk>/<str:app_type>/', views.application_detail, name='application_detail'),
+    
+    # Application update views
+    path('application/<int:pk>/<str:app_type>/update/', views.application_update, name='application_update'),
+    
+    # Application list and search (admin view)
+    path('applications/', views.application_list, name='application_list'),
+    
+    # ============================================================================
+    # DASHBOARD URLS
+    # ============================================================================
+    
+    # Admin enrollment dashboard
+    path('dashboard/', views.enrollment_dashboard, name='enrollment_dashboard'),
+    
+    # Public application dashboard (shows status to applicants)
+    path('dashboard/<int:pk>/<str:app_type>/', views.application_dashboard, name='application_dashboard'),
+    
+    # ============================================================================
+    # APPLICATION REVIEW AND APPROVAL URLS
+    # ============================================================================
+    
+    # Application review (for admin users)
+    path('application/<int:pk>/<str:app_type>/review/', views.application_review, name='application_review'),
+    
+    # ============================================================================
+    # AJAX ENDPOINTS FOR DYNAMIC FUNCTIONALITY
+    # ============================================================================
+    
+    # Dynamic subcategory loading (for category selection)
+    path('ajax/subcategories/', views.get_subcategories_ajax, name='get_subcategories_ajax'),
+    
+    # Application status checking (for real-time updates)
+    path('ajax/status/<int:pk>/<str:app_type>/', views.application_status_ajax, name='application_status_ajax'),
+    
+    # ============================================================================
+    # UTILITY AND LEGACY URLS
+    # ============================================================================
+    
+    # Student application prompt (for token-based applications)
+    path('learner-apply-prompt/', views.learner_apply_prompt, name='learner_apply_prompt'),
+    
+    # ============================================================================
+    # LEGACY COMPATIBILITY URLS - Redirect to new flow
+    # ============================================================================
+    
+    # Old onboarding URL (redirect to new flow)
+    path('onboarding-old/', views.onboarding, name='onboarding_legacy'),
+    
+    # Legacy council-specific creation URLs (redirect to new onboarding)
+    path('cgmp/create/', lambda request: redirect('enrollments:onboarding_start'), name='cgmp_create_legacy'),
+    path('cpsc/create/', lambda request: redirect('enrollments:onboarding_start'), name='cpsc_create_legacy'), 
+    path('cmtp/create/', lambda request: redirect('enrollments:onboarding_start'), name='cmtp_create_legacy'),
+    
+    # Legacy list views (redirect to unified application list)
+    path('cgmp/', lambda request: redirect('enrollments:application_list'), name='cgmp_list_legacy'),
+    path('cpsc/', lambda request: redirect('enrollments:application_list'), name='cpsc_list_legacy'),
+    path('cmtp/', lambda request: redirect('enrollments:application_list'), name='cmtp_list_legacy'),
+    
+    # ============================================================================
+    # ADMIN SHORTCUTS (Optional - for easier admin navigation)
+    # ============================================================================
+    
+    # Quick links for admin users
+    path('admin-dashboard/', views.enrollment_dashboard, name='admin_dashboard'),
+    path('all-applications/', views.application_list, name='all_applications'),
 ]

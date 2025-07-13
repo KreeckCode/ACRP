@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  
+  <!-- Title -->
+  <title>Join ACRP - Select Affiliation Type</title>
+  
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Choose your ACRP affiliation type - Associated, Designated, or Student membership for ministry professionals.">
+  <meta name="keywords" content="ACRP, Ministry Professionals, Affiliation, Associated, Designated, Student">
+  <meta name="author" content="ACRP Africa Team">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@300;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .fade-in { animation: fadeIn 0.6s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    
+    .slide-in { animation: slideIn 0.4s ease-out; }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+    
+    .affiliation-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+    .affiliation-card { transition: all 0.3s ease; }
+    
+    .card-selected {
+      border-color: #3b82f6 !important;
+      background-color: #eff6ff !important;
+    }
+    
+    .card-selected-blue {
+      border-color: #3b82f6 !important;
+      background-color: #eff6ff !important;
+    }
+    
+    .card-selected-green {
+      border-color: #10b981 !important;
+      background-color: #f0fdf4 !important;
+    }
+    
+    .card-selected-purple {
+      border-color: #8b5cf6 !important;
+      background-color: #faf5ff !important;
+    }
+    
+    @media (max-width: 976px) {
+      body { margin: 0; padding: 0; }
+      .container { margin: 1rem; }
+    }
+  </style>
+</head>
+
+<body class="bg-gradient-to-br from-blue-50 via-white to-purple-50 min-h-screen">
+  
+  <!-- Step 1: Affiliation Type Selection -->
+  <div class="min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-4xl mx-auto">
+      
+      <!-- Header -->
+      <div class="text-center mb-12 fade-in">
+        <div class="w-20 h-20 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
+          <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+          </svg>
+        </div>
+        <h1 class="text-5xl font-bold text-gray-800 mb-4">Welcome to ACRP</h1>
+        <p class="text-xl text-gray-600 max-w-3xl mx-auto">Choose the affiliation type that best describes your ministry involvement and professional goals</p>
+        
+        <!-- Progress Indicator -->
+        <div class="flex justify-center mt-8 mb-4">
+          <div class="flex items-center space-x-2">
+            <div class="w-3 h-3 bg-blue-600 rounded-full"></div>
+            <div class="w-8 h-1 bg-gray-300 rounded"></div>
+            <div class="w-3 h-3 bg-gray-300 rounded-full"></div>
+            <div class="w-8 h-1 bg-gray-300 rounded"></div>
+            <div class="w-3 h-3 bg-gray-300 rounded-full"></div>
+            <div class="w-8 h-1 bg-gray-300 rounded"></div>
+            <div class="w-3 h-3 bg-gray-300 rounded-full"></div>
+          </div>
+        </div>
+        <p class="text-sm text-gray-500">Step 1 of up to 4</p>
+      </div>
+      
+      <!-- Form -->
+      <form method="post" class="max-w-5xl mx-auto" id="affiliationForm">
+        {% csrf_token %}
+        
+        <div class="grid md:grid-cols-3 gap-8 mb-12">
+          
+          <!-- Associated Affiliation -->
+          <div class="affiliation-card cursor-pointer" data-value="associated" onclick="selectCard(this, 'associated')">
+            <input type="radio" name="affiliation_type" value="associated" class="hidden" id="associated" required>
+            <div class="bg-white rounded-2xl shadow-lg p-8 border-2 border-gray-200 transition-all duration-300 h-full slide-in" style="animation-delay: 0.1s">
+              <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                  </svg>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-3">Associated Affiliation</h3>
+                <div class="w-12 h-1 bg-blue-600 mx-auto mb-4"></div>
+              </div>
+              
+              <div class="space-y-4 text-left">
+                <p class="text-gray-700 leading-relaxed">
+                  For persons who are informally or non-professionally involved in ministry, who want to be associated with the professional body.
+                </p>
+                
+                <div class="bg-blue-50 p-4 rounded-lg">
+                  <h4 class="font-semibold text-blue-800 mb-2">Who This Is For:</h4>
+                  <ul class="text-blue-700 text-sm space-y-1">
+                    <li>• Volunteer ministry workers</li>
+                    <li>• Church committee members</li>
+                    <li>• Lay ministers and leaders</li>
+                    <li>• Those exploring ministry</li>
+                  </ul>
+                </div>
+                
+                <div class="flex items-center justify-center mt-6">
+                  <div class="check-indicator w-6 h-6 border-2 border-blue-600 rounded-full flex items-center justify-center">
+                    <div class="w-3 h-3 bg-blue-600 rounded-full opacity-0 transition-opacity duration-300"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Designated Affiliation -->
+          <div class="affiliation-card cursor-pointer" data-value="designated" onclick="selectCard(this, 'designated')">
+            <input type="radio" name="affiliation_type" value="designated" class="hidden" id="designated" required>
+            <div class="bg-white rounded-2xl shadow-lg p-8 border-2 border-gray-200 transition-all duration-300 h-full slide-in" style="animation-delay: 0.2s">
+              <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                  </svg>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-3">Designated Affiliation</h3>
+                <div class="w-12 h-1 bg-green-600 mx-auto mb-4"></div>
+              </div>
+              
+              <div class="space-y-4 text-left">
+                <p class="text-gray-700 leading-relaxed">
+                  For applicants with required SAQA registered qualifications and necessary experience to apply for professional designation.
+                </p>
+                
+                <div class="bg-green-50 p-4 rounded-lg">
+                  <h4 class="font-semibold text-green-800 mb-2">Requirements:</h4>
+                  <ul class="text-green-700 text-sm space-y-1">
+                    <li>• SAQA registered qualifications</li>
+                    <li>• Professional ministry experience</li>
+                    <li>• Supervision requirements</li>
+                    <li>• Comprehensive application</li>
+                  </ul>
+                </div>
+                
+                <div class="flex items-center justify-center mt-6">
+                  <div class="check-indicator w-6 h-6 border-2 border-green-600 rounded-full flex items-center justify-center">
+                    <div class="w-3 h-3 bg-green-600 rounded-full opacity-0 transition-opacity duration-300"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Student Affiliation -->
+          <div class="affiliation-card cursor-pointer" data-value="student" onclick="selectCard(this, 'student')">
+            <input type="radio" name="affiliation_type" value="student" class="hidden" id="student" required>
+            <div class="bg-white rounded-2xl shadow-lg p-8 border-2 border-gray-200 transition-all duration-300 h-full slide-in" style="animation-delay: 0.3s">
+              <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                  </svg>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-3">Student Affiliation</h3>
+                <div class="w-12 h-1 bg-purple-600 mx-auto mb-4"></div>
+              </div>
+              
+              <div class="space-y-4 text-left">
+                <p class="text-gray-700 leading-relaxed">
+                  For full-time or part-time ministry students who are not yet in formal ministry positions.
+                </p>
+                
+                <div class="bg-purple-50 p-4 rounded-lg">
+                  <h4 class="font-semibold text-purple-800 mb-2">Who This Is For:</h4>
+                  <ul class="text-purple-700 text-sm space-y-1">
+                    <li>• Seminary students</li>
+                    <li>• Bible college students</li>
+                    <li>• Ministry training participants</li>
+                    <li>• Pre-ministry candidates</li>
+                  </ul>
+                </div>
+                
+                <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                  <p class="text-yellow-800 text-sm">
+                    <strong>Note:</strong> Those already in formal ministry should apply as designated affiliates.
+                  </p>
+                </div>
+                
+                <div class="flex items-center justify-center mt-6">
+                  <div class="check-indicator w-6 h-6 border-2 border-purple-600 rounded-full flex items-center justify-center">
+                    <div class="w-3 h-3 bg-purple-600 rounded-full opacity-0 transition-opacity duration-300"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Continue Button -->
+        <div class="text-center">
+          <button type="submit" 
+                  class="px-12 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl font-semibold text-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg">
+            Continue to Council Selection
+            <svg class="w-5 h-5 ml-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+            </svg>
+          </button>
+        </div>
+      </form>
+      
+      <!-- Error Messages -->
+      {% if form.errors %}
+        <div class="max-w-md mx-auto mt-6 px-4 py-3 rounded-lg bg-red-100 text-red-800 fade-in">
+          <div class="flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+            </svg>
+            Please select an affiliation type to continue.
+          </div>
+        </div>
+      {% endif %}
+      
+      {% if messages %}
+        {% for message in messages %}
+          <div class="max-w-md mx-auto mt-6 px-4 py-3 rounded-lg bg-red-100 text-red-800 fade-in">
+            <div class="flex items-center">
+              <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+              </svg>
+              {{ message }}
+            </div>
+          </div>
+        {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+
+  <script>
+    let selectedType = null;
+    
+    function selectCard(cardElement, type) {
+      // Remove selection from all cards
+      const allCards = document.querySelectorAll('.affiliation-card');
+      allCards.forEach(card => {
+        const cardDiv = card.querySelector('div');
+        const checkDot = card.querySelector('.check-indicator div');
+        
+        // Reset styles
+        cardDiv.classList.remove('card-selected-blue', 'card-selected-green', 'card-selected-purple', 'ring-2', 'ring-blue-500', 'ring-green-500', 'ring-purple-500');
+        cardDiv.classList.add('border-gray-200');
+        if (checkDot) {
+          checkDot.classList.remove('opacity-100');
+          checkDot.classList.add('opacity-0');
+        }
+        
+        // Uncheck radio buttons
+        const radio = card.querySelector('input[type="radio"]');
+        if (radio) radio.checked = false;
+      });
+      
+      // Select current card
+      const cardDiv = cardElement.querySelector('div');
+      const checkDot = cardElement.querySelector('.check-indicator div');
+      const radio = cardElement.querySelector('input[type="radio"]');
+      
+      // Apply selection styles
+      cardDiv.classList.remove('border-gray-200');
+      
+      if (type === 'associated') {
+        cardDiv.classList.add('card-selected-blue', 'ring-2', 'ring-blue-500');
+      } else if (type === 'designated') {
+        cardDiv.classList.add('card-selected-green', 'ring-2', 'ring-green-500');
+      } else if (type === 'student') {
+        cardDiv.classList.add('card-selected-purple', 'ring-2', 'ring-purple-500');
+      }
+      
+      // Show check indicator
+      if (checkDot) {
+        checkDot.classList.remove('opacity-0');
+        checkDot.classList.add('opacity-100');
+      }
+      
+      // Check radio button
+      if (radio) {
+        radio.checked = true;
+        selectedType = type;
+      }
+      
+      console.log('Selected type:', type, 'Radio checked:', radio.checked);
+    }
+    
+    // Form validation before submit
+    document.getElementById('affiliationForm').addEventListener('submit', function(e) {
+      const selectedRadio = document.querySelector('input[name="affiliation_type"]:checked');
+      
+      if (!selectedRadio) {
+        e.preventDefault();
+        alert('Please select an affiliation type to continue.');
+        return false;
+      }
+      
+      console.log('Form submitted with value:', selectedRadio.value);
+      return true;
+    });
+    
+    // Debug function to check form state
+    function debugForm() {
+      const radios = document.querySelectorAll('input[name="affiliation_type"]');
+      console.log('All radio buttons:');
+      radios.forEach(radio => {
+        console.log(`${radio.value}: ${radio.checked}`);
+      });
+    }
+    
+    // Call debug on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('Page loaded, debugging form state:');
+      debugForm();
+    });
+  </script>
+  
+</body>
+</html>

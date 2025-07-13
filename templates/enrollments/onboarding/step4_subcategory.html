@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  
+  <!-- Title -->
+  <title>Join ACRP - Select Subcategory</title>
+  
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Choose your specific CPSC subcategory for specialized pastoral counselling designation.">
+  <meta name="keywords" content="ACRP, CPSC, Subcategory, Pastoral Counselling, Specialization">
+  <meta name="author" content="ACRP Africa Team">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@300;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .fade-in { animation: fadeIn 0.6s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    
+    .slide-in { animation: slideIn 0.4s ease-out; }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+    
+    .subcategory-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+    .subcategory-card { transition: all 0.3s ease; }
+    
+    @media (max-width: 976px) {
+      body { margin: 0; padding: 0; }
+      .container { margin: 1rem; }
+    }
+  </style>
+</head>
+
+<body class="bg-gradient-to-br from-blue-50 via-white to-purple-50 min-h-screen">
+  
+  <!-- Step 4: Subcategory Selection -->
+  <div class="min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-6xl mx-auto">
+      
+      <!-- Header with Back Button -->
+      <div class="text-center mb-8 fade-in">
+        <button onclick="window.history.back()" class="inline-flex items-center text-blue-600 hover:text-blue-800 mb-6 transition-colors">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+          Back to category selection
+        </button>
+        
+        <h1 class="text-5xl font-bold text-gray-800 mb-4">Select Your Specialization</h1>
+        <p class="text-xl text-gray-600 max-w-4xl mx-auto">
+          Choose your specific area of focus for 
+          <span class="font-semibold text-green-600">{{ session.selected_designation_category.name }}</span>
+          within the
+          <span class="font-semibold text-blue-600">{{ session.selected_council.code }}</span>
+          council
+        </p>
+        
+        <!-- Progress Indicator -->
+        <div class="flex justify-center mt-8 mb-4">
+          <div class="flex items-center space-x-2">
+            <div class="w-3 h-3 bg-blue-600 rounded-full"></div>
+            <div class="w-8 h-1 bg-blue-600 rounded"></div>
+            <div class="w-3 h-3 bg-blue-600 rounded-full"></div>
+            <div class="w-8 h-1 bg-blue-600 rounded"></div>
+            <div class="w-3 h-3 bg-blue-600 rounded-full"></div>
+            <div class="w-8 h-1 bg-blue-600 rounded"></div>
+            <div class="w-3 h-3 bg-blue-600 rounded-full"></div>
+          </div>
+        </div>
+        <p class="text-sm text-gray-500">Step 4 of 4 - Final Step!</p>
+      </div>
+      
+      <!-- Category Context Banner -->
+      <div class="max-w-4xl mx-auto mb-8">
+        <div class="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-xl p-6">
+          <div class="flex items-center justify-center">
+            <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center mr-4">
+              <span class="text-xl font-bold text-white">{{ session.selected_designation_category.level }}</span>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-gray-800">{{ session.selected_designation_category.name }}</h3>
+              <p class="text-gray-600">CPSC - Council for Pastoral & Spiritual Care</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Form -->
+      <form method="post">
+        {% csrf_token %}
+        
+        <!-- Dynamic Subcategory Grid -->
+        <div class="space-y-6 mb-12">
+          {% for subcategory in form.designation_subcategory.field.queryset %}
+            <label class="subcategory-card cursor-pointer block">
+              <input type="radio" name="designation_subcategory" value="{{ subcategory.id }}" class="sr-only peer" required>
+              <div class="bg-white rounded-xl shadow-lg p-6 border-2 border-gray-200 peer-checked:border-green-500 peer-checked:bg-green-50 transition-all duration-300 slide-in" style="animation-delay: {{ forloop.counter0|floatformat:1|add:'0.1' }}s">
+                <div class="flex items-start space-x-6">
+                  
+                  <!-- Icon and Level Indicator -->
+                  <div class="flex-shrink-0">
+                    <div class="w-16 h-16 bg-gradient-to-r from-green-500 to-teal-500 rounded-full flex items-center justify-center mb-2">
+                      <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        {% if subcategory.category.level == 1 %}
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                        {% elif subcategory.category.level == 2 %}
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        {% elif subcategory.category.level == 3 %}
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                        {% else %}
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                        {% endif %}
+                      </svg>
+                    </div>
+                    <div class="text-center">
+                      <span class="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-medium">
+                        Level {{ subcategory.category.level }}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <!-- Content -->
+                  <div class="flex-1">
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">{{ subcategory.name }}</h3>
+                    
+                    {% if subcategory.description %}
+                    <p class="text-gray-600 mb-4 leading-relaxed">{{ subcategory.description }}</p>
+                    {% endif %}
+                    
+                    <!-- Subcategory-specific details based on name -->
+                    <div class="grid md:grid-cols-2 gap-4">
+                      
+                      {% if "practitioner" in subcategory.name.lower %}
+                        <div class="bg-green-50 p-4 rounded-lg">
+                          <h4 class="font-semibold text-green-800 mb-2 text-sm">Requirements:</h4>
+                          <ul class="text-green-700 text-xs space-y-1">
+                            <li>• Basic pastoral counselling training</li>
+                            <li>• Christian ministry experience</li>
+                            <li>• Supervised practice hours</li>
+                            <li>• Commitment to ongoing development</li>
+                          </ul>
+                        </div>
+                        
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                          <h4 class="font-semibold text-blue-800 mb-2 text-sm">Practice Areas:</h4>
+                          <ul class="text-blue-700 text-xs space-y-1">
+                            <li>• Individual pastoral care</li>
+                            <li>• Basic counselling support</li>
+                            <li>• Community outreach</li>
+                            <li>• Referral and coordination</li>
+                          </ul>
+                        </div>
+                      
+                      {% elif "advanced" in subcategory.name.lower %}
+                        <div class="bg-green-50 p-4 rounded-lg">
+                          <h4 class="font-semibold text-green-800 mb-2 text-sm">Requirements:</h4>
+                          <ul class="text-green-700 text-xs space-y-1">
+                            <li>• Advanced training certification</li>
+                            <li>• Demonstrated competency</li>
+                            <li>• Extended supervision hours</li>
+                            <li>• Continuing education</li>
+                          </ul>
+                        </div>
+                        
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                          <h4 class="font-semibold text-blue-800 mb-2 text-sm">Practice Areas:</h4>
+                          <ul class="text-blue-700 text-xs space-y-1">
+                            <li>• Complex pastoral counselling</li>
+                            <li>• Crisis intervention</li>
+                            <li>• Group therapy facilitation</li>
+                            <li>• Supervision of others</li>
+                          </ul>
+                        </div>
+                      
+                      {% elif "professional" in subcategory.name.lower %}
+                        <div class="bg-green-50 p-4 rounded-lg">
+                          <h4 class="font-semibold text-green-800 mb-2 text-sm">Requirements:</h4>
+                          <ul class="text-green-700 text-xs space-y-1">
+                            {% if "basic" in subcategory.name.lower %}
+                              <li>• Professional qualifications</li>
+                              <li>• Structured training program</li>
+                              <li>• Professional supervision</li>
+                              <li>• Ethics compliance</li>
+                            {% elif "intermediate" in subcategory.name.lower %}
+                              <li>• Enhanced professional training</li>
+                              <li>• Specialized skill development</li>
+                              <li>• Advanced supervision</li>
+                              <li>• Research involvement</li>
+                            {% else %}
+                              <li>• Comprehensive qualifications</li>
+                              <li>• Leadership experience</li>
+                              <li>• Advanced supervision provision</li>
+                              <li>• Professional development leadership</li>
+                            {% endif %}
+                          </ul>
+                        </div>
+                        
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                          <h4 class="font-semibold text-blue-800 mb-2 text-sm">Practice Areas:</h4>
+                          <ul class="text-blue-700 text-xs space-y-1">
+                            {% if "basic" in subcategory.name.lower %}
+                              <li>• Professional counselling practice</li>
+                              <li>• Treatment planning</li>
+                              <li>• Assessment and diagnosis</li>
+                              <li>• Professional consultation</li>
+                            {% elif "intermediate" in subcategory.name.lower %}
+                              <li>• Specialized therapy methods</li>
+                              <li>• Complex case management</li>
+                              <li>• Training delivery</li>
+                              <li>• Quality assurance</li>
+                            {% else %}
+                              <li>• Expert-level practice</li>
+                              <li>• Program development</li>
+                              <li>• Advanced supervision</li>
+                              <li>• Research and innovation</li>
+                            {% endif %}
+                          </ul>
+                        </div>
+                      
+                      {% elif "specialist" in subcategory.name.lower %}
+                        <div class="bg-green-50 p-4 rounded-lg">
+                          <h4 class="font-semibold text-green-800 mb-2 text-sm">Requirements:</h4>
+                          <ul class="text-green-700 text-xs space-y-1">
+                            <li>• Highest level qualifications</li>
+                            <li>• Specialized expertise</li>
+                            <li>• Research contributions</li>
+                            <li>• Advanced supervision provision</li>
+                          </ul>
+                        </div>
+                        
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                          <h4 class="font-semibold text-blue-800 mb-2 text-sm">Practice Areas:</h4>
+                          <ul class="text-blue-700 text-xs space-y-1">
+                            <li>• Expert consultation</li>
+                            <li>• Specialized interventions</li>
+                            <li>• Training program leadership</li>
+                            <li>• Research and development</li>
+                          </ul>
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                  
+                  <!-- Selection Indicator -->
+                  <div class="flex-shrink-0 flex items-center">
+                    <div class="w-6 h-6 border-2 border-green-600 rounded-full flex items-center justify-center peer-checked:bg-green-600">
+                      <div class="w-3 h-3 bg-green-600 rounded-full opacity-0 peer-checked:opacity-100 transition-opacity"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </label>
+          {% empty %}
+            <div class="text-center py-12">
+              <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-gray-600 mb-2">No Subcategories Available</h3>
+              <p class="text-gray-500">There are no subcategories configured for this category and council combination.</p>
+            </div>
+          {% endfor %}
+        </div>
+        
+        <!-- Information Box -->
+        <div class="max-w-4xl mx-auto mb-8">
+          <div class="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl p-6">
+            <div class="flex items-start">
+              <div class="flex-shrink-0">
+                <svg class="w-6 h-6 text-yellow-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                </svg>
+              </div>
+              <div class="ml-4">
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">Choose Carefully</h3>
+                <div class="text-gray-600 space-y-2">
+                  <p>Your subcategory selection determines your specific scope of practice and requirements within {{ session.selected_designation_category.name }}.</p>
+                  <p class="text-sm italic">Each subcategory has different training, supervision, and experience requirements. Select the one that best matches your current qualifications.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Continue Button -->
+        <div class="text-center">
+          <button type="submit" 
+                  class="px-12 py-4 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-2xl font-semibold text-lg hover:from-green-700 hover:to-teal-700 transition-all duration-300 transform hover:scale-105 shadow-lg">
+            Complete Setup & Create Application
+            <svg class="w-5 h-5 ml-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </button>
+        </div>
+      </form>
+      
+      <!-- Error Messages -->
+      {% if form.errors %}
+        <div class="max-w-md mx-auto mt-6 px-4 py-3 rounded-lg bg-red-100 text-red-800 fade-in">
+          <div class="flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+            </svg>
+            Please select a subcategory to continue.
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <script>
+    // Add interactive feedback for radio selection
+    document.addEventListener('DOMContentLoaded', function() {
+      const radioInputs = document.querySelectorAll('input[type="radio"]');
+      const cards = document.querySelectorAll('.subcategory-card');
+      
+      radioInputs.forEach((input, index) => {
+        input.addEventListener('change', function() {
+          // Remove selected state from all cards
+          cards.forEach(card => {
+            const cardDiv = card.querySelector('div');
+            cardDiv.classList.remove('ring-2', 'ring-green-500', 'transform', 'scale-[1.02]');
+          });
+          
+          // Add selected state to current card
+          if (this.checked) {
+            const cardDiv = this.closest('label').querySelector('div');
+            cardDiv.classList.add('ring-2', 'ring-green-500', 'transform', 'scale-[1.02]');
+            
+            // Add a celebration animation
+            cardDiv.style.animation = 'celebration 0.6s ease-out';
+            setTimeout(() => {
+              cardDiv.style.animation = '';
+            }, 600);
+          }
+        });
+      });
+    });
+    
+    // Add celebration animation keyframe
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes celebration {
+        0% { transform: scale(1); }
+        25% { transform: scale(1.05) rotate(1deg); }
+        50% { transform: scale(1.03) rotate(-1deg); }
+        75% { transform: scale(1.04) rotate(0.5deg); }
+        100% { transform: scale(1.02) rotate(0deg); }
+      }
+    `;
+    document.head.appendChild(style);
+  </script>
+  
+</body>
+</html>
