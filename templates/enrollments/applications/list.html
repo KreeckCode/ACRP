@@ -1,0 +1,1544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if 'cgmp' in request.resolver_match.url_name %}CGMP Applications
+{% elif 'cpsc' in request.resolver_match.url_name %}CPSC Applications  
+{% elif 'cmtp' in request.resolver_match.url_name %}CMTP Applications
+{% else %}Applications{% endif %} - ACRP Dashboard</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-blue: #0056b3;
+            --primary-light: #4d94ff;
+            --success-green: #198754;
+            --warning-amber: #fd7e14;
+            --danger-red: #dc3545;
+            --light-gray: #f8f9fa;
+            --dark-gray: #495057;
+            --border-color: #dee2e6;
+            --text-muted: #6c757d;
+            --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            --shadow-md: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            --shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+            --border-radius: 12px;
+            --transition: all 0.2s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* Main Container */
+        .dashboard-container {
+            min-height: 100vh;
+            background: transparent;
+        }
+
+        /* Enhanced Page Header */
+        .page-header {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, #003d82 100%);
+            color: white;
+            padding: 3rem 0 2rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.08'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.1;
+        }
+
+        .page-header .container {
+            position: relative;
+            z-index: 1;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .page-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            font-weight: 400;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn-header {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: var(--transition);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-header:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .btn-header.btn-primary {
+            background: white;
+            color: var(--primary-blue);
+            border-color: white;
+        }
+
+        .btn-header.btn-primary:hover {
+            background: #f8f9fa;
+            color: var(--primary-blue);
+            border-color: #f8f9fa;
+        }
+
+        /* Content Container */
+        .content-container {
+            padding: 2rem 0;
+        }
+
+        /* Enhanced Stats Overview */
+        .stats-overview {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            margin: 0;
+        }
+
+        .stat-item {
+            padding: 2rem 1.5rem;
+            text-align: center;
+            border-right: 1px solid var(--border-color);
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .stat-item:last-child {
+            border-right: none;
+        }
+
+        .stat-item:hover {
+            background: var(--light-gray);
+            transform: translateY(-2px);
+        }
+
+        .stat-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-blue), var(--primary-light));
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .stat-item:hover::before {
+            opacity: 1;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        /* Advanced Filters Panel */
+        .filters-panel {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .filters-header {
+            background: linear-gradient(135deg, var(--light-gray) 0%, #e9ecef 100%);
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .filters-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--dark-gray);
+            margin: 0;
+        }
+
+        .filters-body {
+            padding: 2rem;
+        }
+
+        .search-section {
+            margin-bottom: 2rem;
+        }
+
+        .search-input-group {
+            position: relative;
+            max-width: 500px;
+        }
+
+        .search-input {
+            padding: 1rem 1rem 1rem 3rem;
+            border-radius: 10px;
+            border: 2px solid var(--border-color);
+            transition: var(--transition);
+            font-size: 1rem;
+            width: 100%;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 0.2rem rgba(0, 86, 179, 0.15);
+            outline: none;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            z-index: 3;
+            font-size: 1.1rem;
+        }
+
+        .search-actions {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .status-filters {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-chip {
+            padding: 0.75rem 1.25rem;
+            border-radius: 25px;
+            border: 2px solid var(--border-color);
+            background: white;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .filter-chip::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.5s;
+        }
+
+        .filter-chip:hover::before {
+            left: 100%;
+        }
+
+        .filter-chip:hover {
+            border-color: var(--primary-blue);
+            color: var(--primary-blue);
+            text-decoration: none;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .filter-chip.active {
+            background: var(--primary-blue);
+            border-color: var(--primary-blue);
+            color: white;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .filter-chip.active:hover {
+            background: #004085;
+            border-color: #004085;
+        }
+
+        /* Professional Data Table */
+        .applications-table-container {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .table-header {
+            background: linear-gradient(135deg, var(--light-gray) 0%, #e9ecef 100%);
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--dark-gray);
+            margin: 0;
+        }
+
+        .bulk-actions {
+            display: flex;
+            gap: 0.5rem;
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .bulk-actions.visible {
+            opacity: 1;
+        }
+
+        .applications-table {
+            width: 100%;
+            margin-bottom: 0;
+            background: transparent;
+        }
+
+        .applications-table th {
+            background: white;
+            border-bottom: 2px solid var(--border-color);
+            padding: 1.25rem 1rem;
+            font-weight: 600;
+            color: var(--dark-gray);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .applications-table td {
+            padding: 1.25rem 1rem;
+            border-bottom: 1px solid #f1f3f4;
+            vertical-align: middle;
+        }
+
+        .applications-table tbody tr {
+            transition: var(--transition);
+        }
+
+        .applications-table tbody tr:hover {
+            background: linear-gradient(135deg, #f8f9fa 0%, #f1f3f4 100%);
+            transform: scale(1.005);
+        }
+
+        /* Status Badges */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .status-approved {
+            background: linear-gradient(135deg, rgba(25, 135, 84, 0.1) 0%, rgba(25, 135, 84, 0.05) 100%);
+            color: var(--success-green);
+            border: 1px solid rgba(25, 135, 84, 0.2);
+        }
+
+        .status-pending {
+            background: linear-gradient(135deg, rgba(253, 126, 20, 0.1) 0%, rgba(253, 126, 20, 0.05) 100%);
+            color: var(--warning-amber);
+            border: 1px solid rgba(253, 126, 20, 0.2);
+        }
+
+        /* Enhanced Action Buttons */
+        .action-group {
+            display: flex;
+            gap: 0.375rem;
+        }
+
+        .action-btn {
+            padding: 0.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: white;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: var(--transition);
+            font-size: 0.875rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .action-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.3s;
+        }
+
+        .action-btn:hover::before {
+            left: 100%;
+        }
+
+        .action-btn:hover {
+            text-decoration: none;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .action-btn.btn-view:hover {
+            border-color: var(--primary-blue);
+            color: var(--primary-blue);
+            background: rgba(0, 86, 179, 0.05);
+        }
+
+        .action-btn.btn-edit:hover {
+            border-color: #6c757d;
+            color: #495057;
+            background: rgba(108, 117, 125, 0.05);
+        }
+
+        .action-btn.btn-approve:hover {
+            border-color: var(--success-green);
+            color: var(--success-green);
+            background: rgba(25, 135, 84, 0.05);
+        }
+
+        .action-btn.btn-delete:hover {
+            border-color: var(--danger-red);
+            color: var(--danger-red);
+            background: rgba(220, 53, 69, 0.05);
+        }
+
+        /* User Info Display */
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-light));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: white;
+            flex-shrink: 0;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .user-details h6 {
+            margin: 0;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #212529;
+        }
+
+        .user-details .text-muted {
+            font-size: 0.8rem;
+            margin: 0;
+        }
+
+        /* Enhanced Pagination */
+        .pagination-wrapper {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+
+        .pagination-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .pagination {
+            margin: 0;
+            justify-content: center;
+        }
+
+        .page-link {
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin: 0 0.125rem;
+            transition: var(--transition);
+            color: var(--dark-gray);
+            padding: 0.75rem 1rem;
+        }
+
+        .page-link:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+            border-color: var(--primary-blue);
+            color: var(--primary-blue);
+        }
+
+        .page-item.active .page-link {
+            background: var(--primary-blue);
+            border-color: var(--primary-blue);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+        }
+
+        .empty-icon {
+            font-size: 5rem;
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            opacity: 0.6;
+        }
+
+        .empty-state h3 {
+            color: var(--dark-gray);
+            margin-bottom: 1rem;
+        }
+
+        .empty-state p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        /* Loading States */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .loading-spinner {
+            width: 3rem;
+            height: 3rem;
+            border: 3px solid var(--border-color);
+            border-top: 3px solid var(--primary-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Badge Enhancements */
+        .badge {
+            font-weight: 500;
+            padding: 0.375rem 0.75rem;
+            border-radius: 6px;
+        }
+
+        .badge.bg-light {
+            background: var(--light-gray) !important;
+            color: var(--dark-gray) !important;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .page-header {
+                padding: 2rem 0 1.5rem;
+            }
+            
+            .page-title {
+                font-size: 2rem;
+            }
+            
+            .header-actions {
+                flex-direction: column;
+                gap: 0.5rem;
+                margin-top: 1rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .filters-body {
+                padding: 1.5rem;
+            }
+            
+            .search-input-group {
+                max-width: 100%;
+            }
+            
+            .search-actions {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.5rem;
+                margin-top: 1rem;
+            }
+            
+            .status-filters {
+                margin-top: 1rem;
+            }
+            
+            .applications-table-container {
+                overflow-x: auto;
+            }
+            
+            .applications-table th,
+            .applications-table td {
+                padding: 1rem 0.75rem;
+                font-size: 0.875rem;
+            }
+            
+            .user-info {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.75rem;
+            }
+            
+            .action-group {
+                flex-wrap: wrap;
+            }
+            
+            .pagination-info {
+                flex-direction: column;
+                text-align: center;
+                gap: 0.5rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .content-container {
+                padding: 1rem 0;
+            }
+            
+            .applications-table th,
+            .applications-table td {
+                padding: 0.75rem 0.5rem;
+                font-size: 0.8rem;
+            }
+            
+            .user-avatar {
+                width: 32px;
+                height: 32px;
+                font-size: 0.75rem;
+            }
+            
+            .action-btn {
+                width: 32px;
+                height: 32px;
+            }
+            
+            .filter-chip {
+                padding: 0.5rem 1rem;
+                font-size: 0.8rem;
+            }
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background: white;
+            }
+            
+            .page-header {
+                background: white !important;
+                color: black !important;
+                box-shadow: none;
+            }
+            
+            .filters-panel,
+            .pagination-wrapper,
+            .action-group,
+            .header-actions {
+                display: none !important;
+            }
+            
+            .applications-table {
+                font-size: 0.75rem;
+            }
+            
+            .applications-table th,
+            .applications-table td {
+                padding: 0.5rem 0.25rem;
+            }
+        }
+
+        /* Accessibility Enhancements */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* High Contrast Mode */
+        @media (prefers-contrast: high) {
+            :root {
+                --border-color: #000;
+                --text-muted: #000;
+                --shadow-sm: 0 0 0 1px #000;
+                --shadow-md: 0 0 0 2px #000;
+            }
+        }
+
+        /* Dark Mode Support */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --light-gray: #2d3748;
+                --border-color: #4a5568;
+                --text-muted: #a0aec0;
+                --dark-gray: #e2e8f0;
+            }
+            
+            body {
+                background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+                color: #e2e8f0;
+            }
+            
+            .stats-overview,
+            .filters-panel,
+            .applications-table-container,
+            .pagination-wrapper,
+            .empty-state {
+                background: #2d3748;
+                border-color: #4a5568;
+            }
+            
+            .applications-table th {
+                background: #2d3748;
+            }
+            
+            .search-input,
+            .action-btn {
+                background: #4a5568;
+                border-color: #4a5568;
+                color: #e2e8f0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Enhanced Page Header -->
+        <div class="page-header">
+            <div class="container">
+                <div class="d-flex justify-content-between align-items-center flex-wrap">
+                    <div>
+                        <h1 class="page-title">
+                            <i class="bi bi-file-earmark-text me-3"></i>
+                            {% if 'cgmp' in request.resolver_match.url_name %}
+                                CGMP Applications
+                            {% elif 'cpsc' in request.resolver_match.url_name %}
+                                CPSC Applications
+                            {% elif 'cmtp' in request.resolver_match.url_name %}
+                                CMTP Applications
+                            {% else %}
+                                Applications Management
+                            {% endif %}
+                        </h1>
+                        <p class="page-subtitle">Professional application management dashboard</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn btn-header" onclick="window.print()">
+                            <i class="bi bi-printer me-2"></i>Export Report
+                        </button>
+                        {% if 'cgmp' in request.resolver_match.url_name %}
+                            <a href="{% url 'enrollments:cgmp_create' %}" class="btn btn-header btn-primary">
+                                <i class="bi bi-plus-lg me-2"></i>New CGMP Application
+                            </a>
+                        {% elif 'cpsc' in request.resolver_match.url_name %}
+                            <a href="{% url 'enrollments:cpsc_create' %}" class="btn btn-header btn-primary">
+                                <i class="bi bi-plus-lg me-2"></i>New CPSC Application
+                            </a>
+                        {% elif 'cmtp' in request.resolver_match.url_name %}
+                            <a href="{% url 'enrollments:cmtp_create' %}" class="btn btn-header btn-primary">
+                                <i class="bi bi-plus-lg me-2"></i>New CMTP Application
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-container">
+            <div class="container">
+                <!-- Enhanced Stats Overview -->
+                <div class="stats-overview">
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value">{{ total_count|default:0 }}</div>
+                            <div class="stat-label">Total Applications</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">{{ applications.paginator.count|default:0 }}</div>
+                            <div class="stat-label">Search Results</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">
+                                {% if applications %}{{ applications.number }}{% else %}0{% endif %}
+                            </div>
+                            <div class="stat-label">
+                                Current Page (of {% if applications %}{{ applications.paginator.num_pages }}{% else %}0{% endif %})
+                            </div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">
+                                {{ applications|length|default:0 }}
+                            </div>
+                            <div class="stat-label">Displaying Now</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Advanced Filters Panel -->
+                <div class="filters-panel">
+                    <div class="filters-header">
+                        <h5 class="filters-title">
+                            <i class="bi bi-funnel me-2"></i>Search & Filters
+                        </h5>
+                        {% if search_query %}
+                            <small class="text-muted">
+                                Searching for: <strong>"{{ search_query }}"</strong>
+                            </small>
+                        {% endif %}
+                    </div>
+                    <div class="filters-body">
+                        <!-- Enhanced Search -->
+                        <div class="search-section">
+                            <form method="get" class="row g-3 align-items-end">
+                                <div class="col-md-8">
+                                    <label for="searchInput" class="form-label fw-semibold">Search Applications</label>
+                                    <div class="search-input-group">
+                                        <i class="bi bi-search search-icon"></i>
+                                        <input type="text" 
+                                               id="searchInput"
+                                               class="search-input" 
+                                               name="search" 
+                                               value="{{ search_query }}" 
+                                               placeholder="Search by name, email, ID, ministry role, institution..."
+                                               autocomplete="off">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="search-actions">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-search me-2"></i>Search
+                                        </button>
+                                        {% if search_query %}
+                                        <a href="?" class="btn btn-outline-secondary">
+                                            <i class="bi bi-x-lg me-2"></i>Clear
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <input type="hidden" name="status" value="{{ status_filter }}">
+                            </form>
+                        </div>
+                        
+                        <!-- Status Filters -->
+                        <div>
+                            <label class="form-label fw-semibold mb-3">Filter by Status</label>
+                            <div class="status-filters">
+                                <a href="?search={{ search_query }}&status=all" 
+                                   class="filter-chip {% if status_filter == 'all' %}active{% endif %}">
+                                    <i class="bi bi-list-ul"></i>
+                                    All Applications
+                                </a>
+                                <a href="?search={{ search_query }}&status=pending" 
+                                   class="filter-chip {% if status_filter == 'pending' %}active{% endif %}">
+                                    <i class="bi bi-clock-history"></i>
+                                    Pending Review
+                                </a>
+                                <a href="?search={{ search_query }}&status=approved" 
+                                   class="filter-chip {% if status_filter == 'approved' %}active{% endif %}">
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    Approved
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Professional Data Table -->
+                {% if applications %}
+                <div class="applications-table-container">
+                    <div class="table-header">
+                        <h5 class="table-title">
+                            <i class="bi bi-table me-2"></i>
+                            Applications List
+                            <small class="text-muted ms-2">({{ applications|length }} of {{ applications.paginator.count }})</small>
+                        </h5>
+                        <div class="bulk-actions" id="bulkActions">
+                            <button class="btn btn-sm btn-success" disabled>
+                                <i class="bi bi-check-lg me-1"></i>Approve Selected
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" disabled>
+                                <i class="bi bi-trash me-1"></i>Delete Selected
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="applications-table table table-hover">
+                            <thead>
+                                <tr>
+                                    <th width="50">
+                                        <input type="checkbox" class="form-check-input" id="selectAll">
+                                    </th>
+                                    <th width="80">ID</th>
+                                    <th>Applicant</th>
+                                    <th>Contact</th>
+                                    <th>Submitted</th>
+                                    {% if 'cgmp' in request.resolver_match.url_name %}
+                                        <th>Ministry Role</th>
+                                        <th>Ordination</th>
+                                    {% elif 'cpsc' in request.resolver_match.url_name %}
+                                        <th>Certification</th>
+                                        <th>Specialization</th>
+                                    {% elif 'cmtp' in request.resolver_match.url_name %}
+                                        <th>Institution</th>
+                                        <th>Position</th>
+                                    {% endif %}
+                                    <th width="120">Status</th>
+                                    <th width="160">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for application in applications %}
+                                <tr data-application-id="{{ application.pk }}">
+                                    <td>
+                                        <input type="checkbox" class="form-check-input row-select">
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light">#{{ application.id|stringformat:"05d" }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="user-info">
+                                            <div class="user-avatar">
+                                                {% if application.first_name and application.last_name %}
+                                                    {{ application.first_name|first }}{{ application.last_name|first }}
+                                                {% else %}
+                                                    <i class="bi bi-person"></i>
+                                                {% endif %}
+                                            </div>
+                                            <div class="user-details">
+                                                <h6>{{ application.get_display_name }}</h6>
+                                                {% if application.preferred_name %}
+                                                    <small class="text-muted">"{{ application.preferred_name }}"</small>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="mb-1">
+                                            <i class="bi bi-envelope me-1 text-muted"></i>
+                                            <small>{{ application.email|truncatechars:30 }}</small>
+                                        </div>
+                                        {% if application.cell %}
+                                        <div>
+                                            <i class="bi bi-phone me-1 text-muted"></i>
+                                            <small>{{ application.cell }}</small>
+                                        </div>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold">{{ application.created_at|date:"M d, Y" }}</div>
+                                        <small class="text-muted">{{ application.created_at|timesince }} ago</small>
+                                    </td>
+                                    {% if 'cgmp' in request.resolver_match.url_name %}
+                                        <td>
+                                            <span class="badge bg-light">
+                                                {{ application.current_ministry_role|default:"Not specified"|truncatechars:20 }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light">
+                                                {{ application.ordination_status|default:"Not specified" }}
+                                            </span>
+                                        </td>
+                                    {% elif 'cpsc' in request.resolver_match.url_name %}
+                                        <td>
+                                            <span class="badge bg-light">
+                                                {{ application.counseling_certification|default:"Not specified"|truncatechars:20 }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light">
+                                                {{ application.specialization_areas|default:"General"|truncatechars:20 }}
+                                            </span>
+                                        </td>
+                                    {% elif 'cmtp' in request.resolver_match.url_name %}
+                                        <td>
+                                            <span class="badge bg-light">
+                                                {{ application.institution_name|default:"Not specified"|truncatechars:20 }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light">
+                                                {{ application.position_title|default:"Not specified"|truncatechars:20 }}
+                                            </span>
+                                        </td>
+                                    {% endif %}
+                                    <td>
+                                        <span class="status-badge {% if application.approved %}status-approved{% else %}status-pending{% endif %}">
+                                            {% if application.approved %}
+                                                <i class="bi bi-check-circle-fill"></i>
+                                                Approved
+                                            {% else %}
+                                                <i class="bi bi-clock"></i>
+                                                Pending
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="action-group">
+                                            {% if 'cgmp' in request.resolver_match.url_name %}
+                                                <a href="{% url 'enrollments:cgmp_detail' application.pk %}" 
+                                                   class="action-btn btn-view" title="View Details">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a href="{% url 'enrollments:cgmp_update' application.pk %}" 
+                                                   class="action-btn btn-edit" title="Edit Application">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                {% if perms.enrollments.change_cgmpaffiliation and not application.approved %}
+                                                    <form method="post" 
+                                                          action="{% url 'enrollments:approve_application' 'cgmp' application.pk %}" 
+                                                          class="d-inline">
+                                                        {% csrf_token %}
+                                                        <button type="submit" 
+                                                                class="action-btn btn-approve"
+                                                                title="Approve Application"
+                                                                onclick="return confirm('Approve this application?')">
+                                                            <i class="bi bi-check-lg"></i>
+                                                        </button>
+                                                    </form>
+                                                {% endif %}
+                                                {% if perms.enrollments.delete_cgmpaffiliation %}
+                                                    <a href="{% url 'enrollments:cgmp_delete' application.pk %}" 
+                                                       class="action-btn btn-delete"
+                                                       title="Delete Application"
+                                                       onclick="return confirm('Delete this application permanently?')">
+                                                        <i class="bi bi-trash"></i>
+                                                    </a>
+                                                {% endif %}
+                                            {% elif 'cpsc' in request.resolver_match.url_name %}
+                                                <a href="{% url 'enrollments:cpsc_detail' application.pk %}" 
+                                                   class="action-btn btn-view" title="View Details">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a href="{% url 'enrollments:cpsc_update' application.pk %}" 
+                                                   class="action-btn btn-edit" title="Edit Application">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                {% if perms.enrollments.change_cpscaffiliation and not application.approved %}
+                                                    <form method="post" 
+                                                          action="{% url 'enrollments:approve_application' 'cpsc' application.pk %}" 
+                                                          class="d-inline">
+                                                        {% csrf_token %}
+                                                        <button type="submit" 
+                                                                class="action-btn btn-approve"
+                                                                title="Approve Application"
+                                                                onclick="return confirm('Approve this application?')">
+                                                            <i class="bi bi-check-lg"></i>
+                                                        </button>
+                                                    </form>
+                                                {% endif %}
+                                                {% if perms.enrollments.delete_cpscaffiliation %}
+                                                    <a href="{% url 'enrollments:cpsc_delete' application.pk %}" 
+                                                       class="action-btn btn-delete"
+                                                       title="Delete Application"
+                                                       onclick="return confirm('Delete this application permanently?')">
+                                                        <i class="bi bi-trash"></i>
+                                                    </a>
+                                                {% endif %}
+                                            {% elif 'cmtp' in request.resolver_match.url_name %}
+                                                <a href="{% url 'enrollments:cmtp_detail' application.pk %}" 
+                                                   class="action-btn btn-view" title="View Details">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a href="{% url 'enrollments:cmtp_update' application.pk %}" 
+                                                   class="action-btn btn-edit" title="Edit Application">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                {% if perms.enrollments.change_cmtpaffiliation and not application.approved %}
+                                                    <form method="post" 
+                                                          action="{% url 'enrollments:approve_application' 'cmtp' application.pk %}" 
+                                                          class="d-inline">
+                                                        {% csrf_token %}
+                                                        <button type="submit" 
+                                                                class="action-btn btn-approve"
+                                                                title="Approve Application"
+                                                                onclick="return confirm('Approve this application?')">
+                                                            <i class="bi bi-check-lg"></i>
+                                                        </button>
+                                                    </form>
+                                                {% endif %}
+                                                {% if perms.enrollments.delete_cmtpaffiliation %}
+                                                    <a href="{% url 'enrollments:cmtp_delete' application.pk %}" 
+                                                       class="action-btn btn-delete"
+                                                       title="Delete Application"
+                                                       onclick="return confirm('Delete this application permanently?')">
+                                                        <i class="bi bi-trash"></i>
+                                                    </a>
+                                                {% endif %}
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% else %}
+                <!-- Enhanced Empty State -->
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="bi bi-inbox"></i>
+                    </div>
+                    <h3 class="mb-3">No Applications Found</h3>
+                    <p class="mb-4">
+                        {% if search_query or status_filter != 'all' %}
+                            No applications match your current search criteria or filters.<br>
+                            Try adjusting your search terms or removing filters to see more results.
+                        {% else %}
+                            No applications have been submitted yet.<br>
+                            Applications will appear here once they are submitted through the registration system.
+                        {% endif %}
+                    </p>
+                    <div class="d-flex gap-3 justify-content-center flex-wrap">
+                        {% if search_query or status_filter != 'all' %}
+                            <a href="?" class="btn btn-outline-primary">
+                                <i class="bi bi-arrow-clockwise me-2"></i>Reset All Filters
+                            </a>
+                        {% endif %}
+                        {% if 'cgmp' in request.resolver_match.url_name %}
+                            <a href="{% url 'enrollments:cgmp_create' %}" class="btn btn-primary">
+                                <i class="bi bi-plus-lg me-2"></i>Create First CGMP Application
+                            </a>
+                        {% elif 'cpsc' in request.resolver_match.url_name %}
+                            <a href="{% url 'enrollments:cpsc_create' %}" class="btn btn-primary">
+                                <i class="bi bi-plus-lg me-2"></i>Create First CPSC Application
+                            </a>
+                        {% elif 'cmtp' in request.resolver_match.url_name %}
+                            <a href="{% url 'enrollments:cmtp_create' %}" class="btn btn-primary">
+                                <i class="bi bi-plus-lg me-2"></i>Create First CMTP Application
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Enhanced Pagination -->
+                {% if applications.has_other_pages %}
+                <div class="pagination-wrapper">
+                    <div class="pagination-info">
+                        <div class="text-muted">
+                            <strong>{{ applications.start_index }}</strong> to <strong>{{ applications.end_index }}</strong> 
+                            of <strong>{{ applications.paginator.count }}</strong> applications
+                        </div>
+                        <div class="text-muted">
+                            Page <strong>{{ applications.number }}</strong> of <strong>{{ applications.paginator.num_pages }}</strong>
+                        </div>
+                    </div>
+                    
+                    <nav aria-label="Applications pagination">
+                        <ul class="pagination">
+                            {% if applications.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1&search={{ search_query }}&status={{ status_filter }}" title="First page">
+                                        <i class="bi bi-chevron-double-left"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ applications.previous_page_number }}&search={{ search_query }}&status={{ status_filter }}" title="Previous page">
+                                        <i class="bi bi-chevron-left"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+
+                            {% for num in applications.paginator.page_range %}
+                                {% if num == applications.number %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% elif num > applications.number|add:'-3' and num < applications.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}&search={{ search_query }}&status={{ status_filter }}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if applications.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ applications.next_page_number }}&search={{ search_query }}&status={{ status_filter }}" title="Next page">
+                                        <i class="bi bi-chevron-right"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ applications.paginator.num_pages }}&search={{ search_query }}&status={{ status_filter }}" title="Last page">
+                                        <i class="bi bi-chevron-double-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Enhanced Search Functionality with Debouncing
+            const searchInput = document.getElementById('searchInput');
+            let searchTimeout;
+            
+            if (searchInput) {
+                // Real-time search with debouncing
+                searchInput.addEventListener('input', function() {
+                    clearTimeout(searchTimeout);
+                    const value = this.value.trim();
+                    
+                    // Auto-search after 500ms of no typing
+                    searchTimeout = setTimeout(() => {
+                        if (value.length >= 3 || value.length === 0) {
+                            this.form.submit();
+                        }
+                    }, 500);
+                });
+                
+                // Immediate search on Enter
+                searchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        clearTimeout(searchTimeout);
+                        this.form.submit();
+                    }
+                });
+            }
+            
+            // Advanced Bulk Selection Functionality
+            const selectAll = document.getElementById('selectAll');
+            const rowSelects = document.querySelectorAll('.row-select');
+            const bulkActions = document.getElementById('bulkActions');
+            
+            if (selectAll && rowSelects.length > 0) {
+                // Select/deselect all
+                selectAll.addEventListener('change', function() {
+                    rowSelects.forEach(checkbox => {
+                        checkbox.checked = this.checked;
+                    });
+                    updateBulkActions();
+                    updateRowHighlighting();
+                });
+                
+                // Individual row selection
+                rowSelects.forEach(checkbox => {
+                    checkbox.addEventListener('change', function() {
+                        updateSelectAllState();
+                        updateBulkActions();
+                        updateRowHighlighting();
+                    });
+                });
+            }
+            
+            function updateSelectAllState() {
+                const totalRows = rowSelects.length;
+                const selectedRows = document.querySelectorAll('.row-select:checked').length;
+                
+                if (selectedRows === 0) {
+                    selectAll.checked = false;
+                    selectAll.indeterminate = false;
+                } else if (selectedRows === totalRows) {
+                    selectAll.checked = true;
+                    selectAll.indeterminate = false;
+                } else {
+                    selectAll.checked = false;
+                    selectAll.indeterminate = true;
+                }
+            }
+            
+            function updateBulkActions() {
+                const selectedCount = document.querySelectorAll('.row-select:checked').length;
+                const buttons = bulkActions.querySelectorAll('button');
+                
+                if (selectedCount > 0) {
+                    bulkActions.classList.add('visible');
+                    buttons.forEach(btn => {
+                        btn.disabled = false;
+                        btn.textContent = btn.textContent.replace(/\d+/, selectedCount);
+                    });
+                } else {
+                    bulkActions.classList.remove('visible');
+                    buttons.forEach(btn => btn.disabled = true);
+                }
+            }
+            
+            function updateRowHighlighting() {
+                rowSelects.forEach(checkbox => {
+                    const row = checkbox.closest('tr');
+                    if (checkbox.checked) {
+                        row.style.background = 'linear-gradient(135deg, rgba(0, 86, 179, 0.05) 0%, rgba(0, 86, 179, 0.02) 100%)';
+                        row.style.borderLeft = '4px solid var(--primary-blue)';
+                    } else {
+                        row.style.background = '';
+                        row.style.borderLeft = '';
+                    }
+                });
+            }
+            
+            // Enhanced Keyboard Shortcuts
+            document.addEventListener('keydown', function(e) {
+                // Ctrl+F or Cmd+F to focus search
+                if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                    e.preventDefault();
+                    searchInput?.focus();
+                    searchInput?.select();
+                }
+                
+                // Escape to clear search
+                if (e.key === 'Escape') {
+                    if (document.activeElement === searchInput) {
+                        searchInput.value = '';
+                        searchInput.form.submit();
+                    }
+                }
+                
+                // Ctrl+A to select all visible rows
+                if ((e.ctrlKey || e.metaKey) && e.key === 'a' && e.target.tagName !== 'INPUT') {
+                    e.preventDefault();
+                    if (selectAll) {
+                        selectAll.checked = true;
+                        selectAll.dispatchEvent(new Event('change'));
+                    }
+                }
+                
+                // Delete key for bulk delete (when rows selected)
+                if (e.key === 'Delete') {
+                    const selectedCount = document.querySelectorAll('.row-select:checked').length;
+                    if (selectedCount > 0) {
+                        const deleteBtn = bulkActions.querySelector('button[class*="danger"]');
+                        if (deleteBtn && !deleteBtn.disabled) {
+                            deleteBtn.click();
+                        }
+                    }
+                }
+            });
+            
+            // Advanced Search Term Highlighting
+            const searchQuery = '{{ search_query|escapejs }}';
+            if (searchQuery && searchQuery.length > 0) {
+                const regex = new RegExp(`(${searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                
+                document.querySelectorAll('.user-details h6, .applications-table td:not(:first-child)').forEach(element => {
+                    if (element.textContent && element.textContent.match(regex)) {
+                        element.innerHTML = element.innerHTML.replace(regex, '<mark style="background: linear-gradient(120deg, #fff59d 0%, #fff176 100%); padding: 2px 4px; border-radius: 3px; font-weight: 600;">$1</mark>');
+                    }
+                });
+            }
+            
+            // Enhanced Loading States for Form Submissions
+            document.querySelectorAll('form button[type="submit"]').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    if (this.form.checkValidity()) {
+                        // Show loading state
+                        const originalHtml = this.innerHTML;
+                        this.disabled = true;
+                        this.innerHTML = '<div class="loading-spinner" style="width: 1rem; height: 1rem; margin-right: 0.5rem;"></div>Processing...';
+                        
+                        // Reset after timeout (fallback)
+                        setTimeout(() => {
+                            this.disabled = false;
+                            this.innerHTML = originalHtml;
+                        }, 5000);
+                    }
+                });
+            });
+            
+            // Auto-refresh functionality (optional)
+            let autoRefreshInterval;
+            let isAutoRefreshEnabled = false;
+            
+            function toggleAutoRefresh() {
+                if (isAutoRefreshEnabled) {
+                    clearInterval(autoRefreshInterval);
+                    isAutoRefreshEnabled = false;
+                } else {
+                    autoRefreshInterval = setInterval(() => {
+                        if (!document.hidden && document.querySelectorAll('.row-select:checked').length === 0) {
+                            // Only auto-refresh if no selections are active
+                            location.reload();
+                        }
+                    }, 30000); // Refresh every 30 seconds
+                    isAutoRefreshEnabled = true;
+                }
+            }
+            
+            // Add auto-refresh toggle button (optional)
+            // Uncomment to enable auto-refresh functionality
+            /*
+            const autoRefreshBtn = document.createElement('button');
+            autoRefreshBtn.className = 'btn btn-outline-secondary btn-sm ms-2';
+            autoRefreshBtn.innerHTML = '<i class="bi bi-arrow-clockwise me-1"></i>Auto-refresh';
+            autoRefreshBtn.onclick = toggleAutoRefresh;
+            document.querySelector('.header-actions')?.appendChild(autoRefreshBtn);
+            */
+            
+            // Table Row Animation on Hover
+            document.querySelectorAll('.applications-table tbody tr').forEach(row => {
+                row.addEventListener('mouseenter', function() {
+                    this.style.transform = 'scale(1.002)';
+                });
+                
+                row.addEventListener('mouseleave', function() {
+                    if (!this.querySelector('.row-select:checked')) {
+                        this.style.transform = '';
+                    }
+                });
+            });
+            
+            // Smooth scroll to top after pagination
+            if (window.location.search.includes('page=')) {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+            
+            // Print optimization
+            window.addEventListener('beforeprint', function() {
+                // Hide unnecessary elements for printing
+                document.querySelectorAll('.action-group, .bulk-actions').forEach(el => {
+                    el.style.display = 'none';
+                });
+            });
+            
+            window.addEventListener('afterprint', function() {
+                // Restore elements after printing
+                document.querySelectorAll('.action-group, .bulk-actions').forEach(el => {
+                    el.style.display = '';
+                });
+            });
+            
+            // Performance monitoring (optional)
+            if ('performance' in window) {
+                window.addEventListener('load', function() {
+                    const loadTime = performance.timing.loadEventEnd - performance.timing.navigationStart;
+                    console.log(`Dashboard loaded in ${loadTime}ms`);
+                });
+            }
+        });
+    </script>
+</body>
+</html>

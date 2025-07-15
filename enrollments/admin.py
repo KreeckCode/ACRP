@@ -1,4 +1,4 @@
-# enrollments/admin.py - Simple admin configuration
+# enrollments/admin.py - Fixed version
 
 from django.contrib import admin
 from django.utils.html import format_html
@@ -139,7 +139,7 @@ class BaseApplicationAdmin(admin.ModelAdmin):
         ('Review', {
             'fields': (
                 'reviewed_at', 'reviewed_by', 'reviewer_notes',
-                'approved_at', 'approved_by', 'rejected_at', 'rejected_by', 'rejection_reason'
+                'approved_at', 'approved_by', 'rejected_at', 'rejection_reason'  # REMOVED 'rejected_by'
             ),
             'classes': ('collapse',)
         }),
@@ -164,8 +164,10 @@ class BaseApplicationAdmin(admin.ModelAdmin):
         )
 
 
+# ADD THE MISSING AssociatedApplicationAdmin CLASS
 @admin.register(AssociatedApplication)
 class AssociatedApplicationAdmin(BaseApplicationAdmin):
+    """Admin for Associated Applications - inherits all from BaseApplicationAdmin"""
     pass
 
 

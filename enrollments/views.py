@@ -1,24 +1,3 @@
-# enrollments/views.py - Redesigned for new onboarding flow and application structure
-"""
-Enhanced views supporting the new onboarding flow and application model structure.
-
-Design Principles:
-1. Multi-step onboarding process with session tracking
-2. Dynamic form generation based on user selections
-3. Unified application management across all types
-4. Comprehensive security and permission checking
-5. Optimized queries and caching
-6. Proper error handling and logging
-
-Flow:
-1. User starts onboarding → selects affiliation type
-2. User selects council
-3. If designated → selects category and subcategory (if CPSC)
-4. OnboardingSession created with all choices
-5. User fills appropriate application form
-6. Application created with linked onboarding session
-"""
-
 import logging
 from typing import Type, Dict, Any, Optional
 
@@ -190,61 +169,68 @@ def get_all_applications_queryset():
 # ============================================================================
 # ONBOARDING FLOW VIEWS
 # ============================================================================
-
 @csrf_protect
-@rate_limit(max_requests=20, window=3600)
 def onboarding_start(request):
     """
     Step 1: Start onboarding process - select affiliation type.
-    
-    This is the entry point for all new applications.
     """
     if request.method == 'POST':
-        form = AffiliationTypeSelectionForm(request.POST)
-        if form.is_valid():
-            affiliation_type = form.cleaned_data['affiliation_type']
-            
-            # Create or get onboarding session
-            session, created = OnboardingSession.objects.get_or_create(
-                user=request.user if request.user.is_authenticated else None,
-                status='selecting_affiliation',
-                defaults={
-                    'selected_affiliation_type': affiliation_type,
-                    'ip_address': get_client_ip(request),
-                    'user_agent': request.META.get('HTTP_USER_AGENT', '')[:500]
-                }
-            )
-            
-            if not created:
-                session.selected_affiliation_type = affiliation_type
-                session.status = 'selecting_council'
-                session.save(update_fields=['selected_affiliation_type', 'status', 'updated_at'])
-            
-            # Store session ID in user session
-            request.session['onboarding_session_id'] = session.session_id.hex
-            
-            logger.info(f"Onboarding started: {affiliation_type.name} from IP {get_client_ip(request)}")
-            return redirect('enrollments:onboarding_council', session_id=session.session_id.hex)
+        # Get the string value from POST
+        affiliation_type_code = request.POST.get('affiliation_type')
         
-        messages.error(request, "Please select a valid affiliation type.")
-    else:
-        form = AffiliationTypeSelectionForm()
+        if affiliation_type_code in ['associated', 'designated', 'student']:
+            try:
+                # Get the actual AffiliationType object
+                affiliation_type = AffiliationType.objects.get(
+                    code=affiliation_type_code,
+                    is_active=True
+                )
+                
+                # Create or get onboarding session
+                session, created = OnboardingSession.objects.get_or_create(
+                    user=request.user if request.user.is_authenticated else None,
+                    status='selecting_affiliation',
+                    defaults={
+                        'selected_affiliation_type': affiliation_type,
+                        'ip_address': get_client_ip(request),
+                        'user_agent': request.META.get('HTTP_USER_AGENT', '')[:500]
+                    }
+                )
+                
+                if not created:
+                    session.selected_affiliation_type = affiliation_type
+                    session.status = 'selecting_council'
+                    session.save(update_fields=['selected_affiliation_type', 'status', 'updated_at'])
+                
+                # Store session ID in user session (with dashes)
+                request.session['onboarding_session_id'] = str(session.session_id)
+                
+                logger.info(f"Onboarding started: {affiliation_type.name} from IP {get_client_ip(request)}")
+                
+                # Redirect with full UUID format (with dashes)
+                return redirect('enrollments:onboarding_council', session_id=str(session.session_id))
+                
+            except AffiliationType.DoesNotExist:
+                messages.error(request, f"Invalid affiliation type: {affiliation_type_code}")
+        else:
+            messages.error(request, "Please select a valid affiliation type.")
+    
+    # For GET request or form errors
+    form = AffiliationTypeSelectionForm()
     
     context = {
         'form': form,
         'page_title': 'Select Affiliation Type',
         'step': 1,
-        'total_steps': 4,  # max possible steps
+        'total_steps': 4,
     }
     
     return render(request, 'enrollments/onboarding/step1_affiliation_type.html', context)
-
 
 @csrf_protect
 def onboarding_council(request, session_id):
     """
     Step 2: Select council (CGMP, CPSC, CMTP).
-    
     All affiliation types need to select a council.
     """
     # Get and validate onboarding session
@@ -260,31 +246,56 @@ def onboarding_council(request, session_id):
         return redirect('enrollments:onboarding_start')
     
     if request.method == 'POST':
-        form = CouncilSelectionForm(request.POST)
-        if form.is_valid():
-            council = form.cleaned_data['council']
-            
-            session.selected_council = council
-            session.status = 'selecting_category'
-            session.save(update_fields=['selected_council', 'status', 'updated_at'])
-            
-            # Determine next step based on affiliation type
-            if session.selected_affiliation_type.code == 'designated':
-                return redirect('enrollments:onboarding_category', session_id=session_id)
-            else:
-                # Associated or Student - go directly to application
-                session.status = 'completed'
-                session.completed_at = timezone.now()
-                session.save(update_fields=['status', 'completed_at'])
-                return redirect('enrollments:application_create', session_id=session_id)
+        # Get council ID from POST data
+        council_id = request.POST.get('council')
+        logger.info(f"POST data received: {request.POST}")
+        logger.info(f"Council ID: {council_id}")
         
-        messages.error(request, "Please select a valid council.")
-    else:
-        form = CouncilSelectionForm()
+        if council_id:
+            try:
+                # Get the actual Council object
+                council = Council.objects.get(id=council_id, is_active=True)
+                
+                session.selected_council = council
+                session.status = 'selecting_category'
+                session.save(update_fields=['selected_council', 'status', 'updated_at'])
+                
+                logger.info(f"Council selected: {council.code} - {council.name}")
+                
+                # Determine next step based on affiliation type
+                if session.selected_affiliation_type.code == 'designated':
+                    return redirect('enrollments:onboarding_category', session_id=session_id)
+                else:
+                    # Associated or Student - go directly to application
+                    session.status = 'completed'
+                    session.completed_at = timezone.now()
+                    session.save(update_fields=['status', 'completed_at'])
+                    return redirect('enrollments:application_create', session_id=session_id)
+                    
+            except Council.DoesNotExist:
+                logger.error(f"Council with ID {council_id} not found")
+                messages.error(request, f"Invalid council selected: {council_id}")
+        else:
+            messages.error(request, "Please select a valid council.")
+    
+    # Get all councils for the template
+    councils = Council.objects.filter(is_active=True).order_by('code')
+    
+    # Create a dictionary for easy access in template
+    councils_dict = {}
+    for council in councils:
+        councils_dict[council.code.lower()] = council
+    
+    # Debug: Log available councils
+    logger.info(f"Available councils: {[(c.code, c.id) for c in councils]}")
+    
+    form = CouncilSelectionForm()
     
     context = {
         'form': form,
         'session': session,
+        'councils': councils_dict,  # For template access like {{ councils.cgmp.id }}
+        'councils_list': councils,   # For iteration in template
         'page_title': 'Select Council',
         'step': 2,
         'total_steps': 4,
@@ -408,6 +419,7 @@ def onboarding_subcategory(request, session_id):
 # APPLICATION CREATION VIEWS
 # ============================================================================
 
+from django.contrib.contenttypes.models import ContentType
 @csrf_protect
 @rate_limit(max_requests=5, window=3600)
 @transaction.atomic
@@ -459,14 +471,14 @@ def application_create(request, session_id):
             onboarding_session=session
         )
         
-        # Initialize formsets for designated applications
+        # Initialize formsets based on application type
         formsets = {}
         if session.selected_affiliation_type.code == 'designated':
             # Only show formsets for designated applications
             formsets = {
                 'qualifications': AcademicQualificationFormSet(request.POST, prefix='qualifications'),
-                'references': ReferenceFormSet(request.POST, prefix='references'),
                 'experiences': PracticalExperienceFormSet(request.POST, prefix='experiences'),
+                'references': ReferenceFormSet(request.POST, prefix='references'),
                 'documents': DocumentFormSet(request.POST, request.FILES, prefix='documents'),
             }
         elif session.selected_affiliation_type.code in ['associated', 'student']:
@@ -476,13 +488,25 @@ def application_create(request, session_id):
                 'documents': DocumentFormSet(request.POST, request.FILES, prefix='documents'),
             }
         
-        # Validate main form and all formsets
+        # Validate main form
         form_valid = form.is_valid()
-        formsets_valid = all(formset.is_valid() for formset in formsets.values())
+        
+        # Log form errors for debugging
+        if not form_valid:
+            logger.warning(f"Main form errors: {form.errors}")
+            messages.error(request, "Please correct the main form errors.")
+        
+        # Validate formsets
+        formsets_valid = True
+        for formset_name, formset in formsets.items():
+            if not formset.is_valid():
+                formsets_valid = False
+                logger.error(f"Formset {formset_name} validation failed: {formset.errors}")
+                logger.error(f"Formset {formset_name} non-form errors: {formset.non_form_errors()}")
         
         if form_valid and formsets_valid:
             try:
-                # Save main application
+                # Save main application first
                 application = form.save(commit=False)
                 application.onboarding_session = session
                 
@@ -493,20 +517,33 @@ def application_create(request, session_id):
                 
                 application.save()
                 
-                # Save formsets
+                # Get content type for this application
+                content_type = ContentType.objects.get_for_model(application.__class__)
+                
+                # Save formsets with proper handling
                 for formset_name, formset in formsets.items():
                     if formset_name in ['qualifications', 'experiences']:
-                        # Direct foreign key relationship
+                        # Direct foreign key relationship - standard inline formset
+                        formset.instance = application
+                        formset.save()
+                    
+                    elif formset_name in ['references', 'documents']:
+                        # Generic foreign key relationship - manual handling
                         instances = formset.save(commit=False)
                         for instance in instances:
-                            instance.application = application
-                            instance.save()
-                    else:
-                        # Generic foreign key relationship
-                        instances = formset.save(commit=False)
-                        for instance in instances:
+                            instance.content_type = content_type
+                            instance.object_id = application.pk
                             instance.content_object = application
+                            
+                            # Set additional fields for documents
+                            if formset_name == 'documents' and request.user.is_authenticated:
+                                instance.uploaded_by = request.user
+                            
                             instance.save()
+                        
+                        # Handle deleted instances
+                        for obj in formset.deleted_objects:
+                            obj.delete()
                 
                 logger.info(f"Application created: {application.application_number} from session {session_id}")
                 
@@ -527,11 +564,15 @@ def application_create(request, session_id):
                 
             except Exception as e:
                 logger.error(f"Error creating application: {str(e)}")
+                logger.error(f"Exception type: {type(e)}")
+                logger.error(f"Traceback: {traceback.format_exc()}")
                 messages.error(request, "An error occurred while creating your application. Please try again.")
         
         else:
             # Form validation failed
-            logger.warning(f"Application form validation failed. Form errors: {form.errors}")
+            logger.warning(f"Application form validation failed")
+            if not form_valid:
+                logger.warning(f"Form errors: {form.errors}")
             for formset_name, formset in formsets.items():
                 if formset.errors:
                     logger.warning(f"{formset_name} formset errors: {formset.errors}")
@@ -550,8 +591,8 @@ def application_create(request, session_id):
         if session.selected_affiliation_type.code == 'designated':
             formsets = {
                 'qualifications': AcademicQualificationFormSet(prefix='qualifications'),
-                'references': ReferenceFormSet(prefix='references'),
                 'experiences': PracticalExperienceFormSet(prefix='experiences'),
+                'references': ReferenceFormSet(prefix='references'),
                 'documents': DocumentFormSet(prefix='documents'),
             }
         elif session.selected_affiliation_type.code in ['associated', 'student']:
@@ -590,7 +631,6 @@ def application_create(request, session_id):
                                'enrollments/applications/base_form.html')
     
     return render(request, template, context)
-
 
 # ============================================================================
 # APPLICATION MANAGEMENT VIEWS

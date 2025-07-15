@@ -1,21 +1,3 @@
-# enrollments/forms.py - Redesigned for new onboarding flow and model structure
-"""
-Enhanced forms that align with the new onboarding flow and application model structure.
-
-Design Principles:
-1. Separation of onboarding vs application forms
-2. Reusable base classes with DRY principles
-3. Comprehensive validation and styling
-4. Support for polymorphic relationships
-5. Dynamic form generation based on onboarding choices
-
-Flow:
-1. User goes through onboarding forms (affiliation type, council, categories)
-2. OnboardingSession tracks their choices
-3. Application form is generated based on their selections
-4. Related models (qualifications, references, etc.) have their own forms
-"""
-
 import os
 from django import forms
 from django.contrib.contenttypes.forms import generic_inlineformset_factory
@@ -120,49 +102,28 @@ class MultipleFileField(forms.FileField):
 # ============================================================================
 # ONBOARDING FLOW FORMS - Guide users through selection process
 # ============================================================================
-
 class AffiliationTypeSelectionForm(forms.Form):
     """
     First step: User selects their affiliation type.
-    
-    This determines which application form they'll ultimately fill out.
     """
-    affiliation_type = forms.ModelChoiceField(
-        queryset=AffiliationType.objects.filter(is_active=True),
+    AFFILIATION_CHOICES = [
+        ('associated', 'Associated Affiliation'),
+        ('designated', 'Designated Affiliation'), 
+        ('student', 'Student Affiliation'),
+    ]
+    
+    affiliation_type = forms.ChoiceField(
+        choices=AFFILIATION_CHOICES,
         widget=forms.RadioSelect(attrs={
             "class": "h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
         }),
-        empty_label=None,
         required=True,
         help_text="Choose the type of affiliation you want to apply for"
     )
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        
-        # Add descriptions to help users understand each option
-        affiliation_help = {
-            'associated': 'Standard membership for ministry professionals',
-            'designated': 'Professional-level membership with specialization requirements',
-            'student': 'Membership for students in ministry training programs'
-        }
-        
-        # Customize the radio button labels with descriptions
-        choices = []
-        for affiliation in self.fields['affiliation_type'].queryset:
-            description = affiliation_help.get(affiliation.code, '')
-            label = f"{affiliation.name}"
-            if description:
-                label += f" - {description}"
-            choices.append((affiliation.pk, label))
-        
-        self.fields['affiliation_type'].choices = choices
-
 
 class CouncilSelectionForm(forms.Form):
     """
     Second step: User selects which council they want to join.
-    
     All affiliation types need to select a council.
     """
     council = forms.ModelChoiceField(
@@ -183,11 +144,11 @@ class CouncilSelectionForm(forms.Form):
         for council in self.fields['council'].queryset:
             label = f"{council.code} - {council.name}"
             if council.description:
-                label += f" ({council.description[:100]}...)" if len(council.description) > 100 else f" ({council.description})"
+                desc = council.description[:100] + "..." if len(council.description) > 100 else council.description
+                label += f" ({desc})"
             choices.append((council.pk, label))
         
         self.fields['council'].choices = choices
-
 
 class DesignationCategorySelectionForm(forms.Form):
     """

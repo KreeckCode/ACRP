@@ -1,5 +1,3 @@
-# enrollments/urls.py - Complete URL configuration for new onboarding system
-
 from django.urls import path
 from django.shortcuts import redirect
 from . import views
@@ -7,20 +5,13 @@ from . import views
 app_name = 'enrollments'
 
 urlpatterns = [
-    # ============================================================================
-    # ONBOARDING FLOW URLS - New multi-step process
-    # ============================================================================
     
-    # Step 1: Select affiliation type (Associated, Designated, Student)
     path('onboarding/', views.onboarding_start, name='onboarding_start'),
     
-    # Step 2: Select council (CGMP, CPSC, CMTP)
     path('onboarding/council/<uuid:session_id>/', views.onboarding_council, name='onboarding_council'),
     
-    # Step 3: Select designation category (only for designated affiliations)
     path('onboarding/category/<uuid:session_id>/', views.onboarding_category, name='onboarding_category'),
     
-    # Step 4: Select subcategory (only for CPSC designated affiliations)
     path('onboarding/subcategory/<uuid:session_id>/', views.onboarding_subcategory, name='onboarding_subcategory'),
     
     # ============================================================================

@@ -241,13 +241,13 @@
                 <div class="row text-center">
                     <div class="col-6">
                         <div class="fs-2 fw-bold" id="totalApplications">
-                            {{ stats.cgmp.total|add:stats.cpsc.total|add:stats.cmtp.total }}
+                            {% if stats.cgmp %}{{ stats.cgmp.total|default:0 }}{% else %}0{% endif %}
                         </div>
                         <div class="text-light small">Total Applications</div>
                     </div>
                     <div class="col-6">
                         <div class="fs-2 fw-bold" id="totalApproved">
-                            {{ stats.cgmp.approved|add:stats.cpsc.approved|add:stats.cmtp.approved }}
+                            {% if stats.cgmp %}{{ stats.cgmp.approved|default:0 }}{% else %}0{% endif %}
                         </div>
                         <div class="text-light small">Approved</div>
                     </div>

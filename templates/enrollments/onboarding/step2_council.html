@@ -29,6 +29,11 @@
     .council-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
     .council-card { transition: all 0.3s ease; }
     
+    /* Debug styles */
+    .debug-selected {
+      outline: 3px solid red !important;
+    }
+    
     @media (max-width: 976px) {
       body { margin: 0; padding: 0; }
       .container { margin: 1rem; }
@@ -54,7 +59,11 @@
         <h1 class="text-5xl font-bold text-gray-800 mb-4">Choose Your Council</h1>
         <p class="text-xl text-gray-600 max-w-3xl mx-auto">
           Select the council that best matches your ministry focus and professional development needs for your 
+          {% if session.selected_affiliation_type %}
           <span class="font-semibold text-blue-600">{{ session.selected_affiliation_type.name }}</span>
+          {% else %}
+          <span class="font-semibold text-blue-600">selected affiliation</span>
+          {% endif %}
         </p>
         
         <!-- Progress Indicator -->
@@ -73,14 +82,14 @@
       </div>
       
       <!-- Form -->
-      <form method="post">
+      <form method="post" id="councilForm">
         {% csrf_token %}
         
         <div class="grid md:grid-cols-3 gap-8 mb-12">
           <!-- CGMP Council -->
-          <label class="council-card cursor-pointer block">
-            <input type="radio" name="council" value="{{ councils.cgmp.id }}" class="sr-only peer" required>
-            <div class="bg-white rounded-xl shadow-lg p-6 border-2 border-gray-200 peer-checked:border-blue-500 peer-checked:bg-blue-50 transition-all duration-300 h-full slide-in" style="animation-delay: 0.1s">
+          <div class="council-card cursor-pointer" data-council="cgmp" data-value="{{ councils.cgmp.id }}" id="card-cgmp">
+            <input type="radio" name="council" value="{{ councils.cgmp.id }}" class="sr-only peer radio-input" id="radio-cgmp" required>
+            <div class="card-inner bg-white rounded-xl shadow-lg p-6 border-2 border-gray-200 peer-checked:border-blue-500 peer-checked:bg-blue-50 transition-all duration-300 h-full slide-in" style="animation-delay: 0.1s">
               <div class="text-center mb-6">
                 <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -105,18 +114,18 @@
                 </div>
                 
                 <div class="flex items-center justify-center">
-                  <div class="w-6 h-6 border-2 border-blue-600 rounded-full flex items-center justify-center peer-checked:bg-blue-600">
-                    <div class="w-3 h-3 bg-blue-600 rounded-full opacity-0 peer-checked:opacity-100 transition-opacity"></div>
+                  <div class="check-indicator w-6 h-6 border-2 border-blue-600 rounded-full flex items-center justify-center">
+                    <div class="check-dot w-3 h-3 bg-blue-600 rounded-full opacity-0 transition-opacity duration-300"></div>
                   </div>
                 </div>
               </div>
             </div>
-          </label>
+          </div>
 
           <!-- CPSC Council -->
-          <label class="council-card cursor-pointer block">
-            <input type="radio" name="council" value="{{ councils.cpsc.id }}" class="sr-only peer" required>
-            <div class="bg-white rounded-xl shadow-lg p-6 border-2 border-gray-200 peer-checked:border-green-500 peer-checked:bg-green-50 transition-all duration-300 h-full slide-in" style="animation-delay: 0.2s">
+          <div class="council-card cursor-pointer" data-council="cpsc" data-value="{{ councils.cpsc.id }}" id="card-cpsc">
+          <input type="radio" name="council" value="{{ councils.cpsc.id }}" class="sr-only peer radio-input" id="radio-cpsc" required>
+            <div class="card-inner bg-white rounded-xl shadow-lg p-6 border-2 border-gray-200 peer-checked:border-green-500 peer-checked:bg-green-50 transition-all duration-300 h-full slide-in" style="animation-delay: 0.2s">
               <div class="text-center mb-6">
                 <div class="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -141,18 +150,18 @@
                 </div>
                 
                 <div class="flex items-center justify-center">
-                  <div class="w-6 h-6 border-2 border-green-600 rounded-full flex items-center justify-center peer-checked:bg-green-600">
-                    <div class="w-3 h-3 bg-green-600 rounded-full opacity-0 peer-checked:opacity-100 transition-opacity"></div>
+                  <div class="check-indicator w-6 h-6 border-2 border-green-600 rounded-full flex items-center justify-center">
+                    <div class="check-dot w-3 h-3 bg-green-600 rounded-full opacity-0 transition-opacity duration-300"></div>
                   </div>
                 </div>
               </div>
             </div>
-          </label>
+          </div>
 
           <!-- CMTP Council -->
-          <label class="council-card cursor-pointer block">
-            <input type="radio" name="council" value="{{ councils.cmtp.id }}" class="sr-only peer" required>
-            <div class="bg-white rounded-xl shadow-lg p-6 border-2 border-gray-200 peer-checked:border-purple-500 peer-checked:bg-purple-50 transition-all duration-300 h-full slide-in" style="animation-delay: 0.3s">
+          <div class="council-card cursor-pointer" data-council="cmtp" data-value="{{ councils.cmtp.id }}" id="card-cmtp">
+            <input type="radio" name="council" value="{{ councils.cmtp.id }}" class="sr-only peer radio-input" id="radio-cmtp" required>
+            <div class="card-inner bg-white rounded-xl shadow-lg p-6 border-2 border-gray-200 peer-checked:border-purple-500 peer-checked:bg-purple-50 transition-all duration-300 h-full slide-in" style="animation-delay: 0.3s">
               <div class="text-center mb-6">
                 <div class="w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -177,13 +186,13 @@
                 </div>
                 
                 <div class="flex items-center justify-center">
-                  <div class="w-6 h-6 border-2 border-purple-600 rounded-full flex items-center justify-center peer-checked:bg-purple-600">
-                    <div class="w-3 h-3 bg-purple-600 rounded-full opacity-0 peer-checked:opacity-100 transition-opacity"></div>
+                  <div class="check-indicator w-6 h-6 border-2 border-purple-600 rounded-full flex items-center justify-center">
+                    <div class="check-dot w-3 h-3 bg-purple-600 rounded-full opacity-0 transition-opacity duration-300"></div>
                   </div>
                 </div>
               </div>
             </div>
-          </label>
+          </div>
         </div>
         
         <!-- Continue Button -->
@@ -213,6 +222,30 @@
           </div>
         </div>
       {% endif %}
+
+      {% if messages %}
+        {% for message in messages %}
+          <div class="max-w-md mx-auto mt-6 px-4 py-3 rounded-lg bg-red-100 text-red-800 fade-in">
+            <div class="flex items-center">
+              <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+              </svg>
+              {{ message }}
+            </div>
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      <!-- Debug info -->
+      <div class="bg-yellow-100 p-4 rounded">
+        <h4>Debug Info:</h4>
+        <p>Available councils:</p>
+        <ul>
+          {% for council in councils_list %}
+          <li>{{ council.code }} - ID: {{ council.id }}</li>
+          {% endfor %}
+        </ul>
+      </div>
     </div>
   </div>
 
@@ -256,8 +289,208 @@
   </div>
 
   <script>
+    // Global variables for debugging
     let selectedCouncil = '';
-    
+    let debugMode = true; // Set to false in production
+
+    // Enhanced logging function
+    function log(message, data = null) {
+      if (debugMode) {
+        if (data) {
+          console.log(`🏛️ [Council Debug] ${message}:`, data);
+        } else {
+          console.log(`🏛️ [Council Debug] ${message}`);
+        }
+      }
+    }
+
+    // Update debug display
+    function updateDebugDisplay() {
+      if (!debugMode) return;
+      
+      const debugDiv = document.getElementById('debug-content');
+      const debugInfo = document.getElementById('debug-info');
+      
+      if (debugDiv && debugInfo) {
+        const checkedRadio = document.querySelector('input[name="council"]:checked');
+        const allRadios = document.querySelectorAll('input[name="council"]');
+        
+        let debugHTML = `
+          <p><strong>Selected Council:</strong> ${selectedCouncil || 'None'}</p>
+          <p><strong>Checked Radio:</strong> ${checkedRadio ? checkedRadio.value : 'None'}</p>
+          <p><strong>All Radio States:</strong></p>
+          <ul class="ml-4">
+        `;
+        
+        allRadios.forEach((radio, index) => {
+          const council = radio.closest('.council-card').dataset.council;
+          debugHTML += `<li>${council} (${radio.value}): ${radio.checked ? '✅' : '❌'}</li>`;
+        });
+        
+        debugHTML += '</ul>';
+        debugDiv.innerHTML = debugHTML;
+        debugInfo.style.display = 'block';
+      }
+    }
+
+    // Enhanced card selection function
+    function selectCouncil(council) {
+      log(`selectCouncil called with: ${council}`);
+      
+      try {
+        // Clear all selections first
+        clearAllSelections();
+        
+        // Find the specific card and radio button
+        const cardElement = document.getElementById(`card-${council}`);
+        const radioElement = document.getElementById(`radio-${council}`);
+        const cardInner = cardElement?.querySelector('.card-inner');
+        const checkDot = cardElement?.querySelector('.check-dot');
+        
+        log('Found elements', {
+          cardElement: !!cardElement,
+          radioElement: !!radioElement,
+          cardInner: !!cardInner,
+          checkDot: !!checkDot
+        });
+        
+        if (!cardElement || !radioElement || !cardInner) {
+          log('❌ Missing required elements!');
+          return false;
+        }
+        
+        // Set the radio button as checked
+        radioElement.checked = true;
+        selectedCouncil = council;
+        
+        log(`✅ Radio button ${council} set to checked: ${radioElement.checked}`);
+        
+        // Apply visual styles
+        cardInner.classList.remove('border-gray-200');
+        
+        // Apply council-specific styling
+        if (council === 'cgmp') {
+          cardInner.classList.add('ring-2', 'ring-blue-500', 'border-blue-500', 'bg-blue-50');
+        } else if (council === 'cpsc') {
+          cardInner.classList.add('ring-2', 'ring-green-500', 'border-green-500', 'bg-green-50');
+        } else if (council === 'cmtp') {
+          cardInner.classList.add('ring-2', 'ring-purple-500', 'border-purple-500', 'bg-purple-50');
+        }
+        
+        // Show check indicator
+        if (checkDot) {
+          checkDot.classList.remove('opacity-0');
+          checkDot.classList.add('opacity-100');
+        }
+        
+        log(`✅ Applied styling for ${council}`);
+        
+        // Trigger change event on radio button
+        radioElement.dispatchEvent(new Event('change', { bubbles: true }));
+        
+        // Update debug display
+        updateDebugDisplay();
+        
+        // Verify the selection worked
+        const isActuallyChecked = document.querySelector(`input[name="council"][value="${radioElement.value}"]`).checked;
+        log(`✅ Final verification - ${council} is checked: ${isActuallyChecked}`);
+        
+        return true;
+        
+      } catch (error) {
+        log('❌ Error in selectCouncil:', error);
+        return false;
+      }
+    }
+
+    // Clear all selections
+    function clearAllSelections() {
+      log('Clearing all council selections');
+      
+      const allCards = document.querySelectorAll('.council-card');
+      const allRadios = document.querySelectorAll('input[name="council"]');
+      
+      allCards.forEach(card => {
+        const cardInner = card.querySelector('.card-inner');
+        const checkDot = card.querySelector('.check-dot');
+        
+        if (cardInner) {
+          // Remove all selection classes
+          cardInner.classList.remove(
+            'ring-2', 'ring-blue-500', 'ring-green-500', 'ring-purple-500',
+            'border-blue-500', 'border-green-500', 'border-purple-500',
+            'bg-blue-50', 'bg-green-50', 'bg-purple-50'
+          );
+          cardInner.classList.add('border-gray-200');
+        }
+        
+        if (checkDot) {
+          checkDot.classList.remove('opacity-100');
+          checkDot.classList.add('opacity-0');
+        }
+      });
+      
+      allRadios.forEach(radio => {
+        radio.checked = false;
+      });
+      
+      selectedCouncil = '';
+      log('✅ All council selections cleared');
+    }
+
+    // Debug form state
+    function debugFormState() {
+      log('=== COUNCIL FORM STATE DEBUG ===');
+      
+      const form = document.getElementById('councilForm');
+      const allRadios = document.querySelectorAll('input[name="council"]');
+      const checkedRadio = document.querySelector('input[name="council"]:checked');
+      
+      log('Form element found:', !!form);
+      log('Total radio buttons:', allRadios.length);
+      log('Currently checked radio:', checkedRadio ? checkedRadio.value : 'None');
+      log('Selected council variable:', selectedCouncil);
+      
+      log('Individual radio states:');
+      allRadios.forEach((radio, index) => {
+        const council = radio.closest('.council-card').dataset.council;
+        log(`  Radio ${index + 1} (${council}):`, {
+          checked: radio.checked,
+          value: radio.value,
+          id: radio.id,
+          name: radio.name,
+          required: radio.required
+        });
+      });
+      
+      updateDebugDisplay();
+      log('=== END COUNCIL FORM STATE DEBUG ===');
+    }
+
+    // Enhanced form validation
+    function validateForm() {
+      log('🔍 Starting council form validation');
+      
+      const checkedRadio = document.querySelector('input[name="council"]:checked');
+      
+      log('Validation check:', {
+        checkedRadio: !!checkedRadio,
+        value: checkedRadio ? checkedRadio.value : null,
+        selectedCouncil: selectedCouncil
+      });
+      
+      if (!checkedRadio) {
+        log('❌ Validation failed: No council radio button checked');
+        alert('Please select a council to continue.');
+        debugFormState();
+        return false;
+      }
+      
+      log(`✅ Validation passed: ${checkedRadio.value} selected`);
+      return true;
+    }
+
+    // Council data for modals
     const councilData = {
       cgmp: {
         title: 'CGMP',
@@ -387,6 +620,7 @@
     };
 
     function openModal(council) {
+      log(`Opening modal for: ${council}`);
       const modal = document.getElementById('councilModal');
       const data = councilData[council];
       
@@ -399,58 +633,128 @@
       
       selectedCouncil = council;
       modal.classList.remove('hidden');
+      log(`Modal opened for ${council}`);
     }
 
     function closeModal() {
+      log('Closing modal');
       document.getElementById('councilModal').classList.add('hidden');
     }
 
     function selectFromModal() {
-      // Find the radio button for this council and check it
-      const radioButton = document.querySelector(`input[value*="${selectedCouncil}"]`);
-      if (radioButton) {
-        radioButton.checked = true;
-        radioButton.dispatchEvent(new Event('change'));
-      }
+      log(`Selecting ${selectedCouncil} from modal`);
+      selectCouncil(selectedCouncil);
       closeModal();
     }
 
-    // Close modal when clicking outside
-    document.getElementById('councilModal').addEventListener('click', function(e) {
-      if (e.target === this) {
-        closeModal();
-      }
-    });
-
-    // Handle escape key
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') {
-        closeModal();
-      }
-    });
-
-    // Add interactive feedback for radio selection
+    // Event Listeners
     document.addEventListener('DOMContentLoaded', function() {
-      const radioInputs = document.querySelectorAll('input[type="radio"]');
-      const cards = document.querySelectorAll('.council-card');
+      log('🚀 Council page loaded, initializing...');
       
-      radioInputs.forEach((input, index) => {
-        input.addEventListener('change', function() {
-          // Remove selected state from all cards
-          cards.forEach(card => {
-            const cardDiv = card.querySelector('div');
-            cardDiv.classList.remove('ring-2', 'ring-blue-500', 'ring-green-500', 'ring-purple-500');
-          });
-          
-          // Add selected state to current card
-          if (this.checked) {
-            const cardDiv = this.closest('label').querySelector('div');
-            const colors = ['ring-blue-500', 'ring-green-500', 'ring-purple-500'];
-            cardDiv.classList.add('ring-2', colors[index]);
+      // Add click event listeners to all cards
+      const cards = document.querySelectorAll('.council-card');
+      log(`Found ${cards.length} council cards`);
+      
+      cards.forEach((card, index) => {
+        const council = card.dataset.council;
+        log(`Setting up card ${index + 1}: ${council}`);
+        
+        // Add click listener to card
+        card.addEventListener('click', function(e) {
+          // Don't trigger if clicking on the "Learn More" button
+          if (e.target.closest('button[onclick*="openModal"]')) {
+            log(`Learn More button clicked for ${council}, not selecting`);
+            return;
           }
+          
+          e.preventDefault();
+          e.stopPropagation();
+          log(`🎯 Council card clicked: ${council}`);
+          selectCouncil(council);
         });
+        
+        // Also add change listener to the radio button
+        const radio = card.querySelector('input[type="radio"]');
+        if (radio) {
+          radio.addEventListener('change', function() {
+            log(`📻 Radio change event: ${this.value}, checked: ${this.checked}`);
+            if (this.checked) {
+              selectedCouncil = council;
+              updateDebugDisplay();
+            }
+          });
+        }
       });
+      
+      // Form submission handler
+      const form = document.getElementById('councilForm');
+      if (form) {
+        form.addEventListener('submit', function(e) {
+          log('📝 Council form submission attempted');
+          
+          if (!validateForm()) {
+            e.preventDefault();
+            log('❌ Council form submission prevented due to validation failure');
+            return false;
+          }
+          
+          log('✅ Council form validation passed, submitting...');
+          return true;
+        });
+      }
+      
+      // Modal event listeners
+      document.getElementById('councilModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+          closeModal();
+        }
+      });
+
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          closeModal();
+        }
+      });
+      
+      // Initial debug
+      setTimeout(() => {
+        debugFormState();
+      }, 500);
+      
+      log('✅ Council page initialization complete');
     });
+
+    // Global functions for manual testing
+    window.testSelectCouncil = function(council) {
+      log(`🧪 Manual test: selecting ${council}`);
+      selectCouncil(council);
+    };
+
+    window.testCouncilFormState = function() {
+      debugFormState();
+    };
+
+    window.testCouncilSubmit = function() {
+      const form = document.getElementById('councilForm');
+      if (form) {
+        log('🧪 Manual test: submitting council form');
+        form.dispatchEvent(new Event('submit'));
+      }
+    };
+
+    // Console helper message
+    setTimeout(() => {
+      if (debugMode) {
+        console.log(`
+🔧 Council Debug Console Commands:
+• testSelectCouncil('cgmp') - Test selecting CGMP
+• testSelectCouncil('cpsc') - Test selecting CPSC  
+• testSelectCouncil('cmtp') - Test selecting CMTP
+• testCouncilFormState() - Check current form state
+• testCouncilSubmit() - Test form submission
+        `);
+      }
+    }, 1000);
   </script>
   
 </body>
