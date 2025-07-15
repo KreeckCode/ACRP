@@ -390,12 +390,6 @@
             {% csrf_token %}
             
             <!-- Form Management Fields -->
-            {% if formsets.references %}
-                {{ formsets.references.management_form }}
-            {% endif %}
-            {% if formsets.documents %}
-                {{ formsets.documents.management_form }}
-            {% endif %}
             {% if formsets.qualifications %}
                 {{ formsets.qualifications.management_form }}
             {% endif %}
@@ -1032,7 +1026,7 @@
                 </div>
 
                 <!-- References Section -->
-                {% if show_references and formsets.references %}
+                {% if show_references %}
                 <div class="form-section" id="section-references">
                     <div class="section-header" onclick="toggleSection('references')">
                         <h3>
@@ -1042,6 +1036,13 @@
                         <i class="bi bi-chevron-down toggle-icon"></i>
                     </div>
                     <div class="section-content" id="content-references">
+                        
+                        <!-- Management Form for References -->
+                        <input type="hidden" name="references-TOTAL_FORMS" value="0" id="id_references-TOTAL_FORMS">
+                        <input type="hidden" name="references-INITIAL_FORMS" value="0" id="id_references-INITIAL_FORMS">
+                        <input type="hidden" name="references-MIN_NUM_FORMS" value="0" id="id_references-MIN_NUM_FORMS">
+                        <input type="hidden" name="references-MAX_NUM_FORMS" value="1000" id="id_references-MAX_NUM_FORMS">
+                        
                         <div class="formset-container">
                             <div class="formset-header">
                                 <h4 class="formset-title">Professional References</h4>
@@ -1052,47 +1053,10 @@
                             </div>
                             
                             <div id="references-formset">
-                                {% for form in formsets.references %}
-                                    <div class="formset-item" data-form-index="{{ forloop.counter0 }}">
-                                        <div class="formset-item-header">
-                                            <h5 class="formset-item-title">Reference {{ forloop.counter }}</h5>
-                                            {% if not forloop.first %}
-                                            <button type="button" class="formset-remove" onclick="removeFormsetItem(this, 'references')">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                            {% endif %}
-                                        </div>
-                                        
-                                        <div class="field-row two-cols">
-                                            {% for field in form %}
-                                                {% if not field.field.widget.is_hidden %}
-                                                    <div class="form-group {% if field.name in 'reference_address,nature_of_relationship' %}field-full{% endif %}">
-                                                        <label for="{{ field.id_for_label }}">
-                                                            {{ field.label }}
-                                                            {% if field.field.required %}<span class="required">*</span>{% endif %}
-                                                        </label>
-                                                        {{ field }}
-                                                        {% if field.errors %}
-                                                            <div class="invalid-feedback">
-                                                                {% for error in field.errors %}{{ error }}{% endfor %}
-                                                            </div>
-                                                        {% endif %}
-                                                        {% if field.help_text %}
-                                                            <div class="form-text">{{ field.help_text }}</div>
-                                                        {% endif %}
-                                                    </div>
-                                                {% else %}
-                                                    {{ field }}
-                                                {% endif %}
-                                            {% endfor %}
-                                        </div>
-                                    </div>
-                                {% empty %}
-                                    <div class="formset-empty">
-                                        <i class="bi bi-people text-muted" style="font-size: 3rem;"></i>
-                                        <p class="mb-0">No references added yet. Click "Add Reference" to get started.</p>
-                                    </div>
-                                {% endfor %}
+                                <div class="formset-empty">
+                                    <i class="bi bi-people text-muted" style="font-size: 3rem;"></i>
+                                    <p class="mb-0">No references added yet. Click "Add Reference" to get started.</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1100,7 +1064,7 @@
                 {% endif %}
 
                 <!-- Documents Section -->
-                {% if show_documents and formsets.documents %}
+                {% if show_documents %}
                     <div class="form-section" id="section-documents">
                         <div class="section-header" onclick="toggleSection('documents')">
                             <h3>
@@ -1135,6 +1099,12 @@
                             </div>
                             {% endif %}
                             
+                            <!-- Management Form for Documents -->
+                            <input type="hidden" name="documents-TOTAL_FORMS" value="0" id="id_documents-TOTAL_FORMS">
+                            <input type="hidden" name="documents-INITIAL_FORMS" value="0" id="id_documents-INITIAL_FORMS">
+                            <input type="hidden" name="documents-MIN_NUM_FORMS" value="0" id="id_documents-MIN_NUM_FORMS">
+                            <input type="hidden" name="documents-MAX_NUM_FORMS" value="1000" id="id_documents-MAX_NUM_FORMS">
+                            
                             <div class="formset-container">
                                 <div class="formset-header">
                                     <h4 class="formset-title">Upload Additional Documents</h4>
@@ -1145,100 +1115,17 @@
                                 </div>
                                 
                                 <div id="documents-formset">
-                                    {% for form in formsets.documents %}
-                                        <div class="formset-item" data-form-index="{{ forloop.counter0 }}">
-                                            <div class="formset-item-header">
-                                                <h5 class="formset-item-title">Document {{ forloop.counter }}</h5>
-                                                <button type="button" class="formset-remove" onclick="removeFormsetItem(this, 'documents')">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </div>
-                                            
-                                            <div class="field-row">
-                                                {% for field in form %}
-                                                    {% if field.name == 'DELETE' %}
-                                                        {{ field }}
-                                                    {% elif field.name in 'content_type,object_id' %}
-                                                        {{ field }}
-                                                    {% elif field.name == 'category' %}
-                                                        <div class="form-group">
-                                                            <label for="{{ field.id_for_label }}">
-                                                                {{ field.label }}
-                                                                {% if field.field.required %}<span class="required">*</span>{% endif %}
-                                                            </label>
-                                                            {{ field }}
-                                                            {% if field.errors %}
-                                                                <div class="invalid-feedback">
-                                                                    {% for error in field.errors %}{{ error }}{% endfor %}
-                                                                </div>
-                                                            {% endif %}
-                                                        </div>
-                                                    {% elif field.name == 'title' %}
-                                                        <div class="form-group">
-                                                            <label for="{{ field.id_for_label }}">
-                                                                {{ field.label }}
-                                                                {% if field.field.required %}<span class="required">*</span>{% endif %}
-                                                            </label>
-                                                            {{ field }}
-                                                            {% if field.errors %}
-                                                                <div class="invalid-feedback">
-                                                                    {% for error in field.errors %}{{ error }}{% endfor %}
-                                                                </div>
-                                                            {% endif %}
-                                                        </div>
-                                                    {% elif field.name == 'description' %}
-                                                        <div class="form-group field-full">
-                                                            <label for="{{ field.id_for_label }}">
-                                                                {{ field.label }}
-                                                                {% if field.field.required %}<span class="required">*</span>{% endif %}
-                                                            </label>
-                                                            {{ field }}
-                                                            {% if field.errors %}
-                                                                <div class="invalid-feedback">
-                                                                    {% for error in field.errors %}{{ error }}{% endfor %}
-                                                                </div>
-                                                            {% endif %}
-                                                        </div>
-                                                    {% elif field.name == 'file' %}
-                                                        <div class="form-group field-full">
-                                                            <label for="{{ field.id_for_label }}">
-                                                                {{ field.label }}
-                                                                {% if field.field.required %}<span class="required">*</span>{% endif %}
-                                                            </label>
-                                                            {{ field }}
-                                                            {% if field.errors %}
-                                                                <div class="invalid-feedback">
-                                                                    {% for error in field.errors %}{{ error }}{% endfor %}
-                                                                </div>
-                                                            {% endif %}
-                                                            {% if field.help_text %}
-                                                                <div class="form-text">{{ field.help_text }}</div>
-                                                            {% endif %}
-                                                        </div>
-                                                    {% elif field.name == 'is_required' %}
-                                                        <div class="form-group">
-                                                            <div class="form-check">
-                                                                {{ field }}
-                                                                <label class="form-check-label" for="{{ field.id_for_label }}">
-                                                                    {{ field.label }}
-                                                                </label>
-                                                            </div>
-                                                        </div>
-                                                    {% endif %}
-                                                {% endfor %}
-                                            </div>
-                                        </div>
-                                    {% empty %}
-                                        <div class="formset-empty">
-                                            <i class="bi bi-file-earmark-arrow-up text-muted" style="font-size: 3rem;"></i>
-                                            <p class="mb-0">No documents uploaded yet. Click "Add Document" to get started.</p>
-                                        </div>
-                                    {% endfor %}
+                                    <div class="formset-empty">
+                                        <i class="bi bi-file-earmark-arrow-up text-muted" style="font-size: 3rem;"></i>
+                                        <p class="mb-0">No documents uploaded yet. Click "Add Document" to get started.</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 {% endif %}
+
+                
 
                 <!-- Legal Agreements Section -->
                 <div class="form-section" id="section-legal">
@@ -1580,10 +1467,35 @@
                         </div>
                     </div>
                 </div>
-                
-                <input type="hidden" name="documents-${index}-DELETE" id="id_documents-${index}-DELETE">
             `;
         }
+
+        // Enhanced debugging for form submission
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('applicationForm');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    console.log('Form submitting...');
+                    
+                    // Log document form data
+                    const formData = new FormData(form);
+                    const docEntries = [];
+                    for (let [key, value] of formData.entries()) {
+                        if (key.includes('document')) {
+                            docEntries.push(`${key}: ${value instanceof File ? value.name : value}`);
+                        }
+                    }
+                    console.log('Document form data:', docEntries);
+                    
+                    // Check total forms
+                    const totalForms = document.getElementById('id_documents-TOTAL_FORMS');
+                    if (totalForms) {
+                        console.log('Total document forms:', totalForms.value);
+                    }
+                });
+            }
+        });
+
 
 
 

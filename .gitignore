@@ -13,7 +13,8 @@ static
 /static
 static/
 .static
-
+.media_root
+media_root
 
 # Virtual environments
 .venv/

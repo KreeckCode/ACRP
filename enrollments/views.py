@@ -420,10 +420,492 @@ def onboarding_subcategory(request, session_id):
 # ============================================================================
 
 from django.contrib.contenttypes.models import ContentType
+import traceback 
+
 @csrf_protect
-@rate_limit(max_requests=5, window=3600)
+@rate_limit(max_requests=102, window=3600)
 @transaction.atomic
 def application_create(request, session_id):
+    """
+    Create application with proper document handling for generic formsets.
+    """
+    try:
+        session = OnboardingSession.objects.select_related(
+            'selected_affiliation_type', 'selected_council',
+            'selected_designation_category', 'selected_designation_subcategory'
+        ).get(session_id=session_id)
+    except OnboardingSession.DoesNotExist:
+        messages.error(request, "Invalid onboarding session.")
+        return redirect('enrollments:onboarding_start')
+    
+    if not session.is_complete():
+        messages.error(request, "Please complete the onboarding process.")
+        return redirect('enrollments:onboarding_start')
+    
+    # Check for existing application
+    existing_application = None
+    try:
+        if session.selected_affiliation_type.code == 'associated':
+            existing_application = AssociatedApplication.objects.get(onboarding_session=session)
+        elif session.selected_affiliation_type.code == 'designated':
+            existing_application = DesignatedApplication.objects.get(onboarding_session=session)
+        elif session.selected_affiliation_type.code == 'student':
+            existing_application = StudentApplication.objects.get(onboarding_session=session)
+    except (AssociatedApplication.DoesNotExist, DesignatedApplication.DoesNotExist, StudentApplication.DoesNotExist):
+        pass
+    
+    if existing_application:
+        messages.info(request, "Application already exists for this session.")
+        return redirect('enrollments:application_detail', 
+                       pk=existing_application.pk, 
+                       app_type=session.selected_affiliation_type.code)
+    
+    # Get form class
+    form_class_map = {
+        'associated': AssociatedApplicationForm,
+        'designated': DesignatedApplicationForm,
+        'student': StudentApplicationForm,
+    }
+    
+    form_class = form_class_map.get(session.selected_affiliation_type.code)
+    if not form_class:
+        messages.error(request, "Invalid affiliation type.")
+        return redirect('enrollments:onboarding_start')
+    
+    if request.method == 'POST':
+        logger.info(f"POST data keys: {list(request.POST.keys())}")
+        logger.info(f"FILES data keys: {list(request.FILES.keys())}")
+        
+        # Create main form
+        form = form_class(request.POST, request=request, onboarding_session=session)
+        
+        # For new applications, we need to handle documents differently
+        # Extract document data manually instead of using generic formset
+        document_data = extract_document_data_from_post(request)
+        reference_data = extract_reference_data_from_post(request)
+        
+        # Initialize non-generic formsets
+        formsets = {}
+        if session.selected_affiliation_type.code == 'designated':
+            formsets = {
+                'qualifications': AcademicQualificationFormSet(request.POST, prefix='qualifications'),
+                'experiences': PracticalExperienceFormSet(request.POST, prefix='experiences'),
+            }
+        
+        # Validate main form
+        form_valid = form.is_valid()
+        if not form_valid:
+            logger.warning(f"Main form errors: {form.errors}")
+        
+        # Validate formsets
+        formsets_valid = all(formset.is_valid() for formset in formsets.values())
+        
+        # Validate extracted document data
+        documents_valid, document_errors = validate_extracted_documents(document_data)
+        references_valid, reference_errors = validate_extracted_references(reference_data)
+        
+        if form_valid and formsets_valid and documents_valid and references_valid:
+            try:
+                # Save main application first
+                application = form.save(commit=False)
+                application.onboarding_session = session
+                
+                if session.selected_affiliation_type.code == 'designated':
+                    application.designation_category = session.selected_designation_category
+                    application.designation_subcategory = session.selected_designation_subcategory
+                
+                application.save()
+                logger.info(f"Application saved with ID: {application.pk}")
+                
+                # Get content type
+                content_type = ContentType.objects.get_for_model(application.__class__)
+                
+                # Save non-generic formsets
+                for formset_name, formset in formsets.items():
+                    formset.instance = application
+                    formset.save()
+                    logger.info(f"Saved {formset_name} formset")
+                
+                # Save documents manually
+                documents_saved = save_extracted_documents(document_data, application, content_type, request.user)
+                logger.info(f"Saved {documents_saved} documents")
+                
+                # Save references manually
+                references_saved = save_extracted_references(reference_data, application, content_type)
+                logger.info(f"Saved {references_saved} references")
+                
+                # Verify documents were saved
+                saved_documents = Document.objects.filter(content_type=content_type, object_id=application.pk)
+                logger.info(f"Total documents in DB: {saved_documents.count()}")
+                
+                request.session['application_success'] = {
+                    'application_number': application.application_number,
+                    'affiliation_type': session.selected_affiliation_type.name,
+                    'council_name': session.selected_council.name,
+                    'application_id': application.pk,
+                    'app_type': session.selected_affiliation_type.code,
+                }
+                
+                return redirect('enrollments:application_success')
+                
+            except Exception as e:
+                logger.error(f"Error creating application: {str(e)}")
+                logger.error(f"Traceback: {traceback.format_exc()}")
+                messages.error(request, f"An error occurred: {str(e)}")
+        
+        else:
+            # Show validation errors
+            if not form_valid:
+                messages.error(request, "Please correct the form errors.")
+            if document_errors:
+                messages.error(request, f"Document errors: {'; '.join(document_errors)}")
+            if reference_errors:
+                messages.error(request, f"Reference errors: {'; '.join(reference_errors)}")
+    
+    else:
+        # GET request
+        form = form_class(request=request, onboarding_session=session)
+        formsets = {}
+        if session.selected_affiliation_type.code == 'designated':
+            formsets = {
+                'qualifications': AcademicQualificationFormSet(prefix='qualifications'),
+                'experiences': PracticalExperienceFormSet(prefix='experiences'),
+            }
+    
+    # Create mock formsets for template
+    formsets['references'] = create_mock_reference_formset()
+    formsets['documents'] = create_mock_document_formset()
+    
+    context = {
+        'form': form,
+        'formsets': formsets,
+        'session': session,
+        'show_qualifications': session.selected_affiliation_type.code == 'designated',
+        'show_experiences': session.selected_affiliation_type.code == 'designated',
+        'show_references': True,
+        'show_documents': True,
+        'page_title': f'Create {session.selected_affiliation_type.name} Application',
+        'council_name': session.selected_council.name,
+        'affiliation_type': session.selected_affiliation_type.name,
+    }
+    
+    template_map = {
+        'associated': 'enrollments/applications/associated_form.html',
+        'designated': 'enrollments/applications/designated_form.html',
+        'student': 'enrollments/applications/student_form.html',
+    }
+    
+    template = template_map.get(session.selected_affiliation_type.code, 
+                               'enrollments/applications/base_form.html')
+    
+    return render(request, template, context)
+
+
+
+
+# ============================================================================
+# DOCUMENT MANAGEMENT VIEWS
+# ============================================================================
+
+@login_required
+@user_passes_test(can_approve_applications, login_url='/', redirect_field_name=None)
+@require_POST
+def document_verify(request, pk):
+    """Verify a document"""
+    document = get_object_or_404(Document, pk=pk)
+    
+    notes = request.POST.get('notes', '')
+    document.verify(verified_by=request.user, notes=notes)
+    
+    messages.success(request, f'Document "{document.title}" verified successfully.')
+    
+    # Return to application detail
+    app = document.content_object
+    app_type = app.get_affiliation_type()
+    return redirect('enrollments:application_detail', pk=app.pk, app_type=app_type)
+
+
+@login_required
+@user_passes_test(can_approve_applications, login_url='/', redirect_field_name=None)
+@require_POST
+def document_reject(request, pk):
+    """Reject a document"""
+    document = get_object_or_404(Document, pk=pk)
+    
+    notes = request.POST.get('notes', 'Document rejected by reviewer')
+    document.verified = False
+    document.verified_by = request.user
+    document.verified_at = timezone.now()
+    document.verification_notes = notes
+    document.save()
+    
+    messages.warning(request, f'Document "{document.title}" rejected.')
+    
+    # Return to application detail
+    app = document.content_object
+    app_type = app.get_affiliation_type()
+    return redirect('enrollments:application_detail', pk=app.pk, app_type=app_type)
+
+
+@login_required
+@user_passes_test(can_approve_applications, login_url='/', redirect_field_name=None)
+@require_POST
+def document_delete(request, pk):
+    """Delete a document"""
+    document = get_object_or_404(Document, pk=pk)
+    app = document.content_object
+    app_type = app.get_affiliation_type()
+    
+    document_title = document.title
+    document.delete()
+    
+    messages.success(request, f'Document "{document_title}" deleted successfully.')
+    return redirect('enrollments:application_detail', pk=app.pk, app_type=app_type)
+
+
+# ============================================================================
+# REFERENCE MANAGEMENT VIEWS
+# ============================================================================
+
+@login_required
+@user_passes_test(can_approve_applications, login_url='/', redirect_field_name=None)
+@require_POST
+def reference_approve(request, pk):
+    """Mark reference as approved"""
+    reference = get_object_or_404(Reference, pk=pk)
+    
+    reference.letter_received = True
+    reference.letter_received_date = timezone.now()
+    reference.save()
+    
+    messages.success(request, f'Reference from {reference.get_reference_full_name()} approved.')
+    
+    # Return to application detail
+    app = reference.content_object
+    app_type = app.get_affiliation_type()
+    return redirect('enrollments:application_detail', pk=app.pk, app_type=app_type)
+
+
+
+
+# ============================================================================
+# 2. HELPER FUNCTIONS FOR MANUAL DOCUMENT PROCESSING
+# ============================================================================
+
+def extract_document_data_from_post(request):
+    """Extract document data from POST request manually."""
+    document_data = []
+    
+    # Get total forms from management form
+    total_forms = int(request.POST.get('documents-TOTAL_FORMS', 0))
+    
+    for i in range(total_forms):
+        # Check if this form has data
+        category = request.POST.get(f'documents-{i}-category')
+        title = request.POST.get(f'documents-{i}-title')
+        file_key = f'documents-{i}-file'
+        
+        if category and title and file_key in request.FILES:
+            document_data.append({
+                'index': i,
+                'category': category,
+                'title': title,
+                'description': request.POST.get(f'documents-{i}-description', ''),
+                'file': request.FILES[file_key],
+                'is_required': request.POST.get(f'documents-{i}-is_required') == 'on',
+            })
+    
+    return document_data
+
+def extract_reference_data_from_post(request):
+    """Extract reference data from POST request manually."""
+    reference_data = []
+    
+    total_forms = int(request.POST.get('references-TOTAL_FORMS', 0))
+    
+    for i in range(total_forms):
+        title = request.POST.get(f'references-{i}-reference_title')
+        surname = request.POST.get(f'references-{i}-reference_surname')
+        
+        if title and surname:
+            reference_data.append({
+                'index': i,
+                'reference_title': title,
+                'reference_surname': surname,
+                'reference_names': request.POST.get(f'references-{i}-reference_names', ''),
+                'reference_email': request.POST.get(f'references-{i}-reference_email', ''),
+                'reference_phone': request.POST.get(f'references-{i}-reference_phone', ''),
+                'reference_address': request.POST.get(f'references-{i}-reference_address', ''),
+                'nature_of_relationship': request.POST.get(f'references-{i}-nature_of_relationship', ''),
+                'letter_required': request.POST.get(f'references-{i}-letter_required') == 'on',
+            })
+    
+    return reference_data
+
+def validate_extracted_documents(document_data):
+    """Validate extracted document data."""
+    errors = []
+    
+    for doc in document_data:
+        if not doc['category']:
+            errors.append(f"Document {doc['index'] + 1}: Category is required")
+        if not doc['title']:
+            errors.append(f"Document {doc['index'] + 1}: Title is required")
+        if not doc['file']:
+            errors.append(f"Document {doc['index'] + 1}: File is required")
+        elif doc['file'].size > 10 * 1024 * 1024:  # 10MB
+            errors.append(f"Document {doc['index'] + 1}: File too large (max 10MB)")
+    
+    return len(errors) == 0, errors
+
+def validate_extracted_references(reference_data):
+    """Validate extracted reference data."""
+    errors = []
+    
+    for ref in reference_data:
+        if not ref['reference_title']:
+            errors.append(f"Reference {ref['index'] + 1}: Title is required")
+        if not ref['reference_surname']:
+            errors.append(f"Reference {ref['index'] + 1}: Surname is required")
+        if not ref['reference_email']:
+            errors.append(f"Reference {ref['index'] + 1}: Email is required")
+    
+    return len(errors) == 0, errors
+
+def save_extracted_documents(document_data, application, content_type, user):
+    """Save documents manually."""
+    saved_count = 0
+    
+    for doc_data in document_data:
+        try:
+            document = Document.objects.create(
+                content_type=content_type,
+                object_id=application.pk,
+                category=doc_data['category'],
+                title=doc_data['title'],
+                description=doc_data['description'],
+                file=doc_data['file'],
+                is_required=doc_data['is_required'],
+                uploaded_by=user if user.is_authenticated else None,
+            )
+            logger.info(f"Created document: {document.title} (ID: {document.pk})")
+            saved_count += 1
+        except Exception as e:
+            logger.error(f"Error saving document {doc_data['title']}: {str(e)}")
+    
+    return saved_count
+
+def save_extracted_references(reference_data, application, content_type):
+    """Save references manually."""
+    saved_count = 0
+    
+    for ref_data in reference_data:
+        try:
+            reference = Reference.objects.create(
+                content_type=content_type,
+                object_id=application.pk,
+                reference_title=ref_data['reference_title'],
+                reference_surname=ref_data['reference_surname'],
+                reference_names=ref_data['reference_names'],
+                reference_email=ref_data['reference_email'],
+                reference_phone=ref_data['reference_phone'],
+                reference_address=ref_data['reference_address'],
+                nature_of_relationship=ref_data['nature_of_relationship'],
+                letter_required=ref_data['letter_required'],
+            )
+            logger.info(f"Created reference: {reference.get_reference_full_name()} (ID: {reference.pk})")
+            saved_count += 1
+        except Exception as e:
+            logger.error(f"Error saving reference {ref_data['reference_surname']}: {str(e)}")
+    
+    return saved_count
+
+
+# Replace the mock formset functions in your views.py with these:
+
+def create_mock_reference_formset():
+    """Create a mock formset for template rendering."""
+    class MockForm:
+        def __init__(self):
+            self.errors = {}
+    
+    class MockFormset:
+        def __init__(self):
+            self.management_form = self.MockManagementForm()
+            self.forms = []  # Empty list so template can iterate
+            self.errors = []
+            self.non_form_errors = lambda: []
+            
+        # Make it iterable for the template
+        def __iter__(self):
+            return iter(self.forms)
+        
+        def __len__(self):
+            return len(self.forms)
+    
+        class MockManagementForm:
+            def __str__(self):
+                return '''
+                <input type="hidden" name="references-TOTAL_FORMS" value="0" id="id_references-TOTAL_FORMS">
+                <input type="hidden" name="references-INITIAL_FORMS" value="0" id="id_references-INITIAL_FORMS">
+                <input type="hidden" name="references-MIN_NUM_FORMS" value="0" id="id_references-MIN_NUM_FORMS">
+                <input type="hidden" name="references-MAX_NUM_FORMS" value="1000" id="id_references-MAX_NUM_FORMS">
+                '''
+    
+    return MockFormset()
+
+def create_mock_document_formset():
+    """Create a mock formset for template rendering."""
+    class MockFormset:
+        def __init__(self):
+            self.management_form = self.MockManagementForm()
+            self.forms = []  # Empty list so template can iterate
+            self.errors = []
+            self.non_form_errors = lambda: []
+            
+        # Make it iterable for the template
+        def __iter__(self):
+            return iter(self.forms)
+            
+        def __len__(self):
+            return len(self.forms)
+    
+        class MockManagementForm:
+            def __str__(self):
+                return '''
+                <input type="hidden" name="documents-TOTAL_FORMS" value="0" id="id_documents-TOTAL_FORMS">
+                <input type="hidden" name="documents-INITIAL_FORMS" value="0" id="id_documents-INITIAL_FORMS">
+                <input type="hidden" name="documents-MIN_NUM_FORMS" value="0" id="id_documents-MIN_NUM_FORMS">
+                <input type="hidden" name="documents-MAX_NUM_FORMS" value="1000" id="id_documents-MAX_NUM_FORMS">
+                '''
+    
+    return MockFormset()
+
+# Add this new view for the success page
+def application_success(request):
+    """
+    Success page after application submission.
+    """
+    success_data = request.session.get('application_success')
+    
+    if not success_data:
+        # If no success data, redirect to onboarding start
+        messages.info(request, "Please complete an application first.")
+        return redirect('enrollments:onboarding_start')
+    
+    # Clear the success data from session after use
+    del request.session['application_success']
+    
+    context = {
+        'application_number': success_data.get('application_number'),
+        'affiliation_type': success_data.get('affiliation_type'),
+        'council_name': success_data.get('council_name'),
+        'application_id': success_data.get('application_id'),
+        'app_type': success_data.get('app_type'),
+        'page_title': 'Application Submitted Successfully',
+    }
+    
+    return render(request, 'enrollments/applications/success.html', context)
     """
     Create application based on completed onboarding session.
     
@@ -762,11 +1244,8 @@ def application_list(request):
 
 def application_detail(request, pk, app_type):
     """
-    Unified detail view for all application types.
-    
-    Shows comprehensive application details with related models.
+    Comprehensive application detail view with admin review capabilities.
     """
-    # Get appropriate model
     model_map = {
         'associated': AssociatedApplication,
         'designated': DesignatedApplication,
@@ -777,19 +1256,28 @@ def application_detail(request, pk, app_type):
     if not model:
         raise Http404("Invalid application type")
     
-    # Get application with related data
+    # Get application with all related data
     if model == DesignatedApplication:
         application = get_object_or_404(
             model.objects.select_related(
                 'onboarding_session__selected_council',
                 'onboarding_session__selected_affiliation_type',
                 'designation_category',
-                'designation_subcategory'
+                'designation_subcategory',
+                'submitted_by',
+                'reviewed_by',
+                'approved_by'
             ).prefetch_related(
                 'academic_qualifications',
                 'practical_experiences',
-                'documents',
-                Prefetch('references', queryset=Reference.objects.select_related())
+                Prefetch(
+                    'documents',
+                    queryset=Document.objects.select_related('uploaded_by', 'verified_by')
+                ),
+                Prefetch(
+                    'references',
+                    queryset=Reference.objects.select_related().prefetch_related('documents')
+                )
             ),
             pk=pk
         )
@@ -797,10 +1285,19 @@ def application_detail(request, pk, app_type):
         application = get_object_or_404(
             model.objects.select_related(
                 'onboarding_session__selected_council',
-                'onboarding_session__selected_affiliation_type'
+                'onboarding_session__selected_affiliation_type',
+                'submitted_by',
+                'reviewed_by',
+                'approved_by'
             ).prefetch_related(
-                'documents',
-                Prefetch('references', queryset=Reference.objects.select_related())
+                Prefetch(
+                    'documents',
+                    queryset=Document.objects.select_related('uploaded_by', 'verified_by')
+                ),
+                Prefetch(
+                    'references',
+                    queryset=Reference.objects.select_related().prefetch_related('documents')
+                )
             ),
             pk=pk
         )
@@ -810,31 +1307,79 @@ def application_detail(request, pk, app_type):
         request.user.is_authenticated and (
             application.onboarding_session.user == request.user or
             application.email == request.user.email or
-            request.user.acrp_role in {User.ACRPRole.GLOBAL_SDP, User.ACRPRole.PROVIDER_ADMIN}
+            is_admin_or_manager(request.user)
         )
     ) or not request.user.is_authenticated
     
     if not user_can_view:
         return HttpResponseForbidden("You don't have permission to view this application")
     
+    # Determine user capabilities
+    can_review = request.user.is_authenticated and can_approve_applications(request.user)
+    can_edit = request.user.is_authenticated and (
+        application.onboarding_session.user == request.user or
+        is_admin_or_manager(request.user)
+    )
+    
+    # Get review form for admins
+    review_form = None
+    if can_review and request.method == 'GET':
+        review_form = ApplicationReviewForm(initial={
+            'status': application.status,
+            'reviewer_notes': application.reviewer_notes,
+            'rejection_reason': application.rejection_reason,
+        })
+    
+    # Calculate completion percentage
+    completion_percentage = calculate_application_completion(application, app_type)
+    
+    # Get status timeline
+    status_timeline = get_application_timeline(application)
+    
+    # Group documents by category
+    documents_by_category = {}
+    for doc in application.documents.all():
+        category = doc.get_category_display()
+        if category not in documents_by_category:
+            documents_by_category[category] = []
+        documents_by_category[category].append(doc)
+    
+    # Calculate document statistics
+    total_documents = application.documents.count()
+    verified_documents = application.documents.filter(verified=True).count()
+    pending_documents = total_documents - verified_documents
+    
+    # Calculate reference statistics
+    total_references = application.references.count()
+    references_with_letters = application.references.filter(letter_received=True).count()
+    pending_references = total_references - references_with_letters
+    
     context = {
         'application': application,
         'app_type': app_type,
         'council': application.onboarding_session.selected_council,
         'affiliation_type': application.onboarding_session.selected_affiliation_type,
-        'page_title': f'{app_type.title()} Application Details',
+        'can_review': can_review,
+        'can_edit': can_edit,
+        'review_form': review_form,
+        'completion_percentage': completion_percentage,
+        'status_timeline': status_timeline,
+        'documents_by_category': documents_by_category,
+        'document_stats': {
+            'total': total_documents,
+            'verified': verified_documents,
+            'pending': pending_documents,
+        },
+        'reference_stats': {
+            'total': total_references,
+            'with_letters': references_with_letters,
+            'pending': pending_references,
+        },
+        'page_title': f'{app_type.title()} Application - {application.application_number}',
     }
     
-    # Use different templates for different application types
-    template_map = {
-        'associated': 'enrollments/applications/associated_detail.html',
-        'designated': 'enrollments/applications/designated_detail.html',
-        'student': 'enrollments/applications/student_detail.html',
-    }
-    
-    template = template_map.get(app_type, 'enrollments/applications/base_detail.html')
-    
-    return render(request, template, context)
+    return render(request, 'enrollments/applications/detail.html', context)
+
 
 
 @login_required
@@ -964,6 +1509,174 @@ def application_update(request, pk, app_type):
 
 
 # ============================================================================
+# APPLICATION BULK ACTIONS
+# ============================================================================
+
+@login_required
+@user_passes_test(can_approve_applications, login_url='/', redirect_field_name=None)
+@require_POST
+def application_bulk_action(request):
+    """Handle bulk actions on applications"""
+    action = request.POST.get('action')
+    application_ids = request.POST.getlist('application_ids')
+    
+    if not action or not application_ids:
+        messages.error(request, "No action or applications selected.")
+        return redirect('enrollments:application_list')
+    
+    count = 0
+    
+    try:
+        with transaction.atomic():
+            for app_id in application_ids:
+                # Get app_type and model
+                for app_type, model in [('associated', AssociatedApplication), 
+                                      ('designated', DesignatedApplication), 
+                                      ('student', StudentApplication)]:
+                    try:
+                        app = model.objects.get(pk=app_id)
+                        
+                        if action == 'approve':
+                            app.status = 'approved'
+                            app.approved_at = timezone.now()
+                            app.approved_by = request.user
+                        elif action == 'reject':
+                            app.status = 'rejected'
+                            app.rejected_at = timezone.now()
+                            app.rejected_by = request.user
+                        elif action == 'under_review':
+                            app.status = 'under_review'
+                            app.reviewed_at = timezone.now()
+                            app.reviewed_by = request.user
+                        
+                        app.save()
+                        count += 1
+                        break
+                    except model.DoesNotExist:
+                        continue
+        
+        messages.success(request, f'Successfully {action}d {count} applications.')
+        
+    except Exception as e:
+        logger.error(f"Error in bulk action: {str(e)}")
+        messages.error(request, "An error occurred during bulk action.")
+    
+    return redirect('enrollments:application_list')
+
+
+# ============================================================================
+# HELPER FUNCTIONS
+# ============================================================================
+
+def calculate_application_completion(application, app_type):
+    """Calculate application completion percentage"""
+    total_fields = 0
+    completed_fields = 0
+    
+    # Count basic required fields
+    required_basic_fields = [
+        'title', 'surname', 'full_names', 'email', 'cell_phone',
+        'postal_address_line1', 'postal_city', 'postal_province',
+        'postal_code', 'home_language', 'current_occupation'
+    ]
+    
+    for field in required_basic_fields:
+        total_fields += 1
+        if getattr(application, field, None):
+            completed_fields += 1
+    
+    # Count documents
+    if application.documents.exists():
+        completed_fields += 1
+    total_fields += 1
+    
+    # Count references
+    if application.references.exists():
+        completed_fields += 1
+    total_fields += 1
+    
+    # Count legal agreements
+    legal_fields = ['popi_act_accepted', 'terms_accepted', 'information_accurate', 'declaration_accepted']
+    for field in legal_fields:
+        total_fields += 1
+        if getattr(application, field, False):
+            completed_fields += 1
+    
+    # Add type-specific fields
+    if app_type == 'designated':
+        if hasattr(application, 'academic_qualifications') and application.academic_qualifications.exists():
+            completed_fields += 1
+        total_fields += 1
+        
+        if hasattr(application, 'practical_experiences') and application.practical_experiences.exists():
+            completed_fields += 1
+        total_fields += 1
+    
+    elif app_type == 'student':
+        student_fields = ['current_institution', 'course_of_study', 'expected_graduation']
+        for field in student_fields:
+            total_fields += 1
+            if getattr(application, field, None):
+                completed_fields += 1
+    
+    return int((completed_fields / total_fields) * 100) if total_fields > 0 else 0
+
+
+def get_application_timeline(application):
+    """Get application status timeline"""
+    timeline = []
+    
+    # Created
+    timeline.append({
+        'status': 'Created',
+        'date': application.created_at,
+        'user': application.submitted_by,
+        'icon': 'plus-circle',
+        'color': 'primary'
+    })
+    
+    # Submitted
+    if application.submitted_at:
+        timeline.append({
+            'status': 'Submitted',
+            'date': application.submitted_at,
+            'user': application.submitted_by,
+            'icon': 'check-circle',
+            'color': 'info'
+        })
+    
+    # Under Review
+    if application.reviewed_at:
+        timeline.append({
+            'status': 'Under Review',
+            'date': application.reviewed_at,
+            'user': application.reviewed_by,
+            'icon': 'eye',
+            'color': 'warning'
+        })
+    
+    # Approved/Rejected
+    if application.approved_at:
+        timeline.append({
+            'status': 'Approved',
+            'date': application.approved_at,
+            'user': application.approved_by,
+            'icon': 'check-circle-fill',
+            'color': 'success'
+        })
+    elif application.rejected_at:
+        timeline.append({
+            'status': 'Rejected',
+            'date': application.rejected_at,
+            'user': application.rejected_by,
+            'icon': 'x-circle-fill',
+            'color': 'danger'
+        })
+    
+    return timeline
+
+
+# ============================================================================
 # APPLICATION REVIEW AND APPROVAL
 # ============================================================================
 
@@ -1034,74 +1747,124 @@ def application_review(request, pk, app_type):
 # ============================================================================
 # DASHBOARD AND STATISTICS
 # ============================================================================
+def enrollment_dashboard_ajax(request):
+    """Handle AJAX requests for dashboard updates"""
+    # This would contain the same logic as above but return JSON
+    # For now, return a simple response
+    return JsonResponse({
+        'status': 'success',
+        'message': 'Dashboard data updated'
+    })
+
+
 
 @login_required
 @user_passes_test(is_admin_or_manager, login_url='/', redirect_field_name=None)
 def enrollment_dashboard(request):
     """
     Enhanced administrative dashboard with comprehensive statistics.
+    Supports AJAX requests for real-time updates.
     """
-    # Calculate statistics for each council and affiliation type
-    stats = {}
+    # Handle AJAX requests
+    if request.GET.get('ajax') == '1':
+        return enrollment_dashboard_ajax(request)
     
-    for council in Council.objects.filter(is_active=True):
+    # Initialize stats structure for all councils
+    stats = {
+        'cgmp': {'total': 0, 'approved': 0, 'pending': 0, 'by_type': {}},
+        'cpsc': {'total': 0, 'approved': 0, 'pending': 0, 'by_type': {}},
+        'cmtp': {'total': 0, 'approved': 0, 'pending': 0, 'by_type': {}},
+    }
+    
+    # Get all councils
+    councils = Council.objects.filter(is_active=True)
+    council_map = {council.code.lower(): council for council in councils}
+    
+    # Calculate statistics for each council
+    for council in councils:
+        council_code = council.code.lower()
         council_stats = {
             'total': 0,
             'approved': 0,
             'pending': 0,
+            'rejected': 0,
+            'under_review': 0,
             'by_type': {}
         }
         
         # Get applications for this council across all types
-        for app_model in [AssociatedApplication, DesignatedApplication, StudentApplication]:
-            apps = app_model.objects.filter(onboarding_session__selected_council=council)
+        app_models = [
+            ('associated', AssociatedApplication),
+            ('designated', DesignatedApplication),
+            ('student', StudentApplication)
+        ]
+        
+        for app_type_name, app_model in app_models:
+            apps = app_model.objects.filter(
+                onboarding_session__selected_council=council
+            )
             
-            app_type = app_model.__name__.replace('Application', '').lower()
             type_stats = {
                 'total': apps.count(),
                 'approved': apps.filter(status='approved').count(),
-                'pending': apps.filter(status__in=['draft', 'submitted', 'under_review']).count(),
+                'pending': apps.filter(status__in=['draft', 'submitted']).count(),
+                'under_review': apps.filter(status='under_review').count(),
+                'rejected': apps.filter(status='rejected').count(),
+                'requires_clarification': apps.filter(status='requires_clarification').count(),
             }
             
-            council_stats['by_type'][app_type] = type_stats
+            council_stats['by_type'][app_type_name] = type_stats
             council_stats['total'] += type_stats['total']
             council_stats['approved'] += type_stats['approved']
-            council_stats['pending'] += type_stats['pending']
+            council_stats['pending'] += type_stats['pending'] + type_stats['under_review']
+            council_stats['rejected'] += type_stats['rejected']
+            council_stats['under_review'] += type_stats['under_review']
         
-        stats[council.code.lower()] = council_stats
+        stats[council_code] = council_stats
     
-    # Get recent applications across all types
+    # Get recent applications across all types (last 20)
     recent_applications = []
     
-    # This could be optimized with a single query using union
-    for app_model in [AssociatedApplication, DesignatedApplication, StudentApplication]:
+    for app_type_name, app_model in app_models:
         apps = app_model.objects.select_related(
             'onboarding_session__selected_council',
             'onboarding_session__selected_affiliation_type'
-        ).order_by('-created_at')[:10]
+        ).order_by('-created_at')[:15]
         
         for app in apps:
-            recent_applications.append({
-                'type': app.__class__.__name__.replace('Application', ''),
+            app_data = {
+                'id': app.pk,
+                'type': app_type_name.title(),
                 'council': app.onboarding_session.selected_council.code,
                 'name': app.get_display_name(),
                 'email': app.email,
                 'application_number': app.application_number,
                 'status': app.status,
                 'created_at': app.created_at,
-            })
+                'submitted_at': app.submitted_at,
+            }
+            
+            # Add type-specific fields
+            if app_type_name == 'designated' and hasattr(app, 'designation_category'):
+                app_data['category'] = app.designation_category.name if app.designation_category else None
+            elif app_type_name == 'student' and hasattr(app, 'current_institution'):
+                app_data['institution'] = app.current_institution
+            
+            recent_applications.append(app_data)
     
-    # Sort by creation date
+    # Sort by creation date and limit to 20
     recent_applications.sort(key=lambda x: x['created_at'], reverse=True)
     recent_applications = recent_applications[:20]
     
     context = {
         'stats': stats,
         'recent_applications': recent_applications,
-        'page_title': 'Enrollment Dashboard'
+        'page_title': 'Enrollment Dashboard',
+        'councils': council_map,
     }
     
     return render(request, 'enrollments/dashboard.html', context)
+
 
 
 def application_dashboard(request, pk, app_type):

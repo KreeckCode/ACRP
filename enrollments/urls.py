@@ -18,17 +18,13 @@ urlpatterns = [
     # APPLICATION CREATION AND MANAGEMENT
     # ============================================================================
     
-    # Create application based on onboarding session
     path('application/create/<uuid:session_id>/', views.application_create, name='application_create'),
-    
-    # Application detail views (unified for all types: associated, designated, student)
-    path('application/<int:pk>/<str:app_type>/', views.application_detail, name='application_detail'),
-    
-    # Application update views
-    path('application/<int:pk>/<str:app_type>/update/', views.application_update, name='application_update'),
-    
-    # Application list and search (admin view)
+    path('application/success/', views.application_success, name='application_success'),
     path('applications/', views.application_list, name='application_list'),
+    path('application/<int:pk>/<str:app_type>/', views.application_detail, name='application_detail'),
+    path('application/<int:pk>/<str:app_type>/update/', views.application_update, name='application_update'),
+    path('application/<int:pk>/<str:app_type>/review/', views.application_review, name='application_review'),
+    path('application/<int:pk>/<str:app_type>/dashboard/', views.application_dashboard, name='application_dashboard'),
     
     # ============================================================================
     # DASHBOARD URLS
@@ -88,4 +84,21 @@ urlpatterns = [
     # Quick links for admin users
     path('admin-dashboard/', views.enrollment_dashboard, name='admin_dashboard'),
     path('all-applications/', views.application_list, name='all_applications'),
+
+
+    # ============================================================================
+    # DOCUMENT MANAGEMENT
+    # ============================================================================
+    path('document/<int:pk>/verify/', views.document_verify, name='document_verify'),
+    path('document/<int:pk>/reject/', views.document_reject, name='document_reject'),
+    path('document/<int:pk>/delete/', views.document_delete, name='document_delete'),
+    # ============================================================================
+    # REFERENCE MANAGEMENT
+    # ============================================================================
+    path('reference/<int:pk>/approve/', views.reference_approve, name='reference_approve'),
+    
+    # ============================================================================
+    # BULK ACTIONS
+    # ============================================================================
+    path('applications/bulk-action/', views.application_bulk_action, name='application_bulk_action'),
 ]

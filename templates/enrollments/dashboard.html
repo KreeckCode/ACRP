@@ -507,10 +507,6 @@
         {% if recent_applications %}
         <div class="d-flex justify-content-between align-items-center mt-3">
             <small class="text-muted">Showing {{ recent_applications|length }} most recent applications</small>
-            <a href="{% url 'enrollments:application_list' %}" class="btn btn-primary btn-sm">
-                <i class="bi bi-list me-1"></i>
-                View All Applications
-            </a>
         </div>
         {% endif %}
     </div>
@@ -524,16 +520,6 @@
                 </div>
                 <h6 class="fw-semibold text-dark mb-1">New Application</h6>
                 <small class="text-primary">Start Onboarding Process</small>
-            </div>
-        </div>
-
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="dashboard-card quick-action-card p-4 text-center h-100" onclick="window.location.href='{% url 'enrollments:application_list' %}'">
-                <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 3rem; height: 3rem;">
-                    <i class="bi bi-list-check text-success fs-4"></i>
-                </div>
-                <h6 class="fw-semibold text-dark mb-1">All Applications</h6>
-                <small class="text-success">View & Manage</small>
             </div>
         </div>
 

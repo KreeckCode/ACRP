@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ application.application_number }} - Application Details</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #4a6741;
+            --secondary-color: #6c757d;
+            --success-color: #5a6c57;
+            --warning-color: #8b7355;
+            --danger-color: #7a5a5a;
+            --info-color: #5a7a8b;
+            --light-bg: #f8f9fa;
+            --dark-text: #2c3e50;
+            --medium-text: #495057;
+            --light-text: #6c757d;
+            --border-color: #dee2e6;
+            --card-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        body {
+            font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--dark-text);
+            background-color: #f5f6fa;
+        }
+
+        .container-fluid {
+            max-width: 1400px;
+        }
+
+        /* Header */
+        .application-header {
+            background: linear-gradient(135deg, var(--primary-color), #5a7c54);
+            color: white;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .application-title {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .application-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 1rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-draft { background-color: var(--secondary-color); }
+        .status-submitted { background-color: var(--info-color); }
+        .status-under_review { background-color: var(--warning-color); }
+        .status-approved { background-color: var(--success-color); }
+        .status-rejected { background-color: var(--danger-color); }
+        .status-requires_clarification { background-color: #b8860b; color: white; }
+
+        /* Progress Circle */
+        .progress-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: conic-gradient(#ffffff calc(var(--progress) * 1%), rgba(255,255,255,0.3) 0deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .progress-circle::before {
+            content: '';
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.9);
+            position: absolute;
+        }
+
+        .progress-text {
+            position: relative;
+            font-weight: 600;
+            color: var(--primary-color);
+            font-size: 0.9rem;
+        }
+
+        /* Statistics Cards */
+        .stat-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 1rem;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--dark-text);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--medium-text);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+
+        .stat-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-primary { color: var(--primary-color); }
+        .stat-success { color: var(--success-color); }
+        .stat-warning { color: var(--warning-color); }
+        .stat-info { color: var(--info-color); }
+
+        /* Cards */
+        .card {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            background-color: var(--light-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--dark-text);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        /* Information Display */
+        .info-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .info-item {
+            border: 1px solid var(--border-color);
+            padding: 1rem;
+            border-radius: 4px;
+            background: white;
+        }
+
+        .info-label {
+            font-size: 0.75rem;
+            color: var(--medium-text);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .info-value {
+            font-size: 0.95rem;
+            color: var(--dark-text);
+            font-weight: 500;
+        }
+
+        /* List Items */
+        .list-item {
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: white;
+        }
+
+        .list-item.verified {
+            border-left: 4px solid var(--success-color);
+            background-color: #f8f9f8;
+        }
+
+        .list-item.pending {
+            border-left: 4px solid var(--warning-color);
+            background-color: #fffdf8;
+        }
+
+        .list-item.rejected {
+            border-left: 4px solid var(--danger-color);
+            background-color: #fdf8f8;
+        }
+
+        .item-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--dark-text);
+            margin-bottom: 0.5rem;
+        }
+
+        .item-meta {
+            font-size: 0.85rem;
+            color: var(--light-text);
+            margin-bottom: 0.5rem;
+        }
+
+        .item-description {
+            font-size: 0.9rem;
+            color: var(--medium-text);
+            margin-bottom: 0.75rem;
+        }
+
+        /* Status Indicators */
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-verified {
+            background-color: #e8f5e8;
+            color: var(--success-color);
+            border: 1px solid #c3e6c3;
+        }
+
+        .status-pending {
+            background-color: #fff8e8;
+            color: var(--warning-color);
+            border: 1px solid #f0d584;
+        }
+
+        .status-rejected {
+            background-color: #fdf2f2;
+            color: var(--danger-color);
+            border: 1px solid #f5c6c6;
+        }
+
+        /* Buttons */
+        .btn {
+            border-radius: 4px;
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: #3e5638;
+            border-color: #3e5638;
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            border-color: var(--success-color);
+        }
+
+        .btn-success:hover {
+            background-color: #4a5c47;
+            border-color: #4a5c47;
+        }
+
+        .btn-warning {
+            background-color: var(--warning-color);
+            border-color: var(--warning-color);
+            color: white;
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            border-color: var(--danger-color);
+        }
+
+        .btn-outline-primary {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-outline-primary:hover {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        /* Action Panel */
+        .action-panel {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-shadow: var(--card-shadow);
+            position: sticky;
+            top: 1rem;
+        }
+
+        .action-section {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .action-section:last-child {
+            border-bottom: none;
+        }
+
+        .action-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--dark-text);
+            margin-bottom: 1rem;
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0.75rem;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border-color);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 1.5rem;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 1rem;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -1.25rem;
+            top: 1rem;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid var(--primary-color);
+        }
+
+        /* Forms */
+        .form-control, .form-select {
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(74, 103, 65, 0.25);
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--dark-text);
+            font-size: 0.9rem;
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background: white !important;
+                font-size: 12px;
+            }
+            
+            .application-header {
+                background: #f8f9fa !important;
+                color: #000 !important;
+            }
+            
+            .action-panel, .btn {
+                display: none !important;
+            }
+            
+            .card {
+                border: 1px solid #000 !important;
+                box-shadow: none !important;
+                break-inside: avoid;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .info-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-panel {
+                position: relative;
+                top: 0;
+                margin-top: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-3">
+        
+        <!-- Application Header -->
+        <div class="application-header">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <div class="status-badge status-{{ application.status }} mb-2">
+                        {{ application.get_status_display }}
+                    </div>
+                    <h1 class="application-title">{{ application.application_number }}</h1>
+                    <h2 class="application-subtitle">{{ application.get_display_name }}</h2>
+                    <p class="mb-0">
+                        {{ affiliation_type.name }} Application for {{ council.name }}
+                        {% if application.designation_category %}
+                            - {{ application.designation_category.name }}
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="progress-circle" style="--progress: {{ completion_percentage }};">
+                        <span class="progress-text">{{ completion_percentage }}%</span>
+                    </div>
+                    <div class="mt-2">
+                        <small style="color: rgba(255,255,255,0.8);">Application Complete</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Row -->
+        <div class="row mb-3">
+            <div class="col-lg-3 col-sm-6">
+                <div class="stat-card">
+                    <div class="stat-icon stat-primary">
+                        <i class="bi bi-file-earmark-text"></i>
+                    </div>
+                    <div class="stat-number">{{ document_stats.total }}</div>
+                    <div class="stat-label">Total Documents</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-sm-6">
+                <div class="stat-card">
+                    <div class="stat-icon stat-success">
+                        <i class="bi bi-check-circle"></i>
+                    </div>
+                    <div class="stat-number">{{ document_stats.verified }}</div>
+                    <div class="stat-label">Verified</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-sm-6">
+                <div class="stat-card">
+                    <div class="stat-icon stat-warning">
+                        <i class="bi bi-clock"></i>
+                    </div>
+                    <div class="stat-number">{{ document_stats.pending }}</div>
+                    <div class="stat-label">Pending</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-sm-6">
+                <div class="stat-card">
+                    <div class="stat-icon stat-info">
+                        <i class="bi bi-people"></i>
+                    </div>
+                    <div class="stat-number">{{ reference_stats.total }}</div>
+                    <div class="stat-label">References</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Main Content -->
+            <div class="col-lg-8">
+                
+                <!-- Personal Information -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">
+                            <i class="bi bi-person text-primary"></i>
+                            Personal Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-row">
+                            <div class="info-item">
+                                <div class="info-label">Full Name</div>
+                                <div class="info-value">{{ application.title }} {{ application.get_full_name }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Email</div>
+                                <div class="info-value">{{ application.email }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Cell Phone</div>
+                                <div class="info-value">{{ application.cell_phone }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">ID Number</div>
+                                <div class="info-value">{{ application.id_number|default:"Not provided" }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Date of Birth</div>
+                                <div class="info-value">{{ application.date_of_birth|date:"d M Y" }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Occupation</div>
+                                <div class="info-value">{{ application.current_occupation }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="info-row">
+                            <div class="info-item" style="grid-column: 1 / -1;">
+                                <div class="info-label">Address</div>
+                                <div class="info-value">
+                                    {{ application.postal_address_line1 }}<br>
+                                    {% if application.postal_address_line2 %}{{ application.postal_address_line2 }}<br>{% endif %}
+                                    {{ application.postal_city }}, {{ application.postal_province }} {{ application.postal_code }}
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Religious Affiliation</div>
+                                <div class="info-value">{{ application.religious_affiliation|default:"Not specified" }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Years in Ministry</div>
+                                <div class="info-value">{{ application.years_in_ministry }} years</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Student Information -->
+                {% if app_type == "student" %}
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">
+                            <i class="bi bi-mortarboard text-primary"></i>
+                            Academic Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-row">
+                            <div class="info-item">
+                                <div class="info-label">Institution</div>
+                                <div class="info-value">{{ application.current_institution }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Course</div>
+                                <div class="info-value">{{ application.course_of_study }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Expected Graduation</div>
+                                <div class="info-value">{{ application.expected_graduation|date:"M Y" }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Year of Study</div>
+                                <div class="info-value">Year {{ application.year_of_study }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Qualifications (Designated only) -->
+                {% if app_type == "designated" and application.academic_qualifications.exists %}
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">
+                            <i class="bi bi-award text-primary"></i>
+                            Academic Qualifications
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% for qualification in application.academic_qualifications.all %}
+                        <div class="list-item verified">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <div class="item-title">{{ qualification.qualification_name }}</div>
+                                    <div class="item-description">{{ qualification.institution_name }}</div>
+                                    <div class="item-meta">
+                                        <i class="bi bi-calendar me-1"></i>{{ qualification.date_awarded|date:"Y" }}
+                                        <span class="ms-3">{{ qualification.get_qualification_type_display }}</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    {% if qualification.grade_or_class %}
+                                    <span class="badge bg-secondary">{{ qualification.grade_or_class }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Documents -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">
+                            <i class="bi bi-file-earmark-text text-primary"></i>
+                            Supporting Documents
+                            <span class="badge bg-secondary ms-2">{{ document_stats.total }}</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if documents_by_category %}
+                            {% for category, category_documents in documents_by_category.items %}
+                            <div class="mb-3">
+                                <h6 class="text-primary mb-2">{{ category }}</h6>
+                                {% for document in category_documents %}
+                                <div class="list-item {% if document.verified %}verified{% elif document.verification_notes %}rejected{% else %}pending{% endif %}">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-7">
+                                            <div class="item-title">{{ document.title }}</div>
+                                            <div class="item-description">{{ document.description|default:"No description" }}</div>
+                                            <div class="item-meta">
+                                                <i class="bi bi-clock me-1"></i>{{ document.uploaded_at|timesince }} ago
+                                                <span class="ms-3"><i class="bi bi-file me-1"></i>{{ document.get_file_size_display }}</span>
+                                                {% if document.uploaded_by %}
+                                                <span class="ms-3"><i class="bi bi-person me-1"></i>{{ document.uploaded_by.get_full_name }}</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            {% if document.verified %}
+                                                <span class="status-indicator status-verified">
+                                                    <i class="bi bi-check-circle"></i> Verified
+                                                </span>
+                                            {% elif document.verification_notes %}
+                                                <span class="status-indicator status-rejected">
+                                                    <i class="bi bi-x-circle"></i> Rejected
+                                                </span>
+                                            {% else %}
+                                                <span class="status-indicator status-pending">
+                                                    <i class="bi bi-clock"></i> Pending
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-2 text-end">
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{{ document.file.url }}" target="_blank" class="btn btn-outline-primary">
+                                                    <i class="bi bi-download"></i>
+                                                </a>
+                                                {% if can_review %}
+                                                {% if not document.verified %}
+                                                <button class="btn btn-success" onclick="verifyDocument({{ document.pk }})">
+                                                    <i class="bi bi-check"></i>
+                                                </button>
+                                                <button class="btn btn-danger" onclick="rejectDocument({{ document.pk }})">
+                                                    <i class="bi bi-x"></i>
+                                                </button>
+                                                {% endif %}
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% if document.verification_notes %}
+                                    <div class="mt-2 p-2 bg-light border-start border-danger border-3">
+                                        <small><strong>Review Notes:</strong> {{ document.verification_notes }}</small>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-file-earmark display-6"></i>
+                            <p class="mt-2">No documents uploaded yet.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- References -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">
+                            <i class="bi bi-people text-primary"></i>
+                            Professional References
+                            <span class="badge bg-secondary ms-2">{{ reference_stats.total }}</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                            {% for reference in application.references.all %}
+                            <div class="list-item {% if reference.letter_received %}verified{% else %}pending{% endif %}">
+                                <div class="row align-items-center">
+                                    <div class="col-md-7">
+                                        <div class="item-title">{{ reference.get_reference_full_name }}</div>
+                                        <div class="item-description">{{ reference.nature_of_relationship }}</div>
+                                        <div class="item-meta">
+                                            <i class="bi bi-envelope me-1"></i>{{ reference.reference_email }}
+                                            <span class="ms-3"><i class="bi bi-phone me-1"></i>{{ reference.reference_phone }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        {% if reference.letter_received %}
+                                            <span class="status-indicator status-verified">
+                                                <i class="bi bi-check-circle"></i> Received
+                                            </span>
+                                        {% else %}
+                                            <span class="status-indicator status-pending">
+                                                <i class="bi bi-clock"></i> Pending
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-2 text-end">
+                                        {% if can_review and not reference.letter_received %}
+                                        <button class="btn btn-success btn-sm" onclick="approveReference({{ reference.pk }})">
+                                            <i class="bi bi-check"></i> Mark Received
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {% empty %}
+                            <div class="text-center py-4 text-muted">
+                                <i class="bi bi-people display-6"></i>
+                                <p class="mt-2">No references provided yet.</p>
+                            </div>
+                            {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Timeline -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">
+                            <i class="bi bi-clock-history text-primary"></i>
+                            Application Timeline
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="timeline">
+                            {% for event in status_timeline %}
+                            <div class="timeline-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">{{ event.status }}</h6>
+                                        <p class="mb-1 text-muted">{{ event.date|date:"d M Y, H:i" }}</p>
+                                        {% if event.user %}
+                                        <small class="text-muted">
+                                            <i class="bi bi-person me-1"></i>{{ event.user.get_full_name }}
+                                        </small>
+                                        {% endif %}
+                                    </div>
+                                    <i class="bi bi-{{ event.icon }} text-{{ event.color }}"></i>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Action Panel -->
+            <div class="col-lg-4">
+                <div class="action-panel">
+                    
+                    <!-- Quick Actions -->
+                    <div class="action-section">
+                        <h6 class="action-title">Quick Actions</h6>
+                        <div class="d-grid gap-2">
+                            {% if can_edit %}
+                            <a href="{% url 'enrollments:application_update' pk=application.pk app_type=app_type %}" class="btn btn-primary">
+                                <i class="bi bi-pencil me-2"></i>Edit Application
+                            </a>
+                            {% endif %}
+                            
+                            <button class="btn btn-outline-primary" onclick="window.print()">
+                                <i class="bi bi-printer me-2"></i>Print Application
+                            </button>
+                            
+                            <a href="mailto:{{ application.email }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-envelope me-2"></i>Email Applicant
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Review Panel -->
+                    {% if can_review %}
+                    <div class="action-section">
+                        <h6 class="action-title">Administrative Review</h6>
+                        
+                        {% if application.reviewer_notes %}
+                        <div class="alert alert-info">
+                            <strong>Previous Notes:</strong><br>
+                            <small>{{ application.reviewer_notes }}</small>
+                        </div>
+                        {% endif %}
+                        
+                        <form method="post" action="{% url 'enrollments:application_review' pk=application.pk app_type=app_type %}">
+                            {% csrf_token %}
+                            
+                            <div class="mb-3">
+                                <label class="form-label">{{ review_form.status.label }}</label>
+                                {{ review_form.status }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">{{ review_form.reviewer_notes.label }}</label>
+                                {{ review_form.reviewer_notes }}
+                            </div>
+                            
+                            <div class="mb-3" id="rejection-reason" style="display: none;">
+                                <label class="form-label">{{ review_form.rejection_reason.label }}</label>
+                                {{ review_form.rejection_reason }}
+                            </div>
+                            
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="bi bi-check-circle me-2"></i>Update Status
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
+
+                    <!-- Application Info -->
+                    <div class="action-section">
+                        <h6 class="action-title">Application Details</h6>
+                        <div class="info-row" style="grid-template-columns: 1fr;">
+                            <div class="info-item">
+                                <div class="info-label">Application Number</div>
+                                <div class="info-value">{{ application.application_number }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Council</div>
+                                <div class="info-value">{{ council.name }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Type</div>
+                                <div class="info-value">{{ affiliation_type.name }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Created</div>
+                                <div class="info-value">{{ application.created_at|date:"d M Y" }}</div>
+                            </div>
+                            {% if application.submitted_at %}
+                            <div class="info-item">
+                                <div class="info-label">Submitted</div>
+                                <div class="info-value">{{ application.submitted_at|date:"d M Y" }}</div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    {% if can_review %}
+    <!-- Verify Document Modal -->
+    <div class="modal fade" id="verifyDocumentModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Verify Document</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="post" id="verifyDocumentForm">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="verifyNotes" class="form-label">Verification Notes (Optional)</label>
+                            <textarea class="form-control" id="verifyNotes" name="notes" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success">Verify Document</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reject Document Modal -->
+    <div class="modal fade" id="rejectDocumentModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Reject Document</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="post" id="rejectDocumentForm">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="rejectNotes" class="form-label">Rejection Reason <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="rejectNotes" name="notes" rows="3" required></textarea>
+                            <div class="form-text">Please provide a clear reason for rejecting this document.</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger">Reject Document</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Show/hide rejection reason field
+            const statusSelect = document.querySelector('#id_status');
+            const rejectionReasonDiv = document.querySelector('#rejection-reason');
+            
+            if (statusSelect && rejectionReasonDiv) {
+                statusSelect.addEventListener('change', function() {
+                    if (this.value === 'rejected') {
+                        rejectionReasonDiv.style.display = 'block';
+                        rejectionReasonDiv.querySelector('textarea').required = true;
+                    } else {
+                        rejectionReasonDiv.style.display = 'none';
+                        rejectionReasonDiv.querySelector('textarea').required = false;
+                    }
+                });
+                
+                // Initial check
+                if (statusSelect.value === 'rejected') {
+                    rejectionReasonDiv.style.display = 'block';
+                }
+            }
+        });
+
+        {% if can_review %}
+        function verifyDocument(documentId) {
+            document.getElementById('verifyDocumentForm').action = `/enrollments/document/${documentId}/verify/`;
+            new bootstrap.Modal(document.getElementById('verifyDocumentModal')).show();
+        }
+
+        function rejectDocument(documentId) {
+            document.getElementById('rejectDocumentForm').action = `/enrollments/document/${documentId}/reject/`;
+            new bootstrap.Modal(document.getElementById('rejectDocumentModal')).show();
+        }
+
+        function approveReference(referenceId) {
+            if (confirm('Mark this reference letter as received?')) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/enrollments/reference/${referenceId}/approve/`;
+                
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = 'csrfmiddlewaretoken';
+                csrfInput.value = csrfToken;
+                form.appendChild(csrfInput);
+                
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+        {% endif %}
+    </script>
+</body>
+</html>

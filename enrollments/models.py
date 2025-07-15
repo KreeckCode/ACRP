@@ -1,18 +1,3 @@
-# enrollments/models.py - Redesigned for proper onboarding flow
-"""
-Enhanced enrollments models that properly reflect the onboarding process.
-
-This design separates the onboarding flow from the actual applications,
-making it more maintainable and following Django best practices.
-
-Design Principles:
-1. Separation of concerns - onboarding vs applications
-2. Proper inheritance hierarchy
-3. Extensible for future requirements
-4. Clear relationships between entities
-5. Comprehensive validation
-"""
-
 from django.db import models
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
@@ -603,6 +588,7 @@ class BaseApplication(models.Model):
     
     # Generic relation to documents
     documents = GenericRelation('Document')
+    references = GenericRelation('Reference')
     
     class Meta:
         abstract = True
