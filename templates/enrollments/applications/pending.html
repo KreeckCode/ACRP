@@ -1,0 +1,529 @@
+{% extends "base/enrollment_base.html" %}
+
+{% block title %}Pending Applications - ACRP{% endblock %}
+
+{% block breadcrumb %}Applications / Pending Review{% endblock %}
+
+{% block content %}
+<div class="py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Page Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Pending Applications</h1>
+                    <p class="mt-2 text-sm text-gray-600">Review and manage applications awaiting approval</p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <div class="flex items-center space-x-2 text-sm text-gray-500">
+                        <i class="bi bi-clock text-yellow-500"></i>
+                        <span>{{ pending_count }} applications pending review</span>
+                    </div>
+                    <button onclick="bulkApprove()" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
+                        <i class="bi bi-check-circle mr-2"></i>
+                        Bulk Approve
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white border border-gray-200 rounded-lg p-4">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-yellow-100 rounded-md flex items-center justify-center">
+                            <i class="bi bi-clock text-yellow-600"></i>
+                        </div>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-900">New Submissions</p>
+                        <p class="text-2xl font-bold text-yellow-600">{{ new_submissions|default:0 }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white border border-gray-200 rounded-lg p-4">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-blue-100 rounded-md flex items-center justify-center">
+                            <i class="bi bi-eye text-blue-600"></i>
+                        </div>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-900">Under Review</p>
+                        <p class="text-2xl font-bold text-blue-600">{{ under_review|default:0 }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white border border-gray-200 rounded-lg p-4">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-orange-100 rounded-md flex items-center justify-center">
+                            <i class="bi bi-exclamation-triangle text-orange-600"></i>
+                        </div>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-900">Needs Clarification</p>
+                        <p class="text-2xl font-bold text-orange-600">{{ needs_clarification|default:0 }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white border border-gray-200 rounded-lg p-4">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-red-100 rounded-md flex items-center justify-center">
+                            <i class="bi bi-clock-history text-red-600"></i>
+                        </div>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-900">Overdue (7+ days)</p>
+                        <p class="text-2xl font-bold text-red-600">{{ overdue|default:0 }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Options -->
+        <div class="bg-white shadow rounded-lg mb-6">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">Filter & Sort</h3>
+            </div>
+            <div class="px-6 py-4">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Council</label>
+                        <select class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" onchange="filterApplications()">
+                            <option value="">All Councils</option>
+                            <option value="cgmp">CGMP</option>
+                            <option value="cpsc">CPSC</option>
+                            <option value="cmtp">CMTP</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                        <select class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" onchange="filterApplications()">
+                            <option value="">All Priorities</option>
+                            <option value="high">High (Overdue)</option>
+                            <option value="medium">Medium (5-7 days)</option>
+                            <option value="low">Low (Recent)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Type</label>
+                        <select class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" onchange="filterApplications()">
+                            <option value="">All Types</option>
+                            <option value="associated">Associated</option>
+                            <option value="designated">Designated</option>
+                            <option value="student">Student</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
+                        <select class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" onchange="sortApplications()">
+                            <option value="oldest">Oldest First</option>
+                            <option value="newest">Newest First</option>
+                            <option value="priority">Priority</option>
+                            <option value="name">Name A-Z</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Actions</label>
+                        <div class="flex space-x-2">
+                            <button onclick="selectOverdue()" class="flex-1 px-3 py-2 text-xs bg-red-100 text-red-700 rounded-md hover:bg-red-200">
+                                Select Overdue
+                            </button>
+                            <button onclick="clearSelection()" class="flex-1 px-3 py-2 text-xs bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">
+                                Clear All
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Applications List -->
+        <div class="space-y-4">
+            {% for application in pending_applications %}
+            <div class="bg-white shadow rounded-lg application-card" 
+                 data-council="{{ application.council|lower }}" 
+                 data-type="{{ application.type|lower }}"
+                 data-priority="{% if application.days_pending > 7 %}high{% elif application.days_pending > 5 %}medium{% else %}low{% endif %}"
+                 data-submitted="{{ application.created_at|date:'Y-m-d' }}">
+                
+                <div class="px-6 py-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 application-checkbox" value="{{ application.id }}">
+                            
+                            <!-- Priority Indicator -->
+                            <div class="flex-shrink-0">
+                                {% if application.days_pending > 7 %}
+                                <div class="w-3 h-3 bg-red-500 rounded-full" title="Overdue ({{ application.days_pending }} days)"></div>
+                                {% elif application.days_pending > 5 %}
+                                <div class="w-3 h-3 bg-yellow-500 rounded-full" title="Due soon ({{ application.days_pending }} days)"></div>
+                                {% else %}
+                                <div class="w-3 h-3 bg-green-500 rounded-full" title="Recent ({{ application.days_pending }} days)"></div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Application Info -->
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-3 mb-2">
+                                    <h3 class="text-lg font-medium text-gray-900">{{ application.name }}</h3>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if application.council == 'CGMP' %}bg-blue-100 text-blue-800{% elif application.council == 'CPSC' %}bg-green-100 text-green-800{% else %}bg-cyan-100 text-cyan-800{% endif %}">
+                                        {{ application.council }}
+                                    </span>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {% if application.type == 'Associated' %}bg-purple-100 text-purple-800{% elif application.type == 'Designated' %}bg-indigo-100 text-indigo-800{% else %}bg-orange-100 text-orange-800{% endif %}">
+                                        {{ application.type }}
+                                    </span>
+                                </div>
+                                
+                                <div class="flex items-center space-x-6 text-sm text-gray-500">
+                                    <span class="flex items-center">
+                                        <i class="bi bi-envelope mr-1"></i>
+                                        {{ application.email }}
+                                    </span>
+                                    <span class="flex items-center">
+                                        <i class="bi bi-hash mr-1"></i>
+                                        {{ application.application_number }}
+                                    </span>
+                                    <span class="flex items-center">
+                                        <i class="bi bi-clock mr-1"></i>
+                                        Submitted {{ application.days_pending }} days ago
+                                    </span>
+                                    {% if application.documents_count %}
+                                    <span class="flex items-center">
+                                        <i class="bi bi-file-earmark mr-1"></i>
+                                        {{ application.documents_count }} documents
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="flex items-center space-x-2">
+                            <div class="flex -space-x-1">
+                                {% if application.completion_percentage %}
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-16 bg-gray-200 rounded-full h-2">
+                                        <div class="bg-blue-600 h-2 rounded-full" style="width: {{ application.completion_percentage }}%"></div>
+                                    </div>
+                                    <span class="text-xs text-gray-500">{{ application.completion_percentage }}%</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            {% if application.type and application.id %}
+                            <a href="{% url 'enrollments:application_detail' pk=application.id app_type=application.type|lower %}" class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                <i class="bi bi-eye mr-2"></i>
+                                Review
+                            </a>
+                            {% endif %}
+                            
+                            <div class="flex space-x-1">
+                                <button onclick="quickApprove({{ application.id }})" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700" title="Quick Approve">
+                                    <i class="bi bi-check-lg"></i>
+                                </button>
+                                <button onclick="requestClarification({{ application.id }})" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-yellow-600 hover:bg-yellow-700" title="Request Clarification">
+                                    <i class="bi bi-question-lg"></i>
+                                </button>
+                                <button onclick="quickReject({{ application.id }})" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700" title="Reject">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Additional Details (Expandable) -->
+                    <div class="mt-4 hidden" id="details-{{ application.id }}">
+                        <div class="border-t border-gray-200 pt-4">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                <div>
+                                    <span class="font-medium text-gray-500">Phone:</span>
+                                    <span class="ml-2 text-gray-900">{{ application.phone|default:"Not provided" }}</span>
+                                </div>
+                                <div>
+                                    <span class="font-medium text-gray-500">Institution:</span>
+                                    <span class="ml-2 text-gray-900">{{ application.institution|default:"Not provided" }}</span>
+                                </div>
+                                <div>
+                                    <span class="font-medium text-gray-500">Years in Ministry:</span>
+                                    <span class="ml-2 text-gray-900">{{ application.years_ministry|default:"Not provided" }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Toggle Details Button -->
+                    <div class="mt-3">
+                        <button onclick="toggleDetails({{ application.id }})" class="text-sm text-blue-600 hover:text-blue-500">
+                            <span id="toggle-text-{{ application.id }}">Show details</span>
+                            <i class="bi bi-chevron-down ml-1" id="toggle-icon-{{ application.id }}"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-12">
+                <i class="bi bi-check-circle text-green-400 text-6xl mb-4"></i>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">All Caught Up!</h3>
+                <p class="text-sm text-gray-500">No applications are currently pending review.</p>
+                <a href="{% url 'enrollments:application_list' %}" class="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200">
+                    View All Applications
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Bulk Actions Footer -->
+        <div class="fixed bottom-0 left-64 right-0 bg-white border-t border-gray-200 px-6 py-4 hidden" id="bulk-actions-footer">
+            <div class="flex items-center justify-between">
+                <div class="text-sm text-gray-700">
+                    <span id="selected-count">0</span> applications selected
+                </div>
+                <div class="flex space-x-3">
+                    <button onclick="bulkApprove()" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
+                        <i class="bi bi-check-circle mr-2"></i>
+                        Approve Selected
+                    </button>
+                    <button onclick="bulkRequestClarification()" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-yellow-600 hover:bg-yellow-700">
+                        <i class="bi bi-question-circle mr-2"></i>
+                        Request Clarification
+                    </button>
+                    <button onclick="bulkReject()" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700">
+                        <i class="bi bi-x-circle mr-2"></i>
+                        Reject Selected
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Action Modals -->
+<div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden" id="clarificationModal">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Request Clarification</h3>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Message to Applicant</label>
+                <textarea class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" rows="4" placeholder="Please provide additional information..."></textarea>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button onclick="closeClarificationModal()" class="px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-50">Cancel</button>
+                <button onclick="sendClarificationRequest()" class="px-4 py-2 bg-yellow-600 text-white text-sm font-medium rounded-md hover:bg-yellow-700">Send Request</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let selectedApplications = new Set();
+
+    // Toggle application details
+    function toggleDetails(id) {
+        const details = document.getElementById(`details-${id}`);
+        const text = document.getElementById(`toggle-text-${id}`);
+        const icon = document.getElementById(`toggle-icon-${id}`);
+        
+        if (details.classList.contains('hidden')) {
+            details.classList.remove('hidden');
+            text.textContent = 'Hide details';
+            icon.classList.add('rotate-180');
+        } else {
+            details.classList.add('hidden');
+            text.textContent = 'Show details';
+            icon.classList.remove('rotate-180');
+        }
+    }
+
+    // Filter applications
+    function filterApplications() {
+        const council = document.querySelector('select:nth-of-type(1)').value;
+        const priority = document.querySelector('select:nth-of-type(2)').value;
+        const type = document.querySelector('select:nth-of-type(3)').value;
+        
+        const cards = document.querySelectorAll('.application-card');
+        
+        cards.forEach(card => {
+            const cardCouncil = card.dataset.council;
+            const cardPriority = card.dataset.priority;
+            const cardType = card.dataset.type;
+            
+            const showCouncil = !council || cardCouncil === council;
+            const showPriority = !priority || cardPriority === priority;
+            const showType = !type || cardType === type;
+            
+            if (showCouncil && showPriority && showType) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+
+    // Sort applications
+    function sortApplications() {
+        const sortBy = event.target.value;
+        const container = document.querySelector('.space-y-4');
+        const cards = Array.from(document.querySelectorAll('.application-card'));
+        
+        cards.sort((a, b) => {
+            switch(sortBy) {
+                case 'oldest':
+                    return new Date(a.dataset.submitted) - new Date(b.dataset.submitted);
+                case 'newest':
+                    return new Date(b.dataset.submitted) - new Date(a.dataset.submitted);
+                case 'priority':
+                    const priorityOrder = { high: 3, medium: 2, low: 1 };
+                    return priorityOrder[b.dataset.priority] - priorityOrder[a.dataset.priority];
+                case 'name':
+                    return a.querySelector('h3').textContent.localeCompare(b.querySelector('h3').textContent);
+                default:
+                    return 0;
+            }
+        });
+        
+        // Re-append sorted cards
+        cards.forEach(card => container.appendChild(card));
+    }
+
+    // Handle checkbox selection
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('application-checkbox')) {
+            if (e.target.checked) {
+                selectedApplications.add(e.target.value);
+            } else {
+                selectedApplications.delete(e.target.value);
+            }
+            updateBulkActionsFooter();
+        }
+    });
+
+    // Update bulk actions footer
+    function updateBulkActionsFooter() {
+        const footer = document.getElementById('bulk-actions-footer');
+        const count = document.getElementById('selected-count');
+        
+        if (selectedApplications.size > 0) {
+            footer.classList.remove('hidden');
+            count.textContent = selectedApplications.size;
+        } else {
+            footer.classList.add('hidden');
+        }
+    }
+
+    // Select all overdue applications
+    function selectOverdue() {
+        document.querySelectorAll('.application-card[data-priority="high"] .application-checkbox').forEach(checkbox => {
+            checkbox.checked = true;
+            selectedApplications.add(checkbox.value);
+        });
+        updateBulkActionsFooter();
+    }
+
+    // Clear all selections
+    function clearSelection() {
+        document.querySelectorAll('.application-checkbox').forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        selectedApplications.clear();
+        updateBulkActionsFooter();
+    }
+
+    // Quick actions
+    function quickApprove(id) {
+        if (confirm('Are you sure you want to approve this application?')) {
+            showAlert('Approving application...', 'info');
+            // Make API call here
+            setTimeout(() => {
+                showAlert('Application approved successfully!', 'success');
+                document.querySelector(`[data-application-id="${id}"]`)?.remove();
+            }, 1000);
+        }
+    }
+
+    function quickReject(id) {
+        const reason = prompt('Please provide a reason for rejection:');
+        if (reason) {
+            showAlert('Rejecting application...', 'info');
+            // Make API call here
+            setTimeout(() => {
+                showAlert('Application rejected successfully!', 'success');
+                document.querySelector(`[data-application-id="${id}"]`)?.remove();
+            }, 1000);
+        }
+    }
+
+    function requestClarification(id) {
+        document.getElementById('clarificationModal').classList.remove('hidden');
+        // Store the ID for the modal
+        window.currentApplicationId = id;
+    }
+
+    function closeClarificationModal() {
+        document.getElementById('clarificationModal').classList.add('hidden');
+    }
+
+    function sendClarificationRequest() {
+        const message = document.querySelector('#clarificationModal textarea').value;
+        if (message.trim()) {
+            showAlert('Clarification request sent!', 'success');
+            closeClarificationModal();
+            // Make API call here
+        } else {
+            showAlert('Please enter a message', 'warning');
+        }
+    }
+
+    // Bulk actions
+    function bulkApprove() {
+        if (selectedApplications.size === 0) {
+            showAlert('Please select applications to approve', 'warning');
+            return;
+        }
+        
+        if (confirm(`Are you sure you want to approve ${selectedApplications.size} applications?`)) {
+            showAlert(`Approving ${selectedApplications.size} applications...`, 'info');
+            // Make API call here
+            setTimeout(() => {
+                showAlert('Applications approved successfully!', 'success');
+                clearSelection();
+            }, 2000);
+        }
+    }
+
+    function bulkReject() {
+        if (selectedApplications.size === 0) {
+            showAlert('Please select applications to reject', 'warning');
+            return;
+        }
+        
+        const reason = prompt('Please provide a reason for rejection:');
+        if (reason) {
+            showAlert(`Rejecting ${selectedApplications.size} applications...`, 'info');
+            // Make API call here
+            setTimeout(() => {
+                showAlert('Applications rejected successfully!', 'success');
+                clearSelection();
+            }, 2000);
+        }
+    }
+
+    function bulkRequestClarification() {
+        if (selectedApplications.size === 0) {
+            showAlert('Please select applications', 'warning');
+            return;
+        }
+        
+        requestClarification('bulk');
+    }
+</script>
+{% endblock %}

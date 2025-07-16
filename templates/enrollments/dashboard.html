@@ -1,767 +1,707 @@
-{% extends "base/base.html" %}
-{% load static %}
-
-{% block title %}Enrollment Dashboard - ACRP{% endblock %}
-
-{% block extra_css %}
-<style>
-    :root {
-        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-        --warning-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        --info-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        --card-shadow: 0 0.625rem 1.875rem rgba(0, 0, 0, 0.1);
-        --hover-shadow: 0 1.25rem 2.5rem rgba(0, 0, 0, 0.15);
-    }
-
-    .dashboard-card {
-        background: white;
-        border-radius: 1rem;
-        box-shadow: var(--card-shadow);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(10px);
-    }
-
-    .dashboard-card:hover {
-        transform: translateY(-0.25rem);
-        box-shadow: var(--hover-shadow);
-    }
-
-    .stat-card {
-        position: relative;
-        overflow: hidden;
-    }
-
-    .stat-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: var(--primary-gradient);
-    }
-
-    .cgmp-card::before { background: var(--primary-gradient); }
-    .cpsc-card::before { background: var(--success-gradient); }
-    .cmtp-card::before { background: var(--info-gradient); }
-
-    .metric-number {
-        font-weight: 700;
-        font-size: 2.5rem;
-        line-height: 1;
-        background: var(--primary-gradient);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-
-    .metric-label {
-        font-size: 0.875rem;
-        font-weight: 500;
-        color: #6b7280;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-
-    .progress-custom {
-        height: 8px;
-        border-radius: 50rem;
-        overflow: hidden;
-        background-color: #f3f4f6;
-    }
-
-    .progress-fill {
-        height: 100%;
-        border-radius: 50rem;
-        transition: width 0.6s ease-in-out;
-    }
-
-    .cgmp-progress { background: var(--primary-gradient); }
-    .cpsc-progress { background: var(--success-gradient); }
-    .cmtp-progress { background: var(--info-gradient); }
-
-    .recent-item {
-        transition: all 0.2s ease;
-        border-radius: 0.75rem;
-        border: 1px solid #e5e7eb;
-    }
-
-    .recent-item:hover {
-        background-color: #f8fafc;
-        transform: translateX(0.25rem);
-        border-color: #d1d5db;
-    }
-
-    .status-badge {
-        font-size: 0.75rem;
-        font-weight: 600;
-        padding: 0.25rem 0.75rem;
-        border-radius: 50rem;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-
-    .status-approved {
-        background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-        color: #065f46;
-        border: 1px solid #34d399;
-    }
-
-    .status-pending {
-        background: linear-gradient(135deg, #fef3c7, #fde68a);
-        color: #92400e;
-        border: 1px solid #f59e0b;
-    }
-
-    .status-under_review {
-        background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-        color: #1e40af;
-        border: 1px solid #3b82f6;
-    }
-
-    .status-rejected {
-        background: linear-gradient(135deg, #fee2e2, #fecaca);
-        color: #991b1b;
-        border: 1px solid #ef4444;
-    }
-
-    .council-badge {
-        font-size: 0.75rem;
-        font-weight: 700;
-        padding: 0.375rem 0.75rem;
-        border-radius: 0.5rem;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-    }
-
-    .council-cgmp {
-        background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
-        color: #3730a3;
-        border: 1px solid #8b5cf6;
-    }
-
-    .council-cpsc {
-        background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-        color: #065f46;
-        border: 1px solid #10b981;
-    }
-
-    .council-cmtp {
-        background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-        color: #1e40af;
-        border: 1px solid #3b82f6;
-    }
-
-    .dashboard-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 1.25rem;
-        margin-bottom: 2rem;
-        color: white;
-    }
-
-    .fade-in {
-        animation: fadeInUp 0.6s ease-out forwards;
-        opacity: 0;
-        transform: translateY(1.25rem);
-    }
-
-    .fade-in:nth-child(1) { animation-delay: 0.1s; }
-    .fade-in:nth-child(2) { animation-delay: 0.2s; }
-    .fade-in:nth-child(3) { animation-delay: 0.3s; }
-    .fade-in:nth-child(4) { animation-delay: 0.4s; }
-
-    @keyframes fadeInUp {
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .quick-action-card {
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .quick-action-card:hover {
-        background-color: var(--bs-light);
-    }
-
-    .app-type-badge {
-        font-size: 0.6rem;
-        padding: 0.2rem 0.5rem;
-        border-radius: 0.25rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-
-    .app-type-associated {
-        background-color: #e0f2fe;
-        color: #0369a1;
-        border: 1px solid #0ea5e9;
-    }
-
-    .app-type-designated {
-        background-color: #f0fdf4;
-        color: #166534;
-        border: 1px solid #22c55e;
-    }
-
-    .app-type-student {
-        background-color: #fef3e2;
-        color: #ea580c;
-        border: 1px solid #f97316;
-    }
-
-    @media (max-width: 768px) {
-        .metric-number {
-            font-size: 2rem;
-        }
-        
-        .dashboard-card {
-            margin-bottom: 1rem;
-        }
-    }
-</style>
-{% endblock %}
-
-{% block content %}
-<div class="container-fluid py-4">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enrollment Dashboard - ACRP</title>
     
-    <!-- Dashboard Header -->
-    <div class="dashboard-header dashboard-card p-4 mb-4">
-        <div class="row align-items-center">
-            <div class="col-md-8">
-                <h1 class="display-4 fw-bold mb-2">Enrollment Dashboard</h1>
-                <p class="text-light fs-5 mb-0">Welcome back! Here's what's happening with enrollments.</p>
-            </div>
-            <div class="col-md-4">
-                <div class="row text-center">
-                    <div class="col-6">
-                        <div class="fs-2 fw-bold" id="totalApplications">
-                            {% if stats.cgmp %}{{ stats.cgmp.total|default:0 }}{% else %}0{% endif %}
-                        </div>
-                        <div class="text-light small">Total Applications</div>
-                    </div>
-                    <div class="col-6">
-                        <div class="fs-2 fw-bold" id="totalApproved">
-                            {% if stats.cgmp %}{{ stats.cgmp.approved|default:0 }}{% else %}0{% endif %}
-                        </div>
-                        <div class="text-light small">Approved</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Statistics Cards -->
-    <div class="row mb-4">
-        <!-- CGMP Stats -->
-        <div class="col-lg-4 mb-4">
-            <div class="dashboard-card stat-card cgmp-card p-4 fade-in h-100">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                        <h5 class="fw-semibold text-dark mb-1">CGMP Council</h5>
-                        <small class="text-muted">Council for General Ministry Professionals</small>
-                    </div>
-                    <div class="bg-gradient p-3 rounded-circle" style="background: var(--primary-gradient);">
-                        <i class="bi bi-people-fill text-white fs-4"></i>
-                    </div>
-                </div>
-                
-                <div class="row text-center mb-3">
-                    <div class="col-4">
-                        <div class="metric-number">{{ stats.cgmp.total }}</div>
-                        <div class="metric-label">Total</div>
-                    </div>
-                    <div class="col-4">
-                        <div class="metric-number text-success">{{ stats.cgmp.approved }}</div>
-                        <div class="metric-label">Approved</div>
-                    </div>
-                    <div class="col-4">
-                        <div class="metric-number text-warning">{{ stats.cgmp.pending }}</div>
-                        <div class="metric-label">Pending</div>
-                    </div>
-                </div>
-
-                <div class="progress-custom mb-2">
-                    <div class="progress-fill cgmp-progress" style="width: {% if stats.cgmp.total %}{% widthratio stats.cgmp.approved stats.cgmp.total 100 %}{% else %}0{% endif %}%"></div>
-                </div>
-                <div class="d-flex justify-content-between small text-muted">
-                    <span>Approval Rate</span>
-                    <span class="fw-semibold">
-                        {% if stats.cgmp.total %}
-                            {% widthratio stats.cgmp.approved stats.cgmp.total 100 %}%
-                        {% else %}
-                            0%
-                        {% endif %}
-                    </span>
-                </div>
-            </div>
-        </div>
-
-        <!-- CPSC Stats -->
-        <div class="col-lg-4 mb-4">
-            <div class="dashboard-card stat-card cpsc-card p-4 fade-in h-100">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                        <h5 class="fw-semibold text-dark mb-1">CPSC Council</h5>
-                        <small class="text-muted">Council for Pastoral & Spiritual Care</small>
-                    </div>
-                    <div class="bg-gradient p-3 rounded-circle" style="background: var(--success-gradient);">
-                        <i class="bi bi-heart-fill text-white fs-4"></i>
-                    </div>
-                </div>
-                
-                <div class="row text-center mb-3">
-                    <div class="col-4">
-                        <div class="metric-number">{{ stats.cpsc.total }}</div>
-                        <div class="metric-label">Total</div>
-                    </div>
-                    <div class="col-4">
-                        <div class="metric-number text-success">{{ stats.cpsc.approved }}</div>
-                        <div class="metric-label">Approved</div>
-                    </div>
-                    <div class="col-4">
-                        <div class="metric-number text-warning">{{ stats.cpsc.pending }}</div>
-                        <div class="metric-label">Pending</div>
-                    </div>
-                </div>
-
-                <div class="progress-custom mb-2">
-                    <div class="progress-fill cpsc-progress" style="width: {% if stats.cpsc.total %}{% widthratio stats.cpsc.approved stats.cpsc.total 100 %}{% else %}0{% endif %}%"></div>
-                </div>
-                <div class="d-flex justify-content-between small text-muted">
-                    <span>Approval Rate</span>
-                    <span class="fw-semibold">
-                        {% if stats.cpsc.total %}
-                            {% widthratio stats.cpsc.approved stats.cpsc.total 100 %}%
-                        {% else %}
-                            0%
-                        {% endif %}
-                    </span>
-                </div>
-            </div>
-        </div>
-
-        <!-- CMTP Stats -->
-        <div class="col-lg-4 mb-4">
-            <div class="dashboard-card stat-card cmtp-card p-4 fade-in h-100">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                        <h5 class="fw-semibold text-dark mb-1">CMTP Council</h5>
-                        <small class="text-muted">Council for Ministry Training Providers</small>
-                    </div>
-                    <div class="bg-gradient p-3 rounded-circle" style="background: var(--info-gradient);">
-                        <i class="bi bi-book-fill text-white fs-4"></i>
-                    </div>
-                </div>
-                
-                <div class="row text-center mb-3">
-                    <div class="col-4">
-                        <div class="metric-number">{{ stats.cmtp.total }}</div>
-                        <div class="metric-label">Total</div>
-                    </div>
-                    <div class="col-4">
-                        <div class="metric-number text-success">{{ stats.cmtp.approved }}</div>
-                        <div class="metric-label">Approved</div>
-                    </div>
-                    <div class="col-4">
-                        <div class="metric-number text-warning">{{ stats.cmtp.pending }}</div>
-                        <div class="metric-label">Pending</div>
-                    </div>
-                </div>
-
-                <div class="progress-custom mb-2">
-                    <div class="progress-fill cmtp-progress" style="width: {% if stats.cmtp.total %}{% widthratio stats.cmtp.approved stats.cmtp.total 100 %}{% else %}0{% endif %}%"></div>
-                </div>
-                <div class="d-flex justify-content-between small text-muted">
-                    <span>Approval Rate</span>
-                    <span class="fw-semibold">
-                        {% if stats.cmtp.total %}
-                            {% widthratio stats.cmtp.approved stats.cmtp.total 100 %}%
-                        {% else %}
-                            0%
-                        {% endif %}
-                    </span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Recent Applications -->
-    <div class="dashboard-card p-4 fade-in mb-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h2 class="h3 fw-bold text-dark mb-1">Recent Applications</h2>
-                <p class="text-muted mb-0">Latest enrollment submissions across all councils</p>
-            </div>
-            <div class="btn-group" role="group">
-                <button type="button" class="btn btn-outline-primary btn-sm" onclick="filterApplications('all')">
-                    All
-                </button>
-                <button type="button" class="btn btn-outline-primary btn-sm" onclick="filterApplications('cgmp')">
-                    CGMP
-                </button>
-                <button type="button" class="btn btn-outline-success btn-sm" onclick="filterApplications('cpsc')">
-                    CPSC
-                </button>
-                <button type="button" class="btn btn-outline-info btn-sm" onclick="filterApplications('cmtp')">
-                    CMTP
-                </button>
-            </div>
-        </div>
-
-        <div class="list-group list-group-flush" id="recentApplications">
-            {% for application in recent_applications %}
-            <div class="recent-item list-group-item p-3 mb-2" data-council="{{ application.council|lower }}">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div class="flex-grow-1">
-                        <div class="d-flex align-items-center mb-2">
-                            <span class="council-badge council-{{ application.council|lower }} me-2">
-                                {{ application.council }}
-                            </span>
-                            {% if application.type %}
-                            <span class="app-type-badge app-type-{{ application.type|lower }} me-2">
-                                {{ application.type }}
-                            </span>
-                            {% endif %}
-                            <h6 class="fw-semibold mb-0 me-2">{{ application.name }}</h6>
-                            <span class="status-badge status-{{ application.status }}">
-                                {% if application.status == 'approved' %}
-                                    Approved
-                                {% elif application.status == 'pending' or application.status == 'submitted' %}
-                                    Pending
-                                {% elif application.status == 'under_review' %}
-                                    Under Review
-                                {% elif application.status == 'rejected' %}
-                                    Rejected
-                                {% else %}
-                                    {{ application.status|title }}
-                                {% endif %}
-                            </span>
-                        </div>
-                        <div class="d-flex align-items-center text-muted small">
-                            <i class="bi bi-envelope me-1"></i>
-                            <span class="me-3">{{ application.email }}</span>
-                            <i class="bi bi-clock me-1"></i>
-                            <span>{{ application.created_at|timesince }} ago</span>
-                            {% if application.application_number %}
-                            <span class="ms-3">
-                                <i class="bi bi-hash me-1"></i>
-                                {{ application.application_number }}
-                            </span>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        {% if application.type and application.id %}
-                        <a href="{% url 'enrollments:application_detail' pk=application.id app_type=application.type|lower %}" 
-                           class="btn btn-outline-primary btn-sm me-2">
-                            <i class="bi bi-eye me-1"></i>
-                            View Details
-                        </a>
-                        {% endif %}
-                        {% if perms.enrollments.change_baseapplication %}
-                        <div class="dropdown">
-                            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" 
-                                    data-bs-toggle="dropdown">
-                                <i class="bi bi-three-dots"></i>
-                            </button>
-                            <ul class="dropdown-menu">
-                                {% if application.type and application.id %}
-                                <li>
-                                    <a class="dropdown-item" href="{% url 'enrollments:application_update' pk=application.id app_type=application.type|lower %}">
-                                        <i class="bi bi-pencil me-2"></i>Edit
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="{% url 'enrollments:application_review' pk=application.id app_type=application.type|lower %}">
-                                        <i class="bi bi-check-circle me-2"></i>Review
-                                    </a>
-                                </li>
-                                {% endif %}
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <a class="dropdown-item text-danger" href="#" onclick="confirmDelete({{ application.id }}, '{{ application.type|lower }}')">
-                                        <i class="bi bi-trash me-2"></i>Delete
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-            {% empty %}
-            <div class="text-center py-5">
-                <i class="bi bi-inbox display-1 text-muted"></i>
-                <h5 class="text-muted mt-3">No Recent Applications</h5>
-                <p class="text-muted">New applications will appear here when submitted.</p>
-            </div>
-            {% endfor %}
-        </div>
-        
-        {% if recent_applications %}
-        <div class="d-flex justify-content-between align-items-center mt-3">
-            <small class="text-muted">Showing {{ recent_applications|length }} most recent applications</small>
-        </div>
-        {% endif %}
-    </div>
-
-    <!-- Quick Actions -->
-    <div class="row">
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="dashboard-card quick-action-card p-4 text-center h-100" onclick="window.location.href='{% url 'enrollments:onboarding_start' %}'">
-                <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 3rem; height: 3rem;">
-                    <i class="bi bi-plus-lg text-primary fs-4"></i>
-                </div>
-                <h6 class="fw-semibold text-dark mb-1">New Application</h6>
-                <small class="text-primary">Start Onboarding Process</small>
-            </div>
-        </div>
-
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="dashboard-card quick-action-card p-4 text-center h-100" onclick="generateReport()">
-                <div class="bg-info bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 3rem; height: 3rem;">
-                    <i class="bi bi-bar-chart text-info fs-4"></i>
-                </div>
-                <h6 class="fw-semibold text-dark mb-1">Generate Report</h6>
-                <small class="text-info">Statistics & Analytics</small>
-            </div>
-        </div>
-
-        <div class="col-lg-3 col-md-6 mb-3">
-            <div class="dashboard-card quick-action-card p-4 text-center h-100" onclick="refreshDashboard()">
-                <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 3rem; height: 3rem;">
-                    <i class="bi bi-arrow-clockwise text-warning fs-4"></i>
-                </div>
-                <h6 class="fw-semibold text-dark mb-1">Refresh Data</h6>
-                <small class="text-warning">Update Dashboard</small>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirm Deletion</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete this application? This action cannot be undone.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete Application</button>
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize tooltips
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
-
-    // Initialize progress bar animations
-    animateProgressBars();
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     
-    // Setup auto-refresh
-    setupAutoRefresh();
-});
-
-// Animate progress bars on load
-function animateProgressBars() {
-    const progressBars = document.querySelectorAll('.progress-fill');
-    progressBars.forEach((bar, index) => {
-        const targetWidth = bar.style.width;
-        bar.style.width = '0%';
-        
-        setTimeout(() => {
-            bar.style.width = targetWidth;
-        }, index * 150);
-    });
-}
-
-// Filter applications by council
-function filterApplications(councilType) {
-    const applications = document.querySelectorAll('.recent-item');
-    const buttons = document.querySelectorAll('.btn-group .btn');
-    
-    // Update button states
-    buttons.forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.textContent.trim().toLowerCase() === councilType || 
-            (councilType === 'all' && btn.textContent.trim() === 'All')) {
-            btn.classList.add('active');
-        }
-    });
-
-    // Filter applications
-    applications.forEach(app => {
-        const appCouncil = app.getAttribute('data-council');
-        
-        if (councilType === 'all' || appCouncil === councilType) {
-            app.style.display = 'block';
-            app.style.opacity = '0';
-            app.style.transform = 'translateY(10px)';
-            
-            setTimeout(() => {
-                app.style.transition = 'all 0.3s ease';
-                app.style.opacity = '1';
-                app.style.transform = 'translateY(0)';
-            }, 50);
-        } else {
-            app.style.transition = 'all 0.3s ease';
-            app.style.opacity = '0';
-            app.style.transform = 'translateY(-10px)';
-            
-            setTimeout(() => {
-                app.style.display = 'none';
-            }, 300);
-        }
-    });
-}
-
-// Delete confirmation
-function confirmDelete(applicationId, applicationType) {
-    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
-    
-    document.getElementById('confirmDeleteBtn').onclick = function() {
-        // In a real implementation, you would make an AJAX call to delete
-        fetch(`/enrollments/application/${applicationId}/${applicationType}/delete/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                'Content-Type': 'application/json',
-            },
-        })
-        .then(response => {
-            if (response.ok) {
-                showAlert('Application deleted successfully', 'success');
-                refreshDashboard();
-            } else {
-                showAlert('Error deleting application', 'danger');
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            300: '#93c5fd',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        },
+                        sidebar: '#1f2937',
+                        'sidebar-hover': '#374151'
+                    }
+                }
             }
-            modal.hide();
-        })
-        .catch(error => {
-            showAlert('Error deleting application', 'danger');
-            modal.hide();
-        });
-    };
+        }
+    </script>
     
-    modal.show();
-}
-
-// Generate report
-function generateReport() {
-    showAlert('Generating report...', 'info');
-    
-    // Simulate report generation
-    setTimeout(() => {
-        const reportData = {
-            cgmp: {{ stats.cgmp|safe }},
-            cpsc: {{ stats.cpsc|safe }},
-            cmtp: {{ stats.cmtp|safe }}
-        };
+    <style>
+        .sidebar-link:hover {
+            background-color: #374151;
+        }
         
-        downloadReport(reportData);
-        showAlert('Report generated successfully!', 'success');
-    }, 2000);
-}
-
-// Download report as CSV
-function downloadReport(data) {
-    const csvContent = "data:text/csv;charset=utf-8," 
-        + "Council,Total,Approved,Pending,Approval Rate\n"
-        + `CGMP,${data.cgmp.total},${data.cgmp.approved},${data.cgmp.pending},${data.cgmp.total ? Math.round((data.cgmp.approved / data.cgmp.total) * 100) : 0}%\n`
-        + `CPSC,${data.cpsc.total},${data.cpsc.approved},${data.cpsc.pending},${data.cpsc.total ? Math.round((data.cpsc.approved / data.cpsc.total) * 100) : 0}%\n`
-        + `CMTP,${data.cmtp.total},${data.cmtp.approved},${data.cmtp.pending},${data.cmtp.total ? Math.round((data.cmtp.approved / data.cmtp.total) * 100) : 0}%\n`;
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `enrollment_report_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
-
-// Refresh dashboard
-function refreshDashboard() {
-    showAlert('Refreshing dashboard...', 'info');
-    
-    setTimeout(() => {
-        window.location.reload();
-    }, 1000);
-}
-
-// Setup auto-refresh every 5 minutes
-function setupAutoRefresh() {
-    setInterval(() => {
-        if (document.visibilityState === 'visible') {
-            // Silent refresh - update data without reload
-            updateDashboardData();
+        .sidebar-link.active {
+            background-color: #3b82f6;
         }
-    }, 300000); // 5 minutes
-}
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease-in-out;
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    
+    <!-- Top Navigation -->
+    <nav class="bg-white shadow-sm border-b border-gray-200 fixed w-full z-30 top-0">
+        <div class="px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <!-- Mobile menu button -->
+                    <button type="button" class="md:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100" onclick="toggleSidebar()">
+                        <i class="bi bi-list text-xl"></i>
+                    </button>
+                    
+                    <!-- Logo -->
+                    <div class="flex-shrink-0 flex items-center ml-4 md:ml-0">
+                        <h1 class="text-xl font-semibold text-gray-900">ACRP Dashboard</h1>
+                    </div>
+                    
+                    <!-- Breadcrumb -->
+                    <div class="hidden md:ml-6 md:flex md:items-center md:space-x-4">
+                        <span class="text-gray-500">/</span>
+                        <span class="text-sm text-gray-500">Enrollment Management</span>
+                    </div>
+                </div>
+                
+                <!-- Right side -->
+                <div class="flex items-center space-x-4">
+                    <!-- Notifications -->
+                    <button class="p-2 text-gray-400 hover:text-gray-500 relative">
+                        <i class="bi bi-bell text-xl"></i>
+                        <span class="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400"></span>
+                    </button>
+                    
+                    <!-- User menu -->
+                    <div class="relative">
+                        <button class="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                            <img class="h-8 w-8 rounded-full" src="https://ui-avatars.com/api/?name=Admin+User&background=3b82f6&color=fff" alt="User">
+                            <span class="ml-2 text-gray-700 hidden sm:block">Admin User</span>
+                            <i class="bi bi-chevron-down ml-1 text-gray-400"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
 
-// Update dashboard data via AJAX
-function updateDashboardData() {
-    fetch('{% url "enrollments:enrollment_dashboard" %}?ajax=1')
-        .then(response => response.json())
-        .then(data => {
-            // Update statistics
-            updateStatistics(data.stats);
-            updateRecentApplications(data.recent_applications);
-        })
-        .catch(error => {
-            console.error('Error updating dashboard:', error);
+    <!-- Sidebar -->
+    <div class="sidebar fixed inset-y-0 left-0 z-20 w-64 bg-gray-800 pt-16 pb-4 overflow-y-auto">
+        <nav class="mt-5 px-2">
+            <div class="space-y-1">
+                <!-- Dashboard -->
+                <a href="#" class="sidebar-link active text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                    <i class="bi bi-speedometer2 mr-3 text-lg"></i>
+                    Dashboard
+                </a>
+                
+                <!-- Applications -->
+                <div class="space-y-1">
+                    <button class="sidebar-link text-gray-300 hover:text-white group w-full flex items-center px-3 py-2 text-sm font-medium rounded-md" onclick="toggleSubmenu('applications')">
+                        <i class="bi bi-file-earmark-text mr-3 text-lg"></i>
+                        Applications
+                        <i class="bi bi-chevron-down ml-auto transition-transform duration-200" id="applications-icon"></i>
+                    </button>
+                    <div class="hidden ml-6 space-y-1" id="applications-submenu">
+                        <a href="#" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">All Applications</a>
+                        <a href="#" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">Pending Review</a>
+                        <a href="#" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">Approved</a>
+                        <a href="#" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">Rejected</a>
+                    </div>
+                </div>
+                
+                <!-- Councils -->
+                <div class="space-y-1">
+                    <button class="sidebar-link text-gray-300 hover:text-white group w-full flex items-center px-3 py-2 text-sm font-medium rounded-md" onclick="toggleSubmenu('councils')">
+                        <i class="bi bi-building mr-3 text-lg"></i>
+                        Councils
+                        <i class="bi bi-chevron-down ml-auto transition-transform duration-200" id="councils-icon"></i>
+                    </button>
+                    <div class="hidden ml-6 space-y-1" id="councils-submenu">
+                        <a href="#" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">CGMP</a>
+                        <a href="#" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">CPSC</a>
+                        <a href="#" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">CMTP</a>
+                    </div>
+                </div>
+                
+                <!-- Reports -->
+                <a href="#" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                    <i class="bi bi-bar-chart mr-3 text-lg"></i>
+                    Reports
+                </a>
+                
+                <!-- Users -->
+                <a href="#" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                    <i class="bi bi-people mr-3 text-lg"></i>
+                    Users
+                </a>
+                
+                <!-- Settings -->
+                <a href="#" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                    <i class="bi bi-gear mr-3 text-lg"></i>
+                    Settings
+                </a>
+            </div>
+            
+            <!-- Bottom Links -->
+            <div class="mt-8 pt-8 border-t border-gray-700">
+                <div class="space-y-1">
+                    <a href="#" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                        <i class="bi bi-question-circle mr-3 text-lg"></i>
+                        Help & Support
+                    </a>
+                    <a href="#" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                        <i class="bi bi-box-arrow-right mr-3 text-lg"></i>
+                        Sign Out
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="md:pl-64 flex flex-col flex-1">
+        <main class="flex-1 pt-16">
+            <div class="py-6">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    
+                    <!-- Page Header -->
+                    <div class="mb-8">
+                        <h1 class="text-3xl font-bold text-gray-900">Enrollment Dashboard</h1>
+                        <p class="mt-2 text-sm text-gray-600">Monitor and manage application submissions across all councils</p>
+                    </div>
+
+                    <!-- Quick Stats -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div class="bg-white overflow-hidden shadow rounded-lg">
+                            <div class="p-6">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
+                                            <i class="bi bi-file-earmark-text text-white"></i>
+                                        </div>
+                                    </div>
+                                    <div class="ml-4 w-0 flex-1">
+                                        <dl>
+                                            <dt class="text-sm font-medium text-gray-500 truncate">Total Applications</dt>
+                                            <dd class="text-2xl font-semibold text-gray-900" id="totalApplications">{{ stats.cgmp.total|add:stats.cpsc.total|add:stats.cmtp.total|default:0 }}</dd>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white overflow-hidden shadow rounded-lg">
+                            <div class="p-6">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+                                            <i class="bi bi-check-circle text-white"></i>
+                                        </div>
+                                    </div>
+                                    <div class="ml-4 w-0 flex-1">
+                                        <dl>
+                                            <dt class="text-sm font-medium text-gray-500 truncate">Approved</dt>
+                                            <dd class="text-2xl font-semibold text-gray-900" id="totalApproved">{{ stats.cgmp.approved|add:stats.cpsc.approved|add:stats.cmtp.approved|default:0 }}</dd>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white overflow-hidden shadow rounded-lg">
+                            <div class="p-6">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
+                                            <i class="bi bi-clock text-white"></i>
+                                        </div>
+                                    </div>
+                                    <div class="ml-4 w-0 flex-1">
+                                        <dl>
+                                            <dt class="text-sm font-medium text-gray-500 truncate">Pending</dt>
+                                            <dd class="text-2xl font-semibold text-gray-900">{{ stats.cgmp.pending|add:stats.cpsc.pending|add:stats.cmtp.pending|default:0 }}</dd>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white overflow-hidden shadow rounded-lg">
+                            <div class="p-6">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-8 h-8 bg-red-500 rounded-md flex items-center justify-center">
+                                            <i class="bi bi-x-circle text-white"></i>
+                                        </div>
+                                    </div>
+                                    <div class="ml-4 w-0 flex-1">
+                                        <dl>
+                                            <dt class="text-sm font-medium text-gray-500 truncate">Rejected</dt>
+                                            <dd class="text-2xl font-semibold text-gray-900">{{ stats.cgmp.rejected|add:stats.cpsc.rejected|add:stats.cmtp.rejected|default:0 }}</dd>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Council Statistics -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                        <!-- CGMP -->
+                        <div class="bg-white shadow rounded-lg">
+                            <div class="px-6 py-4 border-b border-gray-200">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h3 class="text-lg font-medium text-gray-900">CGMP Council</h3>
+                                        <p class="text-sm text-gray-500">Council for General Ministry Professionals</p>
+                                    </div>
+                                    <div class="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
+                                        <i class="bi bi-people-fill text-white text-xl"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="px-6 py-4">
+                                <div class="grid grid-cols-3 gap-4 mb-4">
+                                    <div class="text-center">
+                                        <div class="text-2xl font-bold text-gray-900">{{ stats.cgmp.total|default:0 }}</div>
+                                        <div class="text-sm text-gray-500">Total</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-2xl font-bold text-green-600">{{ stats.cgmp.approved|default:0 }}</div>
+                                        <div class="text-sm text-gray-500">Approved</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-2xl font-bold text-yellow-600">{{ stats.cgmp.pending|default:0 }}</div>
+                                        <div class="text-sm text-gray-500">Pending</div>
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <div class="flex justify-between text-sm text-gray-600 mb-1">
+                                        <span>Approval Rate</span>
+                                        <span>{% if stats.cgmp.total %}{% widthratio stats.cgmp.approved stats.cgmp.total 100 %}%{% else %}0%{% endif %}</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-blue-500 h-2 rounded-full" style="width: {% if stats.cgmp.total %}{% widthratio stats.cgmp.approved stats.cgmp.total 100 %}%{% else %}0%{% endif %}"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CPSC -->
+                        <div class="bg-white shadow rounded-lg">
+                            <div class="px-6 py-4 border-b border-gray-200">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h3 class="text-lg font-medium text-gray-900">CPSC Council</h3>
+                                        <p class="text-sm text-gray-500">Council for Pastoral & Spiritual Care</p>
+                                    </div>
+                                    <div class="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
+                                        <i class="bi bi-heart-fill text-white text-xl"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="px-6 py-4">
+                                <div class="grid grid-cols-3 gap-4 mb-4">
+                                    <div class="text-center">
+                                        <div class="text-2xl font-bold text-gray-900">{{ stats.cpsc.total|default:0 }}</div>
+                                        <div class="text-sm text-gray-500">Total</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-2xl font-bold text-green-600">{{ stats.cpsc.approved|default:0 }}</div>
+                                        <div class="text-sm text-gray-500">Approved</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-2xl font-bold text-yellow-600">{{ stats.cpsc.pending|default:0 }}</div>
+                                        <div class="text-sm text-gray-500">Pending</div>
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <div class="flex justify-between text-sm text-gray-600 mb-1">
+                                        <span>Approval Rate</span>
+                                        <span>{% if stats.cpsc.total %}{% widthratio stats.cpsc.approved stats.cpsc.total 100 %}%{% else %}0%{% endif %}</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-green-500 h-2 rounded-full" style="width: {% if stats.cpsc.total %}{% widthratio stats.cpsc.approved stats.cpsc.total 100 %}%{% else %}0%{% endif %}"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CMTP -->
+                        <div class="bg-white shadow rounded-lg">
+                            <div class="px-6 py-4 border-b border-gray-200">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h3 class="text-lg font-medium text-gray-900">CMTP Council</h3>
+                                        <p class="text-sm text-gray-500">Council for Ministry Training Providers</p>
+                                    </div>
+                                    <div class="w-12 h-12 bg-cyan-500 rounded-lg flex items-center justify-center">
+                                        <i class="bi bi-book-fill text-white text-xl"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="px-6 py-4">
+                                <div class="grid grid-cols-3 gap-4 mb-4">
+                                    <div class="text-center">
+                                        <div class="text-2xl font-bold text-gray-900">{{ stats.cmtp.total|default:0 }}</div>
+                                        <div class="text-sm text-gray-500">Total</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-2xl font-bold text-green-600">{{ stats.cmtp.approved|default:0 }}</div>
+                                        <div class="text-sm text-gray-500">Approved</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-2xl font-bold text-yellow-600">{{ stats.cmtp.pending|default:0 }}</div>
+                                        <div class="text-sm text-gray-500">Pending</div>
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <div class="flex justify-between text-sm text-gray-600 mb-1">
+                                        <span>Approval Rate</span>
+                                        <span>{% if stats.cmtp.total %}{% widthratio stats.cmtp.approved stats.cmtp.total 100 %}%{% else %}0%{% endif %}</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-cyan-500 h-2 rounded-full" style="width: {% if stats.cmtp.total %}{% widthratio stats.cmtp.approved stats.cmtp.total 100 %}%{% else %}0%{% endif %}"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Applications -->
+                    <div class="bg-white shadow rounded-lg mb-8">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-lg font-medium text-gray-900">Recent Applications</h3>
+                                <div class="flex space-x-2">
+                                    <button class="px-3 py-1 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 active" onclick="filterApplications('all')">All</button>
+                                    <button class="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300" onclick="filterApplications('cgmp')">CGMP</button>
+                                    <button class="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300" onclick="filterApplications('cpsc')">CPSC</button>
+                                    <button class="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300" onclick="filterApplications('cmtp')">CMTP</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="px-6 py-4">
+                            <div class="space-y-4" id="recentApplications">
+                                {% for application in recent_applications %}
+                                <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 application-item" data-council="{{ application.council|lower }}">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex-1">
+                                            <div class="flex items-center space-x-3 mb-2">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if application.council == 'CGMP' %}bg-blue-100 text-blue-800{% elif application.council == 'CPSC' %}bg-green-100 text-green-800{% else %}bg-cyan-100 text-cyan-800{% endif %}">
+                                                    {{ application.council }}
+                                                </span>
+                                                {% if application.type %}
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {% if application.type == 'Associated' %}bg-purple-100 text-purple-800{% elif application.type == 'Designated' %}bg-indigo-100 text-indigo-800{% else %}bg-orange-100 text-orange-800{% endif %}">
+                                                    {{ application.type }}
+                                                </span>
+                                                {% endif %}
+                                                <h4 class="text-sm font-medium text-gray-900">{{ application.name }}</h4>
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {% if application.status == 'approved' %}bg-green-100 text-green-800{% elif application.status == 'pending' or application.status == 'submitted' %}bg-yellow-100 text-yellow-800{% elif application.status == 'under_review' %}bg-blue-100 text-blue-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                                    {% if application.status == 'approved' %}
+                                                        Approved
+                                                    {% elif application.status == 'pending' or application.status == 'submitted' %}
+                                                        Pending
+                                                    {% elif application.status == 'under_review' %}
+                                                        Under Review
+                                                    {% elif application.status == 'rejected' %}
+                                                        Rejected
+                                                    {% else %}
+                                                        {{ application.status|title }}
+                                                    {% endif %}
+                                                </span>
+                                            </div>
+                                            <div class="flex items-center space-x-4 text-sm text-gray-500">
+                                                <span class="flex items-center">
+                                                    <i class="bi bi-envelope mr-1"></i>
+                                                    {{ application.email }}
+                                                </span>
+                                                <span class="flex items-center">
+                                                    <i class="bi bi-clock mr-1"></i>
+                                                    {{ application.created_at|timesince }} ago
+                                                </span>
+                                                {% if application.application_number %}
+                                                <span class="flex items-center">
+                                                    <i class="bi bi-hash mr-1"></i>
+                                                    {{ application.application_number }}
+                                                </span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            {% if application.type and application.id %}
+                                            <a href="{% url 'enrollments:application_detail' pk=application.id app_type=application.type|lower %}" class="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200">
+                                                <i class="bi bi-eye mr-1"></i>
+                                                View
+                                            </a>
+                                            {% endif %}
+                                            <div class="relative">
+                                                <button class="inline-flex items-center px-2 py-1 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" onclick="toggleDropdown(this)">
+                                                    <i class="bi bi-three-dots"></i>
+                                                </button>
+                                                <div class="hidden absolute right-0 z-10 mt-2 w-48 bg-white rounded-md shadow-lg">
+                                                    <div class="py-1">
+                                                        {% if application.type and application.id %}
+                                                        <a href="{% url 'enrollments:application_update' pk=application.id app_type=application.type|lower %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                            <i class="bi bi-pencil mr-2"></i>Edit
+                                                        </a>
+                                                        <a href="{% url 'enrollments:application_review' pk=application.id app_type=application.type|lower %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                            <i class="bi bi-check-circle mr-2"></i>Review
+                                                        </a>
+                                                        {% endif %}
+                                                        <div class="border-t border-gray-100"></div>
+                                                        <a href="#" class="block px-4 py-2 text-sm text-red-700 hover:bg-red-50" onclick="confirmDelete({{ application.id }}, '{{ application.type|lower }}')">
+                                                            <i class="bi bi-trash mr-2"></i>Delete
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <div class="text-center py-8">
+                                    <i class="bi bi-inbox text-gray-400 text-4xl mb-4"></i>
+                                    <h3 class="text-lg font-medium text-gray-900 mb-2">No Recent Applications</h3>
+                                    <p class="text-sm text-gray-500">New applications will appear here when submitted.</p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                            {% if recent_applications %}
+                            <div class="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
+                                <p class="text-sm text-gray-500">Showing {{ recent_applications|length }} most recent applications</p>
+                                <a href="{% url 'enrollments:application_list' %}" class="text-sm font-medium text-blue-600 hover:text-blue-500">
+                                    View all applications
+                                    <i class="bi bi-arrow-right ml-1"></i>
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-md transition-shadow" onclick="window.location.href='{% url 'enrollments:onboarding_start' %}'">
+                            <div class="p-6">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                                            <i class="bi bi-plus-lg text-white"></i>
+                                        </div>
+                                    </div>
+                                    <div class="ml-4">
+                                        <h3 class="text-lg font-medium text-gray-900">New Application</h3>
+                                        <p class="text-sm text-gray-500">Start the enrollment onboarding process</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-md transition-shadow" onclick="generateReport()">
+                            <div class="p-6">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+                                            <i class="bi bi-bar-chart text-white"></i>
+                                        </div>
+                                    </div>
+                                    <div class="ml-4">
+                                        <h3 class="text-lg font-medium text-gray-900">Generate Report</h3>
+                                        <p class="text-sm text-gray-500">Download statistics and analytics</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-md transition-shadow" onclick="refreshDashboard()">
+                            <div class="p-6">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-10 h-10 bg-yellow-500 rounded-lg flex items-center justify-center">
+                                            <i class="bi bi-arrow-clockwise text-white"></i>
+                                        </div>
+                                    </div>
+                                    <div class="ml-4">
+                                        <h3 class="text-lg font-medium text-gray-900">Refresh Data</h3>
+                                        <p class="text-sm text-gray-500">Update dashboard information</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden" id="deleteModal">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3 text-center">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                    <i class="bi bi-exclamation-triangle text-red-600 text-xl"></i>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 mt-4">Confirm Deletion</h3>
+                <div class="mt-2 px-7 py-3">
+                    <p class="text-sm text-gray-500">Are you sure you want to delete this application? This action cannot be undone.</p>
+                </div>
+                <div class="items-center px-4 py-3">
+                    <button class="px-4 py-2 bg-red-500 text-white text-base font-medium rounded-md w-24 mr-2 hover:bg-red-600" id="confirmDeleteBtn">Delete</button>
+                    <button class="px-4 py-2 bg-gray-300 text-gray-800 text-base font-medium rounded-md w-24" onclick="closeModal()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Toggle sidebar on mobile
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('open');
+        }
+
+        // Toggle submenu
+        function toggleSubmenu(menuId) {
+            const submenu = document.getElementById(menuId + '-submenu');
+            const icon = document.getElementById(menuId + '-icon');
+            
+            submenu.classList.toggle('hidden');
+            icon.classList.toggle('rotate-180');
+        }
+
+        // Toggle dropdown
+        function toggleDropdown(button) {
+            const dropdown = button.nextElementSibling;
+            
+            // Close all other dropdowns
+            document.querySelectorAll('.relative .absolute').forEach(d => {
+                if (d !== dropdown) d.classList.add('hidden');
+            });
+            
+            dropdown.classList.toggle('hidden');
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.relative')) {
+                document.querySelectorAll('.relative .absolute').forEach(d => {
+                    d.classList.add('hidden');
+                });
+            }
         });
-}
 
-// Update statistics display
-function updateStatistics(stats) {
-    // Update total numbers in header
-    document.getElementById('totalApplications').textContent = 
-        stats.cgmp.total + stats.cpsc.total + stats.cmtp.total;
-    document.getElementById('totalApproved').textContent = 
-        stats.cgmp.approved + stats.cpsc.approved + stats.cmtp.approved;
-    
-    // Update individual council stats would go here
-    // This would require more complex DOM manipulation
-}
+        // Filter applications
+        function filterApplications(councilType) {
+            const applications = document.querySelectorAll('.application-item');
+            const buttons = document.querySelectorAll('button[onclick^="filterApplications"]');
+            
+            // Update button states
+            buttons.forEach(btn => {
+                btn.classList.remove('bg-blue-500', 'text-white');
+                btn.classList.add('bg-gray-200', 'text-gray-700');
+                
+                if (btn.textContent.trim().toLowerCase() === councilType || 
+                    (councilType === 'all' && btn.textContent.trim() === 'All')) {
+                    btn.classList.remove('bg-gray-200', 'text-gray-700');
+                    btn.classList.add('bg-blue-500', 'text-white');
+                }
+            });
 
-// Show alert messages
-function showAlert(message, type) {
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-    alertDiv.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    
-    document.body.appendChild(alertDiv);
-    
-    // Auto-dismiss after 5 seconds
-    setTimeout(() => {
-        if (alertDiv.parentNode) {
-            alertDiv.remove();
+            // Filter applications
+            applications.forEach(app => {
+                const appCouncil = app.getAttribute('data-council');
+                
+                if (councilType === 'all' || appCouncil === councilType) {
+                    app.style.display = 'block';
+                } else {
+                    app.style.display = 'none';
+                }
+            });
         }
-    }, 5000);
-}
-</script>
-{% endblock %}
+
+        // Delete confirmation
+        function confirmDelete(applicationId, applicationType) {
+            document.getElementById('deleteModal').classList.remove('hidden');
+            
+            document.getElementById('confirmDeleteBtn').onclick = function() {
+                // Here you would make the actual delete request
+                console.log('Deleting application:', applicationId, applicationType);
+                closeModal();
+                showAlert('Application deleted successfully', 'success');
+            };
+        }
+
+        function closeModal() {
+            document.getElementById('deleteModal').classList.add('hidden');
+        }
+
+        // Generate report
+        function generateReport() {
+            showAlert('Generating report...', 'info');
+            
+            setTimeout(() => {
+                // Here you would generate and download the actual report
+                showAlert('Report generated successfully!', 'success');
+            }, 2000);
+        }
+
+        // Refresh dashboard
+        function refreshDashboard() {
+            showAlert('Refreshing dashboard...', 'info');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        }
+
+        // Show alert
+        function showAlert(message, type) {
+            const colors = {
+                success: 'bg-green-500',
+                info: 'bg-blue-500',
+                warning: 'bg-yellow-500',
+                error: 'bg-red-500'
+            };
+            
+            const alert = document.createElement('div');
+            alert.className = `fixed top-4 right-4 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-50`;
+            alert.textContent = message;
+            
+            document.body.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 3000);
+        }
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            const sidebar = document.querySelector('.sidebar');
+            const menuButton = document.querySelector('button[onclick="toggleSidebar()"]');
+            
+            if (window.innerWidth < 768 && sidebar.classList.contains('open')) {
+                if (!sidebar.contains(event.target) && !menuButton.contains(event.target)) {
+                    sidebar.classList.remove('open');
+                }
+            }
+        });
+    </script>
+</body>
+</html>
