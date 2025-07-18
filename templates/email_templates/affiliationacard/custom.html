@@ -1,0 +1,178 @@
+{% extends "affiliationcard/emails/email_base.html" %}
+
+{% block title %}{{ custom_subject|default:"ACRP Digital Card Communication" }}{% endblock %}
+
+{% block greeting %}
+<h2 style="color: #1f2937; margin-top: 0; margin-bottom: 20px;">
+    Hello {% if card %}{{ card.get_display_name }}{% else %}there{% endif %},
+</h2>
+{% endblock %}
+
+{% block content %}
+    <div class="alert alert-info">
+        <h3 style="margin-top: 0; color: #1e40af;">📢 Important Communication</h3>
+        <p style="margin-bottom: 0;">You're receiving this message regarding your ACRP Digital Affiliation Card.</p>
+    </div>
+
+    <!-- Card Information (if available) -->
+    {% if card %}
+    <div class="card-preview">
+        <h4 style="margin-top: 0; color: #1f2937;">Your Card Information</h4>
+        <div class="card-number">{{ card.card_number }}</div>
+        
+        <div style="text-align: left; max-width: 300px; margin: 20px auto;">
+            <p style="margin: 5px 0;"><strong>Name:</strong> {{ card.get_display_name }}</p>
+            <p style="margin: 5px 0;"><strong>Council:</strong> {{ card.council_name }}</p>
+            <p style="margin: 5px 0;"><strong>Affiliation:</strong> {{ card.affiliation_type|title }}</p>
+            <p style="margin: 5px 0;"><strong>Status:</strong> 
+                <span class="status-badge status-{{ card.status }}">{{ card.get_status_display }}</span>
+            </p>
+            {% if card.date_issued %}
+            <p style="margin: 5px 0;"><strong>Issued:</strong> {{ card.date_issued|date:"F j, Y" }}</p>
+            {% endif %}
+            {% if card.date_expires %}
+            <p style="margin: 5px 0;"><strong>Expires:</strong> {{ card.date_expires|date:"F j, Y" }}</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Custom Message Content -->
+    <div style="background: white; padding: 25px; border-radius: 8px; margin: 20px 0; border: 1px solid #e2e8f0; min-height: 200px;">
+        {% if custom_message %}
+            <!-- Custom message with preserved formatting -->
+            <div style="color: #374151; line-height: 1.7; font-size: 16px;">
+                {{ custom_message|linebreaks }}
+            </div>
+        {% else %}
+            <!-- Default custom message template -->
+            <div style="color: #374151; line-height: 1.7; font-size: 16px;">
+                <p>We wanted to reach out to you regarding your ACRP Digital Affiliation Card.</p>
+                
+                <p>This communication is to ensure you have the most up-to-date information about your affiliation status and any relevant updates to our digital card system.</p>
+                
+                <p>If you have any questions or concerns, please don't hesitate to contact our support team.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Email Type Specific Content -->
+    {% if email_type == 'announcement' %}
+        <div style="background: #eff6ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3b82f6;">
+            <h4 style="margin-top: 0; color: #1e40af;">📢 Announcement</h4>
+            <p style="color: #1e3a8a; margin-bottom: 0;">This is an important announcement regarding your ACRP affiliation and digital card services.</p>
+        </div>
+    {% elif email_type == 'reminder' %}
+        <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+            <h4 style="margin-top: 0; color: #92400e;">⏰ Friendly Reminder</h4>
+            <p style="color: #78350f; margin-bottom: 0;">This is a reminder about your ACRP digital card or related services.</p>
+        </div>
+    {% elif email_type == 'urgent' %}
+        <div style="background: #fee2e2; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ef4444;">
+            <h4 style="margin-top: 0; color: #991b1b;">⚠️ Urgent Notice</h4>
+            <p style="color: #7f1d1d; margin-bottom: 0;">This message contains time-sensitive information regarding your ACRP digital card.</p>
+        </div>
+    {% elif email_type == 'survey' %}
+        <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #10b981;">
+            <h4 style="margin-top: 0; color: #065f46;">📊 Your Feedback Requested</h4>
+            <p style="color: #064e3b; margin-bottom: 0;">We value your opinion and would appreciate your feedback on our digital card services.</p>
+        </div>
+    {% elif email_type == 'education' %}
+        <div style="background: #faf5ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #8b5cf6;">
+            <h4 style="margin-top: 0; color: #6b21a8;">🎓 Educational Information</h4>
+            <p style="color: #581c87; margin-bottom: 0;">This message contains helpful information to enhance your experience with ACRP digital cards.</p>
+        </div>
+    {% endif %}
+
+    <!-- Action Buttons (conditional) -->
+    {% if card %}
+    <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
+        <h4 style="margin-top: 0; color: #1f2937;">Quick Actions</h4>
+        <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 15px;">
+            <a href="{{ verification_url }}" class="btn btn-secondary" style="color: #3b82f6; text-decoration: none;">
+                🔍 Verify Card
+            </a>
+            <a href="{{ card_detail_url }}" class="btn btn-secondary" style="color: #3b82f6; text-decoration: none;">
+                📥 Download Card
+            </a>
+            <a href="mailto:support@acrp.org" class="btn btn-secondary" style="color: #3b82f6; text-decoration: none;">
+                📞 Contact Support
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Important Information Box -->
+    <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #cbd5e1;">
+        <h4 style="margin-top: 0; color: #1f2937;">📋 Important Information</h4>
+        
+        <div style="color: #4b5563; line-height: 1.6;">
+            <p style="margin: 10px 0;"><strong>Email Authentication:</strong> This email was sent from the official ACRP Digital Card System.</p>
+            
+            {% if card %}
+            <p style="margin: 10px 0;"><strong>Your Card Number:</strong> <span style="font-family: monospace; background: #e2e8f0; padding: 2px 6px; border-radius: 4px;">{{ card.card_number }}</span></p>
+            {% endif %}
+            
+            <p style="margin: 10px 0;"><strong>Secure Communication:</strong> This message was sent to your registered email address.</p>
+            
+            <p style="margin: 10px 0;"><strong>Response Required:</strong> 
+                {% if email_type == 'urgent' %}
+                    <span style="color: #dc2626; font-weight: 600;">Please respond promptly</span>
+                {% elif email_type == 'survey' %}
+                    <span style="color: #059669; font-weight: 600;">Your feedback is appreciated</span>
+                {% else %}
+                    <span style="color: #6b7280;">No immediate action required</span>
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <!-- Contact Information -->
+    <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <h4 style="margin-top: 0; color: #0c4a6e;">📞 Need Assistance?</h4>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+            <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #3b82f6;">
+                <h5 style="margin-top: 0; color: #1e40af;">General Support</h5>
+                <p style="margin: 5px 0; color: #1e3a8a;"><strong>Email:</strong> support@acrp.org</p>
+                <p style="margin: 5px 0; color: #1e3a8a;"><strong>Phone:</strong> (555) 123-4567</p>
+                <p style="margin: 0; color: #1e3a8a;"><strong>Hours:</strong> Mon-Fri 9AM-5PM EST</p>
+            </div>
+            
+            {% if card %}
+            <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #10b981;">
+                <h5 style="margin-top: 0; color: #065f46;">Your Council</h5>
+                <p style="margin: 5px 0; color: #064e3b;"><strong>Council:</strong> {{ card.council_name }}</p>
+                <p style="margin: 5px 0; color: #064e3b;"><strong>Email:</strong> council-{{ card.council_code|lower }}@acrp.org</p>
+                <p style="margin: 0; color: #064e3b;"><strong>Code:</strong> {{ card.council_code }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Security Notice -->
+    <div class="alert alert-warning">
+        <strong>🔒 Security Reminder:</strong> ACRP will never ask for your personal information, passwords, or payment details via email. If you receive suspicious communications claiming to be from ACRP, please report them to security@acrp.org immediately.
+    </div>
+
+    <!-- Personalized Closing -->
+    {% if email_type == 'survey' %}
+    <div style="text-align: center; margin: 25px 0;">
+        <p style="color: #4b5563; margin-bottom: 15px;">Thank you for being a valued member of the ACRP community!</p>
+        <a href="#" class="btn btn-primary" style="color: white; text-decoration: none;">
+            📊 Complete Survey
+        </a>
+    </div>
+    {% elif email_type == 'urgent' %}
+    <div style="text-align: center; background: #fee2e2; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <p style="color: #991b1b; margin-bottom: 15px; font-weight: 600;">Please review this message carefully and take any necessary action.</p>
+        <a href="mailto:support@acrp.org" class="btn btn-primary" style="color: white; text-decoration: none;">
+            📧 Contact Support Now
+        </a>
+    </div>
+    {% else %}
+    <div style="text-align: center; margin: 25px 0;">
+        <p style="color: #4b5563;">Thank you for your continued participation in the ACRP community.</p>
+    </div>
+    {% endif %}
+{% endblock %}

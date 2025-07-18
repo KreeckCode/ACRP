@@ -1,0 +1,66 @@
+{% extends "affiliationcard/emails/email_base.html" %}
+
+{% block title %}Your ACRP Digital Card is Ready - {{ card.card_number }}{% endblock %}
+
+{% block content %}
+    <div class="alert alert-success">
+        <h3 style="margin-top: 0; color: #065f46;">🎉 Congratulations! Your Digital Card is Ready</h3>
+        <p style="margin-bottom: 0;">Your ACRP Digital Affiliation Card has been successfully assigned and is ready for use.</p>
+    </div>
+
+    <!-- Card Preview -->
+    <div class="card-preview">
+        <h4 style="margin-top: 0; color: #1f2937;">ACRP Digital Affiliation Card</h4>
+        <div class="card-number">{{ card.card_number }}</div>
+        
+        <div style="text-align: left; max-width: 300px; margin: 20px auto;">
+            <p style="margin: 5px 0;"><strong>Name:</strong> {{ card.get_display_name }}</p>
+            <p style="margin: 5px 0;"><strong>Council:</strong> {{ card.council_name }}</p>
+            <p style="margin: 5px 0;"><strong>Affiliation:</strong> {{ card.affiliation_type|title }}</p>
+            <p style="margin: 5px 0;"><strong>Status:</strong> 
+                <span class="status-badge status-{{ card.status }}">{{ card.get_status_display }}</span>
+            </p>
+            {% if card.date_issued %}
+            <p style="margin: 5px 0;"><strong>Issued:</strong> {{ card.date_issued|date:"F j, Y" }}</p>
+            {% endif %}
+            {% if card.date_expires %}
+            <p style="margin: 5px 0;"><strong>Expires:</strong> {{ card.date_expires|date:"F j, Y" }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <h3 style="color: #1f2937;">What's Next?</h3>
+    
+    <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3b82f6;">
+        <h4 style="margin-top: 0; color: #1e40af;">📱 Download Your Card</h4>
+        <p>Click the button below to securely download your digital card. You can save it to your phone, print it, or both!</p>
+        
+        <a href="{{ download_url }}" class="btn btn-primary" style="color: white; text-decoration: none;">
+            📥 Download My Digital Card
+        </a>
+    </div>
+
+    <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <h4 style="margin-top: 0; color: #0c4a6e;">🔍 Verify Your Card</h4>
+        <p>Others can verify your affiliation status using your card number or by scanning the QR code on your digital card.</p>
+        
+        <p style="margin-bottom: 0;"><strong>Verification URL:</strong><br>
+        <a href="{{ verification_url }}" style="color: #0ea5e9; word-break: break-all;">{{ verification_url }}</a></p>
+    </div>
+
+    <h3 style="color: #1f2937;">Important Information</h3>
+    
+    <ul style="color: #4b5563; line-height: 1.8;">
+        <li><strong>Keep your card secure:</strong> Your digital card contains unique verification codes. Don't share screenshots publicly.</li>
+        <li><strong>Multiple formats:</strong> You can download your card as PDF, PNG, or JPG format.</li>
+        <li><strong>Mobile friendly:</strong> Save the card to your phone's photo gallery for easy access.</li>
+        <li><strong>Print option:</strong> You can print your digital card if needed.</li>
+        {% if card.date_expires %}
+        <li><strong>Expiration reminder:</strong> Your card expires on {{ card.date_expires|date:"F j, Y" }}. You'll receive renewal reminders.</li>
+        {% endif %}
+    </ul>
+
+    <div class="alert alert-info">
+        <strong>Need Help?</strong> If you have any questions about your digital card or need assistance downloading it, please contact our support team at support@acrp.org or (555) 123-4567.
+    </div>
+{% endblock %}

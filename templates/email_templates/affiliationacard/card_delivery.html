@@ -1,0 +1,219 @@
+{% extends "affiliationcard/emails/email_base.html" %}
+
+{% block title %}Your ACRP Digital Card - {{ card.card_number }}{% endblock %}
+
+{% block content %}
+    <div class="alert alert-success">
+        <h3 style="margin-top: 0; color: #065f46;">📎 Your Digital Card is Attached!</h3>
+        <p style="margin-bottom: 0;">Your ACRP Digital Affiliation Card is attached to this email and ready for download.</p>
+    </div>
+
+    <!-- Attachment Information -->
+    <div style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); padding: 25px; border-radius: 12px; margin: 20px 0; text-align: center; border: 1px solid #10b981;">
+        <h4 style="margin-top: 0; color: #065f46;">📁 Email Attachment Details</h4>
+        
+        <div style="background: white; padding: 20px; border-radius: 8px; margin: 15px 0; border: 1px solid #10b981;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                <div>
+                    <p style="margin: 0; font-size: 14px; color: #6b7280; font-weight: 600;">FILE NAME</p>
+                    <p style="margin: 5px 0 0 0; font-weight: bold; color: #1f2937;">ACRP_Card_{{ card.card_number }}.{{ attachment_format|default:"pdf" }}</p>
+                </div>
+                <div>
+                    <p style="margin: 0; font-size: 14px; color: #6b7280; font-weight: 600;">FILE TYPE</p>
+                    <p style="margin: 5px 0 0 0; font-weight: bold; color: #1f2937;">{{ attachment_format|default:"PDF"|upper }} Document</p>
+                </div>
+                <div>
+                    <p style="margin: 0; font-size: 14px; color: #6b7280; font-weight: 600;">CARD STATUS</p>
+                    <p style="margin: 5px 0 0 0;">
+                        <span class="status-badge status-{{ card.status }}">{{ card.get_status_display }}</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <p style="margin: 0; color: #065f46; font-size: 14px;">
+            📎 <strong>Look for the attachment in this email to download your card</strong>
+        </p>
+    </div>
+
+    <!-- Card Preview Information -->
+    <div class="card-preview">
+        <h4 style="margin-top: 0; color: #1f2937;">🆔 Your Card Information</h4>
+        <div class="card-number">{{ card.card_number }}</div>
+        
+        <div style="text-align: left; max-width: 350px; margin: 20px auto;">
+            <p style="margin: 8px 0;"><strong>Name:</strong> {{ card.get_display_name }}</p>
+            <p style="margin: 8px 0;"><strong>Council:</strong> {{ card.council_name }}</p>
+            <p style="margin: 8px 0;"><strong>Affiliation:</strong> {{ card.affiliation_type|title }}</p>
+            {% if card.date_issued %}
+            <p style="margin: 8px 0;"><strong>Issued:</strong> {{ card.date_issued|date:"F j, Y" }}</p>
+            {% endif %}
+            {% if card.date_expires %}
+            <p style="margin: 8px 0;"><strong>Expires:</strong> {{ card.date_expires|date:"F j, Y" }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Download Instructions -->
+    <h3 style="color: #1f2937;">📥 How to Download & Save Your Card</h3>
+
+    <div style="display: grid; gap: 20px; margin: 20px 0;">
+        <div style="background: #eff6ff; padding: 20px; border-radius: 8px; border-left: 4px solid #3b82f6;">
+            <h4 style="margin-top: 0; color: #1e40af;">📧 From Email (Desktop)</h4>
+            <ol style="color: #1e3a8a; margin-bottom: 0; padding-left: 20px;">
+                <li>Look for the paper clip icon (📎) in your email</li>
+                <li>Click on the attached file name</li>
+                <li>Choose "Download" or "Save to Downloads"</li>
+                <li>Open the file to view your digital card</li>
+            </ol>
+        </div>
+
+        <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; border-left: 4px solid #10b981;">
+            <h4 style="margin-top: 0; color: #065f46;">📱 From Email (Mobile)</h4>
+            <ol style="color: #064e3b; margin-bottom: 0; padding-left: 20px;">
+                <li>Tap the attachment in your email app</li>
+                <li>Choose "Save to Files" or "Save to Photos"</li>
+                <li>Select your preferred location (Downloads, Photos, etc.)</li>
+                <li>Your card is now saved to your device</li>
+            </ol>
+        </div>
+
+        <div style="background: #fef3c7; padding: 20px; border-radius: 8px; border-left: 4px solid #f59e0b;">
+            <h4 style="margin-top: 0; color: #92400e;">🖨️ Printing Your Card</h4>
+            <ol style="color: #78350f; margin-bottom: 0; padding-left: 20px;">
+                <li>Open the downloaded card file</li>
+                <li>Click "Print" or use Ctrl+P (Cmd+P on Mac)</li>
+                <li>Choose your printer and paper size</li>
+                <li>Select "Actual Size" or "100%" scaling for best results</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- File Format Information -->
+    <h3 style="color: #1f2937;">📄 About Your Card Format</h3>
+
+    {% if attachment_format == 'pdf' or not attachment_format %}
+    <div style="background: #fef2f2; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc2626;">
+        <h4 style="margin-top: 0; color: #991b1b;">📄 PDF Format Benefits</h4>
+        <ul style="color: #7f1d1d; margin-bottom: 0;">
+            <li><strong>High Quality:</strong> Vector graphics ensure crisp printing at any size</li>
+            <li><strong>Universal Compatibility:</strong> Opens on any device with a PDF reader</li>
+            <li><strong>Professional:</strong> Perfect for official use and presentations</li>
+            <li><strong>Secure:</strong> Maintains formatting and prevents accidental editing</li>
+            <li><strong>Small File Size:</strong> Easy to email and store</li>
+        </ul>
+    </div>
+    {% elif attachment_format == 'png' %}
+    <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3b82f6;">
+        <h4 style="margin-top: 0; color: #1e40af;">🖼️ PNG Format Benefits</h4>
+        <ul style="color: #1e3a8a; margin-bottom: 0;">
+            <li><strong>High Quality:</strong> Crisp, clear image with no compression artifacts</li>
+            <li><strong>Transparency Support:</strong> Clean edges with transparent background</li>
+            <li><strong>Universal:</strong> Opens in any image viewer or web browser</li>
+            <li><strong>Mobile Friendly:</strong> Perfect for saving to phone photo gallery</li>
+            <li><strong>Social Media:</strong> Easy to share or use as profile images</li>
+        </ul>
+    </div>
+    {% elif attachment_format == 'jpg' or attachment_format == 'jpeg' %}
+    <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #10b981;">
+        <h4 style="margin-top: 0; color: #065f46;">📸 JPG Format Benefits</h4>
+        <ul style="color: #064e3b; margin-bottom: 0;">
+            <li><strong>Small File Size:</strong> Compressed format perfect for email and storage</li>
+            <li><strong>Universal Compatibility:</strong> Opens on any device or platform</li>
+            <li><strong>Quick Loading:</strong> Fast to open and display</li>
+            <li><strong>Social Media Ready:</strong> Perfect size for profile photos and sharing</li>
+            <li><strong>Photo Gallery:</strong> Easily integrates with your device's photo collection</li>
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- Usage Tips -->
+    <h3 style="color: #1f2937;">💡 Smart Usage Tips</h3>
+
+    <div style="background: #faf5ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #8b5cf6;">
+        <h4 style="margin-top: 0; color: #6b21a8;">🎯 Make the Most of Your Digital Card</h4>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 15px;">
+            <div style="background: white; padding: 15px; border-radius: 6px;">
+                <h5 style="margin-top: 0; color: #6b21a8;">📱 Mobile Wallet</h5>
+                <p style="margin: 0; color: #581c87; font-size: 14px;">Save to your phone's photo gallery for quick access during verification.</p>
+            </div>
+            
+            <div style="background: white; padding: 15px; border-radius: 6px;">
+                <h5 style="margin-top: 0; color: #6b21a8;">☁️ Cloud Backup</h5>
+                <p style="margin: 0; color: #581c87; font-size: 14px;">Store in Google Drive, iCloud, or Dropbox for access from anywhere.</p>
+            </div>
+            
+            <div style="background: white; padding: 15px; border-radius: 6px;">
+                <h5 style="margin-top: 0; color: #6b21a8;">🖨️ Physical Copy</h5>
+                <p style="margin: 0; color: #581c87; font-size: 14px;">Print a wallet-sized copy as a backup for your physical wallet.</p>
+            </div>
+            
+            <div style="background: white; padding: 15px; border-radius: 6px;">
+                <h5 style="margin-top: 0; color: #6b21a8;">📧 Email Backup</h5>
+                <p style="margin: 0; color: #581c87; font-size: 14px;">Forward this email to a personal account for additional backup.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Verification Information -->
+    <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <h4 style="margin-top: 0; color: #0c4a6e;">🔍 Card Verification Options</h4>
+        <p style="color: #0c4a6e; margin-bottom: 15px;">Others can verify your ACRP affiliation using these methods:</p>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+            <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #3b82f6;">
+                <h5 style="margin-top: 0; color: #1e40af;">📱 QR Code Scan</h5>
+                <p style="margin: 0; color: #1e3a8a; font-size: 14px;">Scan the QR code on your card with any smartphone camera for instant verification.</p>
+            </div>
+            
+            <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #10b981;">
+                <h5 style="margin-top: 0; color: #065f46;">🔢 Manual Lookup</h5>
+                <p style="margin: 0; color: #064e3b; font-size: 14px;">Enter your card number at the ACRP verification website for status confirmation.</p>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.7); border-radius: 6px;">
+            <p style="margin: 0; color: #0c4a6e;"><strong>Verification URL:</strong><br>
+            <a href="{{ verification_url }}" style="color: #0ea5e9; word-break: break-all;">{{ verification_url }}</a></p>
+        </div>
+    </div>
+
+    <!-- Security Notice -->
+    <div style="background: #fef2f2; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc2626;">
+        <h4 style="margin-top: 0; color: #991b1b;">🔒 Security & Authenticity</h4>
+        <ul style="color: #7f1d1d; margin-bottom: 0;">
+            <li><strong>Official Document:</strong> This card is an official ACRP credential with embedded security features</li>
+            <li><strong>Unique Verification:</strong> Each card contains unique codes that cannot be duplicated</li>
+            <li><strong>Tamper-Evident:</strong> Any modifications to the card will be detectable during verification</li>
+            <li><strong>Real-Time Status:</strong> Card status is verified against live ACRP databases</li>
+        </ul>
+    </div>
+
+    <!-- Quick Actions -->
+    <div style="text-align: center; background: #f1f5f9; padding: 25px; border-radius: 8px; margin: 20px 0;">
+        <h4 style="margin-top: 0; color: #1f2937;">🚀 Quick Actions</h4>
+        <p style="color: #4b5563; margin-bottom: 20px;">Test your card and access additional resources:</p>
+        
+        <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;">
+            <a href="{{ verification_url }}" class="btn btn-primary" style="color: white; text-decoration: none;">
+                🔍 Test Card Verification
+            </a>
+            <a href="#" class="btn btn-secondary" style="color: #3b82f6; text-decoration: none;">
+                📚 Download User Guide
+            </a>
+            <a href="mailto:support@acrp.org" class="btn btn-secondary" style="color: #3b82f6; text-decoration: none;">
+                📞 Contact Support
+            </a>
+        </div>
+    </div>
+
+    <!-- Troubleshooting -->
+    <div class="alert alert-warning">
+        <strong>📧 Can't See the Attachment?</strong> If you don't see an attachment in this email, check your spam/junk folder, or contact our support team at support@acrp.org. Some email clients may block attachments for security reasons - we can help you access your card through alternative methods.
+    </div>
+
+    <div class="alert alert-success">
+        <strong>🎉 Congratulations!</strong> Your ACRP Digital Affiliation Card is now ready to use. Save it to multiple locations for easy access, and don't hesitate to contact us if you have any questions about using your new digital credential.
+    </div>
+{% endblock %}

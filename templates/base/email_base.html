@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>{% block title %}ACRP Digital Card System{% endblock %}</title>
+    
+    <!-- Tailwind CDN for email-safe classes -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        /* Email-safe CSS - Inline styles work best in emails */
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f8fafc;
+        }
+        
+        .email-header {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .email-logo {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .email-tagline {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 0;
+        }
+        
+        .email-body {
+            background: white;
+            padding: 40px 30px;
+            border-left: 1px solid #e2e8f0;
+            border-right: 1px solid #e2e8f0;
+        }
+        
+        .email-footer {
+            background: #1f2937;
+            color: #9ca3af;
+            padding: 30px 20px;
+            text-align: center;
+            border-radius: 0 0 8px 8px;
+            font-size: 14px;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            text-align: center;
+            margin: 10px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+            border: 2px solid #3b82f6;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+            border-color: #2563eb;
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: #3b82f6;
+            border: 2px solid #3b82f6;
+        }
+        
+        .card-preview {
+            background: linear-gradient(45deg, #f8fafc 0%, #e2e8f0 100%);
+            border: 2px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .card-number {
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            font-weight: bold;
+            color: #1e40af;
+            background: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            display: inline-block;
+            margin: 10px 0;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .status-active { background: #dcfce7; color: #166534; }
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-suspended { background: #fee2e2; color: #991b1b; }
+        .status-expired { background: #f3f4f6; color: #374151; }
+        
+        .alert {
+            padding: 16px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .alert-info {
+            background: #dbeafe;
+            border-left: 4px solid #3b82f6;
+            color: #1e40af;
+        }
+        
+        .alert-warning {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            color: #92400e;
+        }
+        
+        .alert-success {
+            background: #dcfce7;
+            border-left: 4px solid #10b981;
+            color: #065f46;
+        }
+        
+        /* Mobile responsive */
+        @media screen and (max-width: 600px) {
+            .email-container {
+                margin: 0;
+                border-radius: 0;
+            }
+            
+            .email-body {
+                padding: 20px 15px;
+            }
+            
+            .email-header, .email-footer {
+                padding: 20px 15px;
+            }
+            
+            .btn {
+                display: block;
+                width: 100%;
+                box-sizing: border-box;
+            }
+        }
+    </style>
+</head>
+<body style="margin: 0; padding: 20px; background-color: #f1f5f9;">
+    <div class="email-container">
+        <!-- Email Header -->
+        <div class="email-header">
+            <div class="email-logo">
+                {% block logo %}
+                ✝️ ACRP Digital Cards
+                {% endblock %}
+            </div>
+            <p class="email-tagline">
+                {% block tagline %}
+                Association of Christian Religious Practitioners
+                {% endblock %}
+            </p>
+        </div>
+        
+        <!-- Email Body -->
+        <div class="email-body">
+            {% block greeting %}
+            <h2 style="color: #1f2937; margin-top: 0; margin-bottom: 20px;">
+                Hello {% if card %}{{ card.get_display_name }}{% else %}there{% endif %},
+            </h2>
+            {% endblock %}
+            
+            {% block content %}
+            <!-- Main email content goes here -->
+            {% endblock %}
+            
+            {% block signature %}
+            <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                <p style="margin-bottom: 5px;"><strong>Best regards,</strong></p>
+                <p style="margin-bottom: 5px; color: #6b7280;">ACRP Digital Card System</p>
+                <p style="margin: 0; color: #6b7280; font-size: 14px;">Association of Christian Religious Practitioners</p>
+            </div>
+            {% endblock %}
+        </div>
+        
+        <!-- Email Footer -->
+        <div class="email-footer">
+            {% block footer %}
+            <p style="margin-bottom: 15px;">
+                <strong>Association of Christian Religious Practitioners (ACRP)</strong>
+            </p>
+            <p style="margin-bottom: 15px; font-size: 13px;">
+                This email was sent regarding your ACRP Digital Affiliation Card.
+                {% if card %}Card Number: {{ card.card_number }}{% endif %}
+            </p>
+            
+            <div style="margin: 20px 0; padding: 15px; background: #374151; border-radius: 6px;">
+                <p style="margin: 0; font-size: 12px; color: #9ca3af;">
+                    <strong>Need Help?</strong><br>
+                    Email: support@acrp.org | Phone: (555) 123-4567<br>
+                    Visit: <a href="#" style="color: #60a5fa;">acrp.org/support</a>
+                </p>
+            </div>
+            
+            <p style="margin-bottom: 10px; font-size: 12px;">
+                <a href="#" style="color: #9ca3af; text-decoration: none; margin: 0 10px;">Privacy Policy</a>
+                <a href="#" style="color: #9ca3af; text-decoration: none; margin: 0 10px;">Terms of Service</a>
+                <a href="#" style="color: #9ca3af; text-decoration: none; margin: 0 10px;">Contact Us</a>
+            </p>
+            
+            <p style="margin: 0; font-size: 11px; color: #6b7280;">
+                © {{ current_year|default:"2025" }} Association of Christian Religious Practitioners. All rights reserved.
+            </p>
+            {% endblock %}
+        </div>
+    </div>
+</body>
+</html>

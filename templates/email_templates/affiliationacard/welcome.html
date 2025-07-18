@@ -1,0 +1,200 @@
+{% extends "affiliationcard/emails/email_base.html" %}
+
+{% block title %}Welcome to ACRP Digital Cards - {{ card.card_number }}{% endblock %}
+
+{% block content %}
+    <div style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); padding: 25px; border-radius: 12px; margin: 20px 0; text-align: center; border: 1px solid #10b981;">
+        <h3 style="margin-top: 0; color: #065f46;">🎉 Welcome to ACRP Digital Cards!</h3>
+        <p style="margin-bottom: 0; color: #064e3b; font-size: 16px;">Congratulations on receiving your digital affiliation card. You're now part of our modern, secure verification system!</p>
+    </div>
+
+    <!-- Your New Card -->
+    <div class="card-preview">
+        <h4 style="margin-top: 0; color: #1f2937;">✨ Your Brand New Digital Card</h4>
+        <div class="card-number">{{ card.card_number }}</div>
+        
+        <div style="text-align: left; max-width: 350px; margin: 20px auto;">
+            <p style="margin: 8px 0;"><strong>Name:</strong> {{ card.get_display_name }}</p>
+            <p style="margin: 8px 0;"><strong>Council:</strong> {{ card.council_name }}</p>
+            <p style="margin: 8px 0;"><strong>Affiliation:</strong> {{ card.affiliation_type|title }}</p>
+            <p style="margin: 8px 0;"><strong>Status:</strong> 
+                <span class="status-badge status-{{ card.status }}">{{ card.get_status_display }}</span>
+            </p>
+            <p style="margin: 8px 0;"><strong>Issued:</strong> {{ card.date_issued|date:"F j, Y" }}</p>
+            {% if card.date_expires %}
+            <p style="margin: 8px 0;"><strong>Valid Until:</strong> {{ card.date_expires|date:"F j, Y" }}</p>
+            {% endif %}
+        </div>
+        
+        <div style="background: #f0f9ff; padding: 15px; border-radius: 8px; margin-top: 15px;">
+            <p style="margin: 0; color: #1e40af; font-size: 14px;"><strong>🔐 Your card includes secure QR code verification</strong></p>
+        </div>
+    </div>
+
+    <!-- Getting Started Guide -->
+    <h3 style="color: #1f2937;">🚀 Getting Started with Your Digital Card</h3>
+
+    <div style="display: grid; gap: 20px; margin: 20px 0;">
+        <div style="background: #eff6ff; padding: 20px; border-radius: 8px; border-left: 4px solid #3b82f6;">
+            <h4 style="margin-top: 0; color: #1e40af;">1️⃣ Download Your Card</h4>
+            <p style="color: #1e3a8a; margin-bottom: 15px;">Get your digital card in multiple formats for maximum convenience.</p>
+            
+            <div style="text-align: center;">
+                <a href="{{ card_detail_url }}" class="btn btn-primary" style="color: white; text-decoration: none; margin: 5px;">
+                    📥 Download PDF Card
+                </a>
+                <a href="{{ card_detail_url }}" class="btn btn-secondary" style="color: #3b82f6; text-decoration: none; margin: 5px;">
+                    📱 Get Mobile Version
+                </a>
+            </div>
+        </div>
+
+        <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; border-left: 4px solid #10b981;">
+            <h4 style="margin-top: 0; color: #065f46;">2️⃣ Save to Your Device</h4>
+            <p style="color: #064e3b; margin-bottom: 15px;">Keep your card accessible wherever you go.</p>
+            
+            <ul style="color: #064e3b; margin-bottom: 0;">
+                <li><strong>Smartphone:</strong> Save to your photo gallery or download folder</li>
+                <li><strong>Computer:</strong> Save to your documents or desktop</li>
+                <li><strong>Print:</strong> Print a physical copy for your wallet</li>
+                <li><strong>Cloud:</strong> Store in Google Drive, iCloud, or Dropbox</li>
+            </ul>
+        </div>
+
+        <div style="background: #fefce8; padding: 20px; border-radius: 8px; border-left: 4px solid #eab308;">
+            <h4 style="margin-top: 0; color: #a16207;">3️⃣ Test Verification</h4>
+            <p style="color: #92400e; margin-bottom: 15px;">Make sure your card works perfectly!</p>
+            
+            <div style="text-align: center;">
+                <a href="{{ verification_url }}" class="btn btn-secondary" style="color: #eab308; text-decoration: none;">
+                    🔍 Test Card Verification
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Overview -->
+    <h3 style="color: #1f2937;">💎 What Makes Your Digital Card Special</h3>
+
+    <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e2e8f0;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+            <div style="text-align: center; padding: 15px;">
+                <div style="font-size: 24px; margin-bottom: 10px;">🔒</div>
+                <h5 style="margin: 0 0 10px 0; color: #1f2937;">Bank-Level Security</h5>
+                <p style="margin: 0; color: #6b7280; font-size: 14px;">Your card uses advanced encryption and unique verification tokens.</p>
+            </div>
+            
+            <div style="text-align: center; padding: 15px;">
+                <div style="font-size: 24px; margin-bottom: 10px;">📱</div>
+                <h5 style="margin: 0 0 10px 0; color: #1f2937;">Mobile Optimized</h5>
+                <p style="margin: 0; color: #6b7280; font-size: 14px;">Perfectly sized for smartphone screens and mobile wallets.</p>
+            </div>
+            
+            <div style="text-align: center; padding: 15px;">
+                <div style="font-size: 24px; margin-bottom: 10px;">⚡</div>
+                <h5 style="margin: 0 0 10px 0; color: #1f2937;">Instant Verification</h5>
+                <p style="margin: 0; color: #6b7280; font-size: 14px;">Real-time verification takes less than 2 seconds.</p>
+            </div>
+            
+            <div style="text-align: center; padding: 15px;">
+                <div style="font-size: 24px; margin-bottom: 10px;">🌍</div>
+                <h5 style="margin: 0 0 10px 0; color: #1f2937;">Global Access</h5>
+                <p style="margin: 0; color: #6b7280; font-size: 14px;">Verify your status from anywhere in the world, 24/7.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- How Verification Works -->
+    <h3 style="color: #1f2937;">🔍 How Verification Works</h3>
+
+    <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <h4 style="margin-top: 0; color: #0c4a6e;">Two Ways to Verify Your Card:</h4>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 15px;">
+            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                <h5 style="margin-top: 0; color: #1e40af;">📷 QR Code Scanning</h5>
+                <p style="color: #1e3a8a; margin-bottom: 10px;">Others can scan the QR code on your card with any smartphone camera or QR reader app.</p>
+                <p style="margin: 0; color: #1e40af; font-size: 14px; font-weight: 600;">✨ Instant & Secure</p>
+            </div>
+            
+            <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #10b981;">
+                <h5 style="margin-top: 0; color: #065f46;">🔢 Manual Lookup</h5>
+                <p style="color: #064e3b; margin-bottom: 10px;">Anyone can verify your card by entering your card number on the ACRP verification page.</p>
+                <p style="margin: 0; color: #065f46; font-size: 14px; font-weight: 600;">🌐 Always Available</p>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.5); border-radius: 6px;">
+            <p style="margin: 0; color: #0c4a6e;"><strong>Verification URL:</strong> <a href="{{ verification_url }}" style="color: #0ea5e9;">{{ verification_url }}</a></p>
+        </div>
+    </div>
+
+    <!-- Pro Tips -->
+    <h3 style="color: #1f2937;">💡 Pro Tips for Using Your Digital Card</h3>
+
+    <div style="background: #faf5ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #8b5cf6;">
+        <ul style="color: #581c87; line-height: 1.8; margin: 0;">
+            <li><strong>Share Smart:</strong> You can share screenshots of your card, but the QR code contains unique security features</li>
+            <li><strong>Multiple Copies:</strong> Save your card in multiple locations (phone, cloud, print) for redundancy</li>
+            <li><strong>Regular Updates:</strong> Download fresh copies periodically to get the latest security features</li>
+            <li><strong>Quick Access:</strong> Set your card as your phone's wallpaper or save to your home screen for instant access</li>
+            <li><strong>Professional Use:</strong> The PDF version is perfect for professional presentations and documents</li>
+        </ul>
+    </div>
+
+    <!-- Support & Resources -->
+    <h3 style="color: #1f2937;">🎓 Learn More & Get Support</h3>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 20px 0;">
+        <div style="background: #ecfdf5; padding: 20px; border-radius: 8px; border-left: 4px solid #10b981;">
+            <h4 style="margin-top: 0; color: #065f46;">📚 User Guide</h4>
+            <p style="color: #064e3b; margin-bottom: 15px;">Complete guide to using your digital card effectively.</p>
+            <a href="#" style="color: #059669; text-decoration: none; font-weight: 600;">📖 Read User Guide →</a>
+        </div>
+        
+        <div style="background: #eff6ff; padding: 20px; border-radius: 8px; border-left: 4px solid #3b82f6;">
+            <h4 style="margin-top: 0; color: #1e40af;">❓ FAQ</h4>
+            <p style="color: #1e3a8a; margin-bottom: 15px;">Answers to common questions about digital cards.</p>
+            <a href="#" style="color: #2563eb; text-decoration: none; font-weight: 600;">💭 View FAQ →</a>
+        </div>
+        
+        <div style="background: #fefce8; padding: 20px; border-radius: 8px; border-left: 4px solid #eab308;">
+            <h4 style="margin-top: 0; color: #a16207;">🆘 Support</h4>
+            <p style="color: #92400e; margin-bottom: 15px;">Need help? Our support team is here for you.</p>
+            <a href="mailto:support@acrp.org" style="color: #d97706; text-decoration: none; font-weight: 600;">📧 Contact Support →</a>
+        </div>
+    </div>
+
+    <!-- Welcome Community Message -->
+    <div style="background: linear-gradient(135deg, #fef7ff 0%, #f3e8ff 100%); padding: 25px; border-radius: 12px; margin: 20px 0; text-align: center; border: 1px solid #a855f7;">
+        <h4 style="margin-top: 0; color: #6b21a8;">🤝 Welcome to the ACRP Community!</h4>
+        <p style="color: #581c87; margin-bottom: 15px;">
+            Your digital card represents more than just identification - it's your connection to a vibrant community of Christian religious practitioners worldwide.
+        </p>
+        <p style="color: #6b21a8; margin: 0; font-style: italic;">
+            "Be completely humble and gentle; be patient, bearing with one another in love." - Ephesians 4:2
+        </p>
+    </div>
+
+    <!-- Next Steps -->
+    <div style="text-align: center; background: #f1f5f9; padding: 25px; border-radius: 8px; margin: 20px 0;">
+        <h4 style="margin-top: 0; color: #1f2937;">🎯 Ready to Get Started?</h4>
+        <p style="color: #4b5563; margin-bottom: 20px;">Take these actions to make the most of your new digital card:</p>
+        
+        <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;">
+            <a href="{{ card_detail_url }}" class="btn btn-primary" style="color: white; text-decoration: none;">
+                📥 Download My Card
+            </a>
+            <a href="{{ verification_url }}" class="btn btn-secondary" style="color: #3b82f6; text-decoration: none;">
+                🔍 Test Verification
+            </a>
+            <a href="#" class="btn btn-secondary" style="color: #3b82f6; text-decoration: none;">
+                📚 Read User Guide
+            </a>
+        </div>
+    </div>
+
+    <div class="alert alert-success">
+        <strong>🎉 Congratulations again!</strong> You're now equipped with one of the most advanced digital affiliation systems available. If you have any questions or need assistance, don't hesitate to contact our support team at support@acrp.org or (555) 123-4567.
+    </div>
+{% endblock %}

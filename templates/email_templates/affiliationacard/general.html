@@ -1,0 +1,207 @@
+{% extends "affiliationcard/emails/email_base.html" %}
+
+{% block title %}ACRP Digital Card Information{% endblock %}
+
+{% block content %}
+    <div class="alert alert-info">
+        <h3 style="margin-top: 0; color: #1e40af;">📬 ACRP Digital Card Information</h3>
+        <p style="margin-bottom: 0;">We're writing to provide you with important information about your ACRP Digital Affiliation Card.</p>
+    </div>
+
+    <!-- Card Information Display -->
+    {% if card %}
+    <div class="card-preview">
+        <h4 style="margin-top: 0; color: #1f2937;">Your Digital Card</h4>
+        <div class="card-number">{{ card.card_number }}</div>
+        
+        <div style="text-align: left; max-width: 350px; margin: 20px auto;">
+            <p style="margin: 8px 0;"><strong>Name:</strong> {{ card.get_display_name }}</p>
+            <p style="margin: 8px 0;"><strong>Council:</strong> {{ card.council_name }}</p>
+            <p style="margin: 8px 0;"><strong>Affiliation Type:</strong> {{ card.affiliation_type|title }}</p>
+            <p style="margin: 8px 0;"><strong>Current Status:</strong> 
+                <span class="status-badge status-{{ card.status }}">{{ card.get_status_display }}</span>
+            </p>
+            {% if card.date_issued %}
+            <p style="margin: 8px 0;"><strong>Date Issued:</strong> {{ card.date_issued|date:"F j, Y" }}</p>
+            {% endif %}
+            {% if card.date_expires %}
+            <p style="margin: 8px 0;"><strong>Expires:</strong> {{ card.date_expires|date:"F j, Y" }}</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- General Information Section -->
+    <h3 style="color: #1f2937;">📋 About Your Digital Card</h3>
+
+    <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e2e8f0;">
+        <p style="color: #374151; line-height: 1.7; margin-bottom: 15px;">
+            Your ACRP Digital Affiliation Card is an official credential that verifies your status as a member of the Association of Christian Religious Practitioners. This secure, digital format provides instant verification capabilities while maintaining the highest standards of authenticity and security.
+        </p>
+        
+        <p style="color: #374151; line-height: 1.7; margin-bottom: 15px;">
+            The digital card system represents our commitment to modern, efficient service delivery while preserving the integrity and trustworthiness that ACRP members expect and deserve.
+        </p>
+        
+        <p style="color: #374151; line-height: 1.7; margin: 0;">
+            This communication ensures you have access to the most current information about your card and the services available to you as a valued ACRP member.
+        </p>
+    </div>
+
+    <!-- Key Features -->
+    <h3 style="color: #1f2937;">✨ Digital Card Features</h3>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 20px 0;">
+        <div style="background: #eff6ff; padding: 20px; border-radius: 8px; border-left: 4px solid #3b82f6;">
+            <h4 style="margin-top: 0; color: #1e40af;">🔒 Secure Verification</h4>
+            <p style="color: #1e3a8a; margin-bottom: 0; font-size: 14px;">Each card includes unique security features and encrypted verification tokens that cannot be duplicated or forged.</p>
+        </div>
+        
+        <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; border-left: 4px solid #10b981;">
+            <h4 style="margin-top: 0; color: #065f46;">📱 Mobile Ready</h4>
+            <p style="color: #064e3b; margin-bottom: 0; font-size: 14px;">Optimized for smartphones and tablets, your card is always accessible when you need it most.</p>
+        </div>
+        
+        <div style="background: #fef3c7; padding: 20px; border-radius: 8px; border-left: 4px solid #f59e0b;">
+            <h4 style="margin-top: 0; color: #92400e;">⚡ Instant Access</h4>
+            <p style="color: #78350f; margin-bottom: 0; font-size: 14px;">Real-time verification available 24/7 from anywhere in the world with internet access.</p>
+        </div>
+        
+        <div style="background: #faf5ff; padding: 20px; border-radius: 8px; border-left: 4px solid #8b5cf6;">
+            <h4 style="margin-top: 0; color: #6b21a8;">🌐 Universal Recognition</h4>
+            <p style="color: #581c87; margin-bottom: 0; font-size: 14px;">Accepted and recognized by institutions worldwide as official ACRP credentials.</p>
+        </div>
+    </div>
+
+    <!-- How to Use Your Card -->
+    <h3 style="color: #1f2937;">🎯 Using Your Digital Card</h3>
+
+    <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <h4 style="margin-top: 0; color: #0c4a6e;">Common Use Cases:</h4>
+        
+        <div style="display: grid; gap: 15px; margin-top: 15px;">
+            <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #3b82f6;">
+                <h5 style="margin-top: 0; color: #1e40af;">Professional Verification</h5>
+                <p style="margin: 0; color: #1e3a8a; font-size: 14px;">Present your card to verify your ACRP affiliation for professional purposes, employment, or consulting opportunities.</p>
+            </div>
+            
+            <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #10b981;">
+                <h5 style="margin-top: 0; color: #065f46;">Educational Institutions</h5>
+                <p style="margin: 0; color: #064e3b; font-size: 14px;">Use your card for academic verification, enrollment in educational programs, or accessing student discounts.</p>
+            </div>
+            
+            <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #f59e0b;">
+                <h5 style="margin-top: 0; color: #92400e;">Ministry and Service</h5>
+                <p style="margin: 0; color: #78350f; font-size: 14px;">Verify your credentials for ministry work, chaplaincy positions, or volunteer religious services.</p>
+            </div>
+            
+            <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #8b5cf6;">
+                <h5 style="margin-top: 0; color: #6b21a8;">Member Benefits</h5>
+                <p style="margin: 0; color: #581c87; font-size: 14px;">Access exclusive member discounts, services, and resources available to ACRP affiliates.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    {% if card %}
+    <h3 style="color: #1f2937;">🚀 Quick Actions</h3>
+    
+    <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
+        <p style="color: #4b5563; margin-bottom: 20px;">Take advantage of these convenient options for your digital card:</p>
+        
+        <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 20px;">
+            <a href="{{ verification_url }}" class="btn btn-primary" style="color: white; text-decoration: none;">
+                🔍 Verify Your Card
+            </a>
+            <a href="{{ card_detail_url }}" class="btn btn-secondary" style="color: #3b82f6; text-decoration: none;">
+                📥 Download Card
+            </a>
+            <a href="#" class="btn btn-secondary" style="color: #3b82f6; text-decoration: none;">
+                📱 Mobile Version
+            </a>
+        </div>
+        
+        <div style="background: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 6px;">
+            <p style="margin: 0; color: #1e40af; font-size: 14px;">
+                <strong>Quick Verification URL:</strong> <a href="{{ verification_url }}" style="color: #2563eb; word-break: break-all;">{{ verification_url }}</a>
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Member Resources -->
+    <h3 style="color: #1f2937;">📚 Member Resources</h3>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin: 20px 0;">
+        <div style="background: #ecfdf5; padding: 20px; border-radius: 8px; border-left: 4px solid #10b981;">
+            <h4 style="margin-top: 0; color: #065f46;">📖 User Guide</h4>
+            <p style="color: #064e3b; margin-bottom: 15px; font-size: 14px;">Comprehensive guide covering all aspects of your digital card usage and features.</p>
+            <a href="#" style="color: #059669; text-decoration: none; font-weight: 600;">Read Guide →</a>
+        </div>
+        
+        <div style="background: #eff6ff; padding: 20px; border-radius: 8px; border-left: 4px solid #3b82f6;">
+            <h4 style="margin-top: 0; color: #1e40af;">❓ Frequently Asked Questions</h4>
+            <p style="color: #1e3a8a; margin-bottom: 15px; font-size: 14px;">Find answers to common questions about digital cards and ACRP services.</p>
+            <a href="#" style="color: #2563eb; text-decoration: none; font-weight: 600;">View FAQ →</a>
+        </div>
+        
+        <div style="background: #fef7ff; padding: 20px; border-radius: 8px; border-left: 4px solid #a855f7;">
+            <h4 style="margin-top: 0; color: #7c2d12;">🌐 Member Portal</h4>
+            <p style="color: #581c87; margin-bottom: 15px; font-size: 14px;">Access your account, update information, and manage your ACRP membership online.</p>
+            <a href="#" style="color: #7c3aed; text-decoration: none; font-weight: 600;">Visit Portal →</a>
+        </div>
+    </div>
+
+    <!-- Support Information -->
+    <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #cbd5e1;">
+        <h4 style="margin-top: 0; color: #1f2937;">🆘 Support & Assistance</h4>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 15px;">
+            <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #3b82f6;">
+                <h5 style="margin-top: 0; color: #1e40af;">Technical Support</h5>
+                <p style="margin: 5px 0; color: #1e3a8a; font-size: 14px;"><strong>Email:</strong> support@acrp.org</p>
+                <p style="margin: 5px 0; color: #1e3a8a; font-size: 14px;"><strong>Phone:</strong> (555) 123-4567</p>
+                <p style="margin: 0; color: #1e3a8a; font-size: 14px;"><strong>Hours:</strong> Mon-Fri 9AM-5PM EST</p>
+            </div>
+            
+            {% if card %}
+            <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #10b981;">
+                <h5 style="margin-top: 0; color: #065f46;">Council Support</h5>
+                <p style="margin: 5px 0; color: #064e3b; font-size: 14px;"><strong>Council:</strong> {{ card.council_name }}</p>
+                <p style="margin: 5px 0; color: #064e3b; font-size: 14px;"><strong>Email:</strong> council-{{ card.council_code|lower }}@acrp.org</p>
+                <p style="margin: 0; color: #064e3b; font-size: 14px;"><strong>Code:</strong> {{ card.council_code }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- System Status & Updates -->
+    <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #10b981;">
+        <h4 style="margin-top: 0; color: #065f46;">✅ System Status</h4>
+        <p style="color: #064e3b; margin-bottom: 15px;">The ACRP Digital Card system is operating normally with all services available.</p>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 15px;">
+            <div style="text-align: center; padding: 10px;">
+                <div style="color: #10b981; font-size: 20px; margin-bottom: 5px;">●</div>
+                <p style="margin: 0; color: #064e3b; font-size: 12px; font-weight: 600;">Card Verification</p>
+            </div>
+            <div style="text-align: center; padding: 10px;">
+                <div style="color: #10b981; font-size: 20px; margin-bottom: 5px;">●</div>
+                <p style="margin: 0; color: #064e3b; font-size: 12px; font-weight: 600;">Download Services</p>
+            </div>
+            <div style="text-align: center; padding: 10px;">
+                <div style="color: #10b981; font-size: 20px; margin-bottom: 5px;">●</div>
+                <p style="margin: 0; color: #064e3b; font-size: 12px; font-weight: 600;">Email Delivery</p>
+            </div>
+            <div style="text-align: center; padding: 10px;">
+                <div style="color: #10b981; font-size: 20px; margin-bottom: 5px;">●</div>
+                <p style="margin: 0; color: #064e3b; font-size: 12px; font-weight: 600;">Mobile Access</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-info">
+        <strong>📧 Stay Connected:</strong> Make sure your contact information is up to date to receive important notifications about your digital card and ACRP services. 
+        {% if card %}You can update your information through your council or by contacting our support team. Reference your card number: <strong>{{ card.card_number }}</strong>{% endif %}
+    </div>
+{% endblock %}

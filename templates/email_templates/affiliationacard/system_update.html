@@ -1,0 +1,172 @@
+{% extends "affiliationcard/emails/email_base.html" %}
+
+{% block title %}ACRP Digital Card System Update{% endblock %}
+
+{% block content %}
+    <div class="alert alert-info">
+        <h3 style="margin-top: 0; color: #1e40af;">🔄 System Update Notification</h3>
+        <p style="margin-bottom: 0;">We're writing to inform you about important updates to the ACRP Digital Card System.</p>
+    </div>
+
+    <!-- Update Summary -->
+    <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); padding: 25px; border-radius: 12px; margin: 20px 0; border: 1px solid #0ea5e9;">
+        <h4 style="margin-top: 0; color: #0c4a6e; text-align: center;">📅 System Update Details</h4>
+        
+        <div style="background: white; padding: 20px; border-radius: 8px; margin: 15px 0;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                <div>
+                    <p style="margin: 0; font-size: 14px; color: #6b7280; font-weight: 600;">UPDATE TYPE</p>
+                    <p style="margin: 5px 0 0 0; font-weight: bold; color: #1f2937;">System Enhancement</p>
+                </div>
+                <div>
+                    <p style="margin: 0; font-size: 14px; color: #6b7280; font-weight: 600;">EFFECTIVE DATE</p>
+                    <p style="margin: 5px 0 0 0; font-weight: bold; color: #1f2937;">{{ update_date|default:"January 25, 2025" }}</p>
+                </div>
+                <div>
+                    <p style="margin: 0; font-size: 14px; color: #6b7280; font-weight: 600;">IMPACT LEVEL</p>
+                    <p style="margin: 5px 0 0 0; font-weight: bold; color: #059669;">Low Impact</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Your Card Information -->
+    {% if card %}
+    <div class="card-preview">
+        <h4 style="margin-top: 0; color: #1f2937;">Your Card Information</h4>
+        <div class="card-number">{{ card.card_number }}</div>
+        <p style="margin: 10px 0;"><strong>{{ card.get_display_name }}</strong></p>
+        <p style="margin: 0; color: #6b7280;">This update affects your card</p>
+    </div>
+    {% endif %}
+
+    <!-- What's New -->
+    <h3 style="color: #1f2937;">✨ What's New</h3>
+
+    <div style="display: grid; gap: 20px; margin: 20px 0;">
+        <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; border-left: 4px solid #10b981;">
+            <h4 style="margin-top: 0; color: #065f46;">🚀 Enhanced Security</h4>
+            <ul style="color: #064e3b; margin-bottom: 0;">
+                <li>Improved encryption for card verification tokens</li>
+                <li>Enhanced fraud detection capabilities</li>
+                <li>Stronger authentication protocols</li>
+            </ul>
+        </div>
+
+        <div style="background: #eff6ff; padding: 20px; border-radius: 8px; border-left: 4px solid #3b82f6;">
+            <h4 style="margin-top: 0; color: #1e40af;">📱 Better Mobile Experience</h4>
+            <ul style="color: #1e3a8a; margin-bottom: 0;">
+                <li>Optimized card display for mobile devices</li>
+                <li>Faster loading times on smartphones</li>
+                <li>Improved QR code scanning reliability</li>
+            </ul>
+        </div>
+
+        <div style="background: #fefce8; padding: 20px; border-radius: 8px; border-left: 4px solid #eab308;">
+            <h4 style="margin-top: 0; color: #a16207;">⚡ Performance Improvements</h4>
+            <ul style="color: #92400e; margin-bottom: 0;">
+                <li>50% faster card verification response times</li>
+                <li>Reduced server load during peak usage</li>
+                <li>More reliable email delivery system</li>
+            </ul>
+        </div>
+
+        <div style="background: #faf5ff; padding: 20px; border-radius: 8px; border-left: 4px solid #8b5cf6;">
+            <h4 style="margin-top: 0; color: #6b21a8;">🎨 User Interface Updates</h4>
+            <ul style="color: #581c87; margin-bottom: 0;">
+                <li>Refreshed card design templates</li>
+                <li>Improved accessibility features</li>
+                <li>Cleaner, more intuitive navigation</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Action Required -->
+    <h3 style="color: #1f2937;">📋 Do You Need to Do Anything?</h3>
+
+    <div style="background: #ecfdf5; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #10b981;">
+        <h4 style="margin-top: 0; color: #065f46;">✅ Good News - No Action Required!</h4>
+        <p style="color: #064e3b; margin-bottom: 0;">
+            All updates have been applied automatically to your account and digital card. Your card remains fully functional with these improvements working behind the scenes.
+        </p>
+    </div>
+
+    <!-- What This Means for You -->
+    <h3 style="color: #1f2937;">🎯 What This Means for You</h3>
+
+    <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e2e8f0;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+            <div>
+                <h5 style="margin-top: 0; color: #1f2937;">🔒 More Secure</h5>
+                <p style="margin-bottom: 0; color: #4b5563; font-size: 14px;">Your card verification is now more secure than ever with enhanced encryption.</p>
+            </div>
+            
+            <div>
+                <h5 style="margin-top: 0; color: #1f2937;">⚡ Faster Access</h5>
+                <p style="margin-bottom: 0; color: #4b5563; font-size: 14px;">Card downloads and verifications now happen much faster.</p>
+            </div>
+            
+            <div>
+                <h5 style="margin-top: 0; color: #1f2937;">📱 Better Mobile</h5>
+                <p style="margin-bottom: 0; color: #4b5563; font-size: 14px;">Improved experience when using your card on mobile devices.</p>
+            </div>
+            
+            <div>
+                <h5 style="margin-top: 0; color: #1f2937;">🎨 Fresh Look</h5>
+                <p style="margin-bottom: 0; color: #4b5563; font-size: 14px;">Updated design makes your card look more professional.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test Your Card -->
+    <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <h4 style="margin-top: 0; color: #0c4a6e;">🧪 Test the Improvements</h4>
+        <p>Want to see the improvements in action? Try these updated features:</p>
+        
+        <div style="text-align: center; margin: 20px 0;">
+            {% if card %}
+            <a href="{{ verification_url }}" class="btn btn-primary" style="color: white; text-decoration: none; margin: 5px;">
+                🔍 Verify Your Card
+            </a>
+            <a href="{{ card_download_url }}" class="btn btn-secondary" style="color: #3b82f6; text-decoration: none; margin: 5px;">
+                📥 Download Updated Card
+            </a>
+            {% else %}
+            <a href="#" class="btn btn-primary" style="color: white; text-decoration: none; margin: 5px;">
+                🔍 Try Card Verification
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Upcoming Features -->
+    <h3 style="color: #1f2937;">🔮 Coming Soon</h3>
+
+    <div style="background: #fef7ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #a855f7;">
+        <h4 style="margin-top: 0; color: #7c2d12;">🚀 Exciting Features in Development</h4>
+        <ul style="color: #581c87;">
+            <li><strong>Digital Wallet Integration:</strong> Add your ACRP card to Apple Wallet and Google Pay</li>
+            <li><strong>Batch Verification:</strong> Verify multiple cards at once for events</li>
+            <li><strong>Advanced Analytics:</strong> Detailed insights for council administrators</li>
+            <li><strong>Multi-language Support:</strong> Cards available in multiple languages</li>
+        </ul>
+        <p style="margin-bottom: 0; color: #6b21a8; font-style: italic;">
+            Stay tuned for more updates as we continue to enhance your ACRP digital experience!
+        </p>
+    </div>
+
+    <!-- Support Information -->
+    <div class="alert alert-info">
+        <strong>Questions or Issues?</strong> If you experience any problems or have questions about these updates, please contact our support team at support@acrp.org or (555) 123-4567.
+        {% if card %}Reference your card number: <strong>{{ card.card_number }}</strong>{% endif %}
+    </div>
+
+    <!-- Feedback Request -->
+    <div style="text-align: center; background: #f1f5f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <h4 style="margin-top: 0; color: #1f2937;">💬 We Value Your Feedback</h4>
+        <p style="color: #4b5563;">Help us continue improving the ACRP Digital Card System</p>
+        <a href="#" class="btn btn-secondary" style="color: #3b82f6; text-decoration: none;">
+            📝 Share Your Feedback
+        </a>
+    </div>
+{% endblock %}

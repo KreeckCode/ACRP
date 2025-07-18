@@ -1,0 +1,206 @@
+{% extends "affiliationcard/emails/email_base.html" %}
+
+{% block title %}Reactivate Your ACRP Card - {{ card.card_number }}{% endblock %}
+
+{% block content %}
+    <div class="alert alert-warning">
+        <h3 style="margin-top: 0; color: #92400e;">🔄 Your ACRP Card Can Be Reactivated</h3>
+        <p style="margin-bottom: 0;">We notice your ACRP Digital Affiliation Card is currently inactive. Good news - you can reactivate it!</p>
+    </div>
+
+    <!-- Current Status -->
+    <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center; border: 1px solid #f59e0b;">
+        <h4 style="margin-top: 0; color: #92400e;">Current Card Status</h4>
+        <div class="card-number">{{ card.card_number }}</div>
+        <div style="margin: 15px 0;">
+            <span class="status-badge status-{{ card.status }}">{{ card.get_status_display }}</span>
+        </div>
+        <p style="margin: 10px 0; color: #78350f;"><strong>{{ card.get_display_name }}</strong></p>
+        <p style="margin: 0; color: #92400e;">{{ card.council_name }} - {{ card.affiliation_type|title }}</p>
+    </div>
+
+    <!-- Why Reactivate -->
+    <h3 style="color: #1f2937;">🌟 Why Reactivate Your Card?</h3>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 20px 0;">
+        <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; border-left: 4px solid #10b981;">
+            <h4 style="margin-top: 0; color: #065f46;">✅ Full Verification</h4>
+            <p style="margin-bottom: 0; color: #064e3b; font-size: 14px;">Restore your ability to verify your ACRP affiliation status anywhere, anytime.</p>
+        </div>
+        
+        <div style="background: #eff6ff; padding: 20px; border-radius: 8px; border-left: 4px solid #3b82f6;">
+            <h4 style="margin-top: 0; color: #1e40af;">🎫 Member Benefits</h4>
+            <p style="margin-bottom: 0; color: #1e3a8a; font-size: 14px;">Regain access to all ACRP member services, discounts, and resources.</p>
+        </div>
+        
+        <div style="background: #fef3c7; padding: 20px; border-radius: 8px; border-left: 4px solid #f59e0b;">
+            <h4 style="margin-top: 0; color: #92400e;">🤝 Community Access</h4>
+            <p style="margin-bottom: 0; color: #78350f; font-size: 14px;">Reconnect with the ACRP community and maintain your professional standing.</p>
+        </div>
+        
+        <div style="background: #faf5ff; padding: 20px; border-radius: 8px; border-left: 4px solid #8b5cf6;">
+            <h4 style="margin-top: 0; color: #6b21a8;">📱 Digital Convenience</h4>
+            <p style="margin-bottom: 0; color: #581c87; font-size: 14px;">Enjoy the convenience of instant digital verification and mobile access.</p>
+        </div>
+    </div>
+
+    <!-- Reactivation Process -->
+    <h3 style="color: #1f2937;">🚀 How to Reactivate</h3>
+
+    <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e2e8f0;">
+        
+        {% if card.status == 'expired' %}
+        <!-- Expired Card Process -->
+        <div style="background: #fef3c7; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
+            <h5 style="margin-top: 0; color: #92400e;">⏰ Expired Card Reactivation</h5>
+            <p style="margin-bottom: 0; color: #78350f;">Since your card has expired, reactivation requires renewal processing.</p>
+        </div>
+
+        <div style="display: grid; gap: 15px;">
+            <div style="display: flex; align-items: center; padding: 15px; background: white; border-radius: 6px; border-left: 4px solid #3b82f6;">
+                <div style="background: #3b82f6; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-weight: bold;">1</div>
+                <div>
+                    <h5 style="margin: 0; color: #1f2937;">Contact Your Council</h5>
+                    <p style="margin: 0; color: #6b7280; font-size: 14px;">Reach out to begin the renewal/reactivation process</p>
+                </div>
+            </div>
+
+            <div style="display: flex; align-items: center; padding: 15px; background: white; border-radius: 6px; border-left: 4px solid #10b981;">
+                <div style="background: #10b981; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-weight: bold;">2</div>
+                <div>
+                    <h5 style="margin: 0; color: #1f2937;">Complete Requirements</h5>
+                    <p style="margin: 0; color: #6b7280; font-size: 14px;">Submit any required documentation and fees</p>
+                </div>
+            </div>
+
+            <div style="display: flex; align-items: center; padding: 15px; background: white; border-radius: 6px; border-left: 4px solid #8b5cf6;">
+                <div style="background: #8b5cf6; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-weight: bold;">3</div>
+                <div>
+                    <h5 style="margin: 0; color: #1f2937;">Automatic Reactivation</h5>
+                    <p style="margin: 0; color: #6b7280; font-size: 14px;">Your card will be reactivated once approved</p>
+                </div>
+            </div>
+        </div>
+
+        {% elif card.status == 'suspended' %}
+        <!-- Suspended Card Process -->
+        <div style="background: #fee2e2; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
+            <h5 style="margin-top: 0; color: #991b1b;">⚠️ Suspended Card Reactivation</h5>
+            <p style="margin-bottom: 0; color: #7f1d1d;">Your card was suspended and may require resolving specific issues.</p>
+        </div>
+
+        <div style="display: grid; gap: 15px;">
+            <div style="display: flex; align-items: center; padding: 15px; background: white; border-radius: 6px; border-left: 4px solid #ef4444;">
+                <div style="background: #ef4444; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-weight: bold;">1</div>
+                <div>
+                    <h5 style="margin: 0; color: #1f2937;">Contact Support</h5>
+                    <p style="margin: 0; color: #6b7280; font-size: 14px;">Discuss the suspension reason and resolution steps</p>
+                </div>
+            </div>
+
+            <div style="display: flex; align-items: center; padding: 15px; background: white; border-radius: 6px; border-left: 4px solid #f59e0b;">
+                <div style="background: #f59e0b; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-weight: bold;">2</div>
+                <div>
+                    <h5 style="margin: 0; color: #1f2937;">Resolve Issues</h5>
+                    <p style="margin: 0; color: #6b7280; font-size: 14px;">Complete any required corrective actions</p>
+                </div>
+            </div>
+
+            <div style="display: flex; align-items: center; padding: 15px; background: white; border-radius: 6px; border-left: 4px solid #10b981;">
+                <div style="background: #10b981; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-weight: bold;">3</div>
+                <div>
+                    <h5 style="margin: 0; color: #1f2937;">Reactivation Review</h5>
+                    <p style="margin: 0; color: #6b7280; font-size: 14px;">Your case will be reviewed for reactivation</p>
+                </div>
+            </div>
+        </div>
+
+        {% else %}
+        <!-- General Reactivation Process -->
+        <div style="display: grid; gap: 15px;">
+            <div style="display: flex; align-items: center; padding: 15px; background: white; border-radius: 6px; border-left: 4px solid #3b82f6;">
+                <div style="background: #3b82f6; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-weight: bold;">1</div>
+                <div>
+                    <h5 style="margin: 0; color: #1f2937;">Contact Support</h5>
+                    <p style="margin: 0; color: #6b7280; font-size: 14px;">Reach out to begin the reactivation process</p>
+                </div>
+            </div>
+
+            <div style="display: flex; align-items: center; padding: 15px; background: white; border-radius: 6px; border-left: 4px solid #10b981;">
+                <div style="background: #10b981; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-weight: bold;">2</div>
+                <div>
+                    <h5 style="margin: 0; color: #1f2937;">Verify Information</h5>
+                    <p style="margin: 0; color: #6b7280; font-size: 14px;">Confirm your current details and status</p>
+                </div>
+            </div>
+
+            <div style="display: flex; align-items: center; padding: 15px; background: white; border-radius: 6px; border-left: 4px solid #8b5cf6;">
+                <div style="background: #8b5cf6; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-weight: bold;">3</div>
+                <div>
+                    <h5 style="margin: 0; color: #1f2937;">Instant Reactivation</h5>
+                    <p style="margin: 0; color: #6b7280; font-size: 14px;">Your card can be reactivated immediately</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Contact Information -->
+    <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <h4 style="margin-top: 0; color: #0c4a6e;">📞 Get Started Today</h4>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+            <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #3b82f6;">
+                <h5 style="margin-top: 0; color: #1e40af;">ACRP Support Team</h5>
+                <p style="margin: 5px 0; color: #1e3a8a;"><strong>Email:</strong> support@acrp.org</p>
+                <p style="margin: 5px 0; color: #1e3a8a;"><strong>Phone:</strong> (555) 123-4567</p>
+                <p style="margin: 0; color: #1e3a8a;"><strong>Hours:</strong> Mon-Fri 9AM-5PM EST</p>
+            </div>
+            
+            <div style="background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #10b981;">
+                <h5 style="margin-top: 0; color: #065f46;">Your Council</h5>
+                <p style="margin: 5px 0; color: #064e3b;"><strong>Council:</strong> {{ card.council_name }}</p>
+                <p style="margin: 5px 0; color: #064e3b;"><strong>Email:</strong> council-{{ card.council_code|lower }}@acrp.org</p>
+                <p style="margin: 0; color: #064e3b;"><strong>Code:</strong> {{ card.council_code }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Action Buttons -->
+    <div style="text-align: center; margin: 30px 0;">
+        <a href="mailto:support@acrp.org?subject=Reactivate Card {{ card.card_number }}&body=Hello, I would like to reactivate my ACRP digital card {{ card.card_number }}. Please let me know what steps I need to take." 
+           class="btn btn-primary" style="color: white; text-decoration: none; margin: 5px;">
+            ✉️ Email Support to Reactivate
+        </a>
+        <a href="{{ verification_url }}" class="btn btn-secondary" style="color: #3b82f6; text-decoration: none; margin: 5px;">
+            👀 View Current Card
+        </a>
+    </div>
+
+    <!-- Benefits Reminder -->
+    <div style="background: #ecfdf5; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #10b981;">
+        <h4 style="margin-top: 0; color: #065f46;">🎉 Once Reactivated, You'll Enjoy:</h4>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
+            <div>
+                <p style="margin: 0; color: #064e3b;"><strong>✅ Instant Verification</strong><br>
+                <span style="font-size: 14px;">Quick status verification anywhere</span></p>
+            </div>
+            <div>
+                <p style="margin: 0; color: #064e3b;"><strong>📱 Mobile Access</strong><br>
+                <span style="font-size: 14px;">Digital card on your smartphone</span></p>
+            </div>
+            <div>
+                <p style="margin: 0; color: #064e3b;"><strong>🎫 Member Benefits</strong><br>
+                <span style="font-size: 14px;">Full access to ACRP services</span></p>
+            </div>
+            <div>
+                <p style="margin: 0; color: #064e3b;"><strong>🔒 Secure & Official</strong><br>
+                <span style="font-size: 14px;">Officially recognized credentials</span></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-info">
+        <strong>Ready to Reactivate?</strong> Don't wait - your ACRP community is waiting for you to return! Contact us today to get your card reactivated quickly and easily. Reference your card number: <strong>{{ card.card_number }}</strong>
+    </div>
+{% endblock %}
