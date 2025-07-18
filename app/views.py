@@ -12,9 +12,6 @@ from .models import (
     Quiz, Question
 )
 from django.db.models import Count, Sum
-from finance.models import BudgetRequest, Expenditure, Invoice
-from hr.models import EmployeeProfile, LeaveRequest, HRDocumentStorage
-from database.models import Database, Entry
 from accounts.models import Department, User
 from django.views.decorators.http import require_POST
 from django.views.decorators.http import require_http_methods
@@ -53,69 +50,9 @@ def dashboard(request):
     role = getattr(user, 'role', None)
     title = getattr(role, 'title', None)
 
-    # 3) Only add the extra bits for that one role
-    if title == "HR":
-        context.update({
-            'pending_leave_requests': LeaveRequest.objects.filter(status='PENDING').count(),
-            'employee_count':         EmployeeProfile.objects.count(),
-            'hr_documents':           HRDocumentStorage.objects.count(),
-        })
-    elif title == "Finance":
-        context.update({
-            'pending_budget_requests':  BudgetRequest.objects.filter(status='PENDING').count(),
-            'total_expenditure':        Expenditure.objects.aggregate(total=Sum('amount_spent'))['total'] or 0,
-            'unpaid_invoices':          Invoice.objects.filter(status='DRAFT').count(),
-        })
-    elif title == "Database Manager":
-        context.update({
-            'databases': Database.objects.filter(owner=user).count(),
-            'entries':   Entry.objects.filter(database__owner=user).count(),
-        })
-    elif title == "Accounts":
-        context.update({
-            'user_count':       User.objects.count(),
-            'department_count': Department.objects.count(),
-        })
     # else: we do nothing extra
 
     return render(request, 'app/dashboard.html', context)
-
-
-"""
-@login_required
-def dashboard(request):
-    user = request.user
-    context = {}
-
-    context['announcements'] = Announcement.objects.filter(is_urgent=True)[:5]
-    context['events'] = Event.objects.filter(is_mandatory=True, start_time__gte=user.date_joined)[:5]
-    context['projects'] = Projects.objects.filter(manager=user).order_by('-start_date')[:5]
-
-    if user.role.title == "HR":
-        context['pending_leave_requests'] = LeaveRequest.objects.filter(status='PENDING').count()
-        context['employee_count'] = EmployeeProfile.objects.count()
-        context['hr_documents'] = HRDocumentStorage.objects.count()
-    
-    else:
-        pass
-
-    if user.role.title == "Finance":
-        context['pending_budget_requests'] = BudgetRequest.objects.filter(status='PENDING').count()
-        context['total_expenditure'] = Expenditure.objects.aggregate(Sum('amount_spent'))['amount_spent__sum']
-        context['unpaid_invoices'] = Invoice.objects.filter(status='DRAFT').count()
-
-    if user.role.title == "Database Manager":
-        context['databases'] = Database.objects.filter(owner=user).count()
-        context['entries'] = Entry.objects.filter(database__owner=user).count()
-
-    if user.role.title == "Accounts":
-        context['user_count'] = User.objects.count()
-        context['department_count'] = Department.objects.count()
-
-    return render(request, 'app/dashboard.html', context)
-
-"""
-### ========== EVENTS ========== ###
 
 @login_required
 def event_list(request):
