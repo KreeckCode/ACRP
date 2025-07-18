@@ -60,7 +60,7 @@ logger = logging.getLogger(__name__)
 # ============================================================================
 # UTILITY FUNCTIONS AND DECORATORS
 # ============================================================================
-def bulk_send_emails(cards, user, email_type='general', custom_subject=None, custom_message=None):
+def bulk_send_emails(cards, user, email_type='general', custom_subject=None, custom_message=None, request=None):
     """
     Bulk send emails to cardholders.
     
@@ -114,12 +114,13 @@ def bulk_send_emails(cards, user, email_type='general', custom_subject=None, cus
                 'user': user,
                 'email_type': email_type,
                 'custom_message': custom_message,
+                'current_year': timezone.now().year,
                 'verification_url': request.build_absolute_uri(
                     reverse('affiliationcard:verify_token', args=[card.verification_token])
-                ),
+                ) if request else '#',
                 'card_detail_url': request.build_absolute_uri(
                     reverse('affiliationcard:download_card', args=[card.verification_token])
-                )
+                ) if request else '#',
             }
             
             # Render email content
@@ -706,15 +707,15 @@ def bulk_operations(request):
             try:
                 with transaction.atomic():
                     if operation == 'assign':
-                        result = bulk_assign_cards(cards, request.user, reason)
+                        result = bulk_assign_cards(cards, request.user, reason, request=request)
                     elif operation == 'issue':
-                        result = bulk_issue_cards(cards, request.user, reason)
+                        result = bulk_issue_cards(cards, request.user, reason, request=request)
                     elif operation == 'suspend':
-                        result = bulk_suspend_cards(cards, request.user, reason)
+                        result = bulk_suspend_cards(cards, request.user, reason, request=request)
                     elif operation == 'send_email':
-                        result = bulk_send_emails(cards, request.user)
+                        result = bulk_send_emails(cards, request.user, request=request)
                     elif operation == 'regenerate':
-                        result = bulk_regenerate_cards(cards, request.user)
+                        result = bulk_regenerate_cards(cards, request.user, request=request)
                     else:
                         messages.error(request, "Invalid operation")
                         return redirect('affiliationcard:card_list')
@@ -1214,7 +1215,7 @@ def generate_report(request):
 # UTILITY FUNCTIONS
 # ============================================================================
 
-def send_card_assignment_notification(card):
+def send_card_assignment_notification(card, request):
     """Send email notification when card is assigned."""
     subject = f"Your ACRP Digital Affiliation Card is Ready - {card.card_number}"
     
