@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="839" height="248" viewBox="0 0 839 248">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: none;
+        stroke: #000;
+        stroke-width: 5px;
+        font-size: 195px;
+        font-family: Montserrat, sans-serif;
+        font-weight: 700;
+      }
+      /* total path length is about 2400; adjust if you change the text */
+      .letter {
+        stroke-dasharray: 2400;
+        stroke-dashoffset: 2400;
+        animation: draw 2s ease forwards;
+      }
+      /* stagger each letter by 0.25s */
+      .letter:nth-of-type(1) { animation-delay: 0s; }
+      .letter:nth-of-type(2) { animation-delay: 0.25s; }
+      .letter:nth-of-type(3) { animation-delay: 0.5s; }
+      .letter:nth-of-type(4) { animation-delay: 0.75s; }
+      .letter:nth-of-type(5) { animation-delay: 1s; }
+      .letter:nth-of-type(6) { animation-delay: 1.25s; }
+      
+      @keyframes draw {
+        to { stroke-dashoffset: 0; }
+      }
+    </style>
+  </defs>
+
+  <!-- Break “UORIVO” into individual <text> elements for staggering -->
+  <text class="cls-1 letter" x="5"   y="194">U</text>
+  <text class="cls-1 letter" x="140" y="194">O</text>
+  <text class="cls-1 letter" x="275" y="194">R</text>
+  <text class="cls-1 letter" x="410" y="194">I</text>
+  <text class="cls-1 letter" x="475" y="194">V</text>
+  <text class="cls-1 letter" x="610" y="194">O</text>
+</svg>

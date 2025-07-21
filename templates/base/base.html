@@ -1,806 +1,668 @@
 {% load static %}
-
 <!doctype html>
-<html lang="en">
+<html lang="en" class="h-100">
 
 <head>
+    <!-- Required Meta Tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     
-    <!-- Title -->
-    <title>{% block title %} ACRP | System {% endblock title %}</title>
-    
-    <!-- Favicon -->
-    <link rel="shortcut icon" href="{% static 'main_media/logo-white-footer.png' %}">
-    
-    <!-- SEO Meta Tags -->
-    <meta name="description" content="ACRP Africa Management System streamlines manual processes and simplifies affiliation management by integrating key features such as course delivery, CPD tracking, and payment processing for ministry professionals and affiliates.">
-    <meta name="keywords" content="ACRP, Pastoral Training, Ministry Professionals, CPD, Learner Management, Course Management, Payment Processing, Ministry Development, Africa">
+    <!-- Primary Meta Tags -->
+    <title>{% block title %}ACRP | Association of Christian Religious Practitioners{% endblock title %}</title>
+    <meta name="title" content="{% block meta_title %}ACRP | Association of Christian Religious Practitioners{% endblock meta_title %}">
+    <meta name="description" content="{% block meta_description %}ACRP Africa Management System streamlines manual processes and simplifies affiliation management by integrating key features such as course delivery, CPD tracking, and payment processing for ministry professionals and affiliates.{% endblock meta_description %}">
+    <meta name="keywords" content="{% block meta_keywords %}ACRP, Pastoral Training, Ministry Professionals, CPD, Learner Management, Course Management, Payment Processing, Ministry Development, Africa, Christian Religious Practitioners{% endblock meta_keywords %}">
     <meta name="author" content="ACRP Africa Team">
-
+    <meta name="robots" content="{% block meta_robots %}index, follow{% endblock meta_robots %}">
+    
     <!-- Open Graph / Facebook -->
-    <meta property="og:title" content="ACRP Management System | Empowering Ministry Training">
-    <meta property="og:description" content="ACRP Africa Management System streamlines manual processes and simplifies affiliation management by integrating key features such as course delivery, CPD tracking, and payment processing for ministry professionals and affiliates.">
-    <meta name="twitter:image" content="{% static 'main_media/logo.png' %}">
-
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{% block og_url %}https://acrpafrica.co.za/{% endblock og_url %}">
+    <meta property="og:title" content="{% block og_title %}ACRP Management System | Empowering Ministry Training{% endblock og_title %}">
+    <meta property="og:description" content="{% block og_description %}ACRP Africa Management System streamlines manual processes and simplifies affiliation management by integrating key features such as course delivery, CPD tracking, and payment processing.{% endblock og_description %}">
+    <meta property="og:image" content="{% block og_image %}{% static 'main_media/logo.png' %}{% endblock og_image %}">
+    <meta property="og:locale" content="en_ZA">
+    <meta property="og:site_name" content="ACRP Africa">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="{% block twitter_url %}https://acrpafrica.co.za/{% endblock twitter_url %}">
+    <meta property="twitter:title" content="{% block twitter_title %}ACRP Management System | Empowering Ministry Training{% endblock twitter_title %}">
+    <meta property="twitter:description" content="{% block twitter_description %}ACRP Africa Management System streamlines manual processes and simplifies affiliation management.{% endblock twitter_description %}">
+    <meta property="twitter:image" content="{% block twitter_image %}{% static 'main_media/logo.png' %}{% endblock twitter_image %}">
+    
+    <!-- Favicon and Touch Icons -->
+    <link rel="shortcut icon" href="{% static 'main_media/logo-white-footer.png' %}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'main_media/logo.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'main_media/logo.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'main_media/logo.png' %}">
+    
     <!-- Canonical URL -->
-    <link rel="canonical" href="https://acrpafrica.co.za/">
-
-    <!-- CSS Files -->
-     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link rel="stylesheet" href="{% static 'css/backend-plugin.min.css' %}">
-    <link rel="stylesheet" href="{% static 'css/backend.css' %}">
-    <link rel="stylesheet" href="{% static 'css/kanban.css' %}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="canonical" href="{% block canonical_url %}https://acrpafrica.co.za/{% endblock canonical_url %}">
     
-    <!-- Bootstrap Bundle (includes Popper) -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
+    <!-- Preconnect for Performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="//fonts.googleapis.com">
+    <link rel="dns-prefetch" href="//cdnjs.cloudflare.com">
     
-    <!-- Inline Styles -->
-    <style>
-        .card {
-            border-radius: 6px;
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <!-- Font Awesome (fallback) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous">
+    
+    <!-- Additional CSS -->
+    {% block extra_css %}{% endblock extra_css %}
+    
+    <!-- Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            300: '#93c5fd',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        },
+                        acrp: {
+                            primary: '#2c3e50',
+                            secondary: '#3498db',
+                            success: '#27ae60',
+                            warning: '#f39c12',
+                            danger: '#e74c3c',
+                            dark: '#34495e',
+                            light: '#ecf0f1',
+                        },
+                        sidebar: '#1f2937',
+                        'sidebar-hover': '#374151'
+                    }
+                }
+            }
         }
-        .table-hover tbody tr:hover {
-            background-color: #f9f9f9;
+    </script>
+    
+    <!-- Custom Styles -->
+    <style>
+        .sidebar-link:hover {
+            background-color: #374151;
+        }
+        
+        .sidebar-link.active {
+            background-color: #3b82f6;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease-in-out;
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+        }
+        
+        /* Custom scrollbar for sidebar */
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .sidebar::-webkit-scrollbar-track {
+            background: #1f2937;
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 3px;
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
+        }
+        
+        /* Loading animation */
+        .loading-spinner {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
     </style>
     
-    <!-- Schema.org Structured Data for SEO -->
+    <!-- Schema.org Structured Data -->
     <script type="application/ld+json">
-        {
+    {
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
         "name": "ACRP Africa Management System",
-        "operatingSystem": "All",
+        "operatingSystem": "Web-based",
         "applicationCategory": "BusinessApplication",
         "description": "ACRP Africa Management System streamlines manual processes and simplifies affiliation management by integrating key features such as course delivery, CPD tracking, and payment processing for ministry professionals and affiliates.",
         "url": "https://acrpafrica.co.za/",
         "author": {
             "@type": "Organization",
-            "name": "ACRP Africa Team"
+            "name": "ACRP Africa Team",
+            "url": "https://acrpafrica.co.za/"
+        },
+        "provider": {
+            "@type": "Organization",
+            "name": "Association of Christian Religious Practitioners"
         },
         "aggregateRating": {
             "@type": "AggregateRating",
-            "ratingValue": "4.5",
-            "reviewCount": "10"
+            "ratingValue": "4.8",
+            "reviewCount": "150"
+        },
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "ZAR"
         }
-        }
+    }
     </script>
     
+    {% block structured_data %}{% endblock structured_data %}
 </head>
 
-<body class=" color-light ">
-    <!-- Wrapper Start -->
-    <div class="wrapper">
-        <div class="iq-sidebar  sidebar-default  ">
-            <div class="iq-sidebar-logo d-flex align-items-end justify-content-between">
-                <a href="{% static '' %}" class="header-logo">
-                    <img src="{% static 'main_media/logo-white.png' %}" class="img-fluid rounded-normal light-logo"
-                        alt="logo">
-                    <img src="{% static 'main_media/logo-white-footer.png' %}"
-                        class="img-fluid rounded-normal d-none sidebar-light-img" alt="logo">
-                    <span></span>
-                </a>
-                <div class="side-menu-bt-sidebar-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="text-light wrapper-menu" width="30" fill="none"
-                        viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </div>
-            </div>
-            <div class="data-scrollbar" data-scroll="1">
-                <nav class="iq-sidebar-menu">
-                    <ul id="iq-sidebar-toggle" class="side-menu">
-
-                        <!-- Item Start -->
-                        <li class="sidebar-layout" data-toggle="tooltip" data-placement="right" title="Dashboard">
-                            <a href="" class="svg-icon">
-                                <i class="">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" fill="none" viewBox="0 0 24 24"
-                                        stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                                    </svg>
-                                </i>
-                                <span class="ml-2">Dashboard</span>
-                                <p class="mb-0 w-10 badge badge-pill badge-primary">6</p>
-                            </a>
-                        </li>
-                        
-
-                        <!-- Item End -->
-
-                        
-
-                        <!-- Item Start-->
-                        <li class=" sidebar-layout" data-toggle="tooltip" data-placement="right" title="My Profile">
-                            <a href="" class="svg-icon">
-                                <i class="">
-                                    <svg class="svg-icon" id="iq-user-1-1" xmlns="http://www.w3.org/2000/svg"
-                                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </i><span class="ml-2">My Profile</span>
-                            </a>
-                        </li>
-                        <!-- Item End-->
-
-                        <!-- Sidenav Divider Start -->
-                        <li class="px-3 pt-3 pb-2">
-                            <span class="text-uppercase small font-weight-bold">Pings</span>
-                        </li>
-                        <!-- Sidenav Divider End -->
-
-
-                        <!-- Item Start (Events)-->
-                        <li class=" sidebar-layout" data-toggle="tooltip" data-placement="right" title="Events">
-                            <a href="" class="svg-icon">
-                                <i class="">
-                                    <svg fill="#ddd" width="18px" height="18px" viewBox="0 0 52.00 52.00" xmlns="http://www.w3.org/2000/svg" stroke="#ddd" stroke-width="0.0005200000000000001">
-
-                                        <g id="SVGRepo_bgCarrier" stroke-width="0"/>
-                                        
-                                        <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"/>
-                                        
-                                        <g id="SVGRepo_iconCarrier"> <g> <path d="m49.83 32.45a1.43 1.43 0 0 0 -1.39-1.45h-12a1.43 1.43 0 0 0 -1.44 1.44v1.44a1.43 1.43 0 0 0 1.4 1.44h6.14l-11 11a1.42 1.42 0 0 0 0 2l1 1a1.54 1.54 0 0 0 1.09.45 1.32 1.32 0 0 0 .94-.38l11-11v6a1.43 1.43 0 0 0 1.43 1.44h1.53a1.43 1.43 0 0 0 1.47-1.4z"/> <path d="m3.45 12.48h31.91a1.24 1.24 0 0 0 1.25-1.23v-1.25a3.8 3.8 0 0 0 -3.76-3.69h-3.06v-1.31a2.43 2.43 0 0 0 -4.86 0v1.28h-11.06v-1.28a2.44 2.44 0 0 0 -4.87 0v1.28h-3.12a3.69 3.69 0 0 0 -3.69 3.72v1.28a1.24 1.24 0 0 0 1.25 1.23z"/> <path d="m36.53 25.13v-7.79a1.25 1.25 0 0 0 -1.22-1.26h-31.86a1.24 1.24 0 0 0 -1.26 1.22v18.46a3.69 3.69 0 0 0 3.69 3.69h18.5a16.82 16.82 0 0 1 12.15-14.32zm-11-2.85a1.24 1.24 0 0 1 1.2-1.28h2.43a1.24 1.24 0 0 1 1.26 1.22v2.47a1.24 1.24 0 0 1 -1.17 1.31h-2.52a1.25 1.25 0 0 1 -1.25-1.23zm-12.23 11a1.23 1.23 0 0 1 -1.25 1.23h-2.49a1.24 1.24 0 0 1 -1.25-1.23v-2.46a1.25 1.25 0 0 1 1.23-1.25h2.46a1.25 1.25 0 0 1 1.26 1.22zm0-8.54a1.24 1.24 0 0 1 -1.22 1.26h-2.52a1.25 1.25 0 0 1 -1.25-1.23v-2.49a1.24 1.24 0 0 1 1.2-1.28h2.49a1.24 1.24 0 0 1 1.26 1.22zm8.54 8.54a1.25 1.25 0 0 1 -1.22 1.26h-2.51a1.24 1.24 0 0 1 -1.26-1.22v-2.5a1.24 1.24 0 0 1 1.23-1.25h2.46a1.25 1.25 0 0 1 1.25 1.23zm-1.3-7.28h-2.43a1.25 1.25 0 0 1 -1.26-1.22v-2.5a1.24 1.24 0 0 1 1.2-1.28h2.49a1.24 1.24 0 0 1 1.25 1.23v2.46a1.24 1.24 0 0 1 -1.17 1.31z"/> </g> </g>
-                                        
-                                        </svg>
-                                </i>
-                                <span class="ml-2">Events</span>
-                                <p class="mb-0 w-10 badge badge-pill badge-primary">2</p>
-                            </a>
-                        </li>
-                        <!-- Item End -->
-                        
-                        <!-- Item Start (Announcements) -->
-                        <li class=" sidebar-layout" data-toggle="tooltip" data-placement="right" title="Announcements">
-                            <a href="{% url 'announcement_list' %}" class="svg-icon">
-                                <i class="">
-                                    <svg fill="#ddd" height="18px" width="18px" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 472.616 472.616" xml:space="preserve">
-
-                                        <g id="SVGRepo_bgCarrier" stroke-width="0"/>
-                                        
-                                        <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"/>
-                                        
-                                        <g id="SVGRepo_iconCarrier"> <g> <g> <path d="M289.966,231.969c0-59.62,10.963-111.865,29.163-149.142c-106.982,61.473-200.795,65.399-247.864,68.235 c-26.466,1.594-50.836,18.818-63.507,45.789c-10.328,21.985-10.267,47.902-0.288,70.044 c12.575,27.909,37.087,46.209,63.794,45.979c4.422-0.038,9.716,0.029,15.604,0.228c-9.535,42.911,15.044,88.307,59.25,107.464 c13.51,5.855,27.754,8.798,41.875,8.798c11.005,0,21.937-1.788,32.38-5.394c24.149-8.327,42.817-25.308,52.563-47.798 c2.269-5.231,3.807-10.71,4.981-16.27c13.534,6.253,27.315,13.293,41.251,21.284C300.946,343.904,289.966,291.633,289.966,231.969 z M254.87,368.344c-7.524,17.356-22.052,30.499-40.919,37.01c-19.177,6.615-40.494,5.596-60.004-2.866 c-36.58-15.848-56.599-53.562-47.13-88.204c37.589,3.05,91.884,12.199,152.715,37.529 C258.702,357.498,257.161,363.056,254.87,368.344z"/> </g> </g> <g> <g> <path d="M391.137,43.253c-32.566,0-60.587,44.358-73.632,108.315c43.489,1.036,78.566,36.668,78.566,80.402 c0,43.733-35.079,79.356-78.567,80.392c13.043,63.959,41.065,108.319,73.633,108.319c45,0,81.479-84.491,81.479-188.714 S436.137,43.253,391.137,43.253z"/> </g> </g> </g>
-                                        
-                                        </svg>
-                                </i>
-                                <span class="ml-2">Announcements</span>
-                                <p class="mb-0 w-10 badge badge-pill badge-primary">1</p>
-                            </a>
-                        </li>
-
-                        <!-- Item End -->
-
-                        <!-- Item Start (Project) -->
-                        <li class=" sidebar-layout" data-toggle="tooltip" data-placement="right" title="Projects">
-                            <a href="{% url 'project_list' %}" class="svg-icon">
-                                <i class="">
-                                    <svg width="18px" height="18px" viewBox="0 0 24 24" fill="#ddd" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path fill-rule="evenodd" clip-rule="evenodd" d="M5.4 2h13.2A3.4 3.4 0 0 1 22 5.4v13.2a3.4 3.4 0 0 1-3.4 3.4H5.4A3.4 3.4 0 0 1 2 18.6V5.4A3.4 3.4 0 0 1 5.4 2ZM7 5a1 1 0 0 1 1 1v8a1 1 0 1 1-2 0V6a1 1 0 0 1 1-1Zm5 0a1 1 0 0 1 1 1v6a1 1 0 1 1-2 0V6a1 1 0 0 1 1-1Zm6 1a1 1 0 1 0-2 0v10a1 1 0 1 0 2 0V6Z" fill="#ddd"></path></g></svg>
-                                </i>
-                                <span class="ml-2">Projects</span>
-                                <p class="mb-0 w-10 badge badge-pill badge-primary">3</p>
-                            </a>
-                        </li>
-
-                        <!-- Item End -->
-
-                        <!-- Sidenav Divider Start -->
-                        <li class="px-3 pt-3 pb-2">
-                            <span class="text-uppercase small font-weight-bold">Enrollments</span>
-                        </li>
-                        <!-- Sidenav Divider End -->
-
-                        <!-- Enrollments Overview -->
-                        <li class="sidebar-layout">
-                            <a href="{% url 'enrollments:enrollment_dashboard' %}" class="svg-icon">
-                            <i class="">
-                                <!-- reuse your SVG or use an enrollment-specific icon -->
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <path d="M3 3h18v18H3V3z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
-                                <path d="M3 9h18" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
-                                </svg>
-                            </i>
-                            <span>Enrollments List</span>
-                            </a>
-                        </li>
-                                
-                        
-
-                        <li class="sidebar-layout">
-                            
-                                <a href="{% url 'student:learner_list' %}" class="svg-icon">
-                                    <i class="fa fa-users"></i><span class="ml-2">Manage Students</span>
-                                </a>
-                        </li>
-
-                        <!-- Item Start-->
-                        <li class=" sidebar-layout" data-toggle="tooltip" data-placement="right" title="Payslips">
-                            <a href="" class="svg-icon">
-                                <i class="">
-                                    <svg fill="#ddd" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 236 256" enable-background="new 0 0 236 256" xml:space="preserve" stroke="#8f9fbc"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M117.5,2c-12.47,0-22.63,10.16-22.63,22.63c0,12.46,10.06,22.62,22.63,22.62c12.37,0,22.62-10.16,22.62-22.62 C140.12,12.16,129.97,2,117.5,2z M146,52H89c-15.59,0-28,13.41-28,29v32h20V86c0-1.71,1.29-3,3-3s3,1.29,3,3v27h61V86 c0-1.71,1.29-3,3-3s3,1.29,3,3v27h20V81C174,65.51,161.49,52,146,52z M2,118v27h23v109h185V145h24v-27H2z M117.93,235.35 c-25.59,0-46.36-20.77-46.36-46.36c0-25.73,20.63-46.64,46.36-46.64s46.5,20.77,46.5,46.5S143.52,235.35,117.93,235.35z M122.43,184.31c-6.42-2.61-9.41-3.85-9.41-7.06c0-2.34,2.57-4.68,7.3-4.68c4.72,0,8.16,1.47,10.27,2.34l2.61-9.17 c-2.84-1.52-6.69-2.62-12.01-2.62v-7.29h-6.42v7.66c-8.58,1.74-13.26,7.29-13.26,14.35c0,7.66,5.32,11.97,13.85,14.95 c6.15,2.39,8.67,3.72,8.67,6.93c0,3.21-2.61,5.55-7.93,5.55c-4.96,0-9.63-1.75-12.61-3.21l-2.34,9.4c2.7,1.51,8.3,2.98,13.85,2.98 v7.06h6.42v-7.29c9.4-2.11,13.85-7.66,13.85-14.95C135.27,191.97,131.18,187.52,122.43,184.31z"></path> </g></svg>
-                                </i><span class="ml-2">Payments</span>
-                            </a>
-                        </li>
-                        <!-- Item End-->
-
-                        <li class="px-3 pt-3 pb-2">
-                        <span class="text-uppercase small font-weight-bold">Student Menu</span>
-                        </li>
-
-                        <li class="sidebar-layout" data-toggle="tooltip" data-placement="right" title="Student">
-                        <a href="#app50" class="collapsed svg-icon" data-toggle="collapse" aria-expanded="false">
-                            <i class="fa fa-user-graduate"></i>
-                            <span class="ml-2">Student</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" class="svg-icon iq-arrow-right arrow-active" width="15" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                            </svg>
-                        </a>
-                        <ul id="app50" class="submenu collapse" data-parent="#iq-sidebar-toggle">
-                            <li class="sidebar-layout">
-                            <a href="{% url 'student:learner_detail' request.user.learner_profile.pk %}" class="svg-icon">
-                                <i class="fa fa-id-badge"></i><span class="ml-2">My Profile</span>
-                            </a>
-                            </li>
-                            <li class="sidebar-layout">
-                            <a href="{% url 'student:academic_list' request.user.learner_profile.pk %}" class="svg-icon">
-                                <i class="fa fa-book"></i><span class="ml-2">Academic History</span>
-                            </a>
-                            </li>
-                            <li class="sidebar-layout">
-                            <a href="{% url 'student:enrollment_list' request.user.learner_profile.pk %}" class="svg-icon">
-                                <i class="fa fa-graduation-cap"></i><span class="ml-2">My Enrollments</span>
-                            </a>
-                            </li>
-                            
-                            <li class="sidebar-layout">
-                            <a href="{% url 'student:affiliation_list' request.user.learner_profile.pk %}" class="svg-icon">
-                                <i class="fa fa-handshake"></i><span class="ml-2">Affiliations</span>
-                            </a>
-                            </li>
-                            <li class="sidebar-layout">
-                            <a href="{% url 'student:learner_document_list' request.user.learner_profile.pk %}" class="svg-icon">
-                                <i class="fa fa-file-upload"></i><span class="ml-2">Documents</span>
-                            </a>
-                            </li>
-                            
-                            <li class="sidebar-layout">
-                                <a href="{% url 'student:cpd_history_list' request.user.learner_profile.pk %}" class="svg-icon">
-                                    <i class="fa fa-clock"></i><span class="ml-2">CPD History</span>
-                                </a>
-                            </li>
-                        </ul>
-                        </li>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                        <!-- Dropdown Item (Budget)-->
-                        <li class="sidebar-layout" data-toggle="tooltip" data-placement="right" title="Budget Requests">
-                            <a href="#app1" class="collapsed svg-icon" data-toggle="collapse" aria-expanded="false">
-                                <i>
-                                    <svg fill="#ddd" height="18px" width="18px" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 425.773 425.773" xml:space="preserve"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M408.932,297.012c-1.575-2.252-3.26-4.359-5.051-6.316c2.25-3.305,3.962-7.022,5.026-11.037 c3.147-11.93-0.009-24.432-8.435-33.441c-5.438-5.82-11.85-10.504-19.17-14.016c-1.107-18.672-16.65-33.521-35.597-33.521 c-18.665,0-34.027,14.418-35.534,32.701c-2.203,0.973-4.314,2.049-6.334,3.219l-21.687-6.572c-0.002,0.008-0.003,0.018-0.005,0.025 l-40.472-12.266c-1.304-3.945-4.198-7.361-8.244-10.25c4.452-4.949,8.21-9.957,11.068-14.098c6.78-9.832,12.42-20.42,16.326-30.631 c1.926-4.309,3.566-8.635,4.894-12.879c5.26-4.408,8.355-10.992,8.355-17.898v-16.918c0-4.854-1.527-9.602-4.336-13.537V75.76 c0-41.777-33.987-75.76-75.759-75.76h-24.56c-41.775,0-75.763,33.982-75.763,75.76v23.818c-2.808,3.934-4.334,8.686-4.334,13.535 v16.918c0,6.9,3.096,13.482,8.354,17.896c1.326,4.238,2.968,8.564,4.893,12.885c3.909,10.213,9.552,20.797,16.327,30.621 c2.859,4.143,6.618,9.152,11.07,14.104c-4.048,2.889-6.941,6.305-8.246,10.25l-54.016,16.371 C29.676,243.088,6.886,407.402,6.886,407.402H6.89c-0.113,0.73-0.192,1.471-0.192,2.236c0,7.916,6.419,14.336,14.339,14.336h313.507 c3.514,1.162,7.265,1.799,11.163,1.799c19.662,0,35.659-15.994,35.659-35.656v-3.006c7.149-3.205,13.469-7.408,18.906-12.574 c12.302-11.684,18.805-26.932,18.805-44.092C419.076,317.892,415.662,306.647,408.932,297.012z M167.162,274.697 c-0.205,1.984-1.604,3.643-3.528,4.178c-0.431,0.119-0.869,0.178-1.303,0.178c-1.499,0-2.943-0.695-3.877-1.932l-13.646-18.1 c-0.636-0.844-0.979-1.871-0.979-2.928l0.018-29.019c0.001-1.699,0.893-3.279,2.352-4.156c1.458-0.879,3.27-0.928,4.773-0.133 c3.974,2.1,7.939,3.512,11.789,4.197c2.318,0.41,4.008,2.426,4.008,4.781v12.105c0.691,0.271,1.32,0.701,1.829,1.266 c0.92,1.021,1.364,2.385,1.225,3.752L167.162,274.697z M218.568,259.022l-13.626,18.088c-0.932,1.234-2.379,1.934-3.881,1.934 c-0.431,0-0.869-0.059-1.299-0.176c-1.922-0.537-3.322-2.197-3.527-4.184l-2.661-25.797c-0.142-1.367,0.305-2.73,1.226-3.752 c0.507-0.564,1.135-0.994,1.825-1.266v-12.105c0-2.355,1.691-4.371,4.01-4.781c3.847-0.686,7.812-2.098,11.784-4.195 c1.507-0.795,3.318-0.744,4.775,0.135c1.458,0.879,2.352,2.457,2.352,4.16l0.002,29.02 C219.548,257.152,219.205,258.178,218.568,259.022z M194.741,201.289h-26.087c-5.764,0-16.893-7.711-28.77-24.936 c-9.375-13.586-15.889-28.625-17.422-40.23l-0.262-2.008l-4.714-3.064c-1.378-0.895-2.209-2.426-2.209-4.07v-7.994 c0-2.68,2.174-4.855,4.855-4.855h1.983v-8.658c0-1.842,1.041-3.523,2.688-4.348c6.686-3.336,19.951-8.936,33.688-8.936 c10.961,0,20.048,3.646,27.012,10.836c8.676,8.965,18.673,13.512,29.722,13.512c6.252,0,12.717-1.475,19.211-4.385 c1.502-0.674,3.243-0.541,4.626,0.354c0.645,0.42,1.174,0.979,1.553,1.625h2.647c2.682,0,4.857,2.176,4.857,4.855v7.994 c0,1.645-0.834,3.176-2.212,4.072l-4.712,3.063l-0.262,2c-1.536,11.611-8.049,26.652-17.425,40.244 C211.635,193.58,200.507,201.289,194.741,201.289z M384.285,357.705c-6.555,6.23-15.328,10.387-26.134,12.393v20.02 c0,6.873-5.564,12.441-12.445,12.441c-6.877,0-12.443-5.568-12.443-12.441v-19.354c-15.767-2.135-27.564-8.967-35.056-20.34 c-2.293-3.482-2.693-7.879-1.064-11.717c1.634-3.836,5.08-6.604,9.181-7.357l9.395-1.748c4.797-0.897,9.684,1.115,12.479,5.123 c3.528,5.08,9.515,7.654,17.777,7.654c12.708,0,12.708-5.057,12.708-6.719c0-2.41-0.898-4.16-2.843-5.516 c-1.974-1.379-5.584-2.611-10.729-3.656c-20.656-4.215-33.974-9.68-39.565-16.254c-5.687-6.66-8.441-14.107-8.441-22.77 c0-9.406,3.105-17.867,9.228-25.164c5.927-7.057,14.998-11.641,26.931-13.637v-14.328c0-6.871,5.566-12.441,12.443-12.441 c6.881,0,12.445,5.57,12.445,12.441v14.596c10.686,2.037,19.03,6.357,25.36,13.133c2.924,3.127,4.041,7.533,2.95,11.674 c-1.099,4.139-4.233,7.424-8.318,8.695l-6.44,2.02c-4.674,1.469-9.781,0.047-13.03-3.617c-3.239-3.654-8.056-5.51-14.298-5.51 c-5.029,0-11.032,1.199-11.032,6.906c0,1.615,0.619,3.074,1.786,4.217c1.232,1.191,4.814,2.461,10.647,3.766 c13.455,2.941,23.289,5.633,29.168,7.975c5.972,2.375,11,6.451,14.959,12.117c3.95,5.654,5.959,12.432,5.959,20.139 C395.862,341.238,391.969,350.406,384.285,357.705z"></path> </g></svg>
-                                </i>
-                                <span class="ml-2">Budget Request</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" class="svg-icon iq-arrow-right arrow-active"
-                                    width="15" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 5l7 7-7 7" />
-                                </svg>
-                            </a>
-                            <ul id="app1" class="submenu collapse" data-parent="#iq-sidebar-toggle">
-                                
-                                <!-- Dropdown item start-->
-                                <li class=" sidebar-layout">
-                                    <a href="" class="svg-icon">
-                                        <i class="">
-                                            <svg width="18px" height="18px" viewBox="0 0 48 48" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000" stroke="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <title>pull-requests</title> <desc>Created with Sketch.</desc> <g id="pull-requests" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" stroke-linejoin="round"> <rect width="48" height="48" fill="white" fill-opacity="0.01"></rect> <g id="编组" transform="translate(7.000000, 4.000000)" stroke="#8f9fbc" stroke-width="4"> <circle id="Oval" fill="#ffffff" fill-rule="nonzero" cx="30" cy="36" r="4"> </circle> <circle id="Oval-Copy" fill="#ffffff" fill-rule="nonzero" cx="4" cy="4" r="4"> </circle> <circle id="Oval-Copy-2" fill="#ffffff" fill-rule="nonzero" cx="4" cy="36" r="4"> </circle> <path d="M4,8 L4,32" id="Path-315" stroke-linecap="round"> </path> <path d="M17,6 L26,6 C28.209139,6 30,7.790861 30,10 L30,32" id="Path-317" stroke-linecap="round"> </path> <polyline id="Path-367" stroke-linecap="round" transform="translate(20.000000, 6.000000) rotate(180.000000) translate(-20.000000, -6.000000) " points="17 0 23 6 17 12"> </polyline> </g> </g> </g></svg>
-                                        </i><span class="">My Budget Requests</span>
-                                    </a>
-                                </li>
-                                <!-- Dropdown item end-->
-
-
-                                
-                               
-
-                                <!-- Dropdown item start-->
-                                <li class=" sidebar-layout">
-                                    <a href="" class="svg-icon">
-                                        <i class="">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" fill="none"
-                                                viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                                            </svg>
-                                        </i><span class="">Submit Budget Request</span>
-                                    </a>
-                                </li>
-                                <!-- Dropdown item end-->
-
-                                <!-- Dropdown item start-->
-                                <li class=" sidebar-layout">
-                                    <a href="" class="svg-icon">
-                                        <i class="">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" fill="none"
-                                                viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                                            </svg>
-                                        </i><span class="">Requests</span>
-                                    </a>
-                                </li>
-                                <!-- Dropdown item end-->
-
-                            </ul>
-                        </li>
-                        <!-- Dropdown End-->
-
-                       <!-- Sidenav Divider Start -->
-                        <li class="px-3 pt-3 pb-2">
-                            <span class="text-uppercase small font-weight-bold">Provider Details</span>
-                        </li>
-                        <!-- Sidenav Divider End -->
-
-                        <!-- Item Start (Provider dashboard) -->
-                        <li class=" sidebar-layout" data-toggle="tooltip" data-placement="right"
-                            title="Provider Dashboard">
-                            <a href="{% url 'providers:dashboard' %}" class="svg-icon">
-                                <i class="">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="#ddd"
-                                        viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M12 8v4m0 0v4m0-4h4m-4 0H8m-6 6h18a2 2 0 002-2V6a2 2 0 00-2-2H4a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
-                                </i>
-                                <span class="ml-2">Provider Dashboard</span>
-                            </a>
-                        </li>
-
-
-                        
-                    </ul>
-                </nav>
-                <div class="pt-5 pb-5"></div>
-            </div>
-        </div>
-        <div class="iq-top-navbar">
-            <div class="iq-navbar-custom">
-                <nav class="navbar navbar-expand-lg navbar-light p-0">
-                    <div class="side-menu-bt-sidebar">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="text-secondary wrapper-menu" width="30"
-                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
+<body class="bg-gray-50">
+    
+    <!-- Skip to Content (Accessibility) -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-0 focus:left-0 z-50 bg-blue-600 text-white px-4 py-2 rounded">Skip to main content</a>
+    
+    <!-- Top Navigation -->
+    <nav class="bg-white shadow-sm border-b border-gray-200 fixed w-full z-30 top-0">
+        <div class="px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <!-- Mobile menu button -->
+                    <button type="button" class="md:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100" onclick="toggleSidebar()">
+                        <i class="bi bi-list text-xl"></i>
+                    </button>
+                    
+                    <!-- Logo -->
+                    <div class="flex-shrink-0 flex items-center ml-4 md:ml-0">
+                        <img src="{% static 'main_media/logo-white.png' %}" 
+                             class="h-8 w-auto" 
+                             alt="ACRP Logo">
+                        <h1 class="ml-2 text-xl font-semibold text-gray-900 hidden sm:block">ACRP Dashboard</h1>
                     </div>
-                    <div class="d-flex align-items-center">
-                        <button class="navbar-toggler" type="button" data-toggle="collapse"
-                            data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
-                            aria-label="Toggle navigation">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="text-secondary" width="30" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4 6h16M4 12h16m-7 6h7" />
-                            </svg>
+                    
+                    <!-- Breadcrumb -->
+                    <div class="hidden md:ml-6 md:flex md:items-center md:space-x-4">
+                        <span class="text-gray-500">/</span>
+                        <span class="text-sm text-gray-500">
+                            {% block breadcrumb_text %}
+                                {% if 'event' in request.resolver_match.url_name %}
+                                    Event Management
+                                {% elif 'announcement' in request.resolver_match.url_name %}
+                                    Announcement Management
+                                {% elif 'project' in request.resolver_match.url_name %}
+                                    Project Management
+                                {% elif 'task' in request.resolver_match.url_name %}
+                                    Task Management
+                                {% else %}
+                                    {% block page_title %}Dashboard{% endblock page_title %}
+                                {% endif %}
+                            {% endblock breadcrumb_text %}
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Right side -->
+                <div class="flex items-center space-x-4">
+                    <!-- Search -->
+                    <div class="relative hidden md:block">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="bi bi-search text-gray-400"></i>
+                        </div>
+                        <input type="text" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Search...">
+                    </div>
+                    
+                    <!-- Mobile search button -->
+                    <button class="md:hidden p-2 text-gray-400 hover:text-gray-500">
+                        <i class="bi bi-search text-xl"></i>
+                    </button>
+                    
+                    <!-- Notifications -->
+                    <div class="relative">
+                        <button class="p-2 text-gray-400 hover:text-gray-500 relative" onclick="toggleDropdown('notifications')">
+                            <i class="bi bi-bell text-xl"></i>
+                            <span class="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400"></span>
                         </button>
-                        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                            <ul class="navbar-nav ml-auto navbar-list align-items-center">
-                                <li class="nav-item nav-icon dropdown">
-                                    <a href="#" class="search-toggle dropdown-toggle" id="notification-dropdown"
-                                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25"
-                                            class="h-6 w-6 text-secondary" fill="none" viewBox="0 0 24 24"
-                                            stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                                        </svg>
-                                        <span class="bg-primary"></span>
-                                    </a>
-                                    <div class="iq-sub-dropdown dropdown-menu" aria-labelledby="notification-dropdown">
-                                        <div class="card shadow-none m-0 border-0">
-                                            <div class="p-3 card-header-border">
-                                                <h6 class="text-center">
-                                                    Notifications
-                                                </h6>
-                                            </div>
-                                            <div class="card-body overflow-auto card-header-border p-0 card-body-list"
-                                                style="max-height: 500px;">
-                                                <ul class="dropdown-menu-1 overflow-auto list-style-1 mb-0">
-                                                    <li class="dropdown-item-1 float-none p-3">
-                                                        <div
-                                                            class="list-item d-flex justify-content-start align-items-start">
-                                                            <div class="avatar">
-                                                                <div class="avatar-img avatar-danger avatar-20">
-                                                                    <span>
-                                                                        <svg class="icon line" width="30" height="30"
-                                                                            id="cart-alt1" stroke="white"
-                                                                            xmlns="http://www.w3.org/2000/svg"
-                                                                            viewBox="0 0 24 24">
-                                                                            <path
-                                                                                d="M3,3H5.32a1,1,0,0,1,.93.63L10,13,8.72,15.55A1,1,0,0,0,9.62,17H19"
-                                                                                style="fill: none;stroke-linecap: round; stroke-linejoin: round; stroke-width: 2;">
-                                                                            </path>
-                                                                            <polyline points="10 13 18.2 13 21 6"
-                                                                                style="fill: none;stroke-linecap: round; stroke-linejoin: round; stroke-width: 2;">
-                                                                            </polyline>
-                                                                            <line x1="20.8" y1="6" x2="7.2" y2="6"
-                                                                                style="fill: none;stroke-linecap: round; stroke-linejoin: round; stroke-width: 2;">
-                                                                            </line>
-                                                                            <circle cx="10.5" cy="20.5" r="0.5"
-                                                                                style="fill: none;stroke-miterlimit: 10; stroke-width: 2;">
-                                                                            </circle>
-                                                                            <circle cx="16.5" cy="20.5" r="0.5"
-                                                                                style="fill: none;stroke-miterlimit: 10; stroke-width: 2;">
-                                                                            </circle>
-                                                                        </svg>
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                            <div class="list-style-detail ml-2 mr-2">
-                                                                <h6 class="font-weight-bold">Your order is placed</h6>
-                                                                <p class="m-0">
-                                                                    <small class="text-secondary">If several languages
-                                                                        coalesce</small>
-                                                                </p>
-                                                                <p class="m-0">
-                                                                    <small class="text-secondary">
-                                                                        <svg xmlns="http://www.w3.org/2000/svg"
-                                                                            class="text-secondary mr-1" width="15"
-                                                                            fill="none" viewBox="0 0 24 24"
-                                                                            stroke="currentColor">
-                                                                            <path stroke-linecap="round"
-                                                                                stroke-linejoin="round" stroke-width="2"
-                                                                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                                        </svg>
-                                                                        3 hours ago</small>
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                    </li>
-                                                    <li class="dropdown-item-1 float-none p-3">
-                                                        <div
-                                                            class="list-item d-flex justify-content-start align-items-start">
-                                                            <div class="avatar">
-                                                                <div class="avatar-img avatar-success avatar-20">
-                                                                    <span><img class="avatar is-squared rounded-circle"
-                                                                            src="{% static 'assets/images/user/2.jpg' %}"
-                                                                            alt="2.jpg"></span>
-                                                                </div>
-                                                            </div>
-                                                            <div class="list-style-detail ml-2 mr-2">
-                                                                <h6 class="font-weight-bold">New message form cate</h6>
-                                                                <p class="m-0">
-                                                                    <small class="text-secondary">You have 3 unreded
-                                                                        messages</small>
-                                                                </p>
-                                                                <p class="m-0">
-                                                                    <small class="text-secondary">
-                                                                        <svg xmlns="http://www.w3.org/2000/svg"
-                                                                            class="text-secondary mr-1" width="15"
-                                                                            fill="none" viewBox="0 0 24 24"
-                                                                            stroke="currentColor">
-                                                                            <path stroke-linecap="round"
-                                                                                stroke-linejoin="round" stroke-width="2"
-                                                                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                                        </svg>
-                                                                        5 hours ago</small>
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                    </li>
-                                                    <li class="dropdown-item-1 float-none p-3">
-                                                        <div
-                                                            class="list-item d-flex justify-content-start align-items-start">
-                                                            <div class="avatar">
-                                                                <div class="avatar-img avatar-warning avatar-20">
-                                                                    <span>
-                                                                        <svg xmlns="http://www.w3.org/2000/svg"
-                                                                            xmlns:xlink="http://www.w3.org/1999/xlink"
-                                                                            version="1.1" width="30" height="30"
-                                                                            stroke="white" id="Capa_1" x="0px" y="0px"
-                                                                            viewBox="0 0 512 512"
-                                                                            style="enable-background:new 0 0 512 512;"
-                                                                            xml:space="preserve">
-                                                                            <g>
-                                                                                <g>
-                                                                                    <path
-                                                                                        d="M386.689,304.403c-35.587,0-64.538,28.951-64.538,64.538s28.951,64.538,64.538,64.538    c35.593,0,64.538-28.951,64.538-64.538S422.276,304.403,386.689,304.403z M386.689,401.21c-17.796,0-32.269-14.473-32.269-32.269    c0-17.796,14.473-32.269,32.269-32.269c17.796,0,32.269,14.473,32.269,32.269C418.958,386.738,404.485,401.21,386.689,401.21z" />
-                                                                                </g>
-                                                                            </g>
-                                                                            <g>
-                                                                                <g>
-                                                                                    <path
-                                                                                        d="M166.185,304.403c-35.587,0-64.538,28.951-64.538,64.538s28.951,64.538,64.538,64.538s64.538-28.951,64.538-64.538    S201.772,304.403,166.185,304.403z M166.185,401.21c-17.796,0-32.269-14.473-32.269-32.269c0-17.796,14.473-32.269,32.269-32.269    c17.791,0,32.269,14.473,32.269,32.269C198.454,386.738,183.981,401.21,166.185,401.21z" />
-                                                                                </g>
-                                                                            </g>
-                                                                            <g>
-                                                                                <g>
-                                                                                    <path
-                                                                                        d="M430.15,119.675c-2.743-5.448-8.32-8.885-14.419-8.885h-84.975v32.269h75.025l43.934,87.384l28.838-14.5L430.15,119.675z" />
-                                                                                </g>
-                                                                            </g>
-                                                                            <g>
-                                                                                <g>
-                                                                                    <rect x="216.202" y="353.345"
-                                                                                        width="122.084"
-                                                                                        height="32.269" />
-                                                                                </g>
-                                                                            </g>
-                                                                            <g>
-                                                                                <g>
-                                                                                    <path
-                                                                                        d="M117.781,353.345H61.849c-8.912,0-16.134,7.223-16.134,16.134c0,8.912,7.223,16.134,16.134,16.134h55.933    c8.912,0,16.134-7.223,16.134-16.134C133.916,360.567,126.693,353.345,117.781,353.345z" />
-                                                                                </g>
-                                                                            </g>
-                                                                            <g>
-                                                                                <g>
-                                                                                    <path
-                                                                                        d="M508.612,254.709l-31.736-40.874c-3.049-3.937-7.755-6.239-12.741-6.239H346.891V94.655    c0-8.912-7.223-16.134-16.134-16.134H61.849c-8.912,0-16.134,7.223-16.134,16.134s7.223,16.134,16.134,16.134h252.773v112.941    c0,8.912,7.223,16.134,16.134,16.134h125.478l23.497,30.268v83.211h-44.639c-8.912,0-16.134,7.223-16.134,16.134    c0,8.912,7.223,16.134,16.134,16.134h60.773c8.912,0,16.134-7.223,16.135-16.134V264.605    C512,261.023,510.806,257.538,508.612,254.709z" />
-                                                                                </g>
-                                                                            </g>
-                                                                            <g>
-                                                                                <g>
-                                                                                    <path
-                                                                                        d="M116.706,271.597H42.487c-8.912,0-16.134,7.223-16.134,16.134c0,8.912,7.223,16.134,16.134,16.134h74.218    c8.912,0,16.134-7.223,16.134-16.134C132.84,278.82,125.617,271.597,116.706,271.597z" />
-                                                                                </g>
-                                                                            </g>
-                                                                            <g>
-                                                                                <g>
-                                                                                    <path
-                                                                                        d="M153.815,208.134H16.134C7.223,208.134,0,215.357,0,224.269s7.223,16.134,16.134,16.134h137.681    c8.912,0,16.134-7.223,16.134-16.134S162.727,208.134,153.815,208.134z" />
-                                                                                </g>
-                                                                            </g>
-                                                                            <g>
-                                                                                <g>
-                                                                                    <path
-                                                                                        d="M180.168,144.672H42.487c-8.912,0-16.134,7.223-16.134,16.134c0,8.912,7.223,16.134,16.134,16.134h137.681    c8.912,0,16.134-7.223,16.134-16.134C196.303,151.895,189.08,144.672,180.168,144.672z" />
-                                                                                </g>
-                                                                            </g>
-                                                                            <g></g>
-                                                                            <g></g>
-                                                                            <g></g>
-                                                                            <g></g>
-                                                                            <g></g>
-                                                                            <g></g>
-                                                                            <g></g>
-                                                                            <g></g>
-                                                                            <g></g>
-                                                                            <g></g>
-                                                                            <g></g>
-                                                                            <g></g>
-                                                                            <g></g>
-                                                                            <g></g>
-                                                                            <g></g>
-                                                                        </svg>
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                            <div class="list-style-detail ml-2 mr-2">
-                                                                <h6 class="font-weight-bold">Your item is shipped</h6>
-                                                                <p class="m-0">
-                                                                    <small class="text-secondary">You got new order of
-                                                                        goods</small>
-                                                                </p>
-                                                                <p class="m-0">
-                                                                    <small class="text-secondary">
-                                                                        <svg xmlns="http://www.w3.org/2000/svg"
-                                                                            class="text-secondary mr-1" width="15"
-                                                                            fill="none" viewBox="0 0 24 24"
-                                                                            stroke="currentColor">
-                                                                            <path stroke-linecap="round"
-                                                                                stroke-linejoin="round" stroke-width="2"
-                                                                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                                        </svg>
-                                                                        5 hours ago</small>
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                            <div class="card-footer text-muted p-3">
-                                                <p class="mb-0 text-primary text-center font-weight-bold">Show all
-                                                    notifications</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </li>
-                                
-                                <li class="nav-item nav-icon search-content">
-                                    <a href="#" class="search-toggle rounded" id="dropdownSearch" data-toggle="dropdown"
-                                        aria-haspopup="true" aria-expanded="false">
-                                        <svg class="svg-icon text-secondary" id="h-suns" height="25" width="25"
-                                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                            stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                        </svg>
-                                    </a>
-                                    <div class="iq-search-bar iq-sub-dropdown dropdown-menu"
-                                        aria-labelledby="dropdownSearch">
-                                        <form action="#" class="searchbox p-2">
-                                            <div class="form-group mb-0 position-relative">
-                                                <input type="text" class="text search-input font-size-12"
-                                                    placeholder="type here to search...">
-                                                <a href="#" class="search-link">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="" width="20"
-                                                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                                    </svg>
-                                                </a>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </li>
-                                <li class="nav-item nav-icon dropdown">
-                                    <a href="#" class="nav-item nav-icon dropdown-toggle pr-0 search-toggle"
-                                        id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true"
-                                        aria-expanded="false">
-                                        <img src="{% static 'assets/images/user/1.jpg' %}" class="img-fluid avatar-rounded"
-                                            alt="user">
-                                        <span class="mb-0 ml-2 user-name">{{ user.first_name }} {{ user.last_name }}</span>
-                                    </a>
-                                    <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
-                                        <li class="dropdown-item d-flex svg-icon">
-                                            <svg class="svg-icon mr-0 text-secondary" id="h-01-p" width="20"
-                                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                                stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                            <a href="../app/user-profile.html">My Profile</a>
-                                        </li>
-                                        <li class="dropdown-item d-flex svg-icon">
-                                            <svg class="svg-icon mr-0 text-secondary" id="h-02-p" width="20"
-                                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                                stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                            </svg>
-                                            <a href="../app/user-profile-edit.html">Edit Profile</a>
-                                        </li>
-                                        <li class="dropdown-item d-flex svg-icon">
-                                            <svg class="svg-icon mr-0 text-secondary" id="h-03-p" width="20"
-                                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                                stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            </svg>
-                                            <a href="../app/user-account-setting.html">Account Settings</a>
-                                        </li>
-                                        <li class="dropdown-item d-flex svg-icon">
-                                            <svg class="svg-icon mr-0 text-secondary" id="h-04-p" width="20"
-                                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                                stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                                            </svg>
-                                            <a href="../app/user-privacy-setting.html">Privacy Settings</a>
-                                        </li>
-                                        <li class="dropdown-item  d-flex svg-icon border-top">
-                                            <svg class="svg-icon mr-0 text-secondary" id="h-05-p" width="20"
-                                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                                stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                            </svg>
-                                            <form method="POST" action="{% url 'logout' %}" class="d-inline">
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn btn-link nav-link">
-                                                    Logout
-                                                </button>
-                                            </form>
-                                        </li>
-                                    </ul>
-                                </li>
-                            </ul>
+                        <div class="hidden absolute right-0 z-10 mt-2 w-80 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5" id="notifications-dropdown">
+                            <div class="py-1">
+                                <div class="px-4 py-2 text-sm text-gray-700 border-b border-gray-200">
+                                    <strong>Notifications</strong>
+                                </div>
+                                <div class="px-4 py-2 text-sm text-gray-500">
+                                    No new notifications
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </nav>
-            </div>
-        </div>
-        <div class="content-page ">
-            
-            <div class="container-fluid">
-                
-                <div class="row mt-5">
-                    {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                    {% endfor %}
                     
-                    <div class="col-lg-12">
-                        <!--MAIN CONTAINER Start-->
-
-
-
-                        {% block content %} 
-                        
-                        {% endblock content %}
-
-
-
-                        <!--MAIN CONTAINER End-->
-                        
-
-
+                    <!-- User menu -->
+                    <div class="relative">
+                        <button class="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" onclick="toggleDropdown('user-menu')">
+                            <img class="h-8 w-8 rounded-full" src="https://ui-avatars.com/api/?name={{ user.first_name|default:'Admin' }}+{{ user.last_name|default:'User' }}&background=3b82f6&color=fff" alt="User">
+                            <span class="ml-2 text-gray-700 hidden sm:block">{{ user.first_name|default:"User" }} {{ user.last_name|default:"" }}</span>
+                            <i class="bi bi-chevron-down ml-1 text-gray-400"></i>
+                        </button>
+                        <div class="hidden absolute right-0 z-10 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5" id="user-menu-dropdown">
+                            <div class="py-1">
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="bi bi-person mr-2"></i>My Profile
+                                </a>
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="bi bi-gear mr-2"></i>Account Settings
+                                </a>
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="bi bi-shield-check mr-2"></i>Privacy Settings
+                                </a>
+                                <div class="border-t border-gray-100"></div>
+                                <form method="POST" action="{% url 'logout' %}" class="block">
+                                    {% csrf_token %}
+                                    <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50">
+                                        <i class="bi bi-box-arrow-right mr-2"></i>Sign Out
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    <!-- Wrapper End-->
-    <footer class="iq-footer">
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-lg-6">
-                    <ul class="list-inline mb-0">
-                        <li class="list-inline-item"><a href="../backend/privacy-policy.html">Privacy Policy</a></li>
-                        <li class="list-inline-item"><a href="../backend/terms-of-service.html">Terms of Use</a></li>
-                    </ul>
+    </nav>
+
+    <!-- Sidebar -->
+    <div class="sidebar fixed inset-y-0 left-0 z-20 w-64 bg-gray-800 pt-16 pb-4 overflow-y-auto">
+        <nav class="mt-5 px-2">
+            <div class="space-y-1">
+                
+                <!-- Main Menu Section -->
+                <div class="px-3 py-2">
+                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Main Menu</h3>
                 </div>
-                <div class="col-lg-6 text-right">
-                    <span class="mr-1">
-                        Copyright
-                        <script>document.write(new Date().getFullYear())</script>© <a href="#" class="">Kreeck</a>
-                        All Rights Reserved to kreeck.
-                    </span>
+                
+                <!-- Dashboard -->
+                <a href="{% url 'app:dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'dashboard' %}active text-white{% else %}text-gray-300 hover:text-white{% endif %} group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                    <i class="bi bi-speedometer2 mr-3 text-lg"></i>
+                    Dashboard
+                    <span class="ml-auto inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">6</span>
+                </a>
+                
+                <!-- My Profile -->
+                <a href="javascript:void(0)" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                    <i class="bi bi-person mr-3 text-lg"></i>
+                    My Profile
+                </a>
+                
+                <!-- Quick Actions -->
+                <div class="px-3 py-2 mt-6">
+                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Quick Actions</h3>
+                </div>
+                
+                <div class="px-3 py-2">
+                    <div class="space-y-2">
+                        <button type="button" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-3 rounded-md flex items-center" onclick="showToast('New Enrollment feature coming soon!', 'info')">
+                            <i class="bi bi-plus mr-2"></i>New Enrollment
+                        </button>
+                        <button type="button" class="w-full bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-3 rounded-md flex items-center" onclick="showToast('Upload Documents feature coming soon!', 'info')">
+                            <i class="bi bi-upload mr-2"></i>Upload Documents
+                        </button>
+                        <button type="button" class="w-full bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium py-2 px-3 rounded-md flex items-center" onclick="showToast('Generate Report feature coming soon!', 'info')">
+                            <i class="bi bi-download mr-2"></i>Generate Report
+                        </button>
+                        <button type="button" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-medium py-2 px-3 rounded-md flex items-center" onclick="showToast('Digital Card feature coming soon!', 'info')">
+                            <i class="bi bi-credit-card mr-2"></i>Digital Card
+                        </button>
+                    </div>
+                    
+                    <!-- Quick Create Dropdown -->
+                    <div class="mt-3">
+                        <div class="relative">
+                            <button type="button" class="w-full bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium py-2 px-3 rounded-md flex items-center justify-between" onclick="toggleDropdown('quick-create')">
+                                <span><i class="bi bi-plus-circle mr-2"></i>Quick Create</span>
+                                <i class="bi bi-chevron-down"></i>
+                            </button>
+                            <div class="hidden absolute bottom-full left-0 w-full mb-2 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50" id="quick-create-dropdown">
+                                <div class="py-1">
+                                    <a href="{% url 'app:create_event' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        <i class="bi bi-calendar-plus mr-2"></i>New Event
+                                    </a>
+                                    <a href="{% url 'app:create_announcement' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        <i class="bi bi-megaphone mr-2"></i>New Announcement
+                                    </a>
+                                    <a href="{% url 'app:create_project' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        <i class="bi bi-folder-plus mr-2"></i>New Project
+                                    </a>
+                                    <a href="{% url 'app:task_add' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        <i class="bi bi-check-square mr-2"></i>New Task
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Activities Section -->
+                <div class="px-3 py-2 mt-6">
+                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Activities</h3>
+                </div>
+                
+                <!-- Events with submenu -->
+                <div class="space-y-1">
+                    <button class="sidebar-link {% if 'event' in request.resolver_match.url_name %}text-white{% else %}text-gray-300 hover:text-white{% endif %} group w-full flex items-center px-3 py-2 text-sm font-medium rounded-md" onclick="toggleSubmenu('events')">
+                        <i class="bi bi-calendar-event mr-3 text-lg"></i>
+                        Events
+                        <span class="ml-auto mr-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">2</span>
+                        <i class="bi bi-chevron-down transition-transform duration-200" id="events-icon"></i>
+                    </button>
+                    <div class="hidden ml-6 space-y-1" id="events-submenu">
+                        <a href="{% url 'app:event_list' %}" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">All Events</a>
+                        <a href="{% url 'app:create_event' %}" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">Create Event</a>
+                    </div>
+                </div>
+                
+                <!-- Announcements with submenu -->
+                <div class="space-y-1">
+                    <button class="sidebar-link {% if 'announcement' in request.resolver_match.url_name %}text-white{% else %}text-gray-300 hover:text-white{% endif %} group w-full flex items-center px-3 py-2 text-sm font-medium rounded-md" onclick="toggleSubmenu('announcements')">
+                        <i class="bi bi-megaphone mr-3 text-lg"></i>
+                        Announcements
+                        <span class="ml-auto mr-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">1</span>
+                        <i class="bi bi-chevron-down transition-transform duration-200" id="announcements-icon"></i>
+                    </button>
+                    <div class="hidden ml-6 space-y-1" id="announcements-submenu">
+                        <a href="{% url 'app:announcement_list' %}" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">All Announcements</a>
+                        <a href="{% url 'app:create_announcement' %}" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">Create Announcement</a>
+                    </div>
+                </div>
+                
+                <!-- Projects with submenu -->
+                <div class="space-y-1">
+                    <button class="sidebar-link {% if 'project' in request.resolver_match.url_name %}text-white{% else %}text-gray-300 hover:text-white{% endif %} group w-full flex items-center px-3 py-2 text-sm font-medium rounded-md" onclick="toggleSubmenu('projects')">
+                        <i class="bi bi-kanban mr-3 text-lg"></i>
+                        Projects
+                        <span class="ml-auto mr-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">3</span>
+                        <i class="bi bi-chevron-down transition-transform duration-200" id="projects-icon"></i>
+                    </button>
+                    <div class="hidden ml-6 space-y-1" id="projects-submenu">
+                        <a href="{% url 'app:project_list' %}" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">All Projects</a>
+                        <a href="{% url 'app:create_project' %}" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">Create Project</a>
+                        <a href="{% url 'app:task_add' %}" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">Add Task</a>
+                    </div>
+                </div>
+                
+                <!-- Education Section -->
+                <div class="px-3 py-2 mt-6">
+                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Education</h3>
+                </div>
+                
+                <!-- Enrollments with submenu -->
+                <div class="space-y-1">
+                    <button class="sidebar-link text-gray-300 hover:text-white group w-full flex items-center px-3 py-2 text-sm font-medium rounded-md" onclick="toggleSubmenu('enrollments')">
+                        <i class="bi bi-people mr-3 text-lg"></i>
+                        Enrollments
+                        <i class="bi bi-chevron-down ml-auto transition-transform duration-200" id="enrollments-icon"></i>
+                    </button>
+                    <div class="hidden ml-6 space-y-1" id="enrollments-submenu">
+                        <a href="javascript:void(0)" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">All Enrollments</a>
+                        <a href="javascript:void(0)" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">Pending Review</a>
+                        <a href="javascript:void(0)" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">Approved</a>
+                        <a href="javascript:void(0)" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">Rejected</a>
+                    </div>
+                </div>
+                
+                <!-- Students -->
+                <a href="javascript:void(0)" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                    <i class="bi bi-mortarboard mr-3 text-lg"></i>
+                    Students
+                </a>
+                
+                <!-- CPD Tracking -->
+                <a href="javascript:void(0)" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                    <i class="bi bi-award mr-3 text-lg"></i>
+                    CPD Tracking
+                </a>
+                
+                <!-- Administration Section -->
+                <div class="px-3 py-2 mt-6">
+                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Administration</h3>
+                </div>
+                
+                <!-- Budget Requests -->
+                <a href="javascript:void(0)" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                    <i class="bi bi-currency-dollar mr-3 text-lg"></i>
+                    Budget Requests
+                </a>
+                
+                <!-- Reports -->
+                <a href="javascript:void(0)" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                    <i class="bi bi-bar-chart mr-3 text-lg"></i>
+                    Reports
+                </a>
+                
+                <!-- Settings -->
+                <a href="javascript:void(0)" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                    <i class="bi bi-gear mr-3 text-lg"></i>
+                    Provider Settings
+                </a>
+                
+            </div>
+            
+            <!-- Bottom Links -->
+            <div class="mt-8 pt-8 border-t border-gray-700">
+                <div class="space-y-1">
+                    <a href="javascript:void(0)" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                        <i class="bi bi-question-circle mr-3 text-lg"></i>
+                        Help & Support
+                    </a>
                 </div>
             </div>
-        </div>
-    </footer> <!-- Backend Bundle JavaScript -->
-    <script src="{% static 'assets/js/backend-bundle.min.js' %}"></script>
-    <!-- Chart Custom JavaScript -->
-    <script src="{% static 'assets/js/customizer.js' %}"></script>
+        </nav>
+    </div>
 
-    <script src="{% static 'assets/js/sidebar.js' %}"></script>
-
-    <!-- Flextree Javascript-->
-    <script src="{% static 'assets/js/flex-tree.min.js' %}"></script>
-    <script src="{% static 'assets/js/tree.js' %}"></script>
-
-    <!-- Table Treeview JavaScript -->
-    <script src="{% static 'assets/js/table-treeview.js' %}"></script>
-
-    <!-- SweetAlert JavaScript -->
-    <script src="{% static 'assets/js/sweetalert.js' %}"></script>
-
-    <!-- Chart Custom JavaScript -->
-    <script src="{% static 'assets/js/chart-custom.js' %}"></script>
-    <script src="{% static 'assets/js/charts/01.js' %}"></script>
-    <script src="{% static 'assets/js/charts/02.js' %}"></script>
-
-    <!-- slider JavaScript -->
-    <script src="{% static 'assets/js/slider.js' %}"></script>
-
-    <!-- app JavaScript -->
-    <script src="{% static 'assets/js/app.js' %}"></script>
+    <!-- Main Content -->
+    <div class="md:pl-64 flex flex-col flex-1">
+        <main class="flex-1 pt-16" id="main-content">
+            <div class="py-6">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    
+                    <!-- Page Header -->
+                    {% block page_header %}
+                    <div class="mb-8">
+                        <h1 class="text-3xl font-bold text-gray-900">
+                            Dashboard
+                        </h1>
+                        <p class="mt-2 text-sm text-gray-600">
+                            {% block page_description %}Welcome to the ACRP management system{% endblock page_description %}
+                        </p>
+                    </div>
+                    {% endblock page_header %}
+                    
+                    <!-- Alert Messages -->
+                    {% if messages %}
+                    <div class="mb-6">
+                        {% for message in messages %}
+                        <div class="rounded-md p-4 mb-4 {% if message.tags == 'error' or message.tags == 'danger' %}bg-red-50 border border-red-200{% elif message.tags == 'warning' %}bg-yellow-50 border border-yellow-200{% elif message.tags == 'success' %}bg-green-50 border border-green-200{% else %}bg-blue-50 border border-blue-200{% endif %}">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    {% if message.tags == 'error' or message.tags == 'danger' %}
+                                        <i class="bi bi-exclamation-circle text-red-400"></i>
+                                    {% elif message.tags == 'warning' %}
+                                        <i class="bi bi-exclamation-triangle text-yellow-400"></i>
+                                    {% elif message.tags == 'success' %}
+                                        <i class="bi bi-check-circle text-green-400"></i>
+                                    {% else %}
+                                        <i class="bi bi-info-circle text-blue-400"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm {% if message.tags == 'error' or message.tags == 'danger' %}text-red-800{% elif message.tags == 'warning' %}text-yellow-800{% elif message.tags == 'success' %}text-green-800{% else %}text-blue-800{% endif %}">
+                                        {{ message }}
+                                    </p>
+                                </div>
+                                <div class="ml-auto pl-3">
+                                    <button class="inline-flex {% if message.tags == 'error' or message.tags == 'danger' %}text-red-400 hover:text-red-600{% elif message.tags == 'warning' %}text-yellow-400 hover:text-yellow-600{% elif message.tags == 'success' %}text-green-400 hover:text-green-600{% else %}text-blue-400 hover:text-blue-600{% endif %}" onclick="this.parentElement.parentElement.parentElement.remove()">
+                                        <i class="bi bi-x text-lg"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Page Content -->
+                    {% block content %}
+                    <!-- Default dashboard content -->
+                    <div class="bg-white overflow-hidden shadow rounded-lg">
+                        <div class="px-4 py-5 sm:p-6">
+                            <div class="text-center">
+                                <i class="bi bi-house-door text-gray-400 text-6xl mb-4"></i>
+                                <h3 class="text-lg font-medium text-gray-900 mb-2">Welcome to ACRP</h3>
+                                <p class="text-sm text-gray-500 mb-6">
+                                    Welcome to the Association of Christian Religious Practitioners management system.
+                                </p>
+                                <div class="space-x-4">
+                                    <button class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+                                        <i class="bi bi-plus mr-2"></i>
+                                        Get Started
+                                    </button>
+                                    <button class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                        <i class="bi bi-book mr-2"></i>
+                                        Documentation
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endblock content %}
+                    
+                </div>
+            </div>
+        </main>
+        
+        <!-- Footer -->
+        <footer class="bg-white border-t border-gray-200">
+            <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center">
+                    <div class="flex space-x-6">
+                        <a href="javascript:void(0)" class="text-gray-500 hover:text-gray-900 text-sm">Privacy Policy</a>
+                        <a href="javascript:void(0)" class="text-gray-500 hover:text-gray-900 text-sm">Terms of Service</a>
+                        <a href="javascript:void(0)" class="text-gray-500 hover:text-gray-900 text-sm">Support</a>
+                    </div>
+                    <div class="text-sm text-gray-500">
+                        Copyright © <span id="currentYear"></span> 
+                        <a href="https://acrpafrica.co.za/" class="text-gray-700 hover:text-gray-900">ACRP Africa</a>. 
+                        All rights reserved.
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+    
+    <!-- Additional JavaScript -->
+    {% block extra_js %}{% endblock extra_js %}
+    
+    <!-- Core JavaScript -->
+    <script>
+        // Toggle sidebar on mobile
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('open');
+        }
+        
+        // Toggle submenu
+        function toggleSubmenu(menuId) {
+            const submenu = document.getElementById(menuId + '-submenu');
+            const icon = document.getElementById(menuId + '-icon');
+            
+            submenu.classList.toggle('hidden');
+            icon.classList.toggle('rotate-180');
+        }
+        
+        // Toggle dropdown
+        function toggleDropdown(dropdownId) {
+            const dropdown = document.getElementById(dropdownId + '-dropdown');
+            
+            // Close other dropdowns
+            document.querySelectorAll('[id$="-dropdown"]').forEach(d => {
+                if (d !== dropdown) d.classList.add('hidden');
+            });
+            
+            dropdown.classList.toggle('hidden');
+        }
+        
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.relative')) {
+                document.querySelectorAll('[id$="-dropdown"]').forEach(dropdown => {
+                    dropdown.classList.add('hidden');
+                });
+            }
+        });
+        
+        // Utility function for showing toast notifications
+        function showToast(message, type = 'info') {
+            const colors = {
+                success: 'bg-green-500',
+                error: 'bg-red-500',
+                warning: 'bg-yellow-500',
+                info: 'bg-blue-500'
+            };
+            
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-50 transform transition-transform duration-300`;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            
+            // Animate in
+            setTimeout(() => toast.style.transform = 'translateX(0)', 100);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+        
+        // CSRF token helper for AJAX requests
+        function getCSRFToken() {
+            return document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+        }
+        
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            const sidebar = document.querySelector('.sidebar');
+            const menuButton = document.querySelector('button[onclick="toggleSidebar()"]');
+            
+            if (window.innerWidth < 768 && sidebar.classList.contains('open')) {
+                if (!sidebar.contains(event.target) && !menuButton?.contains(event.target)) {
+                    sidebar.classList.remove('open');
+                }
+            }
+        });
+        
+    </script>
+    
+    {% block inline_js %}{% endblock inline_js %}
+    
 </body>
-
 </html>
