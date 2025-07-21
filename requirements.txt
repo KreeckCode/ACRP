@@ -19,3 +19,5 @@ django-widget-tweaks
 django-tinymce
 reportlab
 qrcode
+dj-database-url
+sentry-sdk
