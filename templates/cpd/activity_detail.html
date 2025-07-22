@@ -1,0 +1,417 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ activity.title }} | ACRP{% endblock %}
+
+{% block page_title %}{{ activity.title }}{% endblock %}
+
+{% block page_description %}{{ activity.provider.name }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Breadcrumb -->
+    <nav class="flex" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+            <li class="inline-flex items-center">
+                <a href="{% url 'cpd:dashboard' %}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600">
+                    <i class="bi bi-house mr-2"></i>
+                    Dashboard
+                </a>
+            </li>
+            <li>
+                <div class="flex items-center">
+                    <i class="bi bi-chevron-right text-gray-400"></i>
+                    <a href="{% url 'cpd:activity_list' %}" class="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2">Activities</a>
+                </div>
+            </li>
+            <li aria-current="page">
+                <div class="flex items-center">
+                    <i class="bi bi-chevron-right text-gray-400"></i>
+                    <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">{{ activity.title|truncatewords:5 }}</span>
+                </div>
+            </li>
+        </ol>
+    </nav>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Main Content -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Activity Header -->
+            <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex-1">
+                        <h1 class="text-2xl font-bold text-gray-900 mb-2">{{ activity.title }}</h1>
+                        <p class="text-lg text-gray-600">{{ activity.provider.name }}</p>
+                    </div>
+                    {% if activity.is_featured %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                            <i class="bi bi-star-fill mr-1"></i>
+                            Featured
+                        </span>
+                    {% endif %}
+                </div>
+
+                <!-- Status Badges -->
+                <div class="flex flex-wrap items-center gap-2 mb-4">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
+                        {% if activity.approval_status == 'PRE_APPROVED' %}bg-green-100 text-green-800
+                        {% elif activity.approval_status == 'REQUIRES_APPROVAL' %}bg-amber-100 text-amber-800
+                        {% else %}bg-gray-100 text-gray-800{% endif %}">
+                        {{ activity.get_approval_status_display }}
+                    </span>
+                    
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                        {{ activity.category.name }}
+                    </span>
+                    
+                    {% if activity.is_accredited %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
+                            <i class="bi bi-patch-check mr-1"></i>
+                            Accredited
+                        </span>
+                    {% endif %}
+                </div>
+
+                <!-- Key Details Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    {% if activity.start_date %}
+                        <div class="flex items-center space-x-3">
+                            <div class="p-2 bg-blue-50 rounded-lg">
+                                <i class="bi bi-calendar3 text-blue-600"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">Start Date</p>
+                                <p class="text-sm text-gray-600">{{ activity.start_date|date:"F d, Y" }}</p>
+                                {% if activity.start_date %}
+                                    <p class="text-xs text-gray-500">{{ activity.start_date|date:"g:i A" }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if activity.end_date and activity.end_date != activity.start_date %}
+                        <div class="flex items-center space-x-3">
+                            <div class="p-2 bg-red-50 rounded-lg">
+                                <i class="bi bi-calendar-x text-red-600"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">End Date</p>
+                                <p class="text-sm text-gray-600">{{ activity.end_date|date:"F d, Y" }}</p>
+                                {% if activity.end_date %}
+                                    <p class="text-xs text-gray-500">{{ activity.end_date|date:"g:i A" }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <div class="flex items-center space-x-3">
+                        <div class="p-2 bg-green-50 rounded-lg">
+                            <i class="bi bi-clock text-green-600"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">Duration</p>
+                            <p class="text-sm text-gray-600">{{ activity.duration_hours }} hours</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-3">
+                        <div class="p-2 bg-yellow-50 rounded-lg">
+                            <i class="bi bi-award text-yellow-600"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">CPD Points</p>
+                            <p class="text-sm text-gray-600">{{ activity.calculate_points }} points</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-3">
+                        <div class="p-2 bg-gray-50 rounded-lg">
+                            {% if activity.is_online %}
+                                <i class="bi bi-camera-video text-gray-600"></i>
+                            {% else %}
+                                <i class="bi bi-geo-alt text-gray-600"></i>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">Location</p>
+                            <p class="text-sm text-gray-600">
+                                {% if activity.is_online %}
+                                    Online Event
+                                {% else %}
+                                    {{ activity.location|default:"Location TBD" }}
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-3">
+                        <div class="p-2 bg-indigo-50 rounded-lg">
+                            <i class="bi bi-tag text-indigo-600"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">Activity Type</p>
+                            <p class="text-sm text-gray-600">{{ activity.get_activity_type_display }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Registration Status -->
+                {% if user_record %}
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                        <div class="flex items-center space-x-3">
+                            <i class="bi bi-info-circle text-blue-600"></i>
+                            <div>
+                                <p class="font-medium text-blue-900">You are registered for this activity</p>
+                                <p class="text-sm text-blue-700">Status: {{ user_record.get_status_display }}</p>
+                                {% if user_record.completion_date %}
+                                    <p class="text-sm text-blue-700">Completed: {{ user_record.completion_date|date:"M d, Y" }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <a href="{% url 'cpd:record_detail' user_record.pk %}" class="text-sm font-medium text-blue-600 hover:text-blue-700">
+                                View my record →
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Description -->
+            {% if activity.description %}
+                <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Description</h3>
+                    <div class="prose prose-sm max-w-none text-gray-600">
+                        {{ activity.description|linebreaks }}
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Learning Objectives -->
+            {% if activity.learning_objectives %}
+                <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Learning Objectives</h3>
+                    <div class="prose prose-sm max-w-none text-gray-600">
+                        {{ activity.learning_objectives|linebreaks }}
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Prerequisites -->
+            {% if activity.prerequisites %}
+                <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Prerequisites</h3>
+                    <div class="prose prose-sm max-w-none text-gray-600">
+                        {{ activity.prerequisites|linebreaks }}
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Materials Provided -->
+            {% if activity.materials_provided %}
+                <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Materials Provided</h3>
+                    <div class="prose prose-sm max-w-none text-gray-600">
+                        {{ activity.materials_provided|linebreaks }}
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Admin Statistics -->
+            {% if activity_stats %}
+                <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Activity Statistics</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="text-center">
+                            <p class="text-2xl font-bold text-gray-900">{{ activity_stats.total_registered }}</p>
+                            <p class="text-sm text-gray-600">Total Registered</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-2xl font-bold text-gray-900">{{ activity_stats.completed }}</p>
+                            <p class="text-sm text-gray-600">Completed</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-2xl font-bold text-gray-900">
+                                {% if activity_stats.average_rating %}
+                                    {{ activity_stats.average_rating|floatformat:1 }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </p>
+                            <p class="text-sm text-gray-600">Average Rating</p>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="space-y-6">
+            <!-- Registration/Action Card -->
+            <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                {% if can_register %}
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Register for this Activity</h3>
+                    
+                    {% if activity.registration_required %}
+                        <div class="space-y-3 mb-4">
+                            {% if activity.registration_deadline %}
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Registration Deadline:</span>
+                                    <span class="font-medium">{{ activity.registration_deadline|date:"M d, Y" }}</span>
+                                </div>
+                            {% endif %}
+                            
+                            {% if activity.max_participants %}
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Available Spots:</span>
+                                    <span class="font-medium">{{ activity.available_spots }}</span>
+                                </div>
+                            {% endif %}
+                            
+                            {% if activity.registration_fee %}
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Registration Fee:</span>
+                                    <span class="font-medium">R{{ activity.registration_fee }}</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    <form method="post" action="{% url 'cpd:quick_register' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="activity" value="{{ activity.pk }}">
+                        
+                        <div class="mb-4">
+                            <label for="notes" class="block text-sm font-medium text-gray-700 mb-1">
+                                Additional Notes (Optional)
+                            </label>
+                            <textarea name="notes" id="notes" rows="3" 
+                                      class="w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                      placeholder="Any special requirements or notes..."></textarea>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" name="agree_terms" required 
+                                       class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                <span class="text-sm text-gray-700">
+                                    I agree to attend this activity and understand the CPD requirements
+                                </span>
+                            </label>
+                        </div>
+
+                        <button type="submit" 
+                                class="w-full inline-flex justify-center items-center px-4 py-3 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <i class="bi bi-person-plus mr-2"></i>
+                            Register Now
+                        </button>
+                    </form>
+                {% elif user_record %}
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">You're Registered</h3>
+                    <div class="text-center py-4">
+                        <i class="bi bi-check-circle text-green-500 text-3xl mb-2"></i>
+                        <p class="text-sm text-gray-600 mb-4">You are already registered for this activity.</p>
+                        <a href="{% url 'cpd:record_detail' user_record.pk %}" 
+                           class="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                            View My Record
+                        </a>
+                    </div>
+                {% else %}
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Registration</h3>
+                    <div class="text-center py-4">
+                        {% if not activity.is_registration_open %}
+                            <i class="bi bi-x-circle text-red-500 text-3xl mb-2"></i>
+                            <p class="text-sm text-gray-600">Registration is closed for this activity.</p>
+                        {% elif activity.available_spots == 0 %}
+                            <i class="bi bi-people-fill text-amber-500 text-3xl mb-2"></i>
+                            <p class="text-sm text-gray-600">This activity is fully booked.</p>
+                        {% else %}
+                            <i class="bi bi-info-circle text-blue-500 text-3xl mb-2"></i>
+                            <p class="text-sm text-gray-600">Registration not available.</p>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Provider Information -->
+            <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Provider Information</h3>
+                <div class="space-y-3">
+                    <div>
+                        <p class="font-medium text-gray-900">{{ activity.provider.name }}</p>
+                        {% if activity.provider.provider_type %}
+                            <p class="text-sm text-gray-600">{{ activity.provider.get_provider_type_display }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    {% if activity.provider.description %}
+                        <p class="text-sm text-gray-600">{{ activity.provider.description|truncatewords:30 }}</p>
+                    {% endif %}
+                    
+                    {% if activity.provider.website %}
+                        <div class="pt-3 border-t border-gray-100">
+                            <a href="{{ activity.provider.website }}" target="_blank" 
+                               class="text-sm font-medium text-blue-600 hover:text-blue-700">
+                                Visit Provider Website
+                                <i class="bi bi-arrow-up-right-square ml-1"></i>
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Additional Information -->
+            <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Additional Information</h3>
+                <div class="space-y-3">
+                    {% if activity.website_url %}
+                        <div>
+                            <a href="{{ activity.website_url }}" target="_blank" 
+                               class="text-sm font-medium text-blue-600 hover:text-blue-700">
+                                Activity Website
+                                <i class="bi bi-arrow-up-right-square ml-1"></i>
+                            </a>
+                        </div>
+                    {% endif %}
+                    
+                    {% if activity.meeting_url and activity.is_online %}
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">Meeting Link</p>
+                            <p class="text-xs text-gray-500">Available after registration</p>
+                        </div>
+                    {% endif %}
+                    
+                    <div>
+                        <p class="text-sm text-gray-600">
+                            Activity ID: <span class="font-mono text-xs">{{ activity.pk }}</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Similar Activities -->
+    {% if similar_activities %}
+        <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Similar Activities</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {% for similar in similar_activities %}
+                    <div class="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors">
+                        <h4 class="font-medium text-gray-900 mb-2">
+                            <a href="{% url 'cpd:activity_detail' similar.pk %}" class="hover:text-blue-600">
+                                {{ similar.title|truncatewords:8 }}
+                            </a>
+                        </h4>
+                        <p class="text-sm text-gray-600 mb-2">{{ similar.provider.name }}</p>
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-gray-500">{{ similar.duration_hours }} hours</span>
+                            <span class="font-medium text-green-600">{{ similar.calculate_points }} points</span>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

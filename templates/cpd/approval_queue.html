@@ -1,0 +1,453 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}CPD Approval Queue | ACRP{% endblock %}
+
+{% block page_title %}CPD Approval Queue{% endblock %}
+
+{% block page_description %}Review and approve CPD activity submissions{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Statistics Overview -->
+    <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Queue Overview</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="text-center">
+                <p class="text-2xl font-bold text-amber-600">{{ stats.pending_count }}</p>
+                <p class="text-sm text-gray-600">Pending Review</p>
+            </div>
+            <div class="text-center">
+                <p class="text-2xl font-bold text-red-600">{{ stats.urgent_count }}</p>
+                <p class="text-sm text-gray-600">Urgent Priority</p>
+            </div>
+            <div class="text-center">
+                <p class="text-2xl font-bold text-gray-600">{{ stats.overdue_count }}</p>
+                <p class="text-sm text-gray-600">Overdue (7+ days)</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+        <form method="get" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <!-- Status Filter -->
+                <div>
+                    <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select name="status" id="status" class="w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        <option value="all" {% if current_filters.status == 'all' %}selected{% endif %}>All Status</option>
+                        <option value="pending" {% if current_filters.status == 'pending' %}selected{% endif %}>Pending</option>
+                        <option value="UNDER_REVIEW" {% if current_filters.status == 'UNDER_REVIEW' %}selected{% endif %}>Under Review</option>
+                        <option value="APPROVED" {% if current_filters.status == 'APPROVED' %}selected{% endif %}>Approved</option>
+                        <option value="REJECTED" {% if current_filters.status == 'REJECTED' %}selected{% endif %}>Rejected</option>
+                        <option value="NEEDS_MORE_INFO" {% if current_filters.status == 'NEEDS_MORE_INFO' %}selected{% endif %}>Needs More Info</option>
+                    </select>
+                </div>
+
+                <!-- Priority Filter -->
+                <div>
+                    <label for="priority" class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                    <select name="priority" id="priority" class="w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        <option value="all" {% if current_filters.priority == 'all' %}selected{% endif %}>All Priorities</option>
+                        <option value="URGENT" {% if current_filters.priority == 'URGENT' %}selected{% endif %}>Urgent</option>
+                        <option value="HIGH" {% if current_filters.priority == 'HIGH' %}selected{% endif %}>High</option>
+                        <option value="NORMAL" {% if current_filters.priority == 'NORMAL' %}selected{% endif %}>Normal</option>
+                        <option value="LOW" {% if current_filters.priority == 'LOW' %}selected{% endif %}>Low</option>
+                    </select>
+                </div>
+
+                <!-- Category Filter -->
+                <div>
+                    <label for="category" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                    <select name="category" id="category" class="w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        <option value="all" {% if current_filters.category == 'all' %}selected{% endif %}>All Categories</option>
+                        {% for cat in categories %}
+                            <option value="{{ cat.pk }}" {% if current_filters.category == cat.pk|stringformat:"s" %}selected{% endif %}>
+                                {{ cat.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Filter Actions -->
+                <div class="flex items-end space-x-2">
+                    <button type="submit" 
+                            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <i class="bi bi-funnel mr-2"></i>
+                        Apply Filters
+                    </button>
+                    <a href="{% url 'cpd:approval_queue' %}" 
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        Clear
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Bulk Actions -->
+    {% if approvals %}
+        <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
+            <form method="post" action="{% url 'cpd:bulk_approval' %}" id="bulk-form">
+                {% csrf_token %}
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <span class="text-sm font-medium text-gray-700">Bulk Actions:</span>
+                        
+                        {{ bulk_form.action }}
+                        {{ bulk_form.selected_records }}
+                        
+                        <div class="flex-1">
+                            <input type="text" name="bulk_comments" placeholder="Optional comments for bulk action..." 
+                                   class="w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        </div>
+                        
+                        <button type="submit" disabled id="bulk-submit"
+                                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-400 cursor-not-allowed">
+                            <i class="bi bi-check-all mr-2"></i>
+                            Apply to Selected
+                        </button>
+                    </div>
+                    
+                    <div class="text-sm text-gray-500">
+                        <span id="selected-count">0</span> selected
+                    </div>
+                </div>
+            </form>
+        </div>
+    {% endif %}
+
+    <!-- Approvals List -->
+    {% if approvals %}
+        <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-medium text-gray-900">
+                        CPD Submissions 
+                        <span class="text-sm font-normal text-gray-500">
+                            ({{ approvals|length }} of {{ approvals.paginator.count }})
+                        </span>
+                    </h3>
+                    <div class="flex items-center space-x-2">
+                        <button type="button" onclick="selectAll()" id="select-all-btn"
+                                class="text-sm font-medium text-blue-600 hover:text-blue-700">
+                            Select All
+                        </button>
+                        <span class="text-gray-300">|</span>
+                        <button type="button" onclick="selectNone()" 
+                                class="text-sm font-medium text-gray-600 hover:text-gray-700">
+                            Select None
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Desktop Table -->
+            <div class="hidden lg:block overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left">
+                                <input type="checkbox" id="select-all-checkbox" 
+                                       class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User & Activity</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Points</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submitted</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for approval in approvals %}
+                            <tr class="hover:bg-gray-50 {% if approval.priority == 'URGENT' %}bg-red-50{% elif approval.priority == 'HIGH' %}bg-amber-50{% endif %}">
+                                <td class="px-6 py-4">
+                                    <input type="checkbox" class="approval-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                                           value="{{ approval.pk }}" onchange="updateBulkActions()">
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-900">{{ approval.record.user.get_full_name }}</p>
+                                        <p class="text-sm text-gray-600">{{ approval.record.display_title }}</p>
+                                        <p class="text-xs text-gray-500">{{ approval.record.display_provider }}</p>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                        {{ approval.record.activity.category.name }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-sm">
+                                    <div>
+                                        <p class="font-medium text-gray-900">{{ approval.original_points }} pts</p>
+                                        {% if approval.adjusted_points and approval.adjusted_points != approval.original_points %}
+                                            <p class="text-xs text-blue-600">Adj: {{ approval.adjusted_points }} pts</p>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                        {% if approval.priority == 'URGENT' %}bg-red-100 text-red-800
+                                        {% elif approval.priority == 'HIGH' %}bg-amber-100 text-amber-800
+                                        {% elif approval.priority == 'LOW' %}bg-gray-100 text-gray-600
+                                        {% else %}bg-blue-100 text-blue-800{% endif %}">
+                                        {{ approval.get_priority_display }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-600">
+                                    <div>
+                                        <p>{{ approval.submitted_at|date:"M d, Y" }}</p>
+                                        <p class="text-xs text-gray-500">{{ approval.submitted_at|timesince }} ago</p>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                        {% if approval.status == 'APPROVED' %}bg-green-100 text-green-800
+                                        {% elif approval.status == 'REJECTED' %}bg-red-100 text-red-800
+                                        {% elif approval.status == 'NEEDS_MORE_INFO' %}bg-amber-100 text-amber-800
+                                        {% elif approval.status == 'UNDER_REVIEW' %}bg-blue-100 text-blue-800
+                                        {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                        {{ approval.get_status_display }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-sm font-medium">
+                                    <div class="flex items-center space-x-2">
+                                        <a href="{% url 'cpd:approval_detail' approval.pk %}" 
+                                           class="text-blue-600 hover:text-blue-700">
+                                            Review
+                                        </a>
+                                        <span class="text-gray-300">|</span>
+                                        <a href="{% url 'cpd:record_detail' approval.record.pk %}" 
+                                           class="text-gray-600 hover:text-gray-700">
+                                            Record
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Mobile Cards -->
+            <div class="lg:hidden">
+                <div class="divide-y divide-gray-200">
+                    {% for approval in approvals %}
+                        <div class="p-4 space-y-3 {% if approval.priority == 'URGENT' %}bg-red-50{% elif approval.priority == 'HIGH' %}bg-amber-50{% endif %}">
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-start space-x-3">
+                                    <input type="checkbox" class="approval-checkbox mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                                           value="{{ approval.pk }}" onchange="updateBulkActions()">
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium text-gray-900">{{ approval.record.user.get_full_name }}</p>
+                                        <p class="text-sm text-gray-600">{{ approval.record.display_title }}</p>
+                                        <p class="text-xs text-gray-500">{{ approval.record.display_provider }}</p>
+                                    </div>
+                                </div>
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                    {% if approval.priority == 'URGENT' %}bg-red-100 text-red-800
+                                    {% elif approval.priority == 'HIGH' %}bg-amber-100 text-amber-800
+                                    {% else %}bg-blue-100 text-blue-800{% endif %}">
+                                    {{ approval.get_priority_display }}
+                                </span>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-3 text-sm">
+                                <div>
+                                    <span class="text-gray-500">Category:</span>
+                                    <span class="ml-1 text-gray-900">{{ approval.record.activity.category.name }}</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500">Points:</span>
+                                    <span class="ml-1 font-medium text-gray-900">{{ approval.original_points }}</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500">Submitted:</span>
+                                    <span class="ml-1 text-gray-900">{{ approval.submitted_at|date:"M d" }}</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500">Status:</span>
+                                    <span class="ml-1">
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                            {% if approval.status == 'APPROVED' %}bg-green-100 text-green-800
+                                            {% elif approval.status == 'REJECTED' %}bg-red-100 text-red-800
+                                            {% elif approval.status == 'NEEDS_MORE_INFO' %}bg-amber-100 text-amber-800
+                                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                            {{ approval.get_status_display }}
+                                        </span>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                                <div class="flex items-center space-x-3">
+                                    <a href="{% url 'cpd:approval_detail' approval.pk %}" 
+                                       class="text-sm font-medium text-blue-600 hover:text-blue-700">
+                                        Review →
+                                    </a>
+                                    <a href="{% url 'cpd:record_detail' approval.record.pk %}" 
+                                       class="text-sm font-medium text-gray-600 hover:text-gray-700">
+                                        View Record
+                                    </a>
+                                </div>
+                                <span class="text-xs text-gray-500">{{ approval.submitted_at|timesince }} ago</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        {% if approvals.has_other_pages %}
+            <div class="bg-white border border-gray-200 rounded-lg shadow-sm px-4 py-3 flex items-center justify-between">
+                <div class="flex-1 flex justify-between sm:hidden">
+                    {% if approvals.has_previous %}
+                        <a href="?page={{ approvals.previous_page_number }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            Previous
+                        </a>
+                    {% endif %}
+                    {% if approvals.has_next %}
+                        <a href="?page={{ approvals.next_page_number }}" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            Next
+                        </a>
+                    {% endif %}
+                </div>
+                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                        <p class="text-sm text-gray-700">
+                            Showing
+                            <span class="font-medium">{{ approvals.start_index }}</span>
+                            to
+                            <span class="font-medium">{{ approvals.end_index }}</span>
+                            of
+                            <span class="font-medium">{{ approvals.paginator.count }}</span>
+                            results
+                        </p>
+                    </div>
+                    <div>
+                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                            {% if approvals.has_previous %}
+                                <a href="?page={{ approvals.previous_page_number }}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+                            {% endif %}
+                            
+                            {% for num in approvals.paginator.page_range %}
+                                {% if num == approvals.number %}
+                                    <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-blue-50 text-sm font-medium text-blue-600">
+                                        {{ num }}
+                                    </span>
+                                {% elif num > approvals.number|add:'-3' and num < approvals.number|add:'3' %}
+                                    <a href="?page={{ num }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                        {{ num }}
+                                    </a>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if approvals.has_next %}
+                                <a href="?page={{ approvals.next_page_number }}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            {% endif %}
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% else %}
+        <!-- Empty State -->
+        <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-12 text-center">
+            <i class="bi bi-check-circle text-gray-400 text-4xl mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No submissions found</h3>
+            <p class="text-gray-600 mb-6">
+                {% if request.GET %}
+                    No submissions match your current filters. Try adjusting the filter criteria.
+                {% else %}
+                    All CPD submissions have been processed. Great work!
+                {% endif %}
+            </p>
+            <a href="{% url 'cpd:approval_queue' %}" 
+               class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                View All Submissions
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- JavaScript for bulk actions -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAllCheckbox = document.getElementById('select-all-checkbox');
+    const bulkSubmitBtn = document.getElementById('bulk-submit');
+    const selectedCountSpan = document.getElementById('selected-count');
+    const selectedRecordsInput = document.querySelector('input[name="selected_records"]');
+    
+    function updateBulkActions() {
+        const checkboxes = document.querySelectorAll('.approval-checkbox');
+        const checkedBoxes = document.querySelectorAll('.approval-checkbox:checked');
+        const count = checkedBoxes.length;
+        
+        // Update selected count
+        selectedCountSpan.textContent = count;
+        
+        // Update bulk submit button
+        if (count > 0) {
+            bulkSubmitBtn.disabled = false;
+            bulkSubmitBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+            bulkSubmitBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+        } else {
+            bulkSubmitBtn.disabled = true;
+            bulkSubmitBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
+            bulkSubmitBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+        }
+        
+        // Update selected records input
+        const selectedIds = Array.from(checkedBoxes).map(cb => cb.value);
+        selectedRecordsInput.value = selectedIds.join(',');
+        
+        // Update select all checkbox
+        if (count === checkboxes.length && count > 0) {
+            selectAllCheckbox.checked = true;
+            selectAllCheckbox.indeterminate = false;
+        } else if (count > 0) {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = true;
+        } else {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        }
+    }
+    
+    // Select all functionality
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.approval-checkbox');
+            checkboxes.forEach(cb => cb.checked = this.checked);
+            updateBulkActions();
+        });
+    }
+    
+    // Initial state
+    updateBulkActions();
+    
+    // Make updateBulkActions globally available
+    window.updateBulkActions = updateBulkActions;
+});
+
+function selectAll() {
+    const checkboxes = document.querySelectorAll('.approval-checkbox');
+    checkboxes.forEach(cb => cb.checked = true);
+    updateBulkActions();
+}
+
+function selectNone() {
+    const checkboxes = document.querySelectorAll('.approval-checkbox');
+    checkboxes.forEach(cb => cb.checked = false);
+    updateBulkActions();
+}
+</script>
+{% endblock %}

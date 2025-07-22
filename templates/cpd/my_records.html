@@ -1,0 +1,407 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}My CPD Records | ACRP{% endblock %}
+
+{% block page_title %}My CPD Records{% endblock %}
+
+{% block page_description %}Track and manage your continuing professional development activities{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Summary Statistics -->
+    <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">CPD Summary</h3>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="text-center">
+                <p class="text-2xl font-bold text-gray-900">{{ summary.total_records }}</p>
+                <p class="text-sm text-gray-600">Total Activities</p>
+            </div>
+            <div class="text-center">
+                <p class="text-2xl font-bold text-green-600">{{ summary.total_points|floatformat:1 }}</p>
+                <p class="text-sm text-gray-600">CPD Points</p>
+            </div>
+            <div class="text-center">
+                <p class="text-2xl font-bold text-blue-600">{{ summary.completed_activities }}</p>
+                <p class="text-sm text-gray-600">Completed</p>
+            </div>
+            <div class="text-center">
+                <p class="text-2xl font-bold text-amber-600">{{ summary.pending_approval }}</p>
+                <p class="text-sm text-gray-600">Pending Approval</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Items -->
+    {% if needs_feedback or needs_evidence %}
+        <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
+            <div class="flex">
+                <i class="bi bi-exclamation-triangle text-amber-400 mt-0.5"></i>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-amber-800">Action Required</h3>
+                    <div class="mt-2 text-sm text-amber-700">
+                        {% if needs_feedback %}
+                            <p class="mb-1">You have completed activities that need feedback ratings.</p>
+                        {% endif %}
+                        {% if needs_evidence %}
+                            <p>Some of your activities require additional evidence for approval.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Filters -->
+    <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+        <form method="get" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Period -->
+                <div>
+                    <label for="{{ filter_form.period.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        Period
+                    </label>
+                    {{ filter_form.period }}
+                </div>
+
+                <!-- Status -->
+                <div>
+                    <label for="{{ filter_form.status.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        Status
+                    </label>
+                    {{ filter_form.status }}
+                </div>
+
+                <!-- Category -->
+                <div>
+                    <label for="{{ filter_form.category.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        Category
+                    </label>
+                    {{ filter_form.category }}
+                </div>
+
+                <!-- Approval Status -->
+                <div>
+                    <label for="{{ filter_form.approval_status.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        Approval Status
+                    </label>
+                    {{ filter_form.approval_status }}
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Points Range -->
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label for="{{ filter_form.points_min.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                            Min Points
+                        </label>
+                        {{ filter_form.points_min }}
+                    </div>
+                    <div>
+                        <label for="{{ filter_form.points_max.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                            Max Points
+                        </label>
+                        {{ filter_form.points_max }}
+                    </div>
+                </div>
+
+                <!-- Quick Filters -->
+                <div class="flex items-end space-x-3">
+                    <a href="?needs_feedback=true" 
+                       class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium 
+                              {% if needs_feedback %}text-amber-700 bg-amber-50 border-amber-300{% else %}text-gray-700 bg-white hover:bg-gray-50{% endif %}">
+                        <i class="bi bi-star mr-1"></i>
+                        Needs Feedback
+                    </a>
+                    <a href="?needs_evidence=true" 
+                       class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium 
+                              {% if needs_evidence %}text-red-700 bg-red-50 border-red-300{% else %}text-gray-700 bg-white hover:bg-gray-50{% endif %}">
+                        <i class="bi bi-paperclip mr-1"></i>
+                        Needs Evidence
+                    </a>
+                </div>
+
+                <!-- Filter Actions -->
+                <div class="flex items-end space-x-2">
+                    <button type="submit" 
+                            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <i class="bi bi-funnel mr-2"></i>
+                        Apply Filters
+                    </button>
+                    <a href="{% url 'cpd:my_records' %}" 
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        Clear
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Records Table -->
+    {% if records %}
+        <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="text-lg font-medium text-gray-900">CPD Activities</h3>
+                <div class="flex items-center space-x-2">
+                    <a href="{% url 'cpd:export_my_data' %}" 
+                       class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        <i class="bi bi-download mr-2"></i>
+                        Export CSV
+                    </a>
+                    <a href="{% url 'cpd:activity_create' %}" 
+                       class="inline-flex items-center px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                        <i class="bi bi-plus mr-2"></i>
+                        Add Activity
+                    </a>
+                </div>
+            </div>
+
+            <!-- Desktop Table -->
+            <div class="hidden md:block overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Activity</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Points</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Approval</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for record in records %}
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4">
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-900">{{ record.display_title }}</p>
+                                        <p class="text-xs text-gray-500">{{ record.display_provider }}</p>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-600">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                        {{ record.activity.category.name }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-600">
+                                    {% if record.completion_date %}
+                                        {{ record.completion_date|date:"M d, Y" }}
+                                    {% elif record.attendance_date %}
+                                        {{ record.attendance_date|date:"M d, Y" }}
+                                    {% else %}
+                                        {{ record.created_at|date:"M d, Y" }}
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 text-sm font-medium text-gray-900">
+                                    {% if record.points_awarded %}
+                                        {{ record.points_awarded }}
+                                    {% else %}
+                                        <span class="text-gray-400">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                        {% if record.status == 'COMPLETED' %}bg-green-100 text-green-800
+                                        {% elif record.status == 'REGISTERED' %}bg-blue-100 text-blue-800
+                                        {% elif record.status == 'CANCELLED' %}bg-red-100 text-red-800
+                                        {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                        {{ record.get_status_display }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    {% if record.approval %}
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                            {% if record.approval.status == 'APPROVED' %}bg-green-100 text-green-800
+                                            {% elif record.approval.status == 'REJECTED' %}bg-red-100 text-red-800
+                                            {% elif record.approval.status == 'NEEDS_MORE_INFO' %}bg-amber-100 text-amber-800
+                                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                            {{ record.approval.get_status_display }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-xs text-gray-400">No approval</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 text-sm font-medium">
+                                    <div class="flex items-center space-x-2">
+                                        <a href="{% url 'cpd:record_detail' record.pk %}" 
+                                           class="text-blue-600 hover:text-blue-700">
+                                            View
+                                        </a>
+                                        
+                                        {% if record.status == 'COMPLETED' and not record.user_rating %}
+                                            <span class="text-gray-300">|</span>
+                                            <a href="{% url 'cpd:record_detail' record.pk %}#feedback" 
+                                               class="text-amber-600 hover:text-amber-700">
+                                                Rate
+                                            </a>
+                                        {% endif %}
+                                        
+                                        {% if record.approval and record.approval.status == 'NEEDS_MORE_INFO' %}
+                                            <span class="text-gray-300">|</span>
+                                            <a href="{% url 'cpd:record_detail' record.pk %}#evidence" 
+                                               class="text-red-600 hover:text-red-700">
+                                                Evidence
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Mobile Cards -->
+            <div class="md:hidden">
+                <div class="divide-y divide-gray-200">
+                    {% for record in records %}
+                        <div class="p-4 space-y-3">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-gray-900">{{ record.display_title }}</p>
+                                    <p class="text-xs text-gray-500">{{ record.display_provider }}</p>
+                                </div>
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                    {{ record.activity.category.name }}
+                                </span>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-3 text-sm">
+                                <div>
+                                    <span class="text-gray-500">Date:</span>
+                                    <span class="ml-1 text-gray-900">
+                                        {% if record.completion_date %}
+                                            {{ record.completion_date|date:"M d, Y" }}
+                                        {% else %}
+                                            {{ record.created_at|date:"M d, Y" }}
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500">Points:</span>
+                                    <span class="ml-1 font-medium text-gray-900">
+                                        {% if record.points_awarded %}
+                                            {{ record.points_awarded }}
+                                        {% else %}
+                                            <span class="text-gray-400">Pending</span>
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-2">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                        {% if record.status == 'COMPLETED' %}bg-green-100 text-green-800
+                                        {% elif record.status == 'REGISTERED' %}bg-blue-100 text-blue-800
+                                        {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                        {{ record.get_status_display }}
+                                    </span>
+                                    
+                                    {% if record.approval %}
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                            {% if record.approval.status == 'APPROVED' %}bg-green-100 text-green-800
+                                            {% elif record.approval.status == 'REJECTED' %}bg-red-100 text-red-800
+                                            {% elif record.approval.status == 'NEEDS_MORE_INFO' %}bg-amber-100 text-amber-800
+                                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                            {{ record.approval.get_status_display }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                
+                                <a href="{% url 'cpd:record_detail' record.pk %}" 
+                                   class="text-sm font-medium text-blue-600 hover:text-blue-700">
+                                    View Details →
+                                </a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        {% if records.has_other_pages %}
+            <div class="bg-white border border-gray-200 rounded-lg shadow-sm px-4 py-3 flex items-center justify-between">
+                <div class="flex-1 flex justify-between sm:hidden">
+                    {% if records.has_previous %}
+                        <a href="?page={{ records.previous_page_number }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            Previous
+                        </a>
+                    {% endif %}
+                    {% if records.has_next %}
+                        <a href="?page={{ records.next_page_number }}" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            Next
+                        </a>
+                    {% endif %}
+                </div>
+                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                        <p class="text-sm text-gray-700">
+                            Showing
+                            <span class="font-medium">{{ records.start_index }}</span>
+                            to
+                            <span class="font-medium">{{ records.end_index }}</span>
+                            of
+                            <span class="font-medium">{{ records.paginator.count }}</span>
+                            results
+                        </p>
+                    </div>
+                    <div>
+                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                            {% if records.has_previous %}
+                                <a href="?page={{ records.previous_page_number }}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+                            {% endif %}
+                            
+                            {% for num in records.paginator.page_range %}
+                                {% if num == records.number %}
+                                    <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-blue-50 text-sm font-medium text-blue-600">
+                                        {{ num }}
+                                    </span>
+                                {% elif num > records.number|add:'-3' and num < records.number|add:'3' %}
+                                    <a href="?page={{ num }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                        {{ num }}
+                                    </a>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if records.has_next %}
+                                <a href="?page={{ records.next_page_number }}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            {% endif %}
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% else %}
+        <!-- Empty State -->
+        <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-12 text-center">
+            <i class="bi bi-journal-text text-gray-400 text-4xl mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No CPD records found</h3>
+            <p class="text-gray-600 mb-6">
+                {% if request.GET %}
+                    Try adjusting your filters or clearing them to see all records.
+                {% else %}
+                    Start your CPD journey by registering for activities or submitting completed activities.
+                {% endif %}
+            </p>
+            <div class="space-x-3">
+                <a href="{% url 'cpd:activity_list' %}" 
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    Browse Activities
+                </a>
+                <a href="{% url 'cpd:activity_create' %}" 
+                   class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                    Submit Activity
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

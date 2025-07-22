@@ -1,0 +1,133 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bad Request | ACRP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+</head>
+<body class="h-full bg-gray-50">
+    <div class="min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+        <div class="sm:mx-auto sm:w-full sm:max-w-md">
+            <div class="text-center">
+                <!-- ACRP Logo placeholder -->
+                <div class="mx-auto h-16 w-16 bg-orange-600 rounded-full flex items-center justify-center mb-6">
+                    <i class="bi bi-exclamation-circle text-white text-2xl"></i>
+                </div>
+                <h1 class="text-6xl font-bold text-gray-900 mb-4">400</h1>
+                <h2 class="text-2xl font-semibold text-gray-700 mb-4">Bad Request</h2>
+                <p class="text-gray-600 mb-8">
+                    The request could not be understood by the server. Please check your input and try again.
+                </p>
+            </div>
+        </div>
+
+        <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+            <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-8">
+                <div class="space-y-4">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">What went wrong?</h3>
+                    
+                    <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
+                        <div class="flex">
+                            <i class="bi bi-info-circle text-orange-400 mt-0.5"></i>
+                            <div class="ml-3">
+                                <p class="text-sm text-orange-700">
+                                    The server couldn't process your request due to invalid or malformed data. This often happens with form submissions or URL parameters.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <a href="/" 
+                           class="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <i class="bi bi-house mr-2"></i>
+                            Go to Homepage
+                        </a>
+                        
+                        <button onclick="history.back()" 
+                                class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <i class="bi bi-arrow-left mr-2"></i>
+                            Go Back and Try Again
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <h4 class="text-sm font-medium text-gray-900 mb-3">Common causes:</h4>
+                    <div class="space-y-2 text-sm text-gray-600">
+                        <div class="flex items-start space-x-2">
+                            <i class="bi bi-dot text-gray-400 mt-1"></i>
+                            <span>Invalid form data or missing required fields</span>
+                        </div>
+                        <div class="flex items-start space-x-2">
+                            <i class="bi bi-dot text-gray-400 mt-1"></i>
+                            <span>Corrupted or malformed URL parameters</span>
+                        </div>
+                        <div class="flex items-start space-x-2">
+                            <i class="bi bi-dot text-gray-400 mt-1"></i>
+                            <span>File uploads that are too large or wrong format</span>
+                        </div>
+                        <div class="flex items-start space-x-2">
+                            <i class="bi bi-dot text-gray-400 mt-1"></i>
+                            <span>Browser or network connectivity issues</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <h4 class="text-sm font-medium text-gray-900 mb-3">What you can try:</h4>
+                    <div class="space-y-2 text-sm text-gray-600">
+                        <div class="flex items-start space-x-2">
+                            <i class="bi bi-dot text-gray-400 mt-1"></i>
+                            <span>Double-check all form fields are filled correctly</span>
+                        </div>
+                        <div class="flex items-start space-x-2">
+                            <i class="bi bi-dot text-gray-400 mt-1"></i>
+                            <span>Ensure uploaded files meet size and format requirements</span>
+                        </div>
+                        <div class="flex items-start space-x-2">
+                            <i class="bi bi-dot text-gray-400 mt-1"></i>
+                            <span>Clear your browser cache and cookies</span>
+                        </div>
+                        <div class="flex items-start space-x-2">
+                            <i class="bi bi-dot text-gray-400 mt-1"></i>
+                            <span>Try using a different browser</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <h4 class="text-sm font-medium text-gray-900 mb-3">Quick Links</h4>
+                    <div class="space-y-2">
+                        <a href="/auth/login/" class="block text-sm text-blue-600 hover:text-blue-700">
+                            <i class="bi bi-box-arrow-in-right mr-1"></i>
+                            Login to Your Account
+                        </a>
+                        <a href="/cpd/" class="block text-sm text-blue-600 hover:text-blue-700">
+                            <i class="bi bi-award mr-1"></i>
+                            CPD Dashboard
+                        </a>
+                        <a href="mailto:support@acrpafrica.co.za" class="block text-sm text-blue-600 hover:text-blue-700">
+                            <i class="bi bi-envelope mr-1"></i>
+                            Contact Support
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 text-center">
+            <p class="text-xs text-gray-500">
+                If this problem persists, please contact our support team with details about what you were trying to do.
+            </p>
+            <p class="text-xs text-gray-400 mt-2">
+                Association of Christian Religious Practitioners (ACRP)
+            </p>
+        </div>
+    </div>
+</body>
+</html>

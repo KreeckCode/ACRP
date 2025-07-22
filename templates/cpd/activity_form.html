@@ -1,0 +1,500 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}
+    {% if object %}Edit Activity{% else %}Create Activity{% endif %} | ACRP
+{% endblock %}
+
+{% block page_title %}
+    {% if object %}Edit Activity{% else %}Create New Activity{% endif %}
+{% endblock %}
+
+{% block page_description %}
+    {% if request.user.is_staff %}
+        Add a new CPD activity to the system
+    {% else %}
+        Submit an external CPD activity for approval
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    <!-- Breadcrumb -->
+    <nav class="flex" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+            <li class="inline-flex items-center">
+                <a href="{% url 'cpd:dashboard' %}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600">
+                    <i class="bi bi-house mr-2"></i>
+                    Dashboard
+                </a>
+            </li>
+            <li>
+                <div class="flex items-center">
+                    <i class="bi bi-chevron-right text-gray-400"></i>
+                    <a href="{% url 'cpd:activity_list' %}" class="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2">Activities</a>
+                </div>
+            </li>
+            <li aria-current="page">
+                <div class="flex items-center">
+                    <i class="bi bi-chevron-right text-gray-400"></i>
+                    <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">
+                        {% if object %}Edit{% else %}Create{% endif %}
+                    </span>
+                </div>
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Form Container -->
+    <div class="bg-white border border-gray-200 rounded-lg shadow-sm">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-medium text-gray-900">
+                {% if object %}
+                    Edit Activity: {{ object.title }}
+                {% else %}
+                    {% if request.user.is_staff %}
+                        Create New Activity
+                    {% else %}
+                        Submit External Activity
+                    {% endif %}
+                {% endif %}
+            </h2>
+            <p class="mt-1 text-sm text-gray-600">
+                {% if request.user.is_staff %}
+                    Add a new CPD activity that users can register for or submit completed activities.
+                {% else %}
+                    Submit an external CPD activity you've completed for approval and CPD points.
+                {% endif %}
+            </p>
+        </div>
+
+        <form method="post" class="p-6 space-y-6">
+            {% csrf_token %}
+            
+            <!-- Form Errors -->
+            {% if form.non_field_errors %}
+                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div class="flex">
+                        <i class="bi bi-exclamation-triangle text-red-400 mt-0.5"></i>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-red-800">Please correct the following errors:</h3>
+                            <div class="mt-2 text-sm text-red-700">
+                                {{ form.non_field_errors }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Basic Information -->
+            <div class="space-y-4">
+                <h3 class="text-base font-medium text-gray-900 border-b border-gray-200 pb-2">Basic Information</h3>
+                
+                <div class="grid grid-cols-1 gap-4">
+                    <!-- Title -->
+                    <div>
+                        <label for="{{ form.title.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                            Activity Title <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.title.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-xs text-gray-500">Full title of the CPD activity</p>
+                    </div>
+
+                    <!-- Description -->
+                    <div>
+                        <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                            Description <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.description.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-xs text-gray-500">Detailed description of the activity content and objectives</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Provider Information -->
+            <div class="space-y-4">
+                <h3 class="text-base font-medium text-gray-900 border-b border-gray-200 pb-2">Provider Information</h3>
+                
+                {% if form.provider %}
+                    <!-- Admin Form - Provider Dropdown -->
+                    <div>
+                        <label for="{{ form.provider.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                            Provider <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.provider }}
+                        {% if form.provider.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.provider.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <!-- User Form - Provider Name and Website -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="{{ form.provider_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                                Provider/Organization <span class="text-red-500">*</span>
+                            </label>
+                            {{ form.provider_name }}
+                            {% if form.provider_name.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ form.provider_name.errors.0 }}</p>
+                            {% endif %}
+                            <p class="mt-1 text-xs text-gray-500">Name of the organization providing this activity</p>
+                        </div>
+
+                        <div>
+                            <label for="{{ form.provider_website.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                                Provider Website
+                            </label>
+                            {{ form.provider_website }}
+                            {% if form.provider_website.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ form.provider_website.errors.0 }}</p>
+                            {% endif %}
+                            <p class="mt-1 text-xs text-gray-500">Website of the provider (if available)</p>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Activity Details -->
+            <div class="space-y-4">
+                <h3 class="text-base font-medium text-gray-900 border-b border-gray-200 pb-2">Activity Details</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Category -->
+                    <div>
+                        <label for="{{ form.category.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                            Category <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.category }}
+                        {% if form.category.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.category.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Activity Type -->
+                    <div>
+                        <label for="{{ form.activity_type.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                            Activity Type <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.activity_type }}
+                        {% if form.activity_type.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.activity_type.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Start Date -->
+                    <div>
+                        <label for="{{ form.start_date.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                            Start Date <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.start_date }}
+                        {% if form.start_date.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.start_date.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- End Date -->
+                    <div>
+                        <label for="{{ form.end_date.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                            End Date
+                        </label>
+                        {{ form.end_date }}
+                        {% if form.end_date.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.end_date.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-xs text-gray-500">Leave blank if single day activity</p>
+                    </div>
+
+                    <!-- Duration -->
+                    <div>
+                        <label for="{{ form.duration_hours.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                            Duration (Hours) <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.duration_hours }}
+                        {% if form.duration_hours.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.duration_hours.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-xs text-gray-500">Total hours of participation</p>
+                    </div>
+                </div>
+
+                <!-- Location Information -->
+                <div class="space-y-4">
+                    <!-- Online/Location Toggle -->
+                    {% if form.is_online %}
+                        <div>
+                            <label class="flex items-center space-x-2">
+                                {{ form.is_online }}
+                                <span class="text-sm font-medium text-gray-700">This is an online activity</span>
+                            </label>
+                            {% if form.is_online.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ form.is_online.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Location -->
+                        <div>
+                            <label for="{{ form.location.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                                Location
+                            </label>
+                            {{ form.location }}
+                            {% if form.location.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ form.location.errors.0 }}</p>
+                            {% endif %}
+                            <p class="mt-1 text-xs text-gray-500">Physical location or "Online" for virtual events</p>
+                        </div>
+
+                        <!-- Meeting URL (for online activities) -->
+                        {% if form.meeting_url %}
+                            <div id="meeting-url-field" style="display: none;">
+                                <label for="{{ form.meeting_url.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Meeting URL
+                                </label>
+                                {{ form.meeting_url }}
+                                {% if form.meeting_url.errors %}
+                                    <p class="mt-1 text-sm text-red-600">{{ form.meeting_url.errors.0 }}</p>
+                                {% endif %}
+                                <p class="mt-1 text-xs text-gray-500">Online meeting link for participants</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Information -->
+            <div class="space-y-4">
+                <h3 class="text-base font-medium text-gray-900 border-b border-gray-200 pb-2">Additional Information</h3>
+                
+                <!-- Learning Objectives -->
+                {% if form.learning_objectives %}
+                    <div>
+                        <label for="{{ form.learning_objectives.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                            Learning Objectives
+                        </label>
+                        {{ form.learning_objectives }}
+                        {% if form.learning_objectives.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.learning_objectives.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-xs text-gray-500">What participants will learn from this activity</p>
+                    </div>
+                {% endif %}
+
+                <!-- Website URL -->
+                {% if form.website_url %}
+                    <div>
+                        <label for="{{ form.website_url.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                            Activity Website
+                        </label>
+                        {{ form.website_url }}
+                        {% if form.website_url.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.website_url.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-xs text-gray-500">Link to more information about this activity</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Admin-Only Fields -->
+            {% if request.user.is_staff and form.registration_required %}
+                <div class="space-y-4">
+                    <h3 class="text-base font-medium text-gray-900 border-b border-gray-200 pb-2">Registration Settings</h3>
+                    
+                    <!-- Registration Required -->
+                    <div>
+                        <label class="flex items-center space-x-2">
+                            {{ form.registration_required }}
+                            <span class="text-sm font-medium text-gray-700">Registration required for this activity</span>
+                        </label>
+                        {% if form.registration_required.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.registration_required.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div id="registration-fields" class="grid grid-cols-1 md:grid-cols-3 gap-4" style="display: none;">
+                        <!-- Registration Deadline -->
+                        {% if form.registration_deadline %}
+                            <div>
+                                <label for="{{ form.registration_deadline.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Registration Deadline
+                                </label>
+                                {{ form.registration_deadline }}
+                                {% if form.registration_deadline.errors %}
+                                    <p class="mt-1 text-sm text-red-600">{{ form.registration_deadline.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+
+                        <!-- Max Participants -->
+                        {% if form.max_participants %}
+                            <div>
+                                <label for="{{ form.max_participants.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Max Participants
+                                </label>
+                                {{ form.max_participants }}
+                                {% if form.max_participants.errors %}
+                                    <p class="mt-1 text-sm text-red-600">{{ form.max_participants.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+
+                        <!-- Registration Fee -->
+                        {% if form.registration_fee %}
+                            <div>
+                                <label for="{{ form.registration_fee.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Registration Fee (R)
+                                </label>
+                                {{ form.registration_fee }}
+                                {% if form.registration_fee.errors %}
+                                    <p class="mt-1 text-sm text-red-600">{{ form.registration_fee.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Points and Status -->
+                <div class="space-y-4">
+                    <h3 class="text-base font-medium text-gray-900 border-b border-gray-200 pb-2">Points & Status</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Points Awarded -->
+                        {% if form.points_awarded %}
+                            <div>
+                                <label for="{{ form.points_awarded.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Points Awarded
+                                </label>
+                                {{ form.points_awarded }}
+                                {% if form.points_awarded.errors %}
+                                    <p class="mt-1 text-sm text-red-600">{{ form.points_awarded.errors.0 }}</p>
+                                {% endif %}
+                                <p class="mt-1 text-xs text-gray-500">Leave blank to auto-calculate</p>
+                            </div>
+                        {% endif %}
+
+                        <!-- Approval Status -->
+                        {% if form.approval_status %}
+                            <div>
+                                <label for="{{ form.approval_status.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Approval Status
+                                </label>
+                                {{ form.approval_status }}
+                                {% if form.approval_status.errors %}
+                                    <p class="mt-1 text-sm text-red-600">{{ form.approval_status.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+
+                        <!-- Featured -->
+                        {% if form.is_featured %}
+                            <div class="flex items-center">
+                                <label class="flex items-center space-x-2">
+                                    {{ form.is_featured }}
+                                    <span class="text-sm font-medium text-gray-700">Featured activity</span>
+                                </label>
+                                {% if form.is_featured.errors %}
+                                    <p class="mt-1 text-sm text-red-600">{{ form.is_featured.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Form Actions -->
+            <div class="flex items-center justify-between pt-6 border-t border-gray-200">
+                <div class="flex space-x-3">
+                    <a href="{% url 'cpd:activity_list' %}" 
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <i class="bi bi-arrow-left mr-2"></i>
+                        Cancel
+                    </a>
+                </div>
+                
+                <div class="flex space-x-3">
+                    {% if object %}
+                        <button type="submit" 
+                                class="inline-flex items-center px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <i class="bi bi-check-circle mr-2"></i>
+                            Update Activity
+                        </button>
+                    {% else %}
+                        <button type="submit" 
+                                class="inline-flex items-center px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <i class="bi bi-plus-circle mr-2"></i>
+                            {% if request.user.is_staff %}Create Activity{% else %}Submit for Approval{% endif %}
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Help Text -->
+    {% if not request.user.is_staff %}
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div class="flex">
+                <i class="bi bi-info-circle text-blue-400 mt-0.5"></i>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-blue-800">Submission Guidelines</h3>
+                    <div class="mt-2 text-sm text-blue-700">
+                        <ul class="list-disc list-inside space-y-1">
+                            <li>All external activities require approval before CPD points are awarded</li>
+                            <li>Provide accurate information about the provider and activity details</li>
+                            <li>You may be asked to provide evidence of completion after submission</li>
+                            <li>Processing time is typically 3-5 business days</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- JavaScript for conditional fields -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle online activity toggle
+    const isOnlineField = document.getElementById('{{ form.is_online.id_for_label }}');
+    const meetingUrlField = document.getElementById('meeting-url-field');
+    
+    if (isOnlineField && meetingUrlField) {
+        function toggleMeetingUrl() {
+            if (isOnlineField.checked) {
+                meetingUrlField.style.display = 'block';
+            } else {
+                meetingUrlField.style.display = 'none';
+            }
+        }
+        
+        isOnlineField.addEventListener('change', toggleMeetingUrl);
+        toggleMeetingUrl(); // Initial state
+    }
+    
+    // Handle registration required toggle
+    const registrationRequiredField = document.getElementById('{{ form.registration_required.id_for_label }}');
+    const registrationFields = document.getElementById('registration-fields');
+    
+    if (registrationRequiredField && registrationFields) {
+        function toggleRegistrationFields() {
+            if (registrationRequiredField.checked) {
+                registrationFields.style.display = 'grid';
+            } else {
+                registrationFields.style.display = 'none';
+            }
+        }
+        
+        registrationRequiredField.addEventListener('change', toggleRegistrationFields);
+        toggleRegistrationFields(); // Initial state
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,356 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Generate CPD Report | ACRP{% endblock %}
+
+{% block page_title %}Generate CPD Report{% endblock %}
+
+{% block page_description %}Create custom compliance and performance reports{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    <!-- Breadcrumb -->
+    <nav class="flex" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+            <li class="inline-flex items-center">
+                <a href="{% url 'cpd:dashboard' %}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600">
+                    <i class="bi bi-house mr-2"></i>
+                    Dashboard
+                </a>
+            </li>
+            <li>
+                <div class="flex items-center">
+                    <i class="bi bi-chevron-right text-gray-400"></i>
+                    <a href="{% url 'cpd:analytics_dashboard' %}" class="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2">Analytics</a>
+                </div>
+            </li>
+            <li aria-current="page">
+                <div class="flex items-center">
+                    <i class="bi bi-chevron-right text-gray-400"></i>
+                    <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">Generate Report</span>
+                </div>
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Report Generator Form -->
+    <div class="bg-white border border-gray-200 rounded-lg shadow-sm">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-medium text-gray-900">Custom Report Generator</h2>
+            <p class="mt-1 text-sm text-gray-600">
+                Create detailed compliance reports with custom filters and export options
+            </p>
+        </div>
+
+        <form method="post" class="p-6 space-y-6">
+            {% csrf_token %}
+            
+            <!-- Form Errors -->
+            {% if form.non_field_errors %}
+                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div class="flex">
+                        <i class="bi bi-exclamation-triangle text-red-400 mt-0.5"></i>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-red-800">Please correct the following errors:</h3>
+                            <div class="mt-2 text-sm text-red-700">
+                                {{ form.non_field_errors }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Report Period -->
+            <div class="space-y-4">
+                <h3 class="text-base font-medium text-gray-900 border-b border-gray-200 pb-2">Report Period</h3>
+                
+                <div>
+                    <label for="{{ form.period.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        CPD Period <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.period }}
+                    {% if form.period.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.period.errors.0 }}</p>
+                    {% endif %}
+                    <p class="mt-1 text-xs text-gray-500">Select the CPD period for which to generate the report</p>
+                </div>
+            </div>
+
+            <!-- Participant Filters -->
+            <div class="space-y-4">
+                <h3 class="text-base font-medium text-gray-900 border-b border-gray-200 pb-2">Participant Filters</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Council Filter -->
+                    <div>
+                        <label for="{{ form.council.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                            Council
+                        </label>
+                        {{ form.council }}
+                        {% if form.council.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.council.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-xs text-gray-500">Filter by specific council or include all</p>
+                    </div>
+
+                    <!-- User Level Filter -->
+                    <div>
+                        <label for="{{ form.user_level.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                            User Level
+                        </label>
+                        {{ form.user_level }}
+                        {% if form.user_level.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.user_level.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-xs text-gray-500">Filter by user level or include all</p>
+                    </div>
+                </div>
+
+                <!-- Compliance Status Filter -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-3">
+                        Compliance Status
+                    </label>
+                    <div class="space-y-2">
+                        {% for choice in form.compliance_status %}
+                            <label class="flex items-center space-x-2">
+                                {{ choice.tag }}
+                                <span class="text-sm text-gray-700">{{ choice.choice_label }}</span>
+                            </label>
+                        {% endfor %}
+                    </div>
+                    {% if form.compliance_status.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.compliance_status.errors.0 }}</p>
+                    {% endif %}
+                    <p class="mt-1 text-xs text-gray-500">Select which compliance statuses to include (leave unchecked for all)</p>
+                </div>
+            </div>
+
+            <!-- Report Format -->
+            <div class="space-y-4">
+                <h3 class="text-base font-medium text-gray-900 border-b border-gray-200 pb-2">Export Options</h3>
+                
+                <div>
+                    <label for="{{ form.report_format.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        Report Format <span class="text-red-500">*</span>
+                    </label>
+                    <div class="mt-2 space-y-2">
+                        {% for choice in form.report_format %}
+                            <label class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:border-gray-300 cursor-pointer">
+                                {{ choice.tag }}
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-2">
+                                        {% if choice.choice_value == 'html' %}
+                                            <i class="bi bi-globe text-blue-600"></i>
+                                            <span class="text-sm font-medium text-gray-900">Web Report</span>
+                                        {% elif choice.choice_value == 'pdf' %}
+                                            <i class="bi bi-file-earmark-pdf text-red-600"></i>
+                                            <span class="text-sm font-medium text-gray-900">PDF Report</span>
+                                        {% elif choice.choice_value == 'excel' %}
+                                            <i class="bi bi-file-earmark-spreadsheet text-green-600"></i>
+                                            <span class="text-sm font-medium text-gray-900">Excel Spreadsheet</span>
+                                        {% elif choice.choice_value == 'csv' %}
+                                            <i class="bi bi-file-earmark-text text-gray-600"></i>
+                                            <span class="text-sm font-medium text-gray-900">CSV Data</span>
+                                        {% endif %}
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1">
+                                        {% if choice.choice_value == 'html' %}
+                                            Interactive web-based report for viewing and sharing
+                                        {% elif choice.choice_value == 'pdf' %}
+                                            Professional PDF document for printing and distribution
+                                        {% elif choice.choice_value == 'excel' %}
+                                            Full Excel workbook with charts and formatting
+                                        {% elif choice.choice_value == 'csv' %}
+                                            Raw data file for import into other systems
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </label>
+                        {% endfor %}
+                    </div>
+                    {% if form.report_format.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.report_format.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Include Options -->
+                <div class="space-y-3">
+                    <div>
+                        <label class="flex items-center space-x-2">
+                            {{ form.include_details }}
+                            <span class="text-sm font-medium text-gray-700">Include Activity Details</span>
+                        </label>
+                        {% if form.include_details.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.include_details.errors.0 }}</p>
+                        {% endif %}
+                        <p class="ml-6 text-xs text-gray-500">Include detailed information about each CPD activity</p>
+                    </div>
+
+                    <div>
+                        <label class="flex items-center space-x-2">
+                            {{ form.include_evidence }}
+                            <span class="text-sm font-medium text-gray-700">Include Evidence Summary</span>
+                        </label>
+                        {% if form.include_evidence.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.include_evidence.errors.0 }}</p>
+                        {% endif %}
+                        <p class="ml-6 text-xs text-gray-500">Include summary of evidence files submitted</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Report Preview Information -->
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div class="flex">
+                    <i class="bi bi-info-circle text-blue-400 mt-0.5"></i>
+                    <div class="ml-3">
+                        <h4 class="text-sm font-medium text-blue-800">Report Information</h4>
+                        <div class="mt-2 text-sm text-blue-700">
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>Reports include compliance status, points earned, and activity summaries</li>
+                                <li>Large reports may take a few moments to generate</li>
+                                <li>HTML reports can be shared via URL, other formats will be downloaded</li>
+                                <li>All reports include generation timestamp and filters applied</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="flex items-center justify-between pt-6 border-t border-gray-200">
+                <div class="flex space-x-3">
+                    <a href="{% url 'cpd:analytics_dashboard' %}" 
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <i class="bi bi-arrow-left mr-2"></i>
+                        Back to Analytics
+                    </a>
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button type="submit" 
+                            class="inline-flex items-center px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <i class="bi bi-file-earmark-text mr-2"></i>
+                        Generate Report
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Recent Reports -->
+    <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Recent Reports</h3>
+        
+        <div class="space-y-3">
+            <!-- Placeholder for recent reports - would be populated by view context -->
+            <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-green-50 rounded-lg">
+                        <i class="bi bi-file-earmark-pdf text-green-600"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-900">Compliance Report - 2024 Period</p>
+                        <p class="text-xs text-gray-500">Generated 2 hours ago • PDF • All Councils</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        Complete
+                    </span>
+                    <button class="text-sm font-medium text-blue-600 hover:text-blue-700">
+                        Download
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-blue-50 rounded-lg">
+                        <i class="bi bi-file-earmark-spreadsheet text-blue-600"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-900">Activity Analysis - Q4 2024</p>
+                        <p class="text-xs text-gray-500">Generated yesterday • Excel • At-Risk Users Only</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        Complete
+                    </span>
+                    <button class="text-sm font-medium text-blue-600 hover:text-blue-700">
+                        Download
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-gray-50 rounded-lg">
+                        <i class="bi bi-file-earmark-text text-gray-600"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-900">Data Export - All Participants</p>
+                        <p class="text-xs text-gray-500">Generated 3 days ago • CSV • All Status</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        Complete
+                    </span>
+                    <button class="text-sm font-medium text-blue-600 hover:text-blue-700">
+                        Download
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4 pt-4 border-t border-gray-200">
+            <p class="text-xs text-gray-500">
+                Reports are automatically deleted after 30 days. Download important reports for long-term storage.
+            </p>
+        </div>
+    </div>
+
+    <!-- Quick Report Templates -->
+    <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Quick Report Templates</h3>
+        <p class="text-sm text-gray-600 mb-4">
+            Generate commonly requested reports with pre-configured settings
+        </p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <button class="p-4 border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-sm transition-all text-left">
+                <div class="flex items-center space-x-3 mb-2">
+                    <div class="p-2 bg-green-50 rounded-lg">
+                        <i class="bi bi-check-circle text-green-600"></i>
+                    </div>
+                    <h4 class="font-medium text-gray-900">Compliance Summary</h4>
+                </div>
+                <p class="text-xs text-gray-500">All users, current period, PDF format</p>
+            </button>
+
+            <button class="p-4 border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-sm transition-all text-left">
+                <div class="flex items-center space-x-3 mb-2">
+                    <div class="p-2 bg-red-50 rounded-lg">
+                        <i class="bi bi-exclamation-triangle text-red-600"></i>
+                    </div>
+                    <h4 class="font-medium text-gray-900">At-Risk Users</h4>
+                </div>
+                <p class="text-xs text-gray-500">Non-compliant and at-risk only, Excel format</p>
+            </button>
+
+            <button class="p-4 border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-sm transition-all text-left">
+                <div class="flex items-center space-x-3 mb-2">
+                    <div class="p-2 bg-blue-50 rounded-lg">
+                        <i class="bi bi-bar-chart text-blue-600"></i>
+                    </div>
+                    <h4 class="font-medium text-gray-900">Activity Analysis</h4>
+                </div>
+                <p class="text-xs text-gray-500">Detailed activity breakdown, HTML format</p>
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}

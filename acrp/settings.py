@@ -417,82 +417,92 @@ if not DEBUG:
         'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
     }
 
-# Template optimization
-FORM_RENDERER = 'django.forms.renderers.TemplatesSetting'
-
-# Admin optimization
-ADMIN_MEDIA_PREFIX = '/static/admin/'
 
 # ============================================================================
 # LOGGING CONFIGURATION - Comprehensive and structured
 # ============================================================================
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
-            'style': '{',
+if DEBUG:
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            'verbose': {
+                'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+                'style': '{',
+            },
+            'simple': {
+                'format': '{levelname} {message}',
+                'style': '{',
+            },
+            'json': {
+                '()': 'pythonjsonlogger.jsonlogger.JsonFormatter',
+                'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+            } if not DEBUG else {
+                'format': '{levelname} {asctime} {module} {message}',
+                'style': '{',
+            },
         },
-        'simple': {
-            'format': '{levelname} {message}',
-            'style': '{',
+        'handlers': {
+            'console': {
+                'class': 'logging.StreamHandler',
+                'formatter': 'simple' if DEBUG else 'json',
+            },
+            'file': {
+                'class': 'logging.handlers.RotatingFileHandler',
+                'filename': BASE_DIR / 'logs' / 'acrp.log',
+                'maxBytes': 15728640,  # 15MB
+                'backupCount': 10,
+                'formatter': 'verbose',
+            },
+            'mail_admins': {
+                'level': 'ERROR',
+                'class': 'django.utils.log.AdminEmailHandler',
+                'formatter': 'verbose',
+            },
         },
-        'json': {
-            '()': 'pythonjsonlogger.jsonlogger.JsonFormatter',
-            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
-        } if not DEBUG else {
-            'format': '{levelname} {asctime} {module} {message}',
-            'style': '{',
-        },
-    },
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'simple' if DEBUG else 'json',
-        },
-        'file': {
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': BASE_DIR / 'logs' / 'acrp.log',
-            'maxBytes': 15728640,  # 15MB
-            'backupCount': 10,
-            'formatter': 'verbose',
-        },
-        'mail_admins': {
-            'level': 'ERROR',
-            'class': 'django.utils.log.AdminEmailHandler',
-            'formatter': 'verbose',
-        },
-    },
-    'root': {
-        'level': 'INFO',
-        'handlers': ['console'],
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console', 'file'] if not DEBUG else ['console'],
+        'root': {
             'level': 'INFO',
-            'propagate': False,
+            'handlers': ['console'],
         },
-        'django.db.backends': {
-            'handlers': ['console'] if DEBUG else [],
-            'level': 'DEBUG' if DEBUG else 'WARNING',
-            'propagate': False,
+        'loggers': {
+            'django': {
+                'handlers': ['console', 'file'] if not DEBUG else ['console'],
+                'level': 'INFO',
+                'propagate': False,
+            },
+            'django.db.backends': {
+                'handlers': ['console'] if DEBUG else [],
+                'level': 'DEBUG' if DEBUG else 'WARNING',
+                'propagate': False,
+            },
+            'acrp': {
+                'handlers': ['console', 'file', 'mail_admins'],
+                'level': 'DEBUG' if DEBUG else 'INFO',
+                'propagate': False,
+            },
+            'cpd_tracking': {
+                'handlers': ['console', 'file'],
+                'level': 'DEBUG' if DEBUG else 'INFO',
+                'propagate': False,
+            },
         },
-        'acrp': {
-            'handlers': ['console', 'file', 'mail_admins'],
-            'level': 'DEBUG' if DEBUG else 'INFO',
-            'propagate': False,
+    }
+else:
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'handlers': {
+            'console': {
+                'class': 'logging.StreamHandler',
+            },
         },
-        'cpd_tracking': {
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG' if DEBUG else 'INFO',
-            'propagate': False,
+        'root': {
+            'handlers': ['console'],
+            'level': 'WARNING',
         },
-    },
-}
-
+    }
+    
 # Ensure logs directory exists
 (BASE_DIR / 'logs').mkdir(exist_ok=True)
 

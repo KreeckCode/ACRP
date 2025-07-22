@@ -49,7 +49,7 @@ def is_cpd_admin(user):
     return (
         user.is_staff or 
         user.acrp_role in ['GLOBAL_SDP', 'PROVIDER_ADMIN', 'INTERNAL_FACILITATOR'] or
-        user.groups.filter(name='CPD_Administrators').exists()
+        user.groups.filter(name='CPD_Administrator').exists()
     )
 
 
@@ -588,8 +588,6 @@ def quick_register(request):
             f"You will receive confirmation details via email."
         )
         
-        # Send confirmation email (implement in utils)
-        # send_registration_confirmation(request.user, activity)
         
     else:
         messages.error(request, "Registration failed. Please try again.")

@@ -1,0 +1,215 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}CPD Admin Dashboard | ACRP{% endblock %}
+
+{% block page_title %}CPD Administration{% endblock %}
+
+{% block page_description %}System overview and management dashboard{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- System Overview Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Total Users</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ stats.total_users|default:0 }}</p>
+                </div>
+                <div class="p-3 bg-gray-100 rounded-full">
+                    <i class="bi bi-people text-gray-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Total Activities</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ stats.total_activities|default:0 }}</p>
+                </div>
+                <div class="p-3 bg-blue-50 rounded-full">
+                    <i class="bi bi-calendar-event text-blue-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Pending Approvals</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ stats.pending_approvals|default:0 }}</p>
+                </div>
+                <div class="p-3 bg-amber-50 rounded-full">
+                    <i class="bi bi-clock text-amber-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Compliance Rate</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ stats.compliance_rate|default:0 }}%</p>
+                </div>
+                <div class="p-3 bg-green-50 rounded-full">
+                    <i class="bi bi-check-circle text-green-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <a href="{% url 'cpd:approval_queue' %}" class="block p-4 border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-sm transition-all">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-blue-50 rounded-lg">
+                        <i class="bi bi-check-square text-blue-600"></i>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-900">Review Approvals</p>
+                        <p class="text-sm text-gray-600">{{ stats.pending_approvals|default:0 }} pending</p>
+                    </div>
+                </div>
+            </a>
+
+            <a href="{% url 'cpd:analytics_dashboard' %}" class="block p-4 border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-sm transition-all">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-green-50 rounded-lg">
+                        <i class="bi bi-bar-chart text-green-600"></i>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-900">View Analytics</p>
+                        <p class="text-sm text-gray-600">System insights</p>
+                    </div>
+                </div>
+            </a>
+
+            <a href="{% url 'cpd:generate_report' %}" class="block p-4 border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-sm transition-all">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-gray-50 rounded-lg">
+                        <i class="bi bi-file-earmark-text text-gray-600"></i>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-900">Generate Reports</p>
+                        <p class="text-sm text-gray-600">Export data</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Compliance Overview -->
+        <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Compliance Overview</h3>
+            {% if current_period %}
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Compliant</span>
+                        <span class="font-medium text-green-600">{{ stats.compliant|default:0 }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">At Risk</span>
+                        <span class="font-medium text-amber-600">{{ stats.at_risk|default:0 }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Non-Compliant</span>
+                        <span class="font-medium text-red-600">{{ stats.non_compliant|default:0 }}</span>
+                    </div>
+                    <div class="pt-4 border-t border-gray-200">
+                        <div class="text-sm text-gray-600 mb-2">Overall Progress</div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-blue-600 h-2 rounded-full" style="width: {{ stats.compliance_rate|default:0 }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <p class="text-sm text-gray-500">No active CPD period found.</p>
+            {% endif %}
+        </div>
+
+        <!-- System Health -->
+        <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">System Health</h3>
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-3 h-3 bg-{% if health_indicators.overdue_reviews > 0 %}red{% else %}green{% endif %}-500 rounded-full"></div>
+                        <span class="text-sm text-gray-600">Overdue Reviews</span>
+                    </div>
+                    <span class="font-medium">{{ health_indicators.overdue_reviews|default:0 }}</span>
+                </div>
+                
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-3 h-3 bg-{% if health_indicators.categories_without_activities > 0 %}amber{% else %}green{% endif %}-500 rounded-full"></div>
+                        <span class="text-sm text-gray-600">Empty Categories</span>
+                    </div>
+                    <span class="font-medium">{{ health_indicators.categories_without_activities|default:0 }}</span>
+                </div>
+                
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-3 h-3 bg-gray-400 rounded-full"></div>
+                        <span class="text-sm text-gray-600">Inactive Providers</span>
+                    </div>
+                    <span class="font-medium">{{ health_indicators.inactive_providers|default:0 }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activities & Urgent Approvals -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Recent Activities -->
+        <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Recent Activities</h3>
+            {% if recent_activities %}
+                <div class="space-y-4">
+                    {% for activity in recent_activities %}
+                        <div class="border-l-4 border-blue-200 pl-4 py-2">
+                            <p class="font-medium text-gray-900">{{ activity.title }}</p>
+                            <p class="text-sm text-gray-600">{{ activity.provider.name }}</p>
+                            <p class="text-xs text-gray-500">{{ activity.created_at|date:"M d, Y" }}</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-sm text-gray-500">No recent activities.</p>
+            {% endif %}
+        </div>
+
+        <!-- Urgent Approvals -->
+        <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Urgent Approvals</h3>
+            {% if urgent_approvals %}
+                <div class="space-y-4">
+                    {% for approval in urgent_approvals %}
+                        <div class="border-l-4 border-red-300 pl-4 py-2">
+                            <p class="font-medium text-gray-900">{{ approval.record.user.get_full_name }}</p>
+                            <p class="text-sm text-gray-600">{{ approval.record.activity.title }}</p>
+                            <div class="flex items-center space-x-2 mt-1">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                    {{ approval.get_priority_display }}
+                                </span>
+                                <span class="text-xs text-gray-500">{{ approval.submitted_at|timesince }} ago</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="mt-4 pt-4 border-t border-gray-200">
+                    <a href="{% url 'cpd:approval_queue' %}" class="text-sm font-medium text-blue-600 hover:text-blue-700">
+                        View all approvals →
+                    </a>
+                </div>
+            {% else %}
+                <p class="text-sm text-gray-500">No urgent approvals.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

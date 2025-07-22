@@ -1,9 +1,9 @@
 from django.contrib import admin
 from .models import *
 
-admin.register(AffiliationCard)
-admin.register(CardTemplate)
-admin.register(CardDelivery)
-admin.register(CardStatusChange)
-admin.register(CardSystemSettings)
-admin.register(CardVerification)
+admin.site.register(AffiliationCard)
+admin.site.register(CardTemplate)
+admin.site.register(CardDelivery)
+admin.site.register(CardStatusChange)
+admin.site.register(CardSystemSettings)
+admin.site.register(CardVerification)

@@ -1,0 +1,547 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Review CPD Submission | ACRP{% endblock %}
+
+{% block page_title %}CPD Approval Review{% endblock %}
+
+{% block page_description %}{{ approval.record.display_title }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Breadcrumb -->
+    <nav class="flex" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+            <li class="inline-flex items-center">
+                <a href="{% url 'cpd:dashboard' %}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600">
+                    <i class="bi bi-house mr-2"></i>
+                    Dashboard
+                </a>
+            </li>
+            <li>
+                <div class="flex items-center">
+                    <i class="bi bi-chevron-right text-gray-400"></i>
+                    <a href="{% url 'cpd:approval_queue' %}" class="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2">Approval Queue</a>
+                </div>
+            </li>
+            <li aria-current="page">
+                <div class="flex items-center">
+                    <i class="bi bi-chevron-right text-gray-400"></i>
+                    <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">Review Submission</span>
+                </div>
+            </li>
+        </ol>
+    </nav>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Main Content -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Submission Header -->
+            <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex-1">
+                        <h1 class="text-2xl font-bold text-gray-900 mb-2">{{ approval.record.display_title }}</h1>
+                        <p class="text-lg text-gray-600">{{ approval.record.display_provider }}</p>
+                        <p class="text-sm text-gray-500 mt-1">
+                            Submitted by {{ approval.record.user.get_full_name }} 
+                            ({{ approval.record.user.email }})
+                        </p>
+                    </div>
+                    <div class="flex flex-col items-end space-y-2">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
+                            {% if approval.status == 'APPROVED' %}bg-green-100 text-green-800
+                            {% elif approval.status == 'REJECTED' %}bg-red-100 text-red-800
+                            {% elif approval.status == 'NEEDS_MORE_INFO' %}bg-amber-100 text-amber-800
+                            {% elif approval.status == 'UNDER_REVIEW' %}bg-blue-100 text-blue-800
+                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ approval.get_status_display }}
+                        </span>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
+                            {% if approval.priority == 'URGENT' %}bg-red-100 text-red-800
+                            {% elif approval.priority == 'HIGH' %}bg-amber-100 text-amber-800
+                            {% elif approval.priority == 'LOW' %}bg-gray-100 text-gray-600
+                            {% else %}bg-blue-100 text-blue-800{% endif %}">
+                            {{ approval.get_priority_display }} Priority
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Key Submission Details -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="flex items-center space-x-3">
+                        <div class="p-2 bg-blue-50 rounded-lg">
+                            <i class="bi bi-tag text-blue-600"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">Category</p>
+                            <p class="text-sm text-gray-600">{{ approval.record.activity.category.name }}</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-3">
+                        <div class="p-2 bg-green-50 rounded-lg">
+                            <i class="bi bi-clock text-green-600"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">Duration</p>
+                            <p class="text-sm text-gray-600">{{ approval.record.final_hours|default:approval.record.activity.duration_hours }} hours</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-3">
+                        <div class="p-2 bg-yellow-50 rounded-lg">
+                            <i class="bi bi-award text-yellow-600"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">Points Requested</p>
+                            <p class="text-sm text-gray-600">{{ approval.original_points }} points</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-3">
+                        <div class="p-2 bg-purple-50 rounded-lg">
+                            <i class="bi bi-calculator text-purple-600"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">Recommended Points</p>
+                            <p class="text-sm text-gray-600">{{ recommended_points }} points</p>
+                            {% if recommended_points != approval.original_points %}
+                                <p class="text-xs text-amber-600">Differs from requested</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-3">
+                        <div class="p-2 bg-indigo-50 rounded-lg">
+                            <i class="bi bi-calendar3 text-indigo-600"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">Period</p>
+                            <p class="text-sm text-gray-600">{{ approval.record.period.name }}</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-3">
+                        <div class="p-2 bg-gray-50 rounded-lg">
+                            <i class="bi bi-clock-history text-gray-600"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">Submitted</p>
+                            <p class="text-sm text-gray-600">{{ approval.submitted_at|date:"F d, Y g:i A" }}</p>
+                            <p class="text-xs text-gray-500">{{ approval.submitted_at|timesince }} ago</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Activity Dates -->
+                {% if approval.record.attendance_date or approval.record.completion_date %}
+                    <div class="pt-4 border-t border-gray-200">
+                        <h4 class="text-sm font-medium text-gray-900 mb-3">Activity Dates</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {% if approval.record.attendance_date %}
+                                <div class="flex items-center space-x-3">
+                                    <div class="p-2 bg-blue-50 rounded-lg">
+                                        <i class="bi bi-calendar-check text-blue-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-900">Attendance Date</p>
+                                        <p class="text-sm text-gray-600">{{ approval.record.attendance_date|date:"F d, Y" }}</p>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            {% if approval.record.completion_date %}
+                                <div class="flex items-center space-x-3">
+                                    <div class="p-2 bg-green-50 rounded-lg">
+                                        <i class="bi bi-check-circle text-green-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-900">Completion Date</p>
+                                        <p class="text-sm text-gray-600">{{ approval.record.completion_date|date:"F d, Y" }}</p>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Notes -->
+                {% if approval.record.notes %}
+                    <div class="pt-4 border-t border-gray-200">
+                        <h4 class="text-sm font-medium text-gray-900 mb-2">Participant Notes</h4>
+                        <p class="text-sm text-gray-600 bg-gray-50 rounded-lg p-3">{{ approval.record.notes }}</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Activity Information -->
+            <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Activity Information</h3>
+                
+                <div class="space-y-4">
+                    {% if approval.record.activity.description %}
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-900 mb-2">Description</h4>
+                            <div class="prose prose-sm max-w-none text-gray-600 bg-gray-50 rounded-lg p-3">
+                                {{ approval.record.activity.description|linebreaks }}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if approval.record.activity.learning_objectives %}
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-900 mb-2">Learning Objectives</h4>
+                            <div class="prose prose-sm max-w-none text-gray-600 bg-gray-50 rounded-lg p-3">
+                                {{ approval.record.activity.learning_objectives|linebreaks }}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-200">
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-900 mb-2">Provider Details</h4>
+                            <div class="space-y-1">
+                                <p class="text-sm text-gray-600">{{ approval.record.activity.provider.name }}</p>
+                                {% if approval.record.activity.provider.provider_type %}
+                                    <p class="text-xs text-gray-500">{{ approval.record.activity.provider.get_provider_type_display }}</p>
+                                {% endif %}
+                                {% if approval.record.activity.provider.website %}
+                                    <a href="{{ approval.record.activity.provider.website }}" target="_blank" 
+                                       class="text-sm text-blue-600 hover:text-blue-700">
+                                        Visit Provider Website
+                                        <i class="bi bi-arrow-up-right-square ml-1"></i>
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        {% if approval.record.activity.website_url %}
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-900 mb-2">Activity Website</h4>
+                                <a href="{{ approval.record.activity.website_url }}" target="_blank" 
+                                   class="text-sm text-blue-600 hover:text-blue-700">
+                                    View Activity Details
+                                    <i class="bi bi-arrow-up-right-square ml-1"></i>
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Evidence Files -->
+            <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">Supporting Evidence</h3>
+                    {% if evidence_files %}
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            {{ evidence_files|length }} file{{ evidence_files|length|pluralize }}
+                        </span>
+                    {% endif %}
+                </div>
+
+                {% if evidence_files %}
+                    <div class="space-y-3">
+                        {% for evidence in evidence_files %}
+                            <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors">
+                                <div class="flex items-center space-x-3">
+                                    <div class="p-2 bg-blue-50 rounded-lg">
+                                        <i class="bi bi-file-earmark text-blue-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-900">{{ evidence.original_filename }}</p>
+                                        <p class="text-xs text-gray-500">
+                                            {{ evidence.get_evidence_type_display }} • 
+                                            Uploaded {{ evidence.uploaded_at|date:"M d, Y g:i A" }}
+                                            {% if evidence.is_verified %}
+                                                • <span class="text-green-600 font-medium">Verified</span>
+                                            {% else %}
+                                                • <span class="text-amber-600">Pending Verification</span>
+                                            {% endif %}
+                                        </p>
+                                        {% if evidence.description %}
+                                            <p class="text-xs text-gray-600 mt-1">{{ evidence.description }}</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-3">
+                                    {% if evidence.is_verified %}
+                                        <i class="bi bi-patch-check text-green-500 text-lg"></i>
+                                    {% else %}
+                                        <i class="bi bi-clock text-amber-500 text-lg"></i>
+                                    {% endif %}
+                                    <a href="{{ evidence.file.url }}" target="_blank" 
+                                       class="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                                        <i class="bi bi-eye mr-1"></i>
+                                        View
+                                    </a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-8">
+                        <i class="bi bi-file-earmark-x text-gray-400 text-3xl mb-2"></i>
+                        <p class="text-sm text-gray-600">No supporting evidence provided</p>
+                        <p class="text-xs text-gray-500 mt-1">Consider requiring additional documentation for approval</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Previous Review History -->
+            {% if approval.reviewed_at %}
+                <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Review History</h3>
+                    <div class="space-y-3">
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <div class="flex items-start justify-between mb-2">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">
+                                        {{ approval.reviewer.get_full_name|default:"System" }}
+                                    </p>
+                                    <p class="text-xs text-gray-500">{{ approval.reviewed_at|date:"F d, Y g:i A" }}</p>
+                                </div>
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                    {% if approval.status == 'APPROVED' %}bg-green-100 text-green-800
+                                    {% elif approval.status == 'REJECTED' %}bg-red-100 text-red-800
+                                    {% elif approval.status == 'NEEDS_MORE_INFO' %}bg-amber-100 text-amber-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ approval.get_status_display }}
+                                </span>
+                            </div>
+                            
+                            {% if approval.reviewer_comments %}
+                                <p class="text-sm text-gray-700 mb-2">{{ approval.reviewer_comments }}</p>
+                            {% endif %}
+                            
+                            {% if approval.status == 'REJECTED' and approval.rejection_reason %}
+                                <div class="pt-2 border-t border-gray-200">
+                                    <p class="text-xs font-medium text-red-900 mb-1">Rejection Reason:</p>
+                                    <p class="text-sm text-red-700">{{ approval.rejection_reason }}</p>
+                                </div>
+                            {% endif %}
+                            
+                            {% if approval.adjusted_points and approval.adjusted_points != approval.original_points %}
+                                <div class="pt-2 border-t border-gray-200">
+                                    <p class="text-xs text-gray-600">
+                                        Points adjusted: {{ approval.original_points }} → {{ approval.adjusted_points }}
+                                        {% if approval.adjustment_reason %}
+                                            <br><span class="text-xs text-gray-500">Reason: {{ approval.adjustment_reason }}</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar - Approval Form -->
+        <div class="space-y-6">
+            <!-- Approval Decision Form -->
+            <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Approval Decision</h3>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <!-- Form Errors -->
+                    {% if form.non_field_errors %}
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                            <div class="text-sm text-red-700">
+                                {{ form.non_field_errors }}
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="space-y-4">
+                        <!-- Status -->
+                        <div>
+                            <label for="{{ form.status.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                                Decision <span class="text-red-500">*</span>
+                            </label>
+                            {{ form.status }}
+                            {% if form.status.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ form.status.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Priority -->
+                        <div>
+                            <label for="{{ form.priority.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                                Priority
+                            </label>
+                            {{ form.priority }}
+                            {% if form.priority.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ form.priority.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Adjusted Points -->
+                        <div>
+                            <label for="{{ form.adjusted_points.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                                Awarded Points
+                            </label>
+                            {{ form.adjusted_points }}
+                            {% if form.adjusted_points.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ form.adjusted_points.errors.0 }}</p>
+                            {% endif %}
+                            <p class="mt-1 text-xs text-gray-500">
+                                Original request: {{ approval.original_points }} points<br>
+                                Recommended: {{ recommended_points }} points
+                            </p>
+                        </div>
+
+                        <!-- Adjustment Reason -->
+                        <div id="adjustment-reason-field" style="display: none;">
+                            <label for="{{ form.adjustment_reason.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                                Adjustment Reason
+                            </label>
+                            {{ form.adjustment_reason }}
+                            {% if form.adjustment_reason.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ form.adjustment_reason.errors.0 }}</p>
+                            {% endif %}
+                            <p class="mt-1 text-xs text-gray-500">Explain why points were adjusted</p>
+                        </div>
+
+                        <!-- Reviewer Comments -->
+                        <div>
+                            <label for="{{ form.reviewer_comments.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                                Comments
+                            </label>
+                            {{ form.reviewer_comments }}
+                            {% if form.reviewer_comments.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ form.reviewer_comments.errors.0 }}</p>
+                            {% endif %}
+                            <p class="mt-1 text-xs text-gray-500">General comments about this submission</p>
+                        </div>
+
+                        <!-- Rejection Reason -->
+                        <div id="rejection-reason-field" style="display: none;">
+                            <label for="{{ form.rejection_reason.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                                Rejection Reason <span class="text-red-500">*</span>
+                            </label>
+                            {{ form.rejection_reason }}
+                            {% if form.rejection_reason.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ form.rejection_reason.errors.0 }}</p>
+                            {% endif %}
+                            <p class="mt-1 text-xs text-gray-500">Detailed reason for rejection</p>
+                        </div>
+                    </div>
+
+                    <!-- Submit Actions -->
+                    <div class="mt-6 pt-4 border-t border-gray-200">
+                        <div class="flex space-x-3">
+                            <button type="submit" 
+                                    class="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <i class="bi bi-check-circle mr-2"></i>
+                                Submit Decision
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
+                <div class="space-y-3">
+                    <a href="{% url 'cpd:approval_queue' %}" 
+                       class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        <i class="bi bi-arrow-left mr-2"></i>
+                        Back to Queue
+                    </a>
+                    
+                    <a href="{% url 'cpd:record_detail' approval.record.pk %}" 
+                       class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        <i class="bi bi-file-earmark-text mr-2"></i>
+                        View Full Record
+                    </a>
+                    
+                    {% if approval.record.activity %}
+                        <a href="{% url 'cpd:activity_detail' approval.record.activity.pk %}" 
+                           class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                            <i class="bi bi-info-circle mr-2"></i>
+                            View Activity Details
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- User Information -->
+            <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Participant Information</h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Name:</span>
+                        <span class="text-sm font-medium text-gray-900">{{ approval.record.user.get_full_name }}</span>
+                    </div>
+                    
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Email:</span>
+                        <a href="mailto:{{ approval.record.user.email }}" class="text-sm text-blue-600 hover:text-blue-700">
+                            {{ approval.record.user.email }}
+                        </a>
+                    </div>
+                    
+                    {% if approval.record.user.acrp_role %}
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Role:</span>
+                            <span class="text-sm text-gray-900">{{ approval.record.user.get_acrp_role_display }}</span>
+                        </div>
+                    {% endif %}
+                    
+                    {% if approval.record.user.council %}
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Council:</span>
+                            <span class="text-sm text-gray-900">{{ approval.record.user.get_council_display }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for conditional fields -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const statusField = document.getElementById('{{ form.status.id_for_label }}');
+    const rejectionReasonField = document.getElementById('rejection-reason-field');
+    const adjustedPointsField = document.getElementById('{{ form.adjusted_points.id_for_label }}');
+    const adjustmentReasonField = document.getElementById('adjustment-reason-field');
+    const originalPoints = {{ approval.original_points }};
+    
+    function toggleConditionalFields() {
+        const status = statusField.value;
+        
+        // Show/hide rejection reason field
+        if (status === 'REJECTED') {
+            rejectionReasonField.style.display = 'block';
+        } else {
+            rejectionReasonField.style.display = 'none';
+        }
+    }
+    
+    function toggleAdjustmentReason() {
+        const adjustedPoints = parseFloat(adjustedPointsField.value) || 0;
+        
+        // Show adjustment reason if points are different from original
+        if (adjustedPoints !== originalPoints && adjustedPoints > 0) {
+            adjustmentReasonField.style.display = 'block';
+        } else {
+            adjustmentReasonField.style.display = 'none';
+        }
+    }
+    
+    // Event listeners
+    statusField.addEventListener('change', toggleConditionalFields);
+    adjustedPointsField.addEventListener('input', toggleAdjustmentReason);
+    
+    // Initial state
+    toggleConditionalFields();
+    toggleAdjustmentReason();
+});
+</script>
+{% endblock %}
