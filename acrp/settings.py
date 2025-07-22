@@ -82,7 +82,8 @@ PROJECT_APPS = [
     'accounts',
     'app',
     'enrollments',
-    'cpd_tracking',  # Added your new CPD app
+    'cpd', 
+    'affiliationcard',
 ]
 
 # Combine all apps
@@ -166,12 +167,15 @@ TEMPLATES = [
 
 # Default database configuration
 DATABASES = {
-    'default': dj_database_url.config(
-        default=config('DATABASE_URL', default=f'sqlite:///{BASE_DIR}/db.sqlite3'),
-        conn_max_age=600,  # Connection pooling
-        conn_health_checks=True,
-    )
-}
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': config('DB_NAME'),
+            'USER': config('DB_USER'),
+            'PASSWORD': config('DB_PASS'),
+            'HOST': config('DB_HOST'), 
+            'PORT': config('DB_PORT'),  
+        }
+    }
 
 # Database optimization settings
 DATABASE_OPTIONS = {
@@ -271,8 +275,8 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # Login/Logout settings
-LOGIN_URL = '/accounts/login/'
-LOGIN_REDIRECT_URL = '/app/'
+LOGIN_REDIRECT_URL = '/'
+LOGIN_URL = '/auth/login/'
 LOGOUT_REDIRECT_URL = '/'
 
 # Password reset settings
@@ -536,10 +540,10 @@ ENROLLMENT_SETTINGS = {
 APP_SETTINGS = {
     'SITE_NAME': 'ACRP Africa',
     'SITE_DESCRIPTION': 'Association of Christian Religious Practitioners',
-    'CONTACT_EMAIL': config('CONTACT_EMAIL', default='info@acrp.com'),
-    'SUPPORT_EMAIL': config('SUPPORT_EMAIL', default='support@acrp.com'),
-    'MAX_LOGIN_ATTEMPTS': 5,
-    'LOGIN_LOCKOUT_DURATION': 300,  # 5 minutes
+    'CONTACT_EMAIL': config('CONTACT_EMAIL', default='info@acrp.org.za'),
+    'SUPPORT_EMAIL': config('SUPPORT_EMAIL', default='acrp@acrpafrica.co.za'),
+    'MAX_LOGIN_ATTEMPTS': 10,
+    'LOGIN_LOCKOUT_DURATION': 500,  # 5 minutes
 }
 
 # ============================================================================
