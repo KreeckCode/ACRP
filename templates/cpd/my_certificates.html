@@ -1,0 +1,486 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}My Certificates | ACRP{% endblock %}
+
+{% block page_title %}My CPD Certificates{% endblock %}
+
+{% block page_description %}View, download, and verify your issued CPD certificates{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Breadcrumb -->
+    <nav class="flex" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+            <li class="inline-flex items-center">
+                <a href="{% url 'cpd:dashboard' %}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600">
+                    <i class="bi bi-house mr-2"></i>
+                    Dashboard
+                </a>
+            </li>
+            <li aria-current="page">
+                <div class="flex items-center">
+                    <i class="bi bi-chevron-right text-gray-400"></i>
+                    <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">My Certificates</span>
+                </div>
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Certificate Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Total Certificates</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ certificates.count }}</p>
+                </div>
+                <div class="p-3 bg-blue-50 rounded-full">
+                    <i class="bi bi-award text-blue-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="mt-2">
+                <span class="text-xs text-gray-500">All time earned</span>
+            </div>
+        </div>
+
+        <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Valid Certificates</p>
+                    <p class="text-2xl font-semibold text-green-600">{{ valid_certificates_count|default:0 }}</p>
+                </div>
+                <div class="p-3 bg-green-50 rounded-full">
+                    <i class="bi bi-check-circle text-green-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="mt-2">
+                <span class="text-xs text-gray-500">Currently active</span>
+            </div>
+        </div>
+
+        <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Expiring Soon</p>
+                    <p class="text-2xl font-semibold text-amber-600">{{ expiring_soon_count|default:0 }}</p>
+                </div>
+                <div class="p-3 bg-amber-50 rounded-full">
+                    <i class="bi bi-exclamation-triangle text-amber-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="mt-2">
+                <span class="text-xs text-gray-500">Within 90 days</span>
+            </div>
+        </div>
+
+        <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Latest Certificate</p>
+                    <p class="text-2xl font-semibold text-gray-900">
+                        {% if latest_certificate %}
+                            {{ latest_certificate.issue_date|date:"M Y" }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="p-3 bg-purple-50 rounded-full">
+                    <i class="bi bi-calendar-event text-purple-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="mt-2">
+                <span class="text-xs text-gray-500">Most recent issue</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters and Search -->
+    <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+        <form method="get" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Status Filter -->
+                <div>
+                    <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select name="status" id="status" class="w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        <option value="" {% if not request.GET.status %}selected{% endif %}>All Status</option>
+                        <option value="valid" {% if request.GET.status == 'valid' %}selected{% endif %}>Valid</option>
+                        <option value="expired" {% if request.GET.status == 'expired' %}selected{% endif %}>Expired</option>
+                        <option value="expiring_soon" {% if request.GET.status == 'expiring_soon' %}selected{% endif %}>Expiring Soon</option>
+                    </select>
+                </div>
+
+                <!-- Period Filter -->
+                <div>
+                    <label for="period" class="block text-sm font-medium text-gray-700 mb-1">Period</label>
+                    <select name="period" id="period" class="w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        <option value="" {% if not request.GET.period %}selected{% endif %}>All Periods</option>
+                        {% for period in available_periods %}
+                            <option value="{{ period.pk }}" {% if request.GET.period == period.pk|stringformat:"s" %}selected{% endif %}>
+                                {{ period.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Filter Actions -->
+                <div class="flex items-end space-x-2">
+                    <button type="submit" 
+                            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <i class="bi bi-funnel mr-2"></i>
+                        Apply Filters
+                    </button>
+                    <a href="{% url 'cpd:my_certificates' %}" 
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        Clear
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Certificates List -->
+    {% if certificates %}
+        <div class="space-y-4">
+            {% for certificate in certificates %}
+                <div class="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                    <div class="p-6">
+                        <div class="flex items-start justify-between">
+                            <!-- Certificate Information -->
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-3 mb-3">
+                                    <div class="p-2 bg-blue-50 rounded-lg">
+                                        <i class="bi bi-award text-blue-600 text-lg"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-lg font-medium text-gray-900">
+                                            CPD Certificate - {{ certificate.period.name }}
+                                        </h3>
+                                        <p class="text-sm text-gray-600">
+                                            Certificate #{{ certificate.certificate_number }}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                                    <div>
+                                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Issue Date</p>
+                                        <p class="text-sm text-gray-900 mt-1">{{ certificate.issue_date|date:"F d, Y" }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Expiry Date</p>
+                                        <p class="text-sm text-gray-900 mt-1">{{ certificate.expiry_date|date:"F d, Y" }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Points Certified</p>
+                                        <p class="text-sm text-gray-900 mt-1">{{ certificate.points_certified }} points</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Hours Certified</p>
+                                        <p class="text-sm text-gray-900 mt-1">{{ certificate.hours_certified }} hours</p>
+                                    </div>
+                                </div>
+
+                                <!-- Compliance Information -->
+                                {% if certificate.compliance %}
+                                    <div class="bg-gray-50 rounded-lg p-3 mb-4">
+                                        <h4 class="text-sm font-medium text-gray-900 mb-2">Compliance Summary</h4>
+                                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                                            <div>
+                                                <span class="text-gray-600">Status:</span>
+                                                <span class="ml-1 font-medium
+                                                    {% if certificate.compliance.compliance_status == 'COMPLIANT' %}text-green-600
+                                                    {% elif certificate.compliance.compliance_status == 'AT_RISK' %}text-amber-600
+                                                    {% else %}text-red-600{% endif %}">
+                                                    {{ certificate.compliance.get_compliance_status_display }}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <span class="text-gray-600">Total Points:</span>
+                                                <span class="ml-1 font-medium text-gray-900">{{ certificate.compliance.total_points_earned }}</span>
+                                            </div>
+                                            <div>
+                                                <span class="text-gray-600">Total Hours:</span>
+                                                <span class="ml-1 font-medium text-gray-900">{{ certificate.compliance.total_hours_completed }}</span>
+                                            </div>
+                                            <div>
+                                                <span class="text-gray-600">Activities:</span>
+                                                <span class="ml-1 font-medium text-gray-900">{{ certificate.compliance.total_activities_completed }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Status and Actions -->
+                            <div class="flex flex-col items-end space-y-3 ml-6">
+                                <!-- Status Badge -->
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
+                                    {% if certificate.is_valid %}
+                                        {% if certificate.is_expiring_soon %}
+                                            bg-amber-100 text-amber-800
+                                        {% else %}
+                                            bg-green-100 text-green-800
+                                        {% endif %}
+                                    {% else %}
+                                        bg-red-100 text-red-800
+                                    {% endif %}">
+                                    {% if certificate.is_valid %}
+                                        {% if certificate.is_expiring_soon %}
+                                            <i class="bi bi-exclamation-triangle mr-1"></i>
+                                            Expiring Soon
+                                        {% else %}
+                                            <i class="bi bi-check-circle mr-1"></i>
+                                            Valid
+                                        {% endif %}
+                                    {% else %}
+                                        <i class="bi bi-x-circle mr-1"></i>
+                                        Expired
+                                    {% endif %}
+                                </span>
+
+                                <!-- Action Buttons -->
+                                <div class="flex flex-col space-y-2">
+                                    <a href="{% url 'cpd:certificate_verification' certificate.verification_token %}" 
+                                       target="_blank"
+                                       class="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                                        <i class="bi bi-shield-check mr-1"></i>
+                                        Verify
+                                    </a>
+                                    
+                                    <a href="{% url 'cpd:download_certificate' certificate.pk %}" 
+                                       class="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                                        <i class="bi bi-download mr-1"></i>
+                                        Download
+                                    </a>
+                                    
+                                    <button onclick="copyCertificateUrl('{{ certificate.verification_token }}')" 
+                                            class="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                                        <i class="bi bi-link-45deg mr-1"></i>
+                                        Share Link
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Expiry Warning -->
+                        {% if certificate.is_expiring_soon and certificate.is_valid %}
+                            <div class="mt-4 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                                <div class="flex">
+                                    <i class="bi bi-exclamation-triangle text-amber-400 mt-0.5"></i>
+                                    <div class="ml-3">
+                                        <p class="text-sm text-amber-700">
+                                            <strong>Expiring Soon:</strong> This certificate will expire on {{ certificate.expiry_date|date:"F d, Y" }}. 
+                                            Make sure to complete your CPD requirements for the next period.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if certificates.has_other_pages %}
+            <div class="bg-white border border-gray-200 rounded-lg shadow-sm px-4 py-3 flex items-center justify-between">
+                <div class="flex-1 flex justify-between sm:hidden">
+                    {% if certificates.has_previous %}
+                        <a href="?page={{ certificates.previous_page_number }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            Previous
+                        </a>
+                    {% endif %}
+                    {% if certificates.has_next %}
+                        <a href="?page={{ certificates.next_page_number }}" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            Next
+                        </a>
+                    {% endif %}
+                </div>
+                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                        <p class="text-sm text-gray-700">
+                            Showing
+                            <span class="font-medium">{{ certificates.start_index }}</span>
+                            to
+                            <span class="font-medium">{{ certificates.end_index }}</span>
+                            of
+                            <span class="font-medium">{{ certificates.paginator.count }}</span>
+                            results
+                        </p>
+                    </div>
+                    <div>
+                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                            {% if certificates.has_previous %}
+                                <a href="?page={{ certificates.previous_page_number }}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+                            {% endif %}
+                            
+                            {% for num in certificates.paginator.page_range %}
+                                {% if num == certificates.number %}
+                                    <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-blue-50 text-sm font-medium text-blue-600">
+                                        {{ num }}
+                                    </span>
+                                {% elif num > certificates.number|add:'-3' and num < certificates.number|add:'3' %}
+                                    <a href="?page={{ num }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                        {{ num }}
+                                    </a>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if certificates.has_next %}
+                                <a href="?page={{ certificates.next_page_number }}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            {% endif %}
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+    {% else %}
+        <!-- Empty State -->
+        <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-12 text-center">
+            <div class="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="bi bi-award text-gray-400 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No Certificates Found</h3>
+            <p class="text-gray-600 mb-6">
+                {% if request.GET %}
+                    No certificates match your current filters. Try adjusting the filter criteria.
+                {% else %}
+                    You haven't earned any CPD certificates yet. Complete your CPD requirements to earn your first certificate.
+                {% endif %}
+            </p>
+            <div class="space-x-3">
+                <a href="{% url 'cpd:my_records' %}" 
+                   class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                    <i class="bi bi-plus-circle mr-2"></i>
+                    View My CPD Records
+                </a>
+                {% if request.GET %}
+                    <a href="{% url 'cpd:my_certificates' %}" 
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        Clear Filters
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Certificate Information -->
+    <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">About CPD Certificates</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <h4 class="text-sm font-medium text-gray-900 mb-3">Certificate Features</h4>
+                <div class="space-y-2 text-sm text-gray-600">
+                    <div class="flex items-start space-x-2">
+                        <i class="bi bi-check-circle text-green-500 mt-0.5"></i>
+                        <span>Digitally signed and tamper-proof</span>
+                    </div>
+                    <div class="flex items-start space-x-2">
+                        <i class="bi bi-check-circle text-green-500 mt-0.5"></i>
+                        <span>Instantly verifiable online</span>
+                    </div>
+                    <div class="flex items-start space-x-2">
+                        <i class="bi bi-check-circle text-green-500 mt-0.5"></i>
+                        <span>Downloadable as PDF</span>
+                    </div>
+                    <div class="flex items-start space-x-2">
+                        <i class="bi bi-check-circle text-green-500 mt-0.5"></i>
+                        <span>Shareable verification links</span>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <h4 class="text-sm font-medium text-gray-900 mb-3">Important Notes</h4>
+                <div class="space-y-2 text-sm text-gray-600">
+                    <div class="flex items-start space-x-2">
+                        <i class="bi bi-info-circle text-blue-500 mt-0.5"></i>
+                        <span>Certificates are issued after successful period completion</span>
+                    </div>
+                    <div class="flex items-start space-x-2">
+                        <i class="bi bi-info-circle text-blue-500 mt-0.5"></i>
+                        <span>Each certificate is valid for the specified period</span>
+                    </div>
+                    <div class="flex items-start space-x-2">
+                        <i class="bi bi-info-circle text-blue-500 mt-0.5"></i>
+                        <span>Verification links never expire but certificates do</span>
+                    </div>
+                    <div class="flex items-start space-x-2">
+                        <i class="bi bi-info-circle text-blue-500 mt-0.5"></i>
+                        <span>Keep certificates for your professional records</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Copy to Clipboard Script -->
+<script>
+function copyCertificateUrl(verificationToken) {
+    const baseUrl = window.location.origin;
+    const url = `${baseUrl}{% url 'cpd:certificate_verification' 'TOKEN' %}`.replace('TOKEN', verificationToken);
+    
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(function() {
+            showNotification('Certificate verification link copied to clipboard!', 'success');
+        }).catch(function() {
+            fallbackCopyTextToClipboard(url);
+        });
+    } else {
+        fallbackCopyTextToClipboard(url);
+    }
+}
+
+function fallbackCopyTextToClipboard(text) {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.top = "0";
+    textArea.style.left = "0";
+    textArea.style.position = "fixed";
+    
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+        document.execCommand('copy');
+        showNotification('Certificate verification link copied to clipboard!', 'success');
+    } catch (err) {
+        showNotification('Failed to copy link. Please copy manually.', 'error');
+    }
+    
+    document.body.removeChild(textArea);
+}
+
+function showNotification(message, type) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg ${
+        type === 'success' ? 'bg-green-100 text-green-800 border border-green-200' : 
+        'bg-red-100 text-red-800 border border-red-200'
+    }`;
+    notification.innerHTML = `
+        <div class="flex items-center space-x-2">
+            <i class="bi bi-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+            <span class="text-sm font-medium">${message}</span>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+</script>
+{% endblock %}

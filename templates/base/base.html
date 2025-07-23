@@ -319,18 +319,18 @@
                 
                 <div class="px-3 py-2">
                     <div class="space-y-2">
-                        <button type="button" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-3 rounded-md flex items-center" onclick="showToast('New Enrollment feature coming soon!', 'info')">
+                        <a href="{% url 'enrollments:onboarding_start' %}" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-3 rounded-md flex items-center">
                             <i class="bi bi-plus mr-2"></i>New Enrollment
-                        </button>
-                        <button type="button" class="w-full bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-3 rounded-md flex items-center" onclick="showToast('Upload Documents feature coming soon!', 'info')">
-                            <i class="bi bi-upload mr-2"></i>Upload Documents
-                        </button>
-                        <button type="button" class="w-full bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium py-2 px-3 rounded-md flex items-center" onclick="showToast('Generate Report feature coming soon!', 'info')">
-                            <i class="bi bi-download mr-2"></i>Generate Report
-                        </button>
-                        <button type="button" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-medium py-2 px-3 rounded-md flex items-center" onclick="showToast('Digital Card feature coming soon!', 'info')">
+                        </a>
+                        <a href="{% url 'cpd:dashboard' %}"  class="w-full bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-3 rounded-md flex items-center" onclick="showToast('Upload Documents feature coming soon!', 'info')">
+                            <i class="bi bi-graph-up mr-2"></i>CPD Dashboard
+                        </a>
+                        <a type="button" class="w-full bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium py-2 px-3 rounded-md flex items-center" onclick="showToast('Generate Report feature coming soon!', 'info')">
+                            <i class="bi bi-mortarboard mr-2"></i>Learn
+                        </a>
+                        <a type="button" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-medium py-2 px-3 rounded-md flex items-center" onclick="showToast('Digital Card feature coming soon!', 'info')">
                             <i class="bi bi-credit-card mr-2"></i>Digital Card
-                        </button>
+                        </a>
                     </div>
                     
                     <!-- Quick Create Dropdown -->
@@ -421,7 +421,7 @@
                         <i class="bi bi-chevron-down ml-auto transition-transform duration-200" id="enrollments-icon"></i>
                     </button>
                     <div class="hidden ml-6 space-y-1" id="enrollments-submenu">
-                        <a href="javascript:void(0)" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">All Enrollments</a>
+                        <a href="{% url "enrollments:enrollment_dashboard" %}" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">Enrollment Dashboard</a>
                         <a href="javascript:void(0)" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">Pending Review</a>
                         <a href="javascript:void(0)" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">Approved</a>
                         <a href="javascript:void(0)" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">Rejected</a>
@@ -429,15 +429,15 @@
                 </div>
                 
                 <!-- Students -->
-                <a href="javascript:void(0)" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                <a href="{% url "enrollments:enrollment_dashboard" %}" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
                     <i class="bi bi-mortarboard mr-3 text-lg"></i>
-                    Students
+                    Enrollment Dashboard
                 </a>
                 
                 <!-- CPD Tracking -->
-                <a href="javascript:void(0)" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                <a href="{% url 'cpd:dashboard' %}" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
                     <i class="bi bi-award mr-3 text-lg"></i>
-                    CPD Tracking
+                    CPD Dashboard
                 </a>
                 
                 <!-- Administration Section -->

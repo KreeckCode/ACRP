@@ -1,0 +1,519 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}CPD Compliance Report | ACRP{% endblock %}
+
+{% block page_title %}CPD Compliance Report{% endblock %}
+
+{% block page_description %}{{ report_title|default:"Comprehensive compliance analysis and performance metrics" }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Breadcrumb -->
+    <nav class="flex" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+            <li class="inline-flex items-center">
+                <a href="{% url 'cpd:dashboard' %}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600">
+                    <i class="bi bi-house mr-2"></i>
+                    Dashboard
+                </a>
+            </li>
+            <li>
+                <div class="flex items-center">
+                    <i class="bi bi-chevron-right text-gray-400"></i>
+                    <a href="{% url 'cpd:analytics_dashboard' %}" class="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2">Analytics</a>
+                </div>
+            </li>
+            <li aria-current="page">
+                <div class="flex items-center">
+                    <i class="bi bi-chevron-right text-gray-400"></i>
+                    <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">Compliance Report</span>
+                </div>
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Report Header -->
+    <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">{{ report_title|default:"CPD Compliance Report" }}</h1>
+                <p class="text-sm text-gray-600 mt-1">
+                    Generated on {{ report.generated_at|date:"F d, Y g:i A" }} • 
+                    Period: {{ report.period.name }} • 
+                    {{ report.total_participants }} participants analyzed
+                </p>
+            </div>
+            <div class="flex items-center space-x-3">
+                <div class="text-right">
+                    <p class="text-sm font-medium text-gray-900">Report Period</p>
+                    <p class="text-sm text-gray-600">{{ report.period.start_date|date:"M d, Y" }} - {{ report.period.end_date|date:"M d, Y" }}</p>
+                </div>
+                <div class="flex flex-col space-y-2">
+                    <button onclick="window.print()" 
+                            class="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        <i class="bi bi-printer mr-1"></i>
+                        Print
+                    </button>
+                    <a href="{% url 'cpd:export_compliance_report' %}?{{ request.GET.urlencode }}" 
+                       class="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        <i class="bi bi-download mr-1"></i>
+                        Export
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Applied Filters -->
+        {% if applied_filters %}
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <div class="flex items-center space-x-2">
+                    <i class="bi bi-funnel text-blue-600"></i>
+                    <span class="text-sm font-medium text-blue-900">Applied Filters:</span>
+                    <div class="flex flex-wrap items-center space-x-2">
+                        {% for filter_name, filter_value in applied_filters.items %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                {{ filter_name }}: {{ filter_value }}
+                            </span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Executive Summary -->
+    <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+        <h2 class="text-lg font-medium text-gray-900 mb-4">Executive Summary</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <div class="text-center">
+                <div class="p-4 bg-blue-50 rounded-lg">
+                    <p class="text-3xl font-bold text-blue-600">{{ report.total_participants }}</p>
+                    <p class="text-sm font-medium text-blue-900">Total Participants</p>
+                    <p class="text-xs text-blue-700">Analyzed in this report</p>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <div class="p-4 bg-green-50 rounded-lg">
+                    <p class="text-3xl font-bold text-green-600">{{ report.compliant_count }}</p>
+                    <p class="text-sm font-medium text-green-900">Fully Compliant</p>
+                    <p class="text-xs text-green-700">
+                        {{ report.compliance_percentage|floatformat:1 }}% of total
+                    </p>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <div class="p-4 bg-amber-50 rounded-lg">
+                    <p class="text-3xl font-bold text-amber-600">{{ report.at_risk_count }}</p>
+                    <p class="text-sm font-medium text-amber-900">At Risk</p>
+                    <p class="text-xs text-amber-700">
+                        {{ report.at_risk_percentage|floatformat:1 }}% of total
+                    </p>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <div class="p-4 bg-red-50 rounded-lg">
+                    <p class="text-3xl font-bold text-red-600">{{ report.non_compliant_count }}</p>
+                    <p class="text-sm font-medium text-red-900">Non-Compliant</p>
+                    <p class="text-xs text-red-700">
+                        {{ report.non_compliant_percentage|floatformat:1 }}% of total
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Key Metrics -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-gray-50 rounded-lg p-4">
+                <h3 class="text-sm font-medium text-gray-900 mb-2">Average Performance</h3>
+                <div class="space-y-1 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Points per Participant:</span>
+                        <span class="font-medium text-gray-900">{{ report.avg_points|floatformat:1 }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Hours per Participant:</span>
+                        <span class="font-medium text-gray-900">{{ report.avg_hours|floatformat:1 }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Activities per Participant:</span>
+                        <span class="font-medium text-gray-900">{{ report.avg_activities|floatformat:1 }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gray-50 rounded-lg p-4">
+                <h3 class="text-sm font-medium text-gray-900 mb-2">Completion Rates</h3>
+                <div class="space-y-1 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Points Target Met:</span>
+                        <span class="font-medium text-gray-900">{{ report.points_completion_rate|floatformat:1 }}%</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Hours Target Met:</span>
+                        <span class="font-medium text-gray-900">{{ report.hours_completion_rate|floatformat:1 }}%</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">On Track for Period:</span>
+                        <span class="font-medium text-gray-900">{{ report.on_track_percentage|floatformat:1 }}%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gray-50 rounded-lg p-4">
+                <h3 class="text-sm font-medium text-gray-900 mb-2">Risk Assessment</h3>
+                <div class="space-y-1 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">High Risk Users:</span>
+                        <span class="font-medium text-red-600">{{ report.high_risk_count }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Medium Risk Users:</span>
+                        <span class="font-medium text-amber-600">{{ report.medium_risk_count }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Intervention Required:</span>
+                        <span class="font-medium text-gray-900">{{ report.intervention_required_count }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Compliance Breakdown Chart -->
+    <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+        <h2 class="text-lg font-medium text-gray-900 mb-4">Compliance Distribution</h2>
+        
+        <!-- Visual Progress Bar -->
+        <div class="mb-6">
+            <div class="flex rounded-full h-8 bg-gray-200 overflow-hidden">
+                {% if report.compliant_count %}
+                    <div class="bg-green-500 flex items-center justify-center text-white text-sm font-medium" 
+                         style="width: {{ report.compliance_percentage }}%">
+                        {% if report.compliance_percentage > 10 %}{{ report.compliance_percentage|floatformat:0 }}%{% endif %}
+                    </div>
+                {% endif %}
+                {% if report.at_risk_count %}
+                    <div class="bg-amber-500 flex items-center justify-center text-white text-sm font-medium" 
+                         style="width: {{ report.at_risk_percentage }}%">
+                        {% if report.at_risk_percentage > 10 %}{{ report.at_risk_percentage|floatformat:0 }}%{% endif %}
+                    </div>
+                {% endif %}
+                {% if report.non_compliant_count %}
+                    <div class="bg-red-500 flex items-center justify-center text-white text-sm font-medium" 
+                         style="width: {{ report.non_compliant_percentage }}%">
+                        {% if report.non_compliant_percentage > 10 %}{{ report.non_compliant_percentage|floatformat:0 }}%{% endif %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="flex justify-between mt-2 text-sm">
+                <div class="flex items-center space-x-2">
+                    <div class="w-3 h-3 bg-green-500 rounded"></div>
+                    <span class="text-gray-600">Compliant ({{ report.compliant_count }})</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div class="w-3 h-3 bg-amber-500 rounded"></div>
+                    <span class="text-gray-600">At Risk ({{ report.at_risk_count }})</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div class="w-3 h-3 bg-red-500 rounded"></div>
+                    <span class="text-gray-600">Non-Compliant ({{ report.non_compliant_count }})</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart Placeholder -->
+        <div class="h-64 flex items-center justify-center border border-gray-200 rounded-lg bg-gray-50">
+            <div class="text-center">
+                <i class="bi bi-pie-chart text-gray-400 text-3xl mb-2"></i>
+                <p class="text-sm text-gray-600">Compliance distribution visualization</p>
+                <p class="text-xs text-gray-500">Chart integration available</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Compliance Data -->
+    <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex justify-between items-center">
+                <h2 class="text-lg font-medium text-gray-900">Detailed Compliance Data</h2>
+                <div class="flex items-center space-x-2">
+                    <select onchange="filterTable(this.value)" class="border border-gray-300 rounded-md text-sm">
+                        <option value="all">All Participants</option>
+                        <option value="compliant">Compliant Only</option>
+                        <option value="at_risk">At Risk Only</option>
+                        <option value="non_compliant">Non-Compliant Only</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Desktop Table -->
+        <div class="hidden lg:block overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200" id="compliance-table">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Participant</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Council</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Points</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hours</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Activities</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Progress</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Risk Level</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for compliance in compliance_data %}
+                        <tr class="hover:bg-gray-50 compliance-row" data-status="{{ compliance.compliance_status|lower }}">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 h-8 w-8">
+                                        <div class="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center">
+                                            <span class="text-xs font-medium text-gray-700">
+                                                {{ compliance.user.first_name|first }}{{ compliance.user.last_name|first }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="ml-3">
+                                        <div class="text-sm font-medium text-gray-900">{{ compliance.user.get_full_name }}</div>
+                                        <div class="text-sm text-gray-500">{{ compliance.user.email }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ compliance.user.get_council_display|default:"-" }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <div class="text-gray-900 font-medium">{{ compliance.total_points_earned }}/{{ compliance.requirement.total_points_required }}</div>
+                                <div class="text-gray-500 text-xs">
+                                    {{ compliance.points_progress_percentage|floatformat:0 }}% complete
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <div class="text-gray-900 font-medium">{{ compliance.total_hours_completed }}/{{ compliance.requirement.total_hours_required }}</div>
+                                <div class="text-gray-500 text-xs">
+                                    {{ compliance.hours_progress_percentage|floatformat:0 }}% complete
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ compliance.total_activities_completed }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="h-2 rounded-full 
+                                        {% if compliance.overall_progress_percentage >= 100 %}bg-green-500
+                                        {% elif compliance.overall_progress_percentage >= 70 %}bg-blue-500
+                                        {% elif compliance.overall_progress_percentage >= 40 %}bg-amber-500
+                                        {% else %}bg-red-500{% endif %}" 
+                                         style="width: {{ compliance.overall_progress_percentage|floatformat:0 }}%"></div>
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1">{{ compliance.overall_progress_percentage|floatformat:0 }}%</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                    {% if compliance.compliance_status == 'COMPLIANT' %}bg-green-100 text-green-800
+                                    {% elif compliance.compliance_status == 'AT_RISK' %}bg-amber-100 text-amber-800
+                                    {% else %}bg-red-100 text-red-800{% endif %}">
+                                    {{ compliance.get_compliance_status_display }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                    {% if compliance.risk_level == 'HIGH' %}bg-red-100 text-red-800
+                                    {% elif compliance.risk_level == 'MEDIUM' %}bg-amber-100 text-amber-800
+                                    {% else %}bg-green-100 text-green-800{% endif %}">
+                                    {{ compliance.get_risk_level_display|default:"Low" }}
+                                </span>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Mobile Cards -->
+        <div class="lg:hidden">
+            <div class="divide-y divide-gray-200" id="compliance-cards">
+                {% for compliance in compliance_data %}
+                    <div class="p-4 space-y-3 compliance-card" data-status="{{ compliance.compliance_status|lower }}">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">{{ compliance.user.get_full_name }}</p>
+                                <p class="text-xs text-gray-500">{{ compliance.user.email }}</p>
+                            </div>
+                            <div class="flex flex-col items-end space-y-1">
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                    {% if compliance.compliance_status == 'COMPLIANT' %}bg-green-100 text-green-800
+                                    {% elif compliance.compliance_status == 'AT_RISK' %}bg-amber-100 text-amber-800
+                                    {% else %}bg-red-100 text-red-800{% endif %}">
+                                    {{ compliance.get_compliance_status_display }}
+                                </span>
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                    {% if compliance.risk_level == 'HIGH' %}bg-red-100 text-red-800
+                                    {% elif compliance.risk_level == 'MEDIUM' %}bg-amber-100 text-amber-800
+                                    {% else %}bg-green-100 text-green-800{% endif %}">
+                                    {{ compliance.get_risk_level_display|default:"Low Risk" }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-3 text-sm">
+                            <div>
+                                <span class="text-gray-500">Points:</span>
+                                <span class="ml-1 font-medium text-gray-900">{{ compliance.total_points_earned }}/{{ compliance.requirement.total_points_required }}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">Hours:</span>
+                                <span class="ml-1 font-medium text-gray-900">{{ compliance.total_hours_completed }}/{{ compliance.requirement.total_hours_required }}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">Activities:</span>
+                                <span class="ml-1 font-medium text-gray-900">{{ compliance.total_activities_completed }}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">Progress:</span>
+                                <span class="ml-1 font-medium text-gray-900">{{ compliance.overall_progress_percentage|floatformat:0 }}%</span>
+                            </div>
+                        </div>
+
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="h-2 rounded-full 
+                                {% if compliance.overall_progress_percentage >= 100 %}bg-green-500
+                                {% elif compliance.overall_progress_percentage >= 70 %}bg-blue-500
+                                {% elif compliance.overall_progress_percentage >= 40 %}bg-amber-500
+                                {% else %}bg-red-500{% endif %}" 
+                                 style="width: {{ compliance.overall_progress_percentage|floatformat:0 }}%"></div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recommendations -->
+    <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+        <h2 class="text-lg font-medium text-gray-900 mb-4">Recommendations & Actions</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <h3 class="text-base font-medium text-gray-900 mb-3">Immediate Actions Required</h3>
+                <div class="space-y-3">
+                    {% if report.non_compliant_count > 0 %}
+                        <div class="flex items-start space-x-3 p-3 bg-red-50 rounded-lg">
+                            <i class="bi bi-exclamation-triangle text-red-500 mt-0.5"></i>
+                            <div>
+                                <p class="text-sm font-medium text-red-900">High Priority</p>
+                                <p class="text-sm text-red-700">{{ report.non_compliant_count }} participants are non-compliant and require immediate intervention.</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    {% if report.at_risk_count > 0 %}
+                        <div class="flex items-start space-x-3 p-3 bg-amber-50 rounded-lg">
+                            <i class="bi bi-exclamation-circle text-amber-500 mt-0.5"></i>
+                            <div>
+                                <p class="text-sm font-medium text-amber-900">Medium Priority</p>
+                                <p class="text-sm text-amber-700">{{ report.at_risk_count }} participants are at risk and need support to meet requirements.</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    {% if report.intervention_required_count > 0 %}
+                        <div class="flex items-start space-x-3 p-3 bg-blue-50 rounded-lg">
+                            <i class="bi bi-info-circle text-blue-500 mt-0.5"></i>
+                            <div>
+                                <p class="text-sm font-medium text-blue-900">Monitoring Required</p>
+                                <p class="text-sm text-blue-700">{{ report.intervention_required_count }} participants need closer monitoring and support.</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-base font-medium text-gray-900 mb-3">Strategic Recommendations</h3>
+                <div class="space-y-3 text-sm text-gray-600">
+                    <div class="flex items-start space-x-2">
+                        <i class="bi bi-check-circle text-green-500 mt-0.5"></i>
+                        <span>Implement targeted outreach for at-risk participants</span>
+                    </div>
+                    <div class="flex items-start space-x-2">
+                        <i class="bi bi-check-circle text-green-500 mt-0.5"></i>
+                        <span>Increase activity offerings in underperforming categories</span>
+                    </div>
+                    <div class="flex items-start space-x-2">
+                        <i class="bi bi-check-circle text-green-500 mt-0.5"></i>
+                        <span>Provide additional support resources and guidance</span>
+                    </div>
+                    <div class="flex items-start space-x-2">
+                        <i class="bi bi-check-circle text-green-500 mt-0.5"></i>
+                        <span>Schedule follow-up assessments for high-risk users</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Footer -->
+    <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+        <div class="text-center">
+            <p class="text-sm text-gray-600">
+                This report was generated on {{ report.generated_at|date:"F d, Y g:i A" }} and reflects data as of that time.
+            </p>
+            <p class="text-xs text-gray-500 mt-2">
+                Association of Christian Religious Practitioners (ACRP) • Compliance Monitoring System
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for table filtering -->
+<script>
+function filterTable(status) {
+    const table = document.getElementById('compliance-table');
+    const cards = document.getElementById('compliance-cards');
+    
+    if (table) {
+        const rows = table.querySelectorAll('.compliance-row');
+        rows.forEach(row => {
+            if (status === 'all' || row.dataset.status === status) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+    
+    if (cards) {
+        const cardElements = cards.querySelectorAll('.compliance-card');
+        cardElements.forEach(card => {
+            if (status === 'all' || card.dataset.status === status) {
+                card.style.display = '';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+}
+
+// Print styles
+document.addEventListener('DOMContentLoaded', function() {
+    const style = document.createElement('style');
+    style.textContent = `
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; }
+            .bg-gray-50 { background: white !important; }
+            .shadow-sm { box-shadow: none !important; }
+        }
+    `;
+    document.head.appendChild(style);
+});
+</script>
+{% endblock %}

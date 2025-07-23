@@ -421,6 +421,7 @@ if not DEBUG:
 # ============================================================================
 # LOGGING CONFIGURATION - Comprehensive and structured
 # ============================================================================
+CONSOLE_LOG_DEBUG = config('CONSOLE_LOG_DEBUG', default=False, cast=bool)
 
 if DEBUG:
     LOGGING = {
@@ -472,8 +473,10 @@ if DEBUG:
                 'propagate': False,
             },
             'django.db.backends': {
-                'handlers': ['console'] if DEBUG else [],
-                'level': 'DEBUG' if DEBUG else 'WARNING',
+                # only attach console handler when CONSOLE_LOG_DEBUG is True
+                'handlers': ['console'] if CONSOLE_LOG_DEBUG else [],
+                # and only DEBUG‑level when the flag is True
+                'level': 'DEBUG' if CONSOLE_LOG_DEBUG else 'WARNING',
                 'propagate': False,
             },
             'acrp': {

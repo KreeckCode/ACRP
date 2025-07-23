@@ -1,0 +1,356 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificate Verification | ACRP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+    <meta name="robots" content="noindex, nofollow">
+</head>
+<body class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <div class="bg-white border-b border-gray-200">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-6">
+                <div class="flex items-center space-x-3">
+                    <div class="h-10 w-10 bg-blue-600 rounded-full flex items-center justify-center">
+                        <i class="bi bi-shield-check text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-semibold text-gray-900">ACRP Certificate Verification</h1>
+                        <p class="text-sm text-gray-600">Association of Christian Religious Practitioners</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm text-gray-500">Verified on</p>
+                    <p class="text-sm font-medium text-gray-900">{{ "now"|date:"F d, Y g:i A" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {% if certificate.is_valid %}
+            <!-- Verification Success -->
+            <div class="bg-green-50 border border-green-200 rounded-lg p-6 mb-8">
+                <div class="flex items-center space-x-3">
+                    <div class="flex-shrink-0">
+                        <i class="bi bi-check-circle-fill text-green-600 text-2xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-medium text-green-900">Certificate Verified Successfully</h2>
+                        <p class="text-sm text-green-700 mt-1">
+                            This certificate is authentic and has been issued by the Association of Christian Religious Practitioners (ACRP).
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Certificate Details -->
+            <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                <!-- Certificate Header -->
+                <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-8 text-white">
+                    <div class="text-center">
+                        <div class="h-16 w-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="bi bi-award text-3xl"></i>
+                        </div>
+                        <h1 class="text-2xl font-bold mb-2">CERTIFICATE OF CPD COMPLIANCE</h1>
+                        <p class="text-blue-100">Association of Christian Religious Practitioners</p>
+                    </div>
+                </div>
+
+                <!-- Certificate Body -->
+                <div class="px-8 py-8">
+                    <!-- Recipient Information -->
+                    <div class="text-center mb-8">
+                        <p class="text-gray-600 mb-2">This is to certify that</p>
+                        <h2 class="text-3xl font-serif font-bold text-gray-900 mb-2">{{ certificate.user.get_full_name }}</h2>
+                        <p class="text-gray-600 max-w-2xl mx-auto">
+                            has successfully completed the required Continuing Professional Development 
+                            for the period {{ certificate.period.name }}
+                        </p>
+                    </div>
+
+                    <!-- CPD Details -->
+                    <div class="bg-gray-50 rounded-lg p-6 mb-8">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4 text-center">CPD Summary</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div class="text-center">
+                                <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                    <p class="text-2xl font-bold text-blue-600">{{ certificate.points_certified }}</p>
+                                    <p class="text-sm text-gray-600">Points Earned</p>
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                    <p class="text-2xl font-bold text-green-600">{{ certificate.hours_certified }}</p>
+                                    <p class="text-sm text-gray-600">Hours Completed</p>
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                    <p class="text-2xl font-bold text-gray-900">{{ certificate.period.name }}</p>
+                                    <p class="text-sm text-gray-600">CPD Period</p>
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                    <p class="text-2xl font-bold text-purple-600">
+                                        {% if certificate.compliance.compliance_status == 'COMPLIANT' %}
+                                            <i class="bi bi-check-circle-fill"></i>
+                                        {% else %}
+                                            <i class="bi bi-exclamation-circle-fill"></i>
+                                        {% endif %}
+                                    </p>
+                                    <p class="text-sm text-gray-600">Compliance Status</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Certificate Information -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-900 mb-3">Certificate Details</h4>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Certificate Number:</span>
+                                    <span class="font-medium text-gray-900">{{ certificate.certificate_number }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Issue Date:</span>
+                                    <span class="font-medium text-gray-900">{{ certificate.issue_date|date:"F d, Y" }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Valid Until:</span>
+                                    <span class="font-medium text-gray-900">{{ certificate.expiry_date|date:"F d, Y" }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Status:</span>
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                        {% if certificate.is_valid %}bg-green-100 text-green-800
+                                        {% else %}bg-red-100 text-red-800{% endif %}">
+                                        {% if certificate.is_valid %}Valid{% else %}Expired{% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-900 mb-3">Holder Information</h4>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Full Name:</span>
+                                    <span class="font-medium text-gray-900">{{ certificate.user.get_full_name }}</span>
+                                </div>
+                                {% if certificate.user.acrp_role %}
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Role:</span>
+                                        <span class="font-medium text-gray-900">{{ certificate.user.get_acrp_role_display }}</span>
+                                    </div>
+                                {% endif %}
+                                {% if certificate.user.council %}
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Council:</span>
+                                        <span class="font-medium text-gray-900">{{ certificate.user.get_council_display }}</span>
+                                    </div>
+                                {% endif %}
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Member Since:</span>
+                                    <span class="font-medium text-gray-900">{{ certificate.user.date_joined|date:"Y" }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Compliance Requirements -->
+                    {% if certificate.compliance %}
+                        <div class="bg-blue-50 rounded-lg p-6 mb-8">
+                            <h4 class="text-sm font-medium text-blue-900 mb-3">Compliance Requirements Met</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-blue-700">Required Points:</span>
+                                    <span class="font-medium text-blue-900">{{ certificate.compliance.requirement.total_points_required }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-blue-700">Points Achieved:</span>
+                                    <span class="font-medium text-blue-900">{{ certificate.compliance.total_points_earned }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-blue-700">Required Hours:</span>
+                                    <span class="font-medium text-blue-900">{{ certificate.compliance.requirement.total_hours_required }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-blue-700">Hours Completed:</span>
+                                    <span class="font-medium text-blue-900">{{ certificate.compliance.total_hours_completed }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Authority and Signatures -->
+                    <div class="text-center border-t border-gray-200 pt-8">
+                        <p class="text-sm text-gray-600 mb-4">
+                            This certificate has been digitally issued and verified by the Association of Christian Religious Practitioners (ACRP).
+                        </p>
+                        <div class="flex justify-center items-center space-x-6">
+                            <div class="text-center">
+                                <div class="h-12 w-32 border-t border-gray-400 mb-2"></div>
+                                <p class="text-xs text-gray-600">Digital Signature</p>
+                                <p class="text-xs font-medium text-gray-900">ACRP Certificate Authority</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        {% else %}
+            <!-- Verification Failed -->
+            <div class="bg-red-50 border border-red-200 rounded-lg p-6 mb-8">
+                <div class="flex items-center space-x-3">
+                    <div class="flex-shrink-0">
+                        <i class="bi bi-x-circle-fill text-red-600 text-2xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-medium text-red-900">Certificate Verification Failed</h2>
+                        <p class="text-sm text-red-700 mt-1">
+                            The certificate could not be verified. It may be invalid, expired, or the verification link may be incorrect.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Failed Verification Details -->
+            <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-8 text-center">
+                <div class="h-16 w-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="bi bi-shield-x text-red-600 text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Certificate Not Found</h3>
+                <p class="text-gray-600 mb-6">
+                    The certificate you're trying to verify could not be found in our system or may have been revoked.
+                </p>
+                
+                <div class="space-y-3 max-w-sm mx-auto">
+                    <h4 class="text-sm font-medium text-gray-900">Possible reasons:</h4>
+                    <div class="text-left space-y-2 text-sm text-gray-600">
+                        <div class="flex items-start space-x-2">
+                            <i class="bi bi-dot text-gray-400 mt-1"></i>
+                            <span>The certificate has expired</span>
+                        </div>
+                        <div class="flex items-start space-x-2">
+                            <i class="bi bi-dot text-gray-400 mt-1"></i>
+                            <span>The verification link is incorrect or corrupted</span>
+                        </div>
+                        <div class="flex items-start space-x-2">
+                            <i class="bi bi-dot text-gray-400 mt-1"></i>
+                            <span>The certificate has been revoked</span>
+                        </div>
+                        <div class="flex items-start space-x-2">
+                            <i class="bi bi-dot text-gray-400 mt-1"></i>
+                            <span>The certificate was never issued</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Security Information -->
+        <div class="mt-8 bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Security & Verification Information</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="text-sm font-medium text-gray-900 mb-3">Verification Details</h4>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Verification URL:</span>
+                            <span class="font-mono text-xs text-gray-900 break-all">{{ request.get_full_path }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Verified On:</span>
+                            <span class="font-medium text-gray-900">{{ "now"|date:"F d, Y g:i A T" }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Verification ID:</span>
+                            <span class="font-mono text-xs text-gray-900">{{ certificate.verification_token|default:"N/A" }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-sm font-medium text-gray-900 mb-3">Security Features</h4>
+                    <div class="space-y-2 text-sm text-gray-600">
+                        <div class="flex items-start space-x-2">
+                            <i class="bi bi-shield-check text-green-500 mt-0.5"></i>
+                            <span>Cryptographically signed certificate</span>
+                        </div>
+                        <div class="flex items-start space-x-2">
+                            <i class="bi bi-shield-check text-green-500 mt-0.5"></i>
+                            <span>Tamper-proof verification system</span>
+                        </div>
+                        <div class="flex items-start space-x-2">
+                            <i class="bi bi-shield-check text-green-500 mt-0.5"></i>
+                            <span>Real-time validation against ACRP database</span>
+                        </div>
+                        <div class="flex items-start space-x-2">
+                            <i class="bi bi-shield-check text-green-500 mt-0.5"></i>
+                            <span>Unique verification token</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 pt-6 border-t border-gray-200">
+                <p class="text-xs text-gray-500 text-center">
+                    This verification page provides real-time validation of ACRP certificates. 
+                    For questions about certificate authenticity, contact ACRP at 
+                    <a href="mailto:certificates@acrpafrica.co.za" class="text-blue-600 hover:text-blue-700">certificates@acrpafrica.co.za</a>
+                </p>
+            </div>
+        </div>
+
+        <!-- Print/Save Actions -->
+        {% if certificate.is_valid %}
+            <div class="mt-8 flex justify-center space-x-4">
+                <button onclick="window.print()" 
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <i class="bi bi-printer mr-2"></i>
+                    Print Certificate
+                </button>
+                
+                <a href="{% url 'cpd:download_certificate' certificate.pk %}" 
+                   class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <i class="bi bi-download mr-2"></i>
+                    Download PDF
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-12">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="text-center">
+                <p class="text-sm text-gray-600">
+                    © {{ "now"|date:"Y" }} Association of Christian Religious Practitioners (ACRP). All rights reserved.
+                </p>
+                <p class="text-xs text-gray-500 mt-1">
+                    Certificate verification system powered by secure digital authentication.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Print Styles -->
+    <style>
+        @media print {
+            body { background: white !important; }
+            .no-print { display: none !important; }
+            .bg-gradient-to-r { background: #2563eb !important; }
+        }
+    </style>
+</body>
+</html>

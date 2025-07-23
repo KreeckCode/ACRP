@@ -89,15 +89,15 @@
       </div>
       
       <!-- Form -->
-      <form method="post">
+      <form method="post" id="subcategoryForm">
         {% csrf_token %}
         
         <!-- Dynamic Subcategory Grid -->
         <div class="space-y-6 mb-12">
           {% for subcategory in form.designation_subcategory.field.queryset %}
-            <label class="subcategory-card cursor-pointer block">
-              <input type="radio" name="designation_subcategory" value="{{ subcategory.id }}" class="sr-only peer" required>
-              <div class="bg-white rounded-xl shadow-lg p-6 border-2 border-gray-200 peer-checked:border-green-500 peer-checked:bg-green-50 transition-all duration-300 slide-in" style="animation-delay: {{ forloop.counter0|floatformat:1|add:'0.1' }}s">
+            <div class="subcategory-card cursor-pointer" data-subcategory="subcategory-{{ subcategory.id }}" data-value="{{ subcategory.id }}" id="card-subcategory-{{ subcategory.id }}">
+              <input type="radio" name="designation_subcategory" value="{{ subcategory.id }}" class="sr-only peer radio-input" id="radio-subcategory-{{ subcategory.id }}" required>
+              <div class="card-inner bg-white rounded-xl shadow-lg p-6 border-2 border-gray-200 peer-checked:border-green-500 peer-checked:bg-green-50 transition-all duration-300 slide-in" style="animation-delay: {{ forloop.counter0|floatformat:1|add:'0.1' }}s">
                 <div class="flex items-start space-x-6">
                   
                   <!-- Icon and Level Indicator -->
@@ -240,19 +240,39 @@
                             <li>• Research and development</li>
                           </ul>
                         </div>
+                      {% else %}
+                        <div class="bg-green-50 p-4 rounded-lg">
+                          <h4 class="font-semibold text-green-800 mb-2 text-sm">Requirements:</h4>
+                          <ul class="text-green-700 text-xs space-y-1">
+                            <li>• Relevant qualifications</li>
+                            <li>• Training completion</li>
+                            <li>• Supervision hours</li>
+                            <li>• Continuing development</li>
+                          </ul>
+                        </div>
+                        
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                          <h4 class="font-semibold text-blue-800 mb-2 text-sm">Practice Areas:</h4>
+                          <ul class="text-blue-700 text-xs space-y-1">
+                            <li>• Specialized practice</li>
+                            <li>• Professional services</li>
+                            <li>• Client support</li>
+                            <li>• Community engagement</li>
+                          </ul>
+                        </div>
                       {% endif %}
                     </div>
                   </div>
                   
                   <!-- Selection Indicator -->
                   <div class="flex-shrink-0 flex items-center">
-                    <div class="w-6 h-6 border-2 border-green-600 rounded-full flex items-center justify-center peer-checked:bg-green-600">
-                      <div class="w-3 h-3 bg-green-600 rounded-full opacity-0 peer-checked:opacity-100 transition-opacity"></div>
+                    <div class="check-indicator w-6 h-6 border-2 border-green-600 rounded-full flex items-center justify-center">
+                      <div class="check-dot w-3 h-3 bg-green-600 rounded-full opacity-0 transition-opacity duration-300"></div>
                     </div>
                   </div>
                 </div>
               </div>
-            </label>
+            </div>
           {% empty %}
             <div class="text-center py-12">
               <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -313,46 +333,118 @@
   </div>
 
   <script>
-    // Add interactive feedback for radio selection
+    let selectedSubcategory = '';
+
+    function selectSubcategory(subcategoryId) {
+      try {
+        clearAllSelections();
+        
+        const cardElement = document.getElementById(`card-subcategory-${subcategoryId}`);
+        const radioElement = document.getElementById(`radio-subcategory-${subcategoryId}`);
+        const cardInner = cardElement?.querySelector('.card-inner');
+        const checkDot = cardElement?.querySelector('.check-dot');
+        
+        if (!cardElement || !radioElement || !cardInner) {
+          return false;
+        }
+        
+        radioElement.checked = true;
+        selectedSubcategory = subcategoryId;
+        
+        // Apply visual styles
+        cardInner.classList.remove('border-gray-200');
+        cardInner.classList.add('ring-2', 'ring-green-500', 'border-green-500', 'bg-green-50');
+        
+        // Show check indicator
+        if (checkDot) {
+          checkDot.classList.remove('opacity-0');
+          checkDot.classList.add('opacity-100');
+        }
+        
+        // Trigger change event
+        radioElement.dispatchEvent(new Event('change', { bubbles: true }));
+        
+        return true;
+        
+      } catch (error) {
+        return false;
+      }
+    }
+
+    function clearAllSelections() {
+      const allCards = document.querySelectorAll('.subcategory-card');
+      const allRadios = document.querySelectorAll('input[name="designation_subcategory"]');
+      
+      allCards.forEach(card => {
+        const cardInner = card.querySelector('.card-inner');
+        const checkDot = card.querySelector('.check-dot');
+        
+        if (cardInner) {
+          cardInner.classList.remove(
+            'ring-2', 'ring-green-500', 'border-green-500', 'bg-green-50'
+          );
+          cardInner.classList.add('border-gray-200');
+        }
+        
+        if (checkDot) {
+          checkDot.classList.remove('opacity-100');
+          checkDot.classList.add('opacity-0');
+        }
+      });
+      
+      allRadios.forEach(radio => {
+        radio.checked = false;
+      });
+      
+      selectedSubcategory = '';
+    }
+
+    function validateForm() {
+      const checkedRadio = document.querySelector('input[name="designation_subcategory"]:checked');
+      
+      if (!checkedRadio) {
+        alert('Please select a subcategory to continue.');
+        return false;
+      }
+      
+      return true;
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
-      const radioInputs = document.querySelectorAll('input[type="radio"]');
+      // Add click event listeners to all cards
       const cards = document.querySelectorAll('.subcategory-card');
       
-      radioInputs.forEach((input, index) => {
-        input.addEventListener('change', function() {
-          // Remove selected state from all cards
-          cards.forEach(card => {
-            const cardDiv = card.querySelector('div');
-            cardDiv.classList.remove('ring-2', 'ring-green-500', 'transform', 'scale-[1.02]');
-          });
-          
-          // Add selected state to current card
-          if (this.checked) {
-            const cardDiv = this.closest('label').querySelector('div');
-            cardDiv.classList.add('ring-2', 'ring-green-500', 'transform', 'scale-[1.02]');
-            
-            // Add a celebration animation
-            cardDiv.style.animation = 'celebration 0.6s ease-out';
-            setTimeout(() => {
-              cardDiv.style.animation = '';
-            }, 600);
-          }
+      cards.forEach(card => {
+        const subcategoryId = card.dataset.value;
+        
+        card.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          selectSubcategory(subcategoryId);
         });
+        
+        const radio = card.querySelector('input[type="radio"]');
+        if (radio) {
+          radio.addEventListener('change', function() {
+            if (this.checked) {
+              selectedSubcategory = subcategoryId;
+            }
+          });
+        }
       });
-    });
-    
-    // Add celebration animation keyframe
-    const style = document.createElement('style');
-    style.textContent = `
-      @keyframes celebration {
-        0% { transform: scale(1); }
-        25% { transform: scale(1.05) rotate(1deg); }
-        50% { transform: scale(1.03) rotate(-1deg); }
-        75% { transform: scale(1.04) rotate(0.5deg); }
-        100% { transform: scale(1.02) rotate(0deg); }
+      
+      // Form submission handler
+      const form = document.getElementById('subcategoryForm');
+      if (form) {
+        form.addEventListener('submit', function(e) {
+          if (!validateForm()) {
+            e.preventDefault();
+            return false;
+          }
+          return true;
+        });
       }
-    `;
-    document.head.appendChild(style);
+    });
   </script>
   
 </body>

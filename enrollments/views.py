@@ -325,37 +325,70 @@ def onboarding_category(request, session_id):
         return redirect('enrollments:onboarding_start')
     
     if request.method == 'POST':
-        form = DesignationCategorySelectionForm(request.POST)
-        if form.is_valid():
-            category = form.cleaned_data['designation_category']
-            
-            session.selected_designation_category = category
-            session.status = 'selecting_subcategory'
-            session.save(update_fields=['selected_designation_category', 'status', 'updated_at'])
-            
-            # Check if council has subcategories (CPSC)
-            if session.selected_council.has_subcategories:
-                return redirect('enrollments:onboarding_subcategory', session_id=session_id)
-            else:
-                # No subcategories - complete onboarding
-                session.status = 'completed'
-                session.completed_at = timezone.now()
-                session.save(update_fields=['status', 'completed_at'])
-                return redirect('enrollments:application_create', session_id=session_id)
+        # Get category ID from POST data (similar to council selection)
+        category_id = request.POST.get('designation_category')
+        logger.info(f"Category POST data received: {request.POST}")
+        logger.info(f"Category ID: {category_id}")
         
-        messages.error(request, "Please select a valid designation category.")
-    else:
-        form = DesignationCategorySelectionForm()
+        if category_id:
+            try:
+                # Get the actual DesignationCategory object
+                category = DesignationCategory.objects.get(id=category_id, is_active=True)
+                
+                session.selected_designation_category = category
+                session.status = 'selecting_subcategory'
+                session.save(update_fields=['selected_designation_category', 'status', 'updated_at'])
+                
+                logger.info(f"Category selected: {category.name}")
+                
+                # Check if council has subcategories (CPSC)
+                if session.selected_council.has_subcategories:
+                    return redirect('enrollments:onboarding_subcategory', session_id=session_id)
+                else:
+                    # No subcategories - complete onboarding
+                    session.status = 'completed'
+                    session.completed_at = timezone.now()
+                    session.save(update_fields=['status', 'completed_at'])
+                    return redirect('enrollments:application_create', session_id=session_id)
+                    
+            except DesignationCategory.DoesNotExist:
+                logger.error(f"Category with ID {category_id} not found")
+                messages.error(request, f"Invalid category selected: {category_id}")
+        else:
+            messages.error(request, "Please select a valid designation category.")
+    
+    # Get categories for the template - ENSURE they exist
+    categories = DesignationCategory.objects.filter(is_active=True).order_by('level')
+    
+    # Create a dictionary for easy access in template (similar to councils)
+    categories_dict = {}
+    for category in categories:
+        categories_dict[f'level{category.level}'] = category
+    
+    # Debug: Log available categories
+    logger.info(f"Available categories: {[(c.level, c.id, c.name) for c in categories]}")
+    
+    # Verify we have all 4 levels
+    if len(categories) < 4:
+        logger.error(f"Not enough categories found. Expected 4, got {len(categories)}")
+        messages.error(request, "Categories not properly configured. Please contact support.")
+    
+    form = DesignationCategorySelectionForm()
     
     context = {
         'form': form,
         'session': session,
+        'categories': categories_dict,  # For template access like {{ categories.level1.id }}
+        'categories_list': categories,   # For iteration in template  
         'page_title': 'Select Designation Category',
         'step': 3,
         'total_steps': 4,
     }
     
     return render(request, 'enrollments/onboarding/step3_category.html', context)
+
+
+
 
 
 @csrf_protect
@@ -380,29 +413,42 @@ def onboarding_subcategory(request, session_id):
         return redirect('enrollments:onboarding_start')
     
     if request.method == 'POST':
-        form = DesignationSubcategorySelectionForm(
-            category=session.selected_designation_category,
-            council=session.selected_council,
-            data=request.POST
-        )
-        if form.is_valid():
-            subcategory = form.cleaned_data['designation_subcategory']
-            
-            session.selected_designation_subcategory = subcategory
-            session.status = 'completed'
-            session.completed_at = timezone.now()
-            session.save(update_fields=[
-                'selected_designation_subcategory', 'status', 'completed_at'
-            ])
-            
-            return redirect('enrollments:application_create', session_id=session_id)
+        # Get subcategory ID from POST data (similar to council and category selection)
+        subcategory_id = request.POST.get('designation_subcategory')
+        logger.info(f"Subcategory POST data received: {request.POST}")
+        logger.info(f"Subcategory ID: {subcategory_id}")
         
-        messages.error(request, "Please select a valid subcategory.")
-    else:
-        form = DesignationSubcategorySelectionForm(
-            category=session.selected_designation_category,
-            council=session.selected_council
-        )
+        if subcategory_id:
+            try:
+                # Get the actual DesignationSubcategory object
+                subcategory = DesignationSubcategory.objects.get(
+                    id=subcategory_id, 
+                    category=session.selected_designation_category,
+                    council=session.selected_council,
+                    is_active=True
+                )
+                
+                session.selected_designation_subcategory = subcategory
+                session.status = 'completed'
+                session.completed_at = timezone.now()
+                session.save(update_fields=[
+                    'selected_designation_subcategory', 'status', 'completed_at'
+                ])
+                
+                logger.info(f"Subcategory selected: {subcategory.name}")
+                
+                return redirect('enrollments:application_create', session_id=session_id)
+                
+            except DesignationSubcategory.DoesNotExist:
+                logger.error(f"Subcategory with ID {subcategory_id} not found")
+                messages.error(request, f"Invalid subcategory selected: {subcategory_id}")
+        else:
+            messages.error(request, "Please select a valid subcategory.")
+    
+    form = DesignationSubcategorySelectionForm(
+        category=session.selected_designation_category,
+        council=session.selected_council
+    )
     
     context = {
         'form': form,
@@ -413,6 +459,7 @@ def onboarding_subcategory(request, session_id):
     }
     
     return render(request, 'enrollments/onboarding/step4_subcategory.html', context)
+
 
 
 # ============================================================================
