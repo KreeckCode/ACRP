@@ -523,23 +523,47 @@ def application_create(request, session_id):
         logger.info(f"POST data keys: {list(request.POST.keys())}")
         logger.info(f"FILES data keys: {list(request.FILES.keys())}")
         
+        # DEBUG: Check session data
+        logger.info(f"Session designation_category: {session.selected_designation_category}")
+        logger.info(f"Session designation_subcategory: {session.selected_designation_subcategory}")
+        logger.info(f"POST designation_category value: '{request.POST.get('designation_category')}'")
+        logger.info(f"POST designation_subcategory value: '{request.POST.get('designation_subcategory')}'")
+        
         # Create main form
         form = form_class(request.POST, request=request, onboarding_session=session)
+        
+        # CRITICAL FIX: Set onboarding_session on form instance BEFORE validation
+        # This prevents RelatedObjectDoesNotExist errors during model.clean()
+        form.instance.onboarding_session = session
+        
+        # For designated applications, also set the designation fields before validation
+        if session.selected_affiliation_type.code == 'designated':
+            form.instance.designation_category = session.selected_designation_category
+            form.instance.designation_subcategory = session.selected_designation_subcategory
         
         # For new applications, we need to handle documents differently
         # Extract document data manually instead of using generic formset
         document_data = extract_document_data_from_post(request)
         reference_data = extract_reference_data_from_post(request)
         
-        # Initialize non-generic formsets
+        # FIXED: Initialize non-generic formsets with CORRECT prefixes to match template
         formsets = {}
         if session.selected_affiliation_type.code == 'designated':
+            # Initialize formsets with proper prefix and instance
             formsets = {
-                'qualifications': AcademicQualificationFormSet(request.POST, prefix='qualifications'),
-                'experiences': PracticalExperienceFormSet(request.POST, prefix='experiences'),
+                'academic_qualifications': AcademicQualificationFormSet(
+                    request.POST, 
+                    prefix='academic_qualifications',
+                    instance=None  # No instance for new application
+                ),
+                'practical_experiences': PracticalExperienceFormSet(
+                    request.POST, 
+                    prefix='practical_experiences',
+                    instance=None  # No instance for new application
+                ),
             }
         
-        # Validate main form
+        # Validate main form (now onboarding_session is set, so model.clean() won't fail)
         form_valid = form.is_valid()
         if not form_valid:
             logger.warning(f"Main form errors: {form.errors}")
@@ -551,10 +575,33 @@ def application_create(request, session_id):
         documents_valid, document_errors = validate_extracted_documents(document_data)
         references_valid, reference_errors = validate_extracted_references(reference_data)
         
+        # ENHANCED DEBUG: Log all validation results
+        logger.info(f"Form valid: {form_valid}")
+        logger.info(f"Formsets valid: {formsets_valid}")
+        logger.info(f"Documents valid: {documents_valid}")
+        logger.info(f"References valid: {references_valid}")
+
+        if not form_valid:
+            logger.error(f"FORM ERRORS: {form.errors}")
+            logger.error(f"FORM NON_FIELD_ERRORS: {form.non_field_errors()}")
+
+        if not formsets_valid:
+            for name, formset in formsets.items():
+                if not formset.is_valid():
+                    logger.error(f"FORMSET {name} ERRORS: {formset.errors}")
+                    logger.error(f"FORMSET {name} NON_FORM_ERRORS: {formset.non_form_errors()}")
+
+        if not documents_valid:
+            logger.error(f"DOCUMENT ERRORS: {document_errors}")
+            
+        if not references_valid:
+            logger.error(f"REFERENCE ERRORS: {reference_errors}")
+        
         if form_valid and formsets_valid and documents_valid and references_valid:
             try:
                 # Save main application first
                 application = form.save(commit=False)
+                # onboarding_session is already set above, but we'll keep this for clarity
                 application.onboarding_session = session
                 
                 if session.selected_affiliation_type.code == 'designated':
@@ -601,22 +648,38 @@ def application_create(request, session_id):
                 messages.error(request, f"An error occurred: {str(e)}")
         
         else:
-            # Show validation errors
+            # ENHANCED: Show validation errors with more detail
             if not form_valid:
                 messages.error(request, "Please correct the form errors.")
+                # Add specific field errors to messages
+                for field, errors in form.errors.items():
+                    messages.error(request, f"{field}: {errors[0]}")
+            
+            if not formsets_valid:
+                messages.error(request, "Please correct the formset errors.")
+                for name, formset in formsets.items():
+                    if not formset.is_valid():
+                        messages.error(request, f"{name} errors: {formset.errors}")
+            
             if document_errors:
                 messages.error(request, f"Document errors: {'; '.join(document_errors)}")
             if reference_errors:
                 messages.error(request, f"Reference errors: {'; '.join(reference_errors)}")
     
     else:
-        # GET request
+        # GET request - FIXED: Use correct prefixes here too
         form = form_class(request=request, onboarding_session=session)
         formsets = {}
         if session.selected_affiliation_type.code == 'designated':
             formsets = {
-                'qualifications': AcademicQualificationFormSet(prefix='qualifications'),
-                'experiences': PracticalExperienceFormSet(prefix='experiences'),
+                'academic_qualifications': AcademicQualificationFormSet(
+                    prefix='academic_qualifications',
+                    instance=None  # No instance for new application
+                ),
+                'practical_experiences': PracticalExperienceFormSet(
+                    prefix='practical_experiences', 
+                    instance=None  # No instance for new application
+                ),
             }
     
     # Create mock formsets for template
@@ -627,8 +690,8 @@ def application_create(request, session_id):
         'form': form,
         'formsets': formsets,
         'session': session,
-        'show_qualifications': session.selected_affiliation_type.code == 'designated',
-        'show_experiences': session.selected_affiliation_type.code == 'designated',
+        'show_academic_qualifications': session.selected_affiliation_type.code == 'designated',
+        'show_practical_experiences': session.selected_affiliation_type.code == 'designated',
         'show_references': True,
         'show_documents': True,
         'page_title': f'Create {session.selected_affiliation_type.name} Application',
@@ -646,8 +709,6 @@ def application_create(request, session_id):
                                'enrollments/applications/base_form.html')
     
     return render(request, template, context)
-
-
 
 
 # ============================================================================

@@ -630,7 +630,20 @@ class DesignatedApplicationForm(BaseApplicationForm):
     """
     
     def __init__(self, *args, **kwargs):
+        # Extract onboarding_session before calling super()
+        self.onboarding_session = kwargs.pop('onboarding_session', None)
+        
         super().__init__(*args, **kwargs)
+        
+        # CRITICAL FIX: Auto-populate designation fields from onboarding session
+        if self.onboarding_session:
+            if 'designation_category' in self.fields and self.onboarding_session.selected_designation_category:
+                self.fields['designation_category'].initial = self.onboarding_session.selected_designation_category
+                self.initial['designation_category'] = self.onboarding_session.selected_designation_category.pk
+                
+            if 'designation_subcategory' in self.fields and self.onboarding_session.selected_designation_subcategory:
+                self.fields['designation_subcategory'].initial = self.onboarding_session.selected_designation_subcategory
+                self.initial['designation_subcategory'] = self.onboarding_session.selected_designation_subcategory.pk
         
         # Add designated-specific help text
         self.fields['high_school_name'].help_text = 'Name of high school attended (if applicable)'
@@ -643,10 +656,26 @@ class DesignatedApplicationForm(BaseApplicationForm):
         self.fields['high_school_year_completed'].required = False
         self.fields['supervision_period_end'].required = False
         self.fields['other_professional_memberships'].required = False
+        
+        # CRITICAL: Make designation fields optional since they're set from onboarding session
+        if 'designation_category' in self.fields:
+            self.fields['designation_category'].required = False
+            self.fields['designation_category'].help_text = 'Set during onboarding process'
+            
+        if 'designation_subcategory' in self.fields:
+            self.fields['designation_subcategory'].required = False
+            self.fields['designation_subcategory'].help_text = 'Set during onboarding process'
     
     def clean(self):
         """Designated application specific validation"""
         cleaned_data = super().clean()
+        
+        # CRITICAL: Force designation fields from onboarding session
+        if self.onboarding_session:
+            if self.onboarding_session.selected_designation_category:
+                cleaned_data['designation_category'] = self.onboarding_session.selected_designation_category
+            if self.onboarding_session.selected_designation_subcategory:
+                cleaned_data['designation_subcategory'] = self.onboarding_session.selected_designation_subcategory
         
         # Validate supervision period
         start_date = cleaned_data.get('supervision_period_start')
@@ -707,6 +736,7 @@ class DesignatedApplicationForm(BaseApplicationForm):
         }
 
 
+        
 # ============================================================================
 # RELATED MODEL FORMS
 # ============================================================================
