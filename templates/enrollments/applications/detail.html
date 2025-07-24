@@ -440,8 +440,24 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container-fluid py-3">
+        
+        <!-- Messages Display -->
+        {% if messages %}
+        <div class="row mb-3">
+            <div class="col-12">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    <i class="bi bi-{% if message.tags == 'error' %}exclamation-triangle{% elif message.tags == 'success' %}check-circle{% elif message.tags == 'warning' %}exclamation-circle{% else %}info-circle{% endif %} me-2"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
         
         <!-- Application Header -->
         <div class="application-header">
@@ -456,6 +472,9 @@
                         {{ affiliation_type.name }} Application for {{ council.name }}
                         {% if application.designation_category %}
                             - {{ application.designation_category.name }}
+                        {% endif %}
+                        {% if application.designation_subcategory %}
+                            ({{ application.designation_subcategory.name }})
                         {% endif %}
                     </p>
                 </div>
@@ -529,6 +548,10 @@
                                 <div class="info-value">{{ application.title }} {{ application.get_full_name }}</div>
                             </div>
                             <div class="info-item">
+                                <div class="info-label">Preferred Name</div>
+                                <div class="info-value">{{ application.preferred_name|default:"Not provided" }}</div>
+                            </div>
+                            <div class="info-item">
                                 <div class="info-label">Email</div>
                                 <div class="info-value">{{ application.email }}</div>
                             </div>
@@ -537,37 +560,101 @@
                                 <div class="info-value">{{ application.cell_phone }}</div>
                             </div>
                             <div class="info-item">
+                                <div class="info-label">Work Phone</div>
+                                <div class="info-value">{{ application.work_phone|default:"Not provided" }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Home Phone</div>
+                                <div class="info-value">{{ application.home_phone|default:"Not provided" }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="info-row">
+                            <div class="info-item">
                                 <div class="info-label">ID Number</div>
                                 <div class="info-value">{{ application.id_number|default:"Not provided" }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Passport Number</div>
+                                <div class="info-value">{{ application.passport_number|default:"Not provided" }}</div>
                             </div>
                             <div class="info-item">
                                 <div class="info-label">Date of Birth</div>
                                 <div class="info-value">{{ application.date_of_birth|date:"d M Y" }}</div>
                             </div>
                             <div class="info-item">
-                                <div class="info-label">Occupation</div>
-                                <div class="info-value">{{ application.current_occupation }}</div>
+                                <div class="info-label">Gender</div>
+                                <div class="info-value">{{ application.get_gender_display|default:"Not provided" }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Race</div>
+                                <div class="info-value">{{ application.get_race_display|default:"Not provided" }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Disability</div>
+                                <div class="info-value">{{ application.disability|default:"None specified" }}</div>
                             </div>
                         </div>
                         
                         <div class="info-row">
                             <div class="info-item" style="grid-column: 1 / -1;">
-                                <div class="info-label">Address</div>
+                                <div class="info-label">Postal Address</div>
                                 <div class="info-value">
                                     {{ application.postal_address_line1 }}<br>
                                     {% if application.postal_address_line2 %}{{ application.postal_address_line2 }}<br>{% endif %}
-                                    {{ application.postal_city }}, {{ application.postal_province }} {{ application.postal_code }}
+                                    {{ application.postal_city }}, {{ application.postal_province }} {{ application.postal_code }}<br>
+                                    {{ application.postal_country|default:"South Africa" }}
                                 </div>
                             </div>
+                        </div>
+                        
+                        <div class="info-row">
                             <div class="info-item">
                                 <div class="info-label">Religious Affiliation</div>
                                 <div class="info-value">{{ application.religious_affiliation|default:"Not specified" }}</div>
                             </div>
                             <div class="info-item">
+                                <div class="info-label">Home Language</div>
+                                <div class="info-value">{{ application.home_language|default:"Not specified" }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Other Languages</div>
+                                <div class="info-value">{{ application.other_languages|default:"Not specified" }}</div>
+                            </div>
+                            <div class="info-item">
                                 <div class="info-label">Years in Ministry</div>
                                 <div class="info-value">{{ application.years_in_ministry }} years</div>
                             </div>
+                            <div class="info-item">
+                                <div class="info-label">Current Occupation</div>
+                                <div class="info-value">{{ application.current_occupation }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Pastoral Counselling</div>
+                                <div class="info-value">{% if application.actively_involved_pastoral_counselling %}Yes{% else %}No{% endif %}</div>
+                            </div>
                         </div>
+                        
+                        {% if application.work_description %}
+                        <div class="info-row">
+                            <div class="info-item" style="grid-column: 1 / -1;">
+                                <div class="info-label">Work Description</div>
+                                <div class="info-value">{{ application.work_description }}</div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if application.disciplinary_action %}
+                        <div class="info-row">
+                            <div class="info-item" style="grid-column: 1 / -1;">
+                                <div class="info-label">Disciplinary Action</div>
+                                <div class="info-value">
+                                    <span class="badge bg-warning">Yes</span><br>
+                                    <small>{{ application.disciplinary_description|default:"No details provided" }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -591,24 +678,164 @@
                                 <div class="info-value">{{ application.course_of_study }}</div>
                             </div>
                             <div class="info-item">
-                                <div class="info-label">Expected Graduation</div>
-                                <div class="info-value">{{ application.expected_graduation|date:"M Y" }}</div>
+                                <div class="info-label">Student Number</div>
+                                <div class="info-value">{{ application.student_number|default:"Not provided" }}</div>
                             </div>
                             <div class="info-item">
                                 <div class="info-label">Year of Study</div>
                                 <div class="info-value">Year {{ application.year_of_study }}</div>
                             </div>
+                            <div class="info-item">
+                                <div class="info-label">Expected Graduation</div>
+                                <div class="info-value">{{ application.expected_graduation|date:"M Y" }}</div>
+                            </div>
                         </div>
+                        
+                        {% if application.academic_supervisor_name %}
+                        <h6 class="mt-3 mb-2">Academic Supervisor</h6>
+                        <div class="info-row">
+                            <div class="info-item">
+                                <div class="info-label">Supervisor Name</div>
+                                <div class="info-value">{{ application.academic_supervisor_name }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Supervisor Email</div>
+                                <div class="info-value">{{ application.academic_supervisor_email|default:"Not provided" }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Supervisor Phone</div>
+                                <div class="info-value">{{ application.academic_supervisor_phone|default:"Not provided" }}</div>
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
                 {% endif %}
 
-                <!-- Qualifications (Designated only) -->
-                {% if app_type == "designated" and application.academic_qualifications.exists %}
+                <!-- Designated Information -->
+                {% if app_type == "designated" %}
+                
+                <!-- High School Information -->
+                {% if application.high_school_name %}
                 <div class="card">
                     <div class="card-header">
                         <h5 class="card-title">
-                            <i class="bi bi-award text-primary"></i>
+                            <i class="bi bi-building text-primary"></i>
+                            High School Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-row">
+                            <div class="info-item">
+                                <div class="info-label">High School</div>
+                                <div class="info-value">{{ application.high_school_name }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Year Completed</div>
+                                <div class="info-value">{{ application.high_school_year_completed|default:"Not provided" }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Professional Supervision -->
+                {% if application.supervisor_name %}
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">
+                            <i class="bi bi-person-badge text-primary"></i>
+                            Professional Supervision
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-row">
+                            <div class="info-item">
+                                <div class="info-label">Supervisor Name</div>
+                                <div class="info-value">{{ application.supervisor_name }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Supervisor Qualification</div>
+                                <div class="info-value">{{ application.supervisor_qualification|default:"Not provided" }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Supervisor Email</div>
+                                <div class="info-value">{{ application.supervisor_email|default:"Not provided" }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Supervisor Phone</div>
+                                <div class="info-value">{{ application.supervisor_phone|default:"Not provided" }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Supervision Hours</div>
+                                <div class="info-value">{{ application.supervision_hours_received|default:"0" }} hours</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Supervision Period</div>
+                                <div class="info-value">
+                                    {% if application.supervision_period_start %}
+                                        {{ application.supervision_period_start|date:"d M Y" }}
+                                        {% if application.supervision_period_end %}
+                                            - {{ application.supervision_period_end|date:"d M Y" }}
+                                        {% else %}
+                                            - Ongoing
+                                        {% endif %}
+                                    {% else %}
+                                        Not specified
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if application.supervisor_address %}
+                        <div class="info-row">
+                            <div class="info-item" style="grid-column: 1 / -1;">
+                                <div class="info-label">Supervisor Address</div>
+                                <div class="info-value">{{ application.supervisor_address }}</div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Professional Development -->
+                {% if application.professional_development_plans or application.other_professional_memberships %}
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">
+                            <i class="bi bi-graph-up-arrow text-primary"></i>
+                            Professional Development
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if application.professional_development_plans %}
+                        <div class="info-row">
+                            <div class="info-item" style="grid-column: 1 / -1;">
+                                <div class="info-label">Professional Development Plans</div>
+                                <div class="info-value">{{ application.professional_development_plans }}</div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if application.other_professional_memberships %}
+                        <div class="info-row">
+                            <div class="info-item" style="grid-column: 1 / -1;">
+                                <div class="info-label">Other Professional Memberships</div>
+                                <div class="info-value">{{ application.other_professional_memberships }}</div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Academic Qualifications (Designated only) -->
+                {% if application.academic_qualifications.exists %}
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">
+                            <i class="bi bi-mortarboard-fill text-primary"></i>
                             Academic Qualifications
                         </h5>
                     </div>
@@ -622,6 +849,9 @@
                                     <div class="item-meta">
                                         <i class="bi bi-calendar me-1"></i>{{ qualification.date_awarded|date:"Y" }}
                                         <span class="ms-3">{{ qualification.get_qualification_type_display }}</span>
+                                        {% if qualification.institution_address %}
+                                        <span class="ms-3"><i class="bi bi-geo-alt me-1"></i>{{ qualification.institution_address|truncatechars:50 }}</span>
+                                        {% endif %}
                                     </div>
                                 </div>
                                 <div class="col-md-4 text-end">
@@ -635,6 +865,75 @@
                     </div>
                 </div>
                 {% endif %}
+
+                <!-- Practical Experience (Designated only) -->
+                {% if application.practical_experiences.exists %}
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">
+                            <i class="bi bi-briefcase text-primary"></i>
+                            Practical Experience
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% for experience in application.practical_experiences.all %}
+                        <div class="list-item verified">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <div class="item-title">{{ experience.institution_name }}</div>
+                                    <div class="item-description">{{ experience.basic_nature_of_work }}</div>
+                                    <div class="item-meta">
+                                        <i class="bi bi-calendar me-1"></i>
+                                        {{ experience.start_date|date:"M Y" }}
+                                        {% if experience.end_date %}
+                                            - {{ experience.end_date|date:"M Y" }}
+                                        {% else %}
+                                            - Present
+                                        {% endif %}
+                                        {% if experience.hours_per_week %}
+                                        <span class="ms-3"><i class="bi bi-clock me-1"></i>{{ experience.hours_per_week }}hrs/week</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="item-meta">
+                                        <i class="bi bi-person me-1"></i>{{ experience.contact_person_name }}
+                                        <span class="ms-3"><i class="bi bi-envelope me-1"></i>{{ experience.contact_person_email }}</span>
+                                        <span class="ms-3"><i class="bi bi-phone me-1"></i>{{ experience.contact_person_phone }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% endif %}
+
+                <!-- Education Background -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">
+                            <i class="bi bi-award text-primary"></i>
+                            Educational Background
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-row">
+                            <div class="info-item">
+                                <div class="info-label">Highest Qualification</div>
+                                <div class="info-value">{{ application.highest_qualification|default:"Not provided" }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Institution</div>
+                                <div class="info-value">{{ application.qualification_institution|default:"Not provided" }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Date Awarded</div>
+                                <div class="info-value">{{ application.qualification_date|date:"d M Y"|default:"Not provided" }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Documents -->
                 <div class="card">
@@ -735,6 +1034,11 @@
                                             <i class="bi bi-envelope me-1"></i>{{ reference.reference_email }}
                                             <span class="ms-3"><i class="bi bi-phone me-1"></i>{{ reference.reference_phone }}</span>
                                         </div>
+                                        {% if reference.reference_address %}
+                                        <div class="item-meta">
+                                            <i class="bi bi-geo-alt me-1"></i>{{ reference.reference_address }}
+                                        </div>
+                                        {% endif %}
                                     </div>
                                     <div class="col-md-3">
                                         {% if reference.letter_received %}
@@ -743,7 +1047,8 @@
                                             </span>
                                         {% else %}
                                             <span class="status-indicator status-pending">
-                                                <i class="bi bi-clock"></i> Pending
+                                                <i class="bi bi-clock"></i> 
+                                                {% if reference.letter_required %}Required{% else %}Optional{% endif %}
                                             </span>
                                         {% endif %}
                                     </div>
@@ -875,6 +1180,18 @@
                                 <div class="info-label">Type</div>
                                 <div class="info-value">{{ affiliation_type.name }}</div>
                             </div>
+                            {% if app_type == "designated" %}
+                            <div class="info-item">
+                                <div class="info-label">Category</div>
+                                <div class="info-value">{{ application.designation_category.name|default:"Not set" }}</div>
+                            </div>
+                            {% if application.designation_subcategory %}
+                            <div class="info-item">
+                                <div class="info-label">Subcategory</div>
+                                <div class="info-value">{{ application.designation_subcategory.name }}</div>
+                            </div>
+                            {% endif %}
+                            {% endif %}
                             <div class="info-item">
                                 <div class="info-label">Created</div>
                                 <div class="info-value">{{ application.created_at|date:"d M Y" }}</div>
@@ -1004,4 +1321,6 @@
         {% endif %}
     </script>
 </body>
+
+
 </html>

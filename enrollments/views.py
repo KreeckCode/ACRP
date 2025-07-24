@@ -389,8 +389,6 @@ def onboarding_category(request, session_id):
 
 
 
-
-
 @csrf_protect
 def onboarding_subcategory(request, session_id):
     """
@@ -1789,12 +1787,13 @@ def get_application_timeline(application):
 # ============================================================================
 
 @login_required
-@user_passes_test(can_approve_applications, login_url='/', redirect_field_name=None)
-@require_POST
+@permission_required('enrollments.change_baseapplication', raise_exception=True)
+@require_http_methods(["POST"])
 @transaction.atomic
 def application_review(request, pk, app_type):
     """
-    Universal application review handler for all application types.
+    Handle application status changes and reviews.
+    Fixed to only use fields that exist in the model.
     """
     model_map = {
         'associated': AssociatedApplication,
@@ -1804,54 +1803,168 @@ def application_review(request, pk, app_type):
     
     model = model_map.get(app_type)
     if not model:
-        raise Http404("Invalid application type")
+        messages.error(request, "Invalid application type.")
+        return redirect('enrollments:application_list')
     
-    application = get_object_or_404(model, pk=pk)
-    
-    form = ApplicationReviewForm(request.POST)
-    
-    if form.is_valid():
-        status = form.cleaned_data['status']
-        reviewer_notes = form.cleaned_data['reviewer_notes']
-        rejection_reason = form.cleaned_data['rejection_reason']
+    try:
+        application = get_object_or_404(model, pk=pk)
         
-        try:
-            # Update application status
-            application.status = status
-            application.reviewed_at = timezone.now()
-            application.reviewed_by = request.user
-            application.reviewer_notes = reviewer_notes
+        # Create review form
+        review_form = ApplicationReviewForm(request.POST)
+        
+        if review_form.is_valid():
+            status = review_form.cleaned_data['status']
+            reviewer_notes = review_form.cleaned_data['reviewer_notes']
+            rejection_reason = review_form.cleaned_data['rejection_reason']
             
-            if status == 'approved':
-                application.approved_at = timezone.now()
-                application.approved_by = request.user
-            elif status == 'rejected':
-                application.rejected_at = timezone.now()
-                application.rejected_by = request.user
+            # Update application status
+            old_status = application.status
+            application.status = status
+            
+            # Update review fields - only if they exist in the model
+            model_fields = [field.name for field in application._meta.get_fields()]
+            
+            if 'reviewer_notes' in model_fields:
+                application.reviewer_notes = reviewer_notes
+            
+            if 'rejection_reason' in model_fields:
                 application.rejection_reason = rejection_reason
             
-            application.save(update_fields=[
-                'status', 'reviewed_at', 'reviewed_by', 'reviewer_notes',
-                'approved_at', 'approved_by', 'rejected_at', 'rejected_by', 'rejection_reason'
-            ])
+            # Set review timestamp and user if fields exist
+            if 'reviewed_at' in model_fields:
+                application.reviewed_at = timezone.now()
             
-            logger.info(f"Application {application.application_number} {status} by {request.user.id}")
+            if 'reviewed_by' in model_fields:
+                application.reviewed_by = request.user
             
-            # Send notification email (implement as needed)
-            # send_status_change_email(application, status)
+            # Handle status-specific fields - only if they exist
+            if status == 'approved':
+                if 'approved_at' in model_fields:
+                    application.approved_at = timezone.now()
+                if 'approved_by' in model_fields:
+                    application.approved_by = request.user
+                    
+            elif status == 'submitted' and old_status != 'submitted':
+                if 'submitted_at' in model_fields and not getattr(application, 'submitted_at', None):
+                    application.submitted_at = timezone.now()
+                if 'submitted_by' in model_fields and not getattr(application, 'submitted_by', None):
+                    application.submitted_by = request.user
             
-            messages.success(request, f"Application {status} successfully.")
+            # Save the application
+            application.save()
             
-        except Exception as e:
-            logger.error(f"Error reviewing application {pk}: {str(e)}")
-            messages.error(request, "An error occurred during review.")
+            # Log the status change
+            logger.info(f"Application {application.application_number} status changed from {old_status} to {status} by {request.user}")
+            
+            # Add success message
+            messages.success(request, f"Application status updated to {application.get_status_display()}.")
+            
+            # Send notification email if needed
+            try:
+                if status == 'approved':
+                    send_application_approved_email(application)
+                elif status == 'rejected' and rejection_reason:
+                    send_application_rejected_email(application, rejection_reason)
+            except Exception as e:
+                logger.warning(f"Failed to send notification email: {str(e)}")
+                # Don't fail the status update if email fails
+                messages.warning(request, "Status updated but email notification failed to send.")
+            
+        else:
+            # Form validation failed
+            for field, errors in review_form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field.replace('_', ' ').title()}: {error}")
     
-    else:
-        messages.error(request, "Invalid review data.")
+    except Exception as e:
+        logger.error(f"Error reviewing application {pk}: {str(e)}")
+        messages.error(request, "An error occurred while updating the application status.")
     
     return redirect('enrollments:application_detail', pk=pk, app_type=app_type)
 
 
+def send_application_approved_email(application):
+    """Send email notification when application is approved using template"""
+    try:
+        from django.template.loader import render_to_string
+        from django.core.mail import EmailMultiAlternatives
+        
+        # Context for email template
+        context = {
+            'application': application,
+            'council': application.onboarding_session.selected_council,
+            'affiliation_type': application.onboarding_session.selected_affiliation_type,
+            'applicant_name': application.get_display_name(),
+            'application_number': application.application_number,
+        }
+        
+        # Render email templates
+        subject = f"Application Approved - {application.application_number}"
+        html_content = render_to_string('email_templates/enrollment/application_approved_email.html', context)
+        text_content = render_to_string('email_templates/enrollment/application_approved_email.txt', context)
+        
+        # Create email
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body=text_content,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[application.email],
+        )
+        email.attach_alternative(html_content, "text/html")
+        
+        # Send email
+        email.send()
+        
+        logger.info(f"Approval email sent for application {application.application_number}")
+        
+    except Exception as e:
+        logger.error(f"Failed to send approval email for {application.application_number}: {str(e)}")
+        raise
+
+
+def send_application_rejected_email(application, rejection_reason):
+    """Send email notification when application is rejected using template"""
+    try:
+        from django.template.loader import render_to_string
+        from django.core.mail import EmailMultiAlternatives
+        
+        # Context for email template
+        context = {
+            'application': application,
+            'council': application.onboarding_session.selected_council,
+            'affiliation_type': application.onboarding_session.selected_affiliation_type,
+            'applicant_name': application.get_display_name(),
+            'application_number': application.application_number,
+            'rejection_reason': rejection_reason,
+        }
+        
+        # Render email templates
+        subject = f"Application Status Update - {application.application_number}"
+        html_content = render_to_string('email_templates/enrollment/application_rejected_email.html', context)
+        text_content = render_to_string('email_templates/enrollment/application_rejected_email.txt', context)
+        
+        # Create email
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body=text_content,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[application.email],
+        )
+        email.attach_alternative(html_content, "text/html")
+        
+        # Send email
+        email.send()
+        
+        logger.info(f"Rejection email sent for application {application.application_number}")
+        
+    except Exception as e:
+        logger.error(f"Failed to send rejection email for {application.application_number}: {str(e)}")
+        raise
+
+
+
+
+    
 # ============================================================================
 # DASHBOARD AND STATISTICS
 # ============================================================================

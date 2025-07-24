@@ -1483,9 +1483,15 @@
                     </div>
                     <div class="section-content" id="content-references">
                         
+                        <!-- Management Form for References -->
+                        <input type="hidden" name="references-TOTAL_FORMS" value="0" id="id_references-TOTAL_FORMS">
+                        <input type="hidden" name="references-INITIAL_FORMS" value="0" id="id_references-INITIAL_FORMS">
+                        <input type="hidden" name="references-MIN_NUM_FORMS" value="0" id="id_references-MIN_NUM_FORMS">
+                        <input type="hidden" name="references-MAX_NUM_FORMS" value="1000" id="id_references-MAX_NUM_FORMS">
+                        
                         <div class="formset-container">
                             <div class="formset-header">
-                                <h4 class="formset-title">Professional References</h4>
+                                <h4 class="formset-title">Academic & Professional References</h4>
                                 <button type="button" class="formset-add" onclick="addFormsetItem('references')">
                                     <i class="bi bi-plus-circle"></i>
                                     Add Reference
@@ -1539,9 +1545,15 @@
                             </div>
                             {% endif %}
                             
+                            <!-- Management Form for Documents -->
+                            <input type="hidden" name="documents-TOTAL_FORMS" value="0" id="id_documents-TOTAL_FORMS">
+                            <input type="hidden" name="documents-INITIAL_FORMS" value="0" id="id_documents-INITIAL_FORMS">
+                            <input type="hidden" name="documents-MIN_NUM_FORMS" value="0" id="id_documents-MIN_NUM_FORMS">
+                            <input type="hidden" name="documents-MAX_NUM_FORMS" value="1000" id="id_documents-MAX_NUM_FORMS">
+                            
                             <div class="formset-container">
                                 <div class="formset-header">
-                                    <h4 class="formset-title">Upload Professional Documents</h4>
+                                    <h4 class="formset-title">Upload Academic & Identity Documents</h4>
                                     <button type="button" class="formset-add" onclick="addFormsetItem('documents')">
                                         <i class="bi bi-plus-circle"></i>
                                         Add Document
@@ -1907,7 +1919,6 @@
                             <option value="Prof">Prof</option>
                             <option value="Rev">Rev</option>
                             <option value="Pastor">Pastor</option>
-                            <option value="Bishop">Bishop</option>
                         </select>
                     </div>
                     
@@ -1938,7 +1949,7 @@
                     
                     <div class="form-group field-full">
                         <label for="id_references-${index}-nature_of_relationship">Relationship <span class="required">*</span></label>
-                        <input type="text" name="references-${index}-nature_of_relationship" id="id_references-${index}-nature_of_relationship" class="form-control" required placeholder="e.g., Professional Supervisor, Ministry Leader, Academic Supervisor">
+                        <input type="text" name="references-${index}-nature_of_relationship" id="id_references-${index}-nature_of_relationship" class="form-control" required placeholder="e.g., Academic Supervisor, Course Lecturer, Ministry Leader">
                     </div>
                     
                     <div class="form-group">
@@ -1978,13 +1989,10 @@
                             <option value="degree_certificate">Degree Certificate</option>
                             <option value="ordination_certificate">Ordination Certificate</option>
                             <option value="professional_certification">Professional Certification</option>
-                            <option value="professional_registration">Professional Registration</option>
-                            <option value="insurance_certificate">Insurance Certificate</option>
-                            <option value="cv">Curriculum Vitae</option>
                             <option value="reference_letter">Reference Letter</option>
                             <option value="recommendation_letter">Letter of Recommendation</option>
                             <option value="ministry_experience_letter">Ministry Experience Letter</option>
-                            <option value="supervision_record">Supervision Record</option>
+                            <option value="cv">Curriculum Vitae</option>
                             <option value="supporting_document">Supporting Document</option>
                             <option value="other">Other</option>
                         </select>
@@ -1992,7 +2000,7 @@
                     
                     <div class="form-group">
                         <label for="id_documents-${index}-title">Title <span class="required">*</span></label>
-                        <input type="text" name="documents-${index}-title" id="id_documents-${index}-title" class="form-control" required placeholder="e.g., Copy of ID Document, Qualification Certificate">
+                        <input type="text" name="documents-${index}-title" id="id_documents-${index}-title" class="form-control" required placeholder="e.g., Copy of ID Document, Academic Transcript">
                     </div>
                     
                     <div class="form-group field-full">
@@ -2013,10 +2021,9 @@
                         </div>
                     </div>
                 </div>
-                
-                <input type="hidden" name="documents-${index}-DELETE" id="id_documents-${index}-DELETE">
             `;
         }
+        
 
         function updateFormsetIndices(formsetName) {
             const formset = document.getElementById(`${formsetName}-formset`);
