@@ -17,7 +17,7 @@ urlpatterns = [
     path("__reload__/", include("django_browser_reload.urls")),
 ]
 
-# Error Handlers
+
 handler404 = error_404
 handler500 = error_500
 handler403 = error_403

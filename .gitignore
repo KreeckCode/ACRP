@@ -7,11 +7,6 @@ __pycache__/
 migrations/
 
 
-.media_root
-media_root
-media
-.media
-/media/
 # Virtual environments
 .venv/
 venv/

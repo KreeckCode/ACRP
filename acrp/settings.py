@@ -1,34 +1,51 @@
+"""
+Django Settings for ACRP Platform
+=================================
+
+This settings file is designed for production deployment with comprehensive
+configuration for security, performance, and maintainability.
+
+Architecture:
+- Environment-based configuration using django-decouple
+- Organized sections for different Django components
+- Production-optimized with development overrides
+- Comprehensive logging and monitoring setup
+- Security-first approach with proper headers and SSL
+
+Author: Development Team
+Last Updated: January 2025
+"""
 
 import os
 import sys
 import logging
 from pathlib import Path
 from decouple import config, Csv
-import dj_database_url
 
 # ============================================================================
-# CORE SETTINGS - Foundation configuration
+# CORE DJANGO SETTINGS
 # ============================================================================
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Environment detection
+# Use 'development', 'staging', or 'production'
 ENVIRONMENT = config('ENVIRONMENT', default='development')
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-# Security
+# Security settings
 SECRET_KEY = config('SECRET_KEY')
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*', cast=Csv())
 
-# CSRF and CORS settings
+# CSRF and CORS settings for trusted origins
 CSRF_TRUSTED_ORIGINS = config(
     'CSRF_TRUSTED_ORIGINS', 
-    default='https://kreeck.com,https://www.kreeck.com',
+    default='https://kreeck.com,https://www.kreeck.com,https://acrpafrica.co.za,https://www.acrpafrica.co.za,https://acrp.org.za,https://www.acrp.org.za,https://ams.acrpafrica.co.za,https://www.ams.acrpafrica.co.za,https://ams.acrp.org.za,https://www.ams.acrp.org.za',
     cast=Csv()
 )
 
-# Security Headers (Production)
+# Security Headers - Applied only in production for maximum security
 if not DEBUG:
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
@@ -38,15 +55,16 @@ if not DEBUG:
     SECURE_REDIRECT_EXEMPT = []
     SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
     SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=True, cast=bool)
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     X_FRAME_OPTIONS = 'DENY'
 
 # ============================================================================
-# APPLICATION DEFINITION - Organized by category
+# APPLICATION DEFINITION - Organized by category for maintainability
 # ============================================================================
 
-# Django Core Apps
+# Django Core Applications
 DJANGO_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -58,7 +76,7 @@ DJANGO_APPS = [
     'django.contrib.sitemaps',
 ]
 
-# Third Party Apps
+# Third Party Applications
 THIRD_PARTY_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
@@ -71,13 +89,13 @@ THIRD_PARTY_APPS = [
     'theme',
 ]
 
-# Development Apps (only in debug mode)
+# Development-only Applications (conditionally loaded)
 DEVELOPMENT_APPS = [
     'debug_toolbar',
     'django_browser_reload',
 ] if DEBUG else []
 
-# Project Apps
+# Project-specific Applications
 PROJECT_APPS = [
     'accounts',
     'app',
@@ -86,42 +104,45 @@ PROJECT_APPS = [
     'affiliationcard',
 ]
 
-# Combine all apps
+# Combine all applications - Order matters for some apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + DEVELOPMENT_APPS + PROJECT_APPS
 
 # ============================================================================
-# MIDDLEWARE CONFIGURATION - Optimized order for performance
+# MIDDLEWARE CONFIGURATION - Optimized order for performance and security
 # ============================================================================
 
 MIDDLEWARE = [
-    # Security middleware (first)
+    # Security middleware (first for early security checks)
     'django.middleware.security.SecurityMiddleware',
     
-    # Static files (early for performance)
+    # Static files middleware (early for performance optimization)
     'whitenoise.middleware.WhiteNoiseMiddleware',
     
-    # Session and cache
+    # Session middleware (required for authentication)
     'django.contrib.sessions.middleware.SessionMiddleware',
     
-    # Common middleware
+    # Common middleware (handles redirects, ETags, etc.)
     'django.middleware.common.CommonMiddleware',
     
-    # CSRF protection
+    # CSRF protection middleware
     'django.middleware.csrf.CsrfViewMiddleware',
     
-    # Authentication
+    # Authentication middleware (after sessions and CSRF)
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     
-    # Messages
+    # Messages framework middleware
     'django.contrib.messages.middleware.MessageMiddleware',
     
-    # Clickjacking protection
+    # Clickjacking protection middleware
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    
-    # Development middleware (only in debug)
-] + (['debug_toolbar.middleware.DebugToolbarMiddleware'] if DEBUG else []) + [
-    'django_browser_reload.middleware.BrowserReloadMiddleware',
-] if DEBUG else []
+]
+
+# Add development middleware only in DEBUG mode
+if DEBUG:
+    MIDDLEWARE.extend([
+        'debug_toolbar.middleware.DebugToolbarMiddleware',
+        'django_browser_reload.middleware.BrowserReloadMiddleware',
+    ])
 
 # ============================================================================
 # URL AND ROUTING CONFIGURATION
@@ -147,7 +168,7 @@ TEMPLATES = [
                 'django.template.context_processors.media',
                 'django.template.context_processors.static',
             ],
-            # Template caching for production
+            # Use cached template loader in production for better performance
             'loaders': [
                 ('django.template.loaders.cached.Loader', [
                     'django.template.loaders.filesystem.Loader',
@@ -162,94 +183,76 @@ TEMPLATES = [
 ]
 
 # ============================================================================
-# DATABASE CONFIGURATION - Environment-based with optimization
+# DATABASE CONFIGURATION - Environment-based with PostgreSQL optimization
 # ============================================================================
 
-# Default database configuration
 DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': config('DB_NAME'),
-            'USER': config('DB_USER'),
-            'PASSWORD': config('DB_PASS'),
-            'HOST': config('DB_HOST'), 
-            'PORT': config('DB_PORT'),  
-        }
-    }
-
-# Database optimization settings
-DATABASE_OPTIONS = {
-    'postgresql': {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config('DB_NAME'),
+        'USER': config('DB_USER'),
+        'PASSWORD': config('DB_PASS'),
+        'HOST': config('DB_HOST'), 
+        'PORT': config('DB_PORT', cast=int),
         'OPTIONS': {
-            'sslmode': config('DB_SSLMODE', default='prefer'),
+            # SSL mode for secure connections (required for production databases)
+            'sslmode': config('DB_SSLMODE', default='require'),
+            # Connection timeout to prevent hanging connections
             'connect_timeout': 10,
-            'options': '-c default_transaction_isolation=read_committed'
         },
-        'CONN_MAX_AGE': 600,
+        # Connection pooling for better performance
+        'CONN_MAX_AGE': 600 if not DEBUG else 0,
+        # Health checks to ensure connection validity
         'CONN_HEALTH_CHECKS': True,
-        'ATOMIC_REQUESTS': True,  # Wrap each request in a transaction
-    },
-    'mysql': {
-        'OPTIONS': {
-            'charset': 'utf8mb4',
-            'use_unicode': True,
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-        },
-        'CONN_MAX_AGE': 600,
-        'CONN_HEALTH_CHECKS': True,
-        'ATOMIC_REQUESTS': True,
     }
 }
 
-# Apply database-specific optimizations
-db_engine = DATABASES['default']['ENGINE']
-if 'postgresql' in db_engine and not DEBUG:
-    DATABASES['default'].update(DATABASE_OPTIONS['postgresql'])
-elif 'mysql' in db_engine and not DEBUG:
-    DATABASES['default'].update(DATABASE_OPTIONS['mysql'])
-
 # ============================================================================
-# CACHE CONFIGURATION - Simple deployment without Redis
+# CACHE CONFIGURATION - Environment-based caching strategy
 # ============================================================================
 
 if DEBUG:
-    # Development: Local memory cache
+    # Development: Local memory cache for quick testing
     CACHES = {
         'default': {
             'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-            'LOCATION': 'acrp-cache',
-            'TIMEOUT': 300,
+            'LOCATION': 'acrp-dev-cache',
+            'TIMEOUT': 300,  # 5 minutes
             'OPTIONS': {
                 'MAX_ENTRIES': 1000,
             }
         }
     }
 else:
-    # Production: Database cache (simple deployment)
+    # Production: Database cache for simple deployment without Redis
     CACHES = {
         'default': {
             'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
             'LOCATION': 'acrp_cache_table',
-            'TIMEOUT': 300,
+            'TIMEOUT': 300,  # 5 minutes
             'OPTIONS': {
                 'MAX_ENTRIES': 5000,
-                'CULL_FREQUENCY': 3,
+                'CULL_FREQUENCY': 3,  # Remove 1/3 of entries when MAX_ENTRIES is reached
             }
         }
     }
 
-# Session configuration for performance (database-backed)
+# ============================================================================
+# SESSION CONFIGURATION - Optimized for performance and security
+# ============================================================================
+
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_COOKIE_AGE = 86400  # 24 hours
-SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_HTTPONLY = True  # Prevent JavaScript access
 SESSION_COOKIE_NAME = 'acrp_sessionid'
-SESSION_SAVE_EVERY_REQUEST = False
+SESSION_SAVE_EVERY_REQUEST = False  # Save only when modified
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 # ============================================================================
 # AUTHENTICATION AND AUTHORIZATION
 # ============================================================================
 
+# Custom user model
 AUTH_USER_MODEL = 'accounts.User'
 
 # Authentication backends
@@ -257,7 +260,7 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
-# Password validation
+# Password validation for security
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -274,7 +277,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# Login/Logout settings
+# Login/Logout URL configuration
 LOGIN_REDIRECT_URL = '/'
 LOGIN_URL = '/auth/login/'
 LOGOUT_REDIRECT_URL = '/'
@@ -283,7 +286,7 @@ LOGOUT_REDIRECT_URL = '/'
 PASSWORD_RESET_TIMEOUT = 86400  # 24 hours
 
 # ============================================================================
-# STATIC FILES AND MEDIA - Optimized for production
+# STATIC FILES AND MEDIA - Production-optimized serving
 # ============================================================================
 
 # Static files configuration
@@ -291,41 +294,41 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static'] if (BASE_DIR / 'static').exists() else []
 
-# Static files finders (optimized order)
+# Static files finders (optimized order for performance)
 STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 ]
 
-# Static files storage (optimized for production)
+# Static files storage with compression for production
 if DEBUG:
     STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 else:
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# WhiteNoise configuration for production
+# WhiteNoise configuration for static file serving
 WHITENOISE_USE_FINDERS = DEBUG
 WHITENOISE_AUTOREFRESH = DEBUG
-WHITENOISE_MAX_AGE = 31536000  # 1 year cache for production
+WHITENOISE_MAX_AGE = 31536000  # 1 year cache for static files
 
 # Media files configuration
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# File upload settings
+# File upload security settings
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
 FILE_UPLOAD_PERMISSIONS = 0o644
 
 # ============================================================================
-# EMAIL CONFIGURATION - Environment-based
+# EMAIL CONFIGURATION - Environment-based email backend
 # ============================================================================
 
 if DEBUG:
-    # Development email backend
+    # Development: Console backend for testing
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 else:
-    # Production email configuration
+    # Production: SMTP backend for real email sending
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     EMAIL_HOST = config('EMAIL_HOST')
     EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
@@ -333,7 +336,7 @@ else:
     EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
     EMAIL_HOST_USER = config('EMAIL_HOST_USER')
     EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
-    
+
 # Email settings
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@acrp.com')
 SERVER_EMAIL = config('SERVER_EMAIL', default=DEFAULT_FROM_EMAIL)
@@ -360,22 +363,28 @@ TIME_FORMAT = 'H:i:s'
 # ============================================================================
 
 REST_FRAMEWORK = {
+    # Authentication classes for API endpoints
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.TokenAuthentication',
     ],
+    # Default permissions for API security
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
+    # Response renderers (browsable API only in debug mode)
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
     ] + (['rest_framework.renderers.BrowsableAPIRenderer'] if DEBUG else []),
+    # Pagination for large datasets
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
+    # Filtering and searching
     'DEFAULT_FILTER_BACKENDS': [
         'rest_framework.filters.SearchFilter',
         'rest_framework.filters.OrderingFilter',
     ],
+    # Rate limiting for API protection
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle'
@@ -391,123 +400,96 @@ REST_FRAMEWORK = {
 # THIRD-PARTY PACKAGE CONFIGURATION
 # ============================================================================
 
-# Crispy Forms
+# Crispy Forms for better form rendering
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 CRISPY_ALLOWED_TEMPLATE_PACKS = 'bootstrap4'
 
-# Tailwind CSS
+# Tailwind CSS configuration
 TAILWIND_APP_NAME = 'theme'
 NPM_BIN_PATH = config('NPM_BIN_PATH', default='npm')
 
-# Django Extensions
+# Django Extensions for development tools
 GRAPH_MODELS = {
     'all_applications': True,
     'group_models': True,
 }
 
 # ============================================================================
-# PERFORMANCE OPTIMIZATION SETTINGS
+# LOGGING CONFIGURATION - Comprehensive logging for debugging and monitoring
 # ============================================================================
 
-# Database query optimization
-if not DEBUG:
-    # Prevent N+1 queries in production
-    DATABASES['default']['OPTIONS'] = {
-        **DATABASES['default'].get('OPTIONS', {}),
-        'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-    }
-
-
-# ============================================================================
-# LOGGING CONFIGURATION - Comprehensive and structured
-# ============================================================================
+# Console debug logging flag
 CONSOLE_LOG_DEBUG = config('CONSOLE_LOG_DEBUG', default=False, cast=bool)
 
-if DEBUG:
-    LOGGING = {
-        'version': 1,
-        'disable_existing_loggers': False,
-        'formatters': {
-            'verbose': {
-                'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
-                'style': '{',
-            },
-            'simple': {
-                'format': '{levelname} {message}',
-                'style': '{',
-            },
-            'json': {
-                '()': 'pythonjsonlogger.jsonlogger.JsonFormatter',
-                'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
-            } if not DEBUG else {
-                'format': '{levelname} {asctime} {module} {message}',
-                'style': '{',
-            },
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
         },
-        'handlers': {
-            'console': {
-                'class': 'logging.StreamHandler',
-                'formatter': 'simple' if DEBUG else 'json',
-            },
-            'file': {
-                'class': 'logging.handlers.RotatingFileHandler',
-                'filename': BASE_DIR / 'logs' / 'acrp.log',
-                'maxBytes': 15728640,  # 15MB
-                'backupCount': 10,
-                'formatter': 'verbose',
-            },
-            'mail_admins': {
-                'level': 'ERROR',
-                'class': 'django.utils.log.AdminEmailHandler',
-                'formatter': 'verbose',
-            },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
         },
-        'root': {
+        'json': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple' if DEBUG else 'json',
+        },
+        'file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': BASE_DIR / 'logs' / 'acrp.log',
+            'maxBytes': 15728640,  # 15MB
+            'backupCount': 10,
+            'formatter': 'verbose',
+        } if not DEBUG else {
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+        'mail_admins': {
+            'level': 'ERROR',
+            'class': 'django.utils.log.AdminEmailHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'level': 'INFO',
+        'handlers': ['console'],
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'] if not DEBUG else ['console'],
             'level': 'INFO',
-            'handlers': ['console'],
+            'propagate': False,
         },
-        'loggers': {
-            'django': {
-                'handlers': ['console', 'file'] if not DEBUG else ['console'],
-                'level': 'INFO',
-                'propagate': False,
-            },
-            'django.db.backends': {
-                # only attach console handler when CONSOLE_LOG_DEBUG is True
-                'handlers': ['console'] if CONSOLE_LOG_DEBUG else [],
-                # and only DEBUG‑level when the flag is True
-                'level': 'DEBUG' if CONSOLE_LOG_DEBUG else 'WARNING',
-                'propagate': False,
-            },
-            'acrp': {
-                'handlers': ['console', 'file', 'mail_admins'],
-                'level': 'DEBUG' if DEBUG else 'INFO',
-                'propagate': False,
-            },
-            'cpd_tracking': {
-                'handlers': ['console', 'file'],
-                'level': 'DEBUG' if DEBUG else 'INFO',
-                'propagate': False,
-            },
+        'django.db.backends': {
+            'handlers': ['console'] if CONSOLE_LOG_DEBUG else [],
+            'level': 'DEBUG' if CONSOLE_LOG_DEBUG else 'WARNING',
+            'propagate': False,
         },
-    }
-else:
-    LOGGING = {
-        'version': 1,
-        'disable_existing_loggers': False,
-        'handlers': {
-            'console': {
-                'class': 'logging.StreamHandler',
-            },
+        'acrp': {
+            'handlers': ['console', 'file', 'mail_admins'] if not DEBUG else ['console'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'propagate': False,
         },
-        'root': {
-            'handlers': ['console'],
-            'level': 'WARNING',
+        'cpd_tracking': {
+            'handlers': ['console', 'file'] if not DEBUG else ['console'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'propagate': False,
         },
-    }
-    
-# Ensure logs directory exists
-(BASE_DIR / 'logs').mkdir(exist_ok=True)
+    },
+}
+
+# Ensure logs directory exists for file logging
+if not DEBUG:
+    (BASE_DIR / 'logs').mkdir(exist_ok=True)
 
 # ============================================================================
 # DEBUG TOOLBAR CONFIGURATION - Development only
@@ -522,16 +504,17 @@ if DEBUG:
         'SQL_WARNING_THRESHOLD': 500,  # milliseconds
     }
     
+    # Internal IPs for debug toolbar access
     INTERNAL_IPS = [
         '127.0.0.1',
         'localhost',
     ]
 
 # ============================================================================
-# CUSTOM APPLICATION SETTINGS
+# CUSTOM APPLICATION SETTINGS - Business logic configuration
 # ============================================================================
 
-# CPD Tracking specific settings
+# CPD (Continuing Professional Development) Tracking Settings
 CPD_SETTINGS = {
     'DEFAULT_POINTS_PER_HOUR': 1.0,
     'MAX_FILE_UPLOAD_SIZE': 10 * 1024 * 1024,  # 10MB
@@ -541,7 +524,7 @@ CPD_SETTINGS = {
     'NOTIFICATION_REMINDER_DAYS': [30, 14, 7, 1],  # Days before deadline
 }
 
-# Enrollment system settings
+# Enrollment System Settings
 ENROLLMENT_SETTINGS = {
     'APPLICATION_TIMEOUT_DAYS': 90,
     'MAX_APPLICATIONS_PER_USER': 5,
@@ -549,21 +532,21 @@ ENROLLMENT_SETTINGS = {
     'AUTO_GENERATE_CERTIFICATES': True,
 }
 
-# General application settings
+# General Application Settings
 APP_SETTINGS = {
     'SITE_NAME': 'ACRP Africa',
     'SITE_DESCRIPTION': 'Association of Christian Religious Practitioners',
     'CONTACT_EMAIL': config('CONTACT_EMAIL', default='info@acrp.org.za'),
     'SUPPORT_EMAIL': config('SUPPORT_EMAIL', default='acrp@acrpafrica.co.za'),
     'MAX_LOGIN_ATTEMPTS': 10,
-    'LOGIN_LOCKOUT_DURATION': 500,  # 5 minutes
+    'LOGIN_LOCKOUT_DURATION': 300,  # 5 minutes
 }
 
 # ============================================================================
-# MONITORING AND ANALYTICS - Simple deployment
+# MONITORING AND ANALYTICS - Optional production monitoring
 # ============================================================================
 
-# Application monitoring (optional - add services like Sentry only if needed)
+# Application monitoring with Sentry (optional)
 MONITORING_ENABLED = config('MONITORING_ENABLED', default=False, cast=bool)
 
 if MONITORING_ENABLED and config('SENTRY_DSN', default=None):
@@ -588,7 +571,7 @@ if MONITORING_ENABLED and config('SENTRY_DSN', default=None):
         # Sentry not installed, skip monitoring
         pass
 
-# Performance monitoring
+# Performance monitoring thresholds
 PERFORMANCE_MONITORING = {
     'SLOW_QUERY_THRESHOLD': 1000,  # milliseconds
     'MEMORY_USAGE_THRESHOLD': 500,  # MB
@@ -596,11 +579,10 @@ PERFORMANCE_MONITORING = {
 }
 
 # ============================================================================
-# BACKGROUND TASKS CONFIGURATION - Simple deployment
+# BACKGROUND TASKS CONFIGURATION - Simple deployment approach
 # ============================================================================
 
-# For simple deployments, we'll use Django's built-in management commands
-# and scheduled cron jobs instead of Celery for background tasks
+# Using Django management commands with cron jobs instead of Celery
 BACKGROUND_TASKS = {
     'EMAIL_BATCH_SIZE': 50,
     'NOTIFICATION_BATCH_SIZE': 100,
@@ -612,37 +594,31 @@ BACKGROUND_TASKS = {
 # ENVIRONMENT-SPECIFIC OVERRIDES
 # ============================================================================
 
-# Development overrides
+# Development environment overrides
 if DEBUG:
     # Allow all hosts in development
     ALLOWED_HOSTS = ['*']
     
-    # Disable email in development
+    # Console email backend for development
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-    
-    # Enable SQL debugging
-    LOGGING['loggers']['django.db.backends']['level'] = 'DEBUG'
 
-# Production overrides
+# Production environment overrides
 if ENVIRONMENT == 'production':
-    # Force HTTPS
+    # Force HTTPS in production
     SECURE_SSL_REDIRECT = True
     
-    # Enable all security features
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    
-    # Optimize for production
-    CONN_MAX_AGE = 600
-    
-# Testing overrides
+    # Set proper allowed hosts (should be configured in environment)
+    assert ALLOWED_HOSTS != ['*'], "ALLOWED_HOSTS must be properly configured for production"
+
+# Testing environment overrides
 if 'test' in sys.argv or 'pytest' in sys.modules:
-    # Use in-memory database for tests
+    # Use SQLite in-memory database for faster tests
     DATABASES['default'] = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': ':memory:',
     }
     
-    # Disable migrations for faster tests
+    # Disable migrations during testing for speed
     class DisableMigrations:
         def __contains__(self, item):
             return True
@@ -654,29 +630,34 @@ if 'test' in sys.argv or 'pytest' in sys.modules:
     # Use dummy cache for tests
     CACHES['default']['BACKEND'] = 'django.core.cache.backends.dummy.DummyCache'
     
-    # Disable logging during tests
+    # Disable logging during tests to reduce noise
     LOGGING['root']['level'] = 'CRITICAL'
 
 # ============================================================================
-# FINAL SETTINGS VALIDATION
+# SETTINGS VALIDATION - Ensure critical settings are properly configured
 # ============================================================================
 
-# Validate critical settings
+# Validate essential environment variables
 assert SECRET_KEY, "SECRET_KEY must be set in environment variables"
 assert ALLOWED_HOSTS, "ALLOWED_HOSTS must be configured"
 
+# Production-specific validations
 if not DEBUG:
     assert config('EMAIL_HOST', default=None), "EMAIL_HOST must be set in production"
-    assert 'postgresql' in DATABASES['default']['ENGINE'] or 'mysql' in DATABASES['default']['ENGINE'], \
-           "Production should use PostgreSQL or MySQL"
+    assert 'postgresql' in DATABASES['default']['ENGINE'], \
+           "Production should use PostgreSQL for better performance and features"
 
-# Set default primary key field type
+# Set default primary key field type for Django 3.2+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Final environment info (for logging)
+# ============================================================================
+# FINAL SETUP AND LOGGING
+# ============================================================================
+
+# Log startup information
 logger = logging.getLogger(__name__)
 logger.info(f"ACRP Platform starting in {ENVIRONMENT} mode (DEBUG={DEBUG})")
 
-# Cache table setup reminder for production
-if not DEBUG and 'migrate' not in sys.argv:
+# Reminder for cache table creation in production
+if not DEBUG and 'migrate' not in sys.argv and 'runserver' not in sys.argv:
     logger.info("Remember to create cache table: python manage.py createcachetable acrp_cache_table")
