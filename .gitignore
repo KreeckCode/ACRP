@@ -27,6 +27,8 @@ venv/
 credentials
 erp_ssh.pub
 
+static_files/
+staticfiles/
 # Themes
 theme/
 .theme/

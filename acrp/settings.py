@@ -1,21 +1,3 @@
-"""
-Django Settings for ACRP Platform
-=================================
-
-This settings file is designed for production deployment with comprehensive
-configuration for security, performance, and maintainability.
-
-Architecture:
-- Environment-based configuration using django-decouple
-- Organized sections for different Django components
-- Production-optimized with development overrides
-- Comprehensive logging and monitoring setup
-- Security-first approach with proper headers and SSL
-
-Author: Development Team
-Last Updated: January 2025
-"""
-
 import os
 import sys
 import logging
@@ -29,10 +11,9 @@ from decouple import config, Csv
 # Build paths inside the project like this: BASE_DIR / 'subdir'
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Environment detection
 # Use 'development', 'staging', or 'production'
 ENVIRONMENT = config('ENVIRONMENT', default='development')
-DEBUG = config('DEBUG', default=True, cast=bool)
+DEBUG = False
 
 # Security settings
 SECRET_KEY = config('SECRET_KEY')
@@ -54,16 +35,17 @@ if not DEBUG:
     SECURE_HSTS_SECONDS = 31536000  # 1 year
     SECURE_REDIRECT_EXEMPT = []
     SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
-    SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=True, cast=bool)
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
+    
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
     X_FRAME_OPTIONS = 'DENY'
 
 # ============================================================================
 # APPLICATION DEFINITION - Organized by category for maintainability
 # ============================================================================
 
+SECURE_SSL_REDIRECT = False
 # Django Core Applications
 DJANGO_APPS = [
     'django.contrib.admin',
@@ -604,8 +586,6 @@ if DEBUG:
 
 # Production environment overrides
 if ENVIRONMENT == 'production':
-    # Force HTTPS in production
-    SECURE_SSL_REDIRECT = True
     
     # Set proper allowed hosts (should be configured in environment)
     assert ALLOWED_HOSTS != ['*'], "ALLOWED_HOSTS must be properly configured for production"

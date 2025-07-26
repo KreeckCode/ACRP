@@ -1979,115 +1979,121 @@ def enrollment_dashboard_ajax(request):
 
 
 
+
 @login_required
-@user_passes_test(is_admin_or_manager, login_url='/', redirect_field_name=None)
 def enrollment_dashboard(request):
     """
     Enhanced administrative dashboard with comprehensive statistics.
-    Supports AJAX requests for real-time updates.
+    Supports AJAX requests for real‑time updates.
     """
     # Handle AJAX requests
     if request.GET.get('ajax') == '1':
         return enrollment_dashboard_ajax(request)
-    
-    # Initialize stats structure for all councils
+
+    # Define all application types up‑front
+    app_models = [
+        ('associated', AssociatedApplication),
+        ('designated', DesignatedApplication),
+        ('student',    StudentApplication),
+    ]
+
+    # Seed stats for each council, including rejected & under_review
     stats = {
-        'cgmp': {'total': 0, 'approved': 0, 'pending': 0, 'by_type': {}},
-        'cpsc': {'total': 0, 'approved': 0, 'pending': 0, 'by_type': {}},
-        'cmtp': {'total': 0, 'approved': 0, 'pending': 0, 'by_type': {}},
+        'cgmp': {
+            'total': 0, 'approved': 0, 'pending': 0,
+            'rejected': 0, 'under_review': 0,
+            'by_type': {}
+        },
+        'cpsc': {
+            'total': 0, 'approved': 0, 'pending': 0,
+            'rejected': 0, 'under_review': 0,
+            'by_type': {}
+        },
+        'cmtp': {
+            'total': 0, 'approved': 0, 'pending': 0,
+            'rejected': 0, 'under_review': 0,
+            'by_type': {}
+        },
     }
-    
-    # Get all councils
-    councils = Council.objects.filter(is_active=True)
-    council_map = {council.code.lower(): council for council in councils}
-    
-    # Calculate statistics for each council
+
+    # Fetch active councils and map by code
+    councils    = Council.objects.filter(is_active=True)
+    council_map = {c.code.lower(): c for c in councils}
+
+    # Build per‑council stats
     for council in councils:
-        council_code = council.code.lower()
+        code = council.code.lower()
         council_stats = {
-            'total': 0,
-            'approved': 0,
-            'pending': 0,
-            'rejected': 0,
-            'under_review': 0,
+            'total': 0, 'approved': 0, 'pending': 0,
+            'rejected': 0, 'under_review': 0,
             'by_type': {}
         }
-        
-        # Get applications for this council across all types
-        app_models = [
-            ('associated', AssociatedApplication),
-            ('designated', DesignatedApplication),
-            ('student', StudentApplication)
-        ]
-        
-        for app_type_name, app_model in app_models:
-            apps = app_model.objects.filter(
-                onboarding_session__selected_council=council
-            )
-            
+
+        for name, Model in app_models:
+            qs = Model.objects.filter(onboarding_session__selected_council=council)
             type_stats = {
-                'total': apps.count(),
-                'approved': apps.filter(status='approved').count(),
-                'pending': apps.filter(status__in=['draft', 'submitted']).count(),
-                'under_review': apps.filter(status='under_review').count(),
-                'rejected': apps.filter(status='rejected').count(),
-                'requires_clarification': apps.filter(status='requires_clarification').count(),
+                'total':                  qs.count(),
+                'approved':               qs.filter(status='approved').count(),
+                'pending':                qs.filter(status__in=['draft','submitted']).count(),
+                'under_review':           qs.filter(status='under_review').count(),
+                'rejected':               qs.filter(status='rejected').count(),
+                'requires_clarification': qs.filter(status='requires_clarification').count(),
             }
-            
-            council_stats['by_type'][app_type_name] = type_stats
-            council_stats['total'] += type_stats['total']
-            council_stats['approved'] += type_stats['approved']
-            council_stats['pending'] += type_stats['pending'] + type_stats['under_review']
-            council_stats['rejected'] += type_stats['rejected']
+
+            council_stats['by_type'][name] = type_stats
+            council_stats['total']        += type_stats['total']
+            council_stats['approved']     += type_stats['approved']
+            council_stats['pending']      += type_stats['pending'] + type_stats['under_review']
             council_stats['under_review'] += type_stats['under_review']
-        
-        stats[council_code] = council_stats
-    
-    # Get recent applications across all types (last 20)
+            council_stats['rejected']     += type_stats['rejected']
+
+        stats[code] = council_stats
+
+    # Gather latest 20 applications across all types
     recent_applications = []
-    
-    for app_type_name, app_model in app_models:
-        apps = app_model.objects.select_related(
-            'onboarding_session__selected_council',
-            'onboarding_session__selected_affiliation_type'
-        ).order_by('-created_at')[:15]
-        
-        for app in apps:
+    for name, Model in app_models:
+        qs = (
+            Model.objects
+                 .select_related('onboarding_session__selected_council',
+                                 'onboarding_session__selected_affiliation_type')
+                 .order_by('-created_at')[:15]
+        )
+
+        for app in qs:
+            # Map “student” → “Learner”
+            type_display = 'Learner' if name == 'student' else name.title()
             app_data = {
-                'id': app.pk,
-                'type': app_type_name.title(),
-                'council': app.onboarding_session.selected_council.code,
-                'name': app.get_display_name(),
-                'email': app.email,
+                'id':                 app.pk,
+                'type':               type_display,
+                'council':            app.onboarding_session.selected_council.code,
+                'name':               app.get_display_name(),
+                'email':              app.email,
                 'application_number': app.application_number,
-                'status': app.status,
-                'created_at': app.created_at,
-                'submitted_at': app.submitted_at,
+                'status':             app.status,
+                'created_at':         app.created_at,
+                'submitted_at':       app.submitted_at,
             }
-            
-            # Add type-specific fields
-            if app_type_name == 'designated' and hasattr(app, 'designation_category'):
-                app_data['category'] = app.designation_category.name if app.designation_category else None
-            elif app_type_name == 'student' and hasattr(app, 'current_institution'):
+
+            # Add any extra fields
+            if name == 'designated' and hasattr(app, 'designation_category'):
+                app_data['category'] = (
+                    app.designation_category.name if app.designation_category else None
+                )
+            elif name == 'student' and hasattr(app, 'current_institution'):
                 app_data['institution'] = app.current_institution
-            
+
             recent_applications.append(app_data)
-    
-    # Sort by creation date and limit to 20
+
+    # Final sort & trim to 20
     recent_applications.sort(key=lambda x: x['created_at'], reverse=True)
     recent_applications = recent_applications[:20]
-    
-    context = {
-        'stats': stats,
+
+    return render(request, 'enrollments/dashboard.html', {
+        'stats':               stats,
         'recent_applications': recent_applications,
-        'page_title': 'Enrollment Dashboard',
-        'councils': council_map,
-    }
-    
-    return render(request, 'enrollments/dashboard.html', context)
-
-
-
+        'page_title':          'Enrollment Dashboard',
+        'councils':            council_map,
+    })
 def application_dashboard(request, pk, app_type):
     """
     Public application dashboard showing status and next steps.
