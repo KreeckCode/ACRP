@@ -164,6 +164,7 @@ TEMPLATES = [
     },
 ]
 
+
 # ============================================================================
 # DATABASE CONFIGURATION - Environment-based with PostgreSQL optimization
 # ============================================================================
@@ -189,6 +190,7 @@ DATABASES = {
     }
 }
 
+
 # ============================================================================
 # CACHE CONFIGURATION - Environment-based caching strategy
 # ============================================================================
@@ -206,7 +208,7 @@ if DEBUG:
         }
     }
 else:
-    # Production: Database cache for simple deployment without Redis
+    
     CACHES = {
         'default': {
             'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
@@ -566,7 +568,7 @@ PERFORMANCE_MONITORING = {
 
 # Using Django management commands with cron jobs instead of Celery
 BACKGROUND_TASKS = {
-    'EMAIL_BATCH_SIZE': 50,
+    'EMAIL_BATCH_SIZE': 10,
     'NOTIFICATION_BATCH_SIZE': 100,
     'CLEANUP_OLDER_THAN_DAYS': 90,
     'MAINTENANCE_WINDOW_HOUR': 2,  # 2 AM
