@@ -1,277 +1,391 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}ACRP Enrollment Management{% endblock %}</title>
-    
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-    
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: {
-                            50: '#eff6ff',
-                            100: '#dbeafe',
-                            200: '#bfdbfe',
-                            300: '#93c5fd',
-                            400: '#60a5fa',
-                            500: '#3b82f6',
-                            600: '#2563eb',
-                            700: '#1d4ed8',
-                            800: '#1e40af',
-                            900: '#1e3a8a',
-                        }
-                    }
-                }
-            }
-        }
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                50: "#eff6ff",
+                100: "#dbeafe",
+                200: "#bfdbfe",
+                300: "#93c5fd",
+                400: "#60a5fa",
+                500: "#3b82f6",
+                600: "#2563eb",
+                700: "#1d4ed8",
+                800: "#1e40af",
+                900: "#1e3a8a",
+              },
+              sidebar: "#1f2937",
+              "sidebar-hover": "#374151",
+            },
+          },
+        },
+      };
     </script>
-    
+
     <style>
-        .sidebar-link:hover {
-            background-color: #374151;
+      .sidebar-link:hover {
+        background-color: #374151;
+      }
+
+      .sidebar-link.active {
+        background-color: #3b82f6;
+      }
+
+      @media (max-width: 768px) {
+        .sidebar {
+          transform: translateX(-100%);
+          transition: transform 0.3s ease-in-out;
         }
-        
-        .sidebar-link.active {
-            background-color: #3b82f6;
+
+        .sidebar.open {
+          transform: translateX(0);
         }
-        
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-                transition: transform 0.3s ease-in-out;
-            }
-            
-            .sidebar.open {
-                transform: translateX(0);
-            }
-        }
+      }
     </style>
-    
+
     {% block extra_css %}{% endblock %}
-</head>
-<body class="bg-gray-50">
-    
+  </head>
+  <body class="bg-gray-50">
     <!-- Top Navigation -->
-    <nav class="bg-white shadow-sm border-b border-gray-200 fixed w-full z-30 top-0">
-        <div class="px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <!-- Mobile menu button -->
-                    <button type="button" class="md:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100" onclick="toggleSidebar()">
-                        <i class="bi bi-list text-xl"></i>
-                    </button>
-                    
-                    <!-- Logo -->
-                    <div class="flex-shrink-0 flex items-center ml-4 md:ml-0">
-                        <h1 class="text-xl font-semibold text-gray-900">ACRP Management</h1>
-                    </div>
-                    
-                    <!-- Breadcrumb -->
-                    <div class="hidden md:ml-6 md:flex md:items-center md:space-x-4">
-                        <span class="text-gray-500">/</span>
-                        <span class="text-sm text-gray-500">{% block breadcrumb %}Enrollment Management{% endblock %}</span>
-                    </div>
-                </div>
-                
-                <!-- Right side -->
-                <div class="flex items-center space-x-4">
-                    <!-- Notifications -->
-                    <button class="p-2 text-gray-400 hover:text-gray-500 relative">
-                        <i class="bi bi-bell text-xl"></i>
-                        <span class="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400"></span>
-                    </button>
-                    
-                    <!-- User menu -->
-                    <div class="relative">
-                        <button class="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
-                            <img class="h-8 w-8 rounded-full" src="https://ui-avatars.com/api/?name=Admin+User&background=3b82f6&color=fff" alt="User">
-                            <span class="ml-2 text-gray-700 hidden sm:block">{{ user.get_full_name|default:"Admin User" }}</span>
-                            <i class="bi bi-chevron-down ml-1 text-gray-400"></i>
-                        </button>
-                    </div>
-                </div>
+    <nav
+      class="bg-white shadow-sm border-b border-gray-200 fixed w-full z-30 top-0"
+    >
+      <div class="px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+          <div class="flex items-center">
+            <!-- Mobile menu button -->
+            <button
+              type="button"
+              class="md:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+              onclick="toggleSidebar()"
+            >
+              <i class="bi bi-list text-xl"></i>
+            </button>
+
+            <!-- Logo -->
+            <div class="flex-shrink-0 flex items-center ml-4 md:ml-0">
+              <h1 class="text-xl font-semibold text-gray-900">
+                ACRP Dashboard
+              </h1>
             </div>
+
+            <!-- Breadcrumb -->
+            <div class="hidden md:ml-6 md:flex md:items-center md:space-x-4">
+              <span class="text-gray-500">/</span>
+              <span class="text-sm text-gray-500">Enrollment Management</span>
+            </div>
+          </div>
+
+          <!-- Right side -->
+          <div class="flex items-center space-x-4">
+            <!-- Notifications -->
+            <button class="p-2 text-gray-400 hover:text-gray-500 relative">
+              <i class="bi bi-bell text-xl"></i>
+              <span
+                class="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400"
+              ></span>
+            </button>
+
+            <!-- User menu -->
+            <div class="relative">
+              <button
+                class="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+              >
+                <img
+                  class="h-8 w-8 rounded-full"
+                  src="https://ui-avatars.com/api/?name=Admin+User&background=3b82f6&color=fff"
+                  alt="User"
+                />
+                <span class="ml-2 text-gray-700 hidden sm:block"
+                  >Admin User</span
+                >
+                <i class="bi bi-chevron-down ml-1 text-gray-400"></i>
+              </button>
+            </div>
+          </div>
         </div>
+      </div>
     </nav>
 
     <!-- Sidebar -->
-    <div class="sidebar fixed inset-y-0 left-0 z-20 w-64 bg-gray-800 pt-16 pb-4 overflow-y-auto">
-        <nav class="mt-5 px-2">
-            <div class="space-y-1">
-                <!-- Dashboard -->
-                <a href="{% url 'enrollments:enrollment_dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'enrollment_dashboard' %}active text-white{% else %}text-gray-300 hover:text-white{% endif %} group flex items-center px-3 py-2 text-sm font-medium rounded-md">
-                    <i class="bi bi-speedometer2 mr-3 text-lg"></i>
-                    Dashboard
-                </a>
-                
-                <!-- Applications -->
-                <div class="space-y-1">
-                    <button class="sidebar-link text-gray-300 hover:text-white group w-full flex items-center px-3 py-2 text-sm font-medium rounded-md" onclick="toggleSubmenu('applications')">
-                        <i class="bi bi-file-earmark-text mr-3 text-lg"></i>
-                        Applications
-                        <i class="bi bi-chevron-down ml-auto transition-transform duration-200" id="applications-icon"></i>
-                    </button>
-                    <div class="hidden ml-6 space-y-1" id="applications-submenu">
-                        <a href="{% url 'enrollments:application_list' %}" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">All Applications</a>
-                        <a href="{% url 'enrollments:applications_pending' %}" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">Pending Review</a>
-                        <a href="{% url 'enrollments:applications_approved' %}" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">Approved</a>
-                        <a href="{% url 'enrollments:applications_rejected' %}" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">Rejected</a>
-                    </div>
-                </div>
-                
-                <!-- Councils -->
-                <div class="space-y-1">
-                    <button class="sidebar-link text-gray-300 hover:text-white group w-full flex items-center px-3 py-2 text-sm font-medium rounded-md" onclick="toggleSubmenu('councils')">
-                        <i class="bi bi-building mr-3 text-lg"></i>
-                        Councils
-                        <i class="bi bi-chevron-down ml-auto transition-transform duration-200" id="councils-icon"></i>
-                    </button>
-                    <div class="hidden ml-6 space-y-1" id="councils-submenu">
-                        <a href="{% url 'enrollments:council_detail' council='cgmp' %}" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">CGMP</a>
-                        <a href="{% url 'enrollments:council_detail' council='cpsc' %}" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">CPSC</a>
-                        <a href="{% url 'enrollments:council_detail' council='cmtp' %}" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">CMTP</a>
-                    </div>
-                </div>
-                
-                <!-- Reports -->
-                <a href="{% url 'enrollments:reports' %}" class="sidebar-link {% if request.resolver_match.url_name == 'reports' %}active text-white{% else %}text-gray-300 hover:text-white{% endif %} group flex items-center px-3 py-2 text-sm font-medium rounded-md">
-                    <i class="bi bi-bar-chart mr-3 text-lg"></i>
-                    Reports
-                </a>
-                
-                <!-- Users -->
-                <a href="{% url 'enrollments:users' %}" class="sidebar-link {% if request.resolver_match.url_name == 'users' %}active text-white{% else %}text-gray-300 hover:text-white{% endif %} group flex items-center px-3 py-2 text-sm font-medium rounded-md">
-                    <i class="bi bi-people mr-3 text-lg"></i>
-                    Users
-                </a>
-                
-                <!-- Settings -->
-                <a href="{% url 'enrollments:settings' %}" class="sidebar-link {% if request.resolver_match.url_name == 'settings' %}active text-white{% else %}text-gray-300 hover:text-white{% endif %} group flex items-center px-3 py-2 text-sm font-medium rounded-md">
-                    <i class="bi bi-gear mr-3 text-lg"></i>
-                    Settings
-                </a>
+    <div
+      class="sidebar fixed inset-y-0 left-0 z-20 w-64 bg-gray-800 pt-16 pb-4 overflow-y-auto"
+    >
+      <nav class="mt-5 px-2">
+        <div class="space-y-1">
+          <!-- Dashboard -->
+          <a
+            href="#"
+            class="sidebar-link active text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md"
+          >
+            <i class="bi bi-speedometer2 mr-3 text-lg"></i>
+            Dashboard
+          </a>
+
+          <!-- Applications -->
+          <div class="space-y-1">
+            <button
+              class="sidebar-link text-gray-300 hover:text-white group w-full flex items-center px-3 py-2 text-sm font-medium rounded-md"
+              onclick="toggleSubmenu('applications')"
+            >
+              <i class="bi bi-file-earmark-text mr-3 text-lg"></i>
+              Applications
+              <i
+                class="bi bi-chevron-down ml-auto transition-transform duration-200"
+                id="applications-icon"
+              ></i>
+            </button>
+            <div class="hidden ml-6 space-y-1" id="applications-submenu">
+              <a
+                href="#"
+                class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md"
+                >All Applications</a
+              >
+              <a
+                href="#"
+                class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md"
+                >Pending Review</a
+              >
+              <a
+                href="#"
+                class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md"
+                >Approved</a
+              >
+              <a
+                href="#"
+                class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md"
+                >Rejected</a
+              >
             </div>
-            
-            <!-- Bottom Links -->
-            <div class="mt-8 pt-8 border-t border-gray-700">
-                <div class="space-y-1">
-                    <a href="{% url 'enrollments:help' %}" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
-                        <i class="bi bi-question-circle mr-3 text-lg"></i>
-                        Help & Support
-                    </a>
-                    <a href="#" onclick="confirmLogout()" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
-                        <i class="bi bi-box-arrow-right mr-3 text-lg"></i>
-                        Sign Out
-                    </a>
-                </div>
+          </div>
+
+          <!-- Councils -->
+          <div class="space-y-1">
+            <button
+              class="sidebar-link text-gray-300 hover:text-white group w-full flex items-center px-3 py-2 text-sm font-medium rounded-md"
+              onclick="toggleSubmenu('councils')"
+            >
+              <i class="bi bi-building mr-3 text-lg"></i>
+              Councils
+              <i
+                class="bi bi-chevron-down ml-auto transition-transform duration-200"
+                id="councils-icon"
+              ></i>
+            </button>
+            <div class="hidden ml-6 space-y-1" id="councils-submenu">
+              <a
+                href="#"
+                class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md"
+                >CGMP</a
+              >
+              <a
+                href="#"
+                class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md"
+                >CPSC</a
+              >
+              <a
+                href="#"
+                class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md"
+                >CMTP</a
+              >
             </div>
-        </nav>
+          </div>
+
+          <!-- Reports -->
+          <a
+            href="#"
+            class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md"
+          >
+            <i class="bi bi-bar-chart mr-3 text-lg"></i>
+            Reports
+          </a>
+
+          <!-- Users -->
+          <a
+            href="#"
+            class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md"
+          >
+            <i class="bi bi-people mr-3 text-lg"></i>
+            Users
+          </a>
+
+          <!-- Settings -->
+          <a
+            href="#"
+            class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md"
+          >
+            <i class="bi bi-gear mr-3 text-lg"></i>
+            Settings
+          </a>
+        </div>
+
+        <!-- Bottom Links -->
+        <div class="mt-8 pt-8 border-t border-gray-700">
+          <div class="space-y-1">
+            <a
+              href="#"
+              class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md"
+            >
+              <i class="bi bi-question-circle mr-3 text-lg"></i>
+              Help & Support
+            </a>
+            <a
+              href="#"
+              class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md"
+            >
+              <i class="bi bi-box-arrow-right mr-3 text-lg"></i>
+              Sign Out
+            </a>
+          </div>
+        </div>
+      </nav>
     </div>
 
     <!-- Main Content -->
     <div class="md:pl-64 flex flex-col flex-1">
-        <main class="flex-1 pt-16">
-            {% block content %}
-            {% endblock %}
-        </main>
-    </div>
-
-    <!-- Logout Confirmation Modal -->
-    <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden" id="logoutModal">
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div class="mt-3 text-center">
-                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100">
-                    <i class="bi bi-exclamation-triangle text-yellow-600 text-xl"></i>
-                </div>
-                <h3 class="text-lg font-medium text-gray-900 mt-4">Confirm Sign Out</h3>
-                <div class="mt-2 px-7 py-3">
-                    <p class="text-sm text-gray-500">Are you sure you want to sign out of the system?</p>
-                </div>
-                <div class="items-center px-4 py-3">
-                    <a href="{% url 'accounts:logout' %}" class="px-4 py-2 bg-red-500 text-white text-base font-medium rounded-md w-24 mr-2 hover:bg-red-600">Sign Out</a>
-                    <button class="px-4 py-2 bg-gray-300 text-gray-800 text-base font-medium rounded-md w-24" onclick="closeLogoutModal()">Cancel</button>
-                </div>
-            </div>
-        </div>
+      <main class="flex-1 pt-16">{% block content %} {% endblock %}</main>
     </div>
 
     <script>
-        // Toggle sidebar on mobile
-        function toggleSidebar() {
-            const sidebar = document.querySelector('.sidebar');
-            sidebar.classList.toggle('open');
-        }
+      // Toggle sidebar on mobile
+      function toggleSidebar() {
+        const sidebar = document.querySelector(".sidebar");
+        sidebar.classList.toggle("open");
+      }
 
-        // Toggle submenu
-        function toggleSubmenu(menuId) {
-            const submenu = document.getElementById(menuId + '-submenu');
-            const icon = document.getElementById(menuId + '-icon');
-            
-            submenu.classList.toggle('hidden');
-            icon.classList.toggle('rotate-180');
-        }
+      // Toggle submenu
+      function toggleSubmenu(menuId) {
+        const submenu = document.getElementById(menuId + "-submenu");
+        const icon = document.getElementById(menuId + "-icon");
 
-        // Auto-open current submenu
-        document.addEventListener('DOMContentLoaded', function() {
-            // Check if we're on an applications page
-            const currentPath = window.location.pathname;
-            if (currentPath.includes('/applications/') || currentPath.includes('/application/')) {
-                toggleSubmenu('applications');
-            }
-            if (currentPath.includes('/council/')) {
-                toggleSubmenu('councils');
-            }
+        submenu.classList.toggle("hidden");
+        icon.classList.toggle("rotate-180");
+      }
+
+      // Toggle dropdown
+      function toggleDropdown(button) {
+        const dropdown = button.nextElementSibling;
+
+        // Close all other dropdowns
+        document.querySelectorAll(".relative .absolute").forEach((d) => {
+          if (d !== dropdown) d.classList.add("hidden");
         });
 
-        // Logout confirmation
-        function confirmLogout() {
-            document.getElementById('logoutModal').classList.remove('hidden');
-        }
+        dropdown.classList.toggle("hidden");
+      }
 
-        function closeLogoutModal() {
-            document.getElementById('logoutModal').classList.add('hidden');
+      // Close dropdowns when clicking outside
+      document.addEventListener("click", function (event) {
+        if (!event.target.closest(".relative")) {
+          document.querySelectorAll(".relative .absolute").forEach((d) => {
+            d.classList.add("hidden");
+          });
         }
+      });
 
-        // Close sidebar when clicking outside on mobile
-        document.addEventListener('click', function(event) {
-            const sidebar = document.querySelector('.sidebar');
-            const menuButton = document.querySelector('button[onclick="toggleSidebar()"]');
-            
-            if (window.innerWidth < 768 && sidebar.classList.contains('open')) {
-                if (!sidebar.contains(event.target) && !menuButton.contains(event.target)) {
-                    sidebar.classList.remove('open');
-                }
-            }
+      // Filter applications
+      function filterApplications(councilType) {
+        const applications = document.querySelectorAll(".application-item");
+        const buttons = document.querySelectorAll(
+          'button[onclick^="filterApplications"]'
+        );
+
+        // Update button states
+        buttons.forEach((btn) => {
+          btn.classList.remove("bg-blue-500", "text-white");
+          btn.classList.add("bg-gray-200", "text-gray-700");
+
+          if (
+            btn.textContent.trim().toLowerCase() === councilType ||
+            (councilType === "all" && btn.textContent.trim() === "All")
+          ) {
+            btn.classList.remove("bg-gray-200", "text-gray-700");
+            btn.classList.add("bg-blue-500", "text-white");
+          }
         });
 
-        // Show alert function for global use
-        function showAlert(message, type = 'info') {
-            const colors = {
-                success: 'bg-green-500',
-                info: 'bg-blue-500',
-                warning: 'bg-yellow-500',
-                error: 'bg-red-500'
-            };
-            
-            const alert = document.createElement('div');
-            alert.className = `fixed top-4 right-4 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-50`;
-            alert.textContent = message;
-            
-            document.body.appendChild(alert);
-            
-            setTimeout(() => {
-                alert.remove();
-            }, 3000);
+        // Filter applications
+        applications.forEach((app) => {
+          const appCouncil = app.getAttribute("data-council");
+
+          if (councilType === "all" || appCouncil === councilType) {
+            app.style.display = "block";
+          } else {
+            app.style.display = "none";
+          }
+        });
+      }
+
+      // Generate report
+      function generateReport() {
+        showAlert("Generating report...", "info");
+
+        setTimeout(() => {
+          // Here you would generate and download the actual report
+          showAlert("Report generated successfully!", "success");
+        }, 2000);
+      }
+
+      // Refresh dashboard
+      function refreshDashboard() {
+        showAlert("Refreshing dashboard...", "info");
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      }
+
+      // Show alert
+      function showAlert(message, type) {
+        const colors = {
+          success: "bg-green-500",
+          info: "bg-blue-500",
+          warning: "bg-yellow-500",
+          error: "bg-red-500",
+        };
+
+        const alert = document.createElement("div");
+        alert.className = `fixed top-4 right-4 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-50`;
+        alert.textContent = message;
+
+        document.body.appendChild(alert);
+
+        setTimeout(() => {
+          alert.remove();
+        }, 3000);
+      }
+
+      // Close sidebar when clicking outside on mobile
+      document.addEventListener("click", function (event) {
+        const sidebar = document.querySelector(".sidebar");
+        const menuButton = document.querySelector(
+          'button[onclick="toggleSidebar()"]'
+        );
+
+        if (window.innerWidth < 768 && sidebar.classList.contains("open")) {
+          if (
+            !sidebar.contains(event.target) &&
+            !menuButton.contains(event.target)
+          ) {
+            sidebar.classList.remove("open");
+          }
         }
+      });
     </script>
-    
-    {% block extra_js %}{% endblock %}
-</body>
+  </body>
 </html>
