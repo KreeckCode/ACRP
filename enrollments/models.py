@@ -201,7 +201,9 @@ class OnboardingSession(models.Model):
     user = models.ForeignKey(
         User, 
         on_delete=models.CASCADE, 
-        related_name='onboarding_sessions'
+        related_name='onboarding_sessions',
+        null=True, 
+        blank=True 
     )
     
     # User selections during onboarding

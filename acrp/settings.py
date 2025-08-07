@@ -1,9 +1,15 @@
 import os
+import ssl
 import sys
 import logging
 from pathlib import Path
 from decouple import config, Csv
+import os
 
+
+# Debug environment loading
+print(f"DEBUG value from env: {config('DEBUG', default='NOT_SET')}")
+print(f"EMAIL_HOST from env: {config('EMAIL_HOST', default='NOT_SET')}")
 # ============================================================================
 # CORE DJANGO SETTINGS
 # ============================================================================
@@ -13,7 +19,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Use 'development', 'staging', or 'production'
 ENVIRONMENT = config('ENVIRONMENT', default='development')
-DEBUG = False
+DEBUG = config('DEBUG', default=False, cast=bool)
 
 # Security settings
 SECRET_KEY = config('SECRET_KEY')
@@ -312,21 +318,25 @@ if DEBUG:
     # Development: Console backend for testing
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 else:
-    # Production: SMTP backend for real email sending
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     EMAIL_HOST = config('EMAIL_HOST')
-    EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+    EMAIL_PORT = config('EMAIL_PORT', default=465, cast=int)
     EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
     EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
     EMAIL_HOST_USER = config('EMAIL_HOST_USER')
     EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+    
+    # SSL context for certificate issues
+    import ssl
+    EMAIL_SSL_CONTEXT = ssl.create_default_context()
+    EMAIL_SSL_CONTEXT.check_hostname = False
+    EMAIL_SSL_CONTEXT.verify_mode = ssl.CERT_NONE
 
-# Email settings
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@acrp.com')
+# Email settings (apply to both development and production)
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='ams@acrp.org.za')
 SERVER_EMAIL = config('SERVER_EMAIL', default=DEFAULT_FROM_EMAIL)
 EMAIL_SUBJECT_PREFIX = '[ACRP] '
 EMAIL_TIMEOUT = 30
-
 # ============================================================================
 # INTERNATIONALIZATION AND LOCALIZATION
 # ============================================================================
@@ -520,11 +530,16 @@ ENROLLMENT_SETTINGS = {
 APP_SETTINGS = {
     'SITE_NAME': 'ACRP Africa',
     'SITE_DESCRIPTION': 'Association of Christian Religious Practitioners',
-    'CONTACT_EMAIL': config('CONTACT_EMAIL', default='info@acrp.org.za'),
-    'SUPPORT_EMAIL': config('SUPPORT_EMAIL', default='acrp@acrpafrica.co.za'),
+    'CONTACT_EMAIL': config('CONTACT_EMAIL', default='ams@acrp.org.za'),
+    'SUPPORT_EMAIL': config('SUPPORT_EMAIL', default='ams@acrpafrica.co.za'),
     'MAX_LOGIN_ATTEMPTS': 10,
     'LOGIN_LOCKOUT_DURATION': 300,  # 5 minutes
 }
+ADMINS = [
+    ('admin', 'ams@acrp.org.za'), 
+]
+MANAGERS = ADMINS
+
 
 # ============================================================================
 # MONITORING AND ANALYTICS - Optional production monitoring
@@ -582,9 +597,6 @@ BACKGROUND_TASKS = {
 if DEBUG:
     # Allow all hosts in development
     ALLOWED_HOSTS = ['*']
-    
-    # Console email backend for development
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Production environment overrides
 if ENVIRONMENT == 'production':

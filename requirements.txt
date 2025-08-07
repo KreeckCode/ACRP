@@ -22,4 +22,4 @@ qrcode
 dj-database-url
 sentry-sdk
 gunicorn
-xdjango_extensions
+django_extensions

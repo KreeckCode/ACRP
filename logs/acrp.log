@@ -927,3 +927,268 @@ INFO 2025-07-26 19:07:16,292 basehttp 9716 6128939008 "GET /acrpdevadmin/jsi18n/
 INFO 2025-07-26 19:07:36,202 basehttp 9716 6128939008 "GET / HTTP/1.1" 200 46209
 INFO 2025-07-26 19:08:01,727 basehttp 9716 6128939008 "GET /enrollments/dashboard/ HTTP/1.1" 200 33122
 INFO 2025-07-26 19:10:52,666 basehttp 9716 6128939008 "GET /enrollments/dashboard/ HTTP/1.1" 200 33122
+INFO 2025-07-30 19:24:19,320 autoreload 12643 8574050048 Watching for file changes with StatReloader
+INFO 2025-07-30 19:24:35,909 autoreload 12643 8574050048 /Users/dave/Documents/projects/ACRP/acrp/settings.py changed, reloading.
+INFO 2025-08-06 09:26:59,720 autoreload 60204 8574050048 Watching for file changes with StatReloader
+INFO 2025-08-06 09:27:09,846 basehttp 60204 6125187072 "GET / HTTP/1.1" 302 0
+INFO 2025-08-06 09:27:09,859 basehttp 60204 6125187072 "GET /auth/login/?next=/ HTTP/1.1" 200 7409
+INFO 2025-08-06 09:27:09,910 basehttp 60204 6142013440 "GET /static/main_media/logo.png HTTP/1.1" 200 45196
+INFO 2025-08-06 09:27:09,914 basehttp 60204 6125187072 "GET /static/css/auth.bootstrap.css HTTP/1.1" 200 209593
+INFO 2025-08-06 09:27:11,382 basehttp 60204 6125187072 "GET /static/main_media/logo-white-footer.png HTTP/1.1" 200 7294
+WARNING 2025-08-06 09:27:22,408 log 60204 6125187072 Not Found: /enrollemnts/onboarding
+WARNING 2025-08-06 09:27:22,409 basehttp 60204 6125187072 "GET /enrollemnts/onboarding HTTP/1.1" 404 4196
+WARNING 2025-08-06 09:27:22,577 log 60204 6125187072 Not Found: /static/favicon.ico
+WARNING 2025-08-06 09:27:22,578 basehttp 60204 6125187072 "GET /static/favicon.ico HTTP/1.1" 404 4196
+INFO 2025-08-06 09:27:40,597 basehttp 60204 6125187072 "GET /enrollments/onboarding/ HTTP/1.1" 200 22970
+WARNING 2025-08-06 09:27:41,052 log 60204 6125187072 Not Found: /favicon.ico
+WARNING 2025-08-06 09:27:41,052 basehttp 60204 6125187072 "GET /favicon.ico HTTP/1.1" 404 4196
+ERROR 2025-08-06 09:27:46,373 log 60204 6125187072 Internal Server Error: /enrollments/onboarding/
+Traceback (most recent call last):
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/db/models/query.py", line 946, in get_or_create
+    return self.get(**kwargs), False
+           ~~~~~~~~^^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/db/models/query.py", line 633, in get
+    raise self.model.DoesNotExist(
+        "%s matching query does not exist." % self.model._meta.object_name
+    )
+enrollments.models.OnboardingSession.DoesNotExist: OnboardingSession matching query does not exist.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/psycopg/cursor.py", line 97, in execute
+    raise ex.with_traceback(None)
+psycopg.errors.NotNullViolation: null value in column "user_id" of relation "enrollments_onboardingsession" violates not-null constraint
+DETAIL:  Failing row contains (11, dd2eed71-c582-4ae7-8dd3-5c0284e80d0d, 2025-08-06 09:27:45.647195+00, 2025-08-06 09:27:45.647221+00, null, 127.0.0.1, Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537...., selecting_affiliation, 1, null, null, null, null).
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/utils/decorators.py", line 192, in _view_wrapper
+    result = _process_exception(request, e)
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/utils/decorators.py", line 190, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+  File "/Users/dave/Documents/projects/ACRP/enrollments/views.py", line 190, in onboarding_start
+    session, created = OnboardingSession.objects.get_or_create(
+                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        user=request.user if request.user.is_authenticated else None,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+        }
+        ^
+    )
+    ^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/db/models/query.py", line 953, in get_or_create
+    return self.create(**params), True
+           ~~~~~~~~~~~^^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/db/models/query.py", line 663, in create
+    obj.save(force_insert=True, using=self.db)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/db/models/base.py", line 902, in save
+    self.save_base(
+    ~~~~~~~~~~~~~~^
+        using=using,
+        ^^^^^^^^^^^^
+    ...<2 lines>...
+        update_fields=update_fields,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/db/models/base.py", line 1008, in save_base
+    updated = self._save_table(
+        raw,
+    ...<4 lines>...
+        update_fields,
+    )
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/db/models/base.py", line 1169, in _save_table
+    results = self._do_insert(
+        cls._base_manager, using, fields, returning_fields, raw
+    )
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/db/models/base.py", line 1210, in _do_insert
+    return manager._insert(
+           ~~~~~~~~~~~~~~~^
+        [self],
+        ^^^^^^^
+    ...<3 lines>...
+        raw=raw,
+        ^^^^^^^^
+    )
+    ^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/db/models/query.py", line 1868, in _insert
+    return query.get_compiler(using=using).execute_sql(returning_fields)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/db/models/sql/compiler.py", line 1882, in execute_sql
+    cursor.execute(sql, params)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/db/backends/utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        sql, params, many=False, executor=self._execute
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/db/backends/utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/db/backends/utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/psycopg/cursor.py", line 97, in execute
+    raise ex.with_traceback(None)
+django.db.utils.IntegrityError: null value in column "user_id" of relation "enrollments_onboardingsession" violates not-null constraint
+DETAIL:  Failing row contains (11, dd2eed71-c582-4ae7-8dd3-5c0284e80d0d, 2025-08-06 09:27:45.647195+00, 2025-08-06 09:27:45.647221+00, null, 127.0.0.1, Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537...., selecting_affiliation, 1, null, null, null, null).
+ERROR 2025-08-06 09:27:46,385 basehttp 60204 6125187072 "POST /enrollments/onboarding/ HTTP/1.1" 500 5640
+INFO 2025-08-06 10:02:13,854 autoreload 60204 8574050048 /Users/dave/Documents/projects/ACRP/acrp/settings.py changed, reloading.
+INFO 2025-08-06 10:02:14,250 autoreload 60769 8574050048 Watching for file changes with StatReloader
+INFO 2025-08-06 10:02:15,570 autoreload 60769 8574050048 /Users/dave/Documents/projects/ACRP/acrp/settings.py changed, reloading.
+INFO 2025-08-06 10:02:15,799 autoreload 60778 8574050048 Watching for file changes with StatReloader
+INFO 2025-08-06 10:02:19,191 autoreload 60778 8574050048 /Users/dave/Documents/projects/ACRP/acrp/settings.py changed, reloading.
+INFO 2025-08-06 10:02:19,441 autoreload 60783 8574050048 Watching for file changes with StatReloader
+INFO 2025-08-06 10:08:21,582 autoreload 60783 8574050048 /Users/dave/Documents/projects/ACRP/enrollments/models.py changed, reloading.
+INFO 2025-08-06 10:08:21,966 autoreload 60900 8574050048 Watching for file changes with StatReloader
+INFO 2025-08-06 10:08:26,433 autoreload 60900 8574050048 /Users/dave/Documents/projects/ACRP/enrollments/models.py changed, reloading.
+INFO 2025-08-06 10:08:26,685 autoreload 60924 8574050048 Watching for file changes with StatReloader
+INFO 2025-08-06 10:08:27,819 autoreload 60924 8574050048 /Users/dave/Documents/projects/ACRP/enrollments/models.py changed, reloading.
+INFO 2025-08-06 10:08:28,019 autoreload 60927 8574050048 Watching for file changes with StatReloader
+INFO 2025-08-06 10:08:56,173 autoreload 60927 8574050048 /Users/dave/Documents/projects/ACRP/enrollments/models.py changed, reloading.
+INFO 2025-08-06 10:08:56,535 autoreload 60941 8574050048 Watching for file changes with StatReloader
+INFO 2025-08-06 10:08:59,940 autoreload 60941 8574050048 /Users/dave/Documents/projects/ACRP/enrollments/models.py changed, reloading.
+INFO 2025-08-06 10:09:00,202 autoreload 60948 8574050048 Watching for file changes with StatReloader
+INFO 2025-08-07 01:44:33,719 autoreload 73473 8574050048 Watching for file changes with StatReloader
+INFO 2025-08-07 01:44:39,263 basehttp 73473 6141489152 code 400, message Bad request syntax ('\x16\x03\x01\x02\x00\x01\x00\x01ü\x03\x03F\x18U\x8c¹A\x84ýÖ\x0e')
+ERROR 2025-08-07 01:44:39,264 basehttp 73473 6141489152 You're accessing the development server over HTTPS, but it only supports HTTP.
+INFO 2025-08-07 01:44:39,265 basehttp 73473 6141489152 code 400, message Bad request version ('\x16?^\x91Á\x13`Æ$«¼W%K»Wi\x9bÑ¢u®8F÷¬\x88Ü\x00*\x8a\x8a\x13\x01\x13\x02\x13\x03À,À+Ì©À0À/Ì¨À')
+ERROR 2025-08-07 01:44:39,266 basehttp 73473 6141489152 You're accessing the development server over HTTPS, but it only supports HTTP.
+INFO 2025-08-07 01:44:39,267 basehttp 73473 6141489152 code 400, message Bad HTTP/0.9 request type ('\x16\x03\x01\x02\x00\x01\x00\x01ü\x03\x03Ú')
+ERROR 2025-08-07 01:44:39,267 basehttp 73473 6141489152 You're accessing the development server over HTTPS, but it only supports HTTP.
+INFO 2025-08-07 01:44:39,284 basehttp 73473 6141489152 code 400, message Bad request version ('{59UkÇúâ8rTÎpC,°³8M)&¾â×\x86þÂè$Lü\x7f\x00*::\x13\x01\x13\x02\x13\x03À,À+Ì©À0À/Ì¨À')
+ERROR 2025-08-07 01:44:39,284 basehttp 73473 6141489152 You're accessing the development server over HTTPS, but it only supports HTTP.
+INFO 2025-08-07 01:44:42,783 basehttp 73473 6141489152 "GET / HTTP/1.1" 302 0
+INFO 2025-08-07 01:44:42,791 basehttp 73473 6141489152 "GET /auth/login/?next=/ HTTP/1.1" 200 7409
+INFO 2025-08-07 01:44:55,724 basehttp 73473 6141489152 "POST /auth/login/ HTTP/1.1" 302 0
+INFO 2025-08-07 01:44:57,075 basehttp 73473 6141489152 "GET / HTTP/1.1" 200 46211
+INFO 2025-08-07 01:44:57,098 basehttp 73473 6141489152 "GET /static/main_media/logo-white.png HTTP/1.1" 200 36143
+INFO 2025-08-07 01:45:02,532 basehttp 73473 6141489152 - Broken pipe from ('127.0.0.1', 59901)
+INFO 2025-08-07 01:45:03,207 basehttp 73473 6158315520 "GET /auth/login/?next=/ HTTP/1.1" 200 7409
+INFO 2025-08-07 01:45:04,938 basehttp 73473 6141489152 - Broken pipe from ('127.0.0.1', 59903)
+INFO 2025-08-07 01:45:08,524 basehttp 73473 6158315520 "GET /acrpdevadmin/enrollments/designationcategory/ HTTP/1.1" 200 34053
+INFO 2025-08-07 01:45:08,547 basehttp 73473 6158315520 "GET /static/admin/css/base.css HTTP/1.1" 200 22120
+INFO 2025-08-07 01:45:08,601 basehttp 73473 6141489152 "GET /static/admin/js/theme.js HTTP/1.1" 200 1653
+INFO 2025-08-07 01:45:08,601 basehttp 73473 6124662784 "GET /static/admin/css/dark_mode.css HTTP/1.1" 200 2808
+INFO 2025-08-07 01:45:08,601 basehttp 73473 13321187328 "GET /static/admin/js/nav_sidebar.js HTTP/1.1" 200 3063
+INFO 2025-08-07 01:45:08,601 basehttp 73473 6158315520 "GET /static/admin/css/forms.css HTTP/1.1" 200 8525
+INFO 2025-08-07 01:45:08,601 basehttp 73473 13304360960 "GET /static/admin/css/nav_sidebar.css HTTP/1.1" 200 2810
+INFO 2025-08-07 01:45:08,601 basehttp 73473 13338013696 "GET /static/admin/css/changelists.css HTTP/1.1" 200 6878
+INFO 2025-08-07 01:45:08,603 basehttp 73473 6141489152 "GET /static/admin/js/jquery.init.js HTTP/1.1" 200 347
+INFO 2025-08-07 01:45:08,604 basehttp 73473 13304360960 "GET /static/admin/js/admin/RelatedObjectLookups.js HTTP/1.1" 200 9777
+INFO 2025-08-07 01:45:08,604 basehttp 73473 13338013696 "GET /static/admin/js/urlify.js HTTP/1.1" 200 7887
+INFO 2025-08-07 01:45:08,604 basehttp 73473 6124662784 "GET /static/admin/js/vendor/jquery/jquery.min.js HTTP/1.1" 200 87533
+INFO 2025-08-07 01:45:08,605 basehttp 73473 6158315520 "GET /static/admin/js/prepopulate.js HTTP/1.1" 200 1531
+INFO 2025-08-07 01:45:08,606 basehttp 73473 6124662784 "GET /static/admin/js/filters.js HTTP/1.1" 200 978
+INFO 2025-08-07 01:45:08,607 basehttp 73473 6141489152 "GET /static/admin/js/vendor/xregexp/xregexp.min.js HTTP/1.1" 200 163184
+INFO 2025-08-07 01:45:08,607 basehttp 73473 13304360960 "GET /static/admin/js/core.js HTTP/1.1" 200 6208
+INFO 2025-08-07 01:45:08,608 basehttp 73473 13338013696 "GET /static/admin/js/actions.js HTTP/1.1" 200 8076
+INFO 2025-08-07 01:45:08,609 basehttp 73473 6158315520 "GET /static/admin/css/widgets.css HTTP/1.1" 200 11991
+INFO 2025-08-07 01:45:08,609 basehttp 73473 6141489152 "GET /static/admin/css/responsive.css HTTP/1.1" 200 16565
+INFO 2025-08-07 01:45:08,611 basehttp 73473 6124662784 "GET /static/admin/img/search.svg HTTP/1.1" 200 458
+INFO 2025-08-07 01:45:10,335 basehttp 73473 13321187328 "GET /acrpdevadmin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-08-07 01:45:10,381 basehttp 73473 13304360960 "GET /static/admin/img/icon-addlink.svg HTTP/1.1" 200 331
+INFO 2025-08-07 01:45:10,381 basehttp 73473 13338013696 "GET /static/admin/img/tooltag-add.svg HTTP/1.1" 200 331
+INFO 2025-08-07 01:45:10,381 basehttp 73473 6141489152 "GET /static/admin/img/sorting-icons.svg HTTP/1.1" 200 1097
+INFO 2025-08-07 01:45:10,382 basehttp 73473 6158315520 "GET /static/admin/img/icon-viewlink.svg HTTP/1.1" 200 581
+INFO 2025-08-07 01:45:15,607 basehttp 73473 13321187328 "GET /acrpdevadmin/enrollments/designationcategory/add/ HTTP/1.1" 200 33456
+INFO 2025-08-07 01:45:15,621 basehttp 73473 13338013696 "GET /static/admin/js/change_form.js HTTP/1.1" 200 606
+INFO 2025-08-07 01:45:15,622 basehttp 73473 6141489152 "GET /static/admin/js/prepopulate_init.js HTTP/1.1" 200 586
+INFO 2025-08-07 01:45:17,296 basehttp 73473 13304360960 "GET /acrpdevadmin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-08-07 01:45:34,849 basehttp 73473 13321187328 "GET / HTTP/1.1" 200 46211
+INFO 2025-08-07 01:45:39,537 basehttp 73473 13304360960 - Broken pipe from ('127.0.0.1', 59909)
+INFO 2025-08-07 01:45:42,454 basehttp 73473 13321187328 - Broken pipe from ('127.0.0.1', 59910)
+INFO 2025-08-07 01:45:43,307 basehttp 73473 6158315520 "GET /enrollments/onboarding/category/a3521994-e6e8-47e1-bbde-b6d818c2b1a4/ HTTP/1.1" 200 23732
+INFO 2025-08-07 01:45:48,875 basehttp 73473 6141489152 "GET /enrollments/onboarding/ HTTP/1.1" 200 22970
+INFO 2025-08-07 01:45:54,682 basehttp 73473 6158315520 "POST /enrollments/onboarding/ HTTP/1.1" 302 0
+INFO 2025-08-07 01:45:56,649 basehttp 73473 6124662784 "GET /enrollments/onboarding/council/75c970b6-2685-446a-8d66-9f8f9d74c6bc/ HTTP/1.1" 200 33476
+INFO 2025-08-07 01:46:05,883 basehttp 73473 13338013696 "POST /enrollments/onboarding/council/75c970b6-2685-446a-8d66-9f8f9d74c6bc/ HTTP/1.1" 302 0
+INFO 2025-08-07 01:46:07,816 basehttp 73473 6141489152 "GET /enrollments/onboarding/category/75c970b6-2685-446a-8d66-9f8f9d74c6bc/ HTTP/1.1" 200 23732
+INFO 2025-08-07 01:46:33,348 basehttp 73473 13338013696 "POST /acrpdevadmin/enrollments/designationcategory/add/ HTTP/1.1" 302 0
+INFO 2025-08-07 01:46:34,766 basehttp 73473 6141489152 "GET /acrpdevadmin/enrollments/designationcategory/ HTTP/1.1" 200 34981
+INFO 2025-08-07 01:46:35,349 basehttp 73473 13338013696 "GET /acrpdevadmin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-08-07 01:46:35,419 basehttp 73473 6141489152 "GET /static/admin/img/icon-yes.svg HTTP/1.1" 200 436
+INFO 2025-08-07 01:46:39,078 basehttp 73473 6141489152 "GET /acrpdevadmin/enrollments/designationcategory/add/ HTTP/1.1" 200 33456
+INFO 2025-08-07 01:46:39,674 basehttp 73473 13338013696 "GET /acrpdevadmin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-08-07 01:46:56,397 basehttp 73473 6141489152 "POST /acrpdevadmin/enrollments/designationcategory/add/ HTTP/1.1" 302 0
+INFO 2025-08-07 01:46:57,757 basehttp 73473 13338013696 "GET /acrpdevadmin/enrollments/designationcategory/ HTTP/1.1" 200 35601
+INFO 2025-08-07 01:46:58,338 basehttp 73473 6141489152 "GET /acrpdevadmin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-08-07 01:47:06,503 basehttp 73473 6141489152 "GET /acrpdevadmin/enrollments/designationcategory/add/ HTTP/1.1" 200 33456
+INFO 2025-08-07 01:47:07,098 basehttp 73473 13338013696 "GET /acrpdevadmin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-08-07 01:47:19,132 basehttp 73473 6141489152 "POST /acrpdevadmin/enrollments/designationcategory/add/ HTTP/1.1" 302 0
+INFO 2025-08-07 01:47:20,507 basehttp 73473 13338013696 "GET /acrpdevadmin/enrollments/designationcategory/ HTTP/1.1" 200 36222
+INFO 2025-08-07 01:47:21,086 basehttp 73473 6141489152 "GET /acrpdevadmin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-08-07 01:47:27,800 basehttp 73473 13338013696 "GET /enrollments/onboarding/category/75c970b6-2685-446a-8d66-9f8f9d74c6bc/ HTTP/1.1" 200 23339
+INFO 2025-08-07 01:47:33,045 basehttp 73473 6141489152 "POST /enrollments/onboarding/category/75c970b6-2685-446a-8d66-9f8f9d74c6bc/ HTTP/1.1" 302 0
+INFO 2025-08-07 01:47:35,383 basehttp 73473 13338013696 "GET /enrollments/application/create/75c970b6-2685-446a-8d66-9f8f9d74c6bc/ HTTP/1.1" 200 101503
+INFO 2025-08-07 01:47:44,794 basehttp 73473 6141489152 "POST /enrollments/onboarding/council/75c970b6-2685-446a-8d66-9f8f9d74c6bc/ HTTP/1.1" 302 0
+INFO 2025-08-07 01:47:45,576 basehttp 73473 13338013696 "GET /enrollments/onboarding/category/75c970b6-2685-446a-8d66-9f8f9d74c6bc/ HTTP/1.1" 200 23339
+INFO 2025-08-07 01:47:51,028 basehttp 73473 6141489152 "POST /enrollments/onboarding/category/75c970b6-2685-446a-8d66-9f8f9d74c6bc/ HTTP/1.1" 302 0
+INFO 2025-08-07 01:47:53,217 basehttp 73473 13338013696 "GET /enrollments/application/create/75c970b6-2685-446a-8d66-9f8f9d74c6bc/ HTTP/1.1" 200 101745
+INFO 2025-08-07 01:48:00,060 basehttp 73473 6141489152 "POST /enrollments/onboarding/category/75c970b6-2685-446a-8d66-9f8f9d74c6bc/ HTTP/1.1" 302 0
+INFO 2025-08-07 01:48:02,169 basehttp 73473 13338013696 "GET /enrollments/application/create/75c970b6-2685-446a-8d66-9f8f9d74c6bc/ HTTP/1.1" 200 101503
+INFO 2025-08-07 01:48:06,230 basehttp 73473 6141489152 "GET /enrollments/onboarding/ HTTP/1.1" 200 22970
+INFO 2025-08-07 01:48:13,827 basehttp 73473 13338013696 "POST /enrollments/onboarding/ HTTP/1.1" 302 0
+INFO 2025-08-07 01:48:14,789 basehttp 73473 6141489152 "GET /enrollments/onboarding/council/15757b72-133b-463c-ab25-79ff9b706235/ HTTP/1.1" 200 33476
+INFO 2025-08-07 01:48:19,134 basehttp 73473 13338013696 "POST /enrollments/onboarding/council/15757b72-133b-463c-ab25-79ff9b706235/ HTTP/1.1" 302 0
+INFO 2025-08-07 01:48:19,905 basehttp 73473 6141489152 "GET /enrollments/onboarding/category/15757b72-133b-463c-ab25-79ff9b706235/ HTTP/1.1" 200 23339
+INFO 2025-08-07 01:48:23,999 basehttp 73473 13338013696 "POST /enrollments/onboarding/category/15757b72-133b-463c-ab25-79ff9b706235/ HTTP/1.1" 302 0
+INFO 2025-08-07 01:48:26,128 basehttp 73473 6141489152 "GET /enrollments/application/create/15757b72-133b-463c-ab25-79ff9b706235/ HTTP/1.1" 200 101485
+INFO 2025-08-07 01:49:01,827 basehttp 73473 6141489152 "GET /acrpdevadmin/enrollments/designationsubcategory/ HTTP/1.1" 200 32418
+INFO 2025-08-07 01:49:03,436 basehttp 73473 6124662784 "GET /acrpdevadmin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-08-07 01:49:16,662 basehttp 73473 6141489152 "POST /enrollments/onboarding/ HTTP/1.1" 302 0
+INFO 2025-08-07 01:49:17,563 basehttp 73473 6124662784 "GET /enrollments/onboarding/council/599814a9-849e-4963-8f74-5127551450e0/ HTTP/1.1" 200 33469
+INFO 2025-08-07 01:49:30,540 basehttp 73473 6141489152 "POST /enrollments/onboarding/council/599814a9-849e-4963-8f74-5127551450e0/ HTTP/1.1" 302 0
+INFO 2025-08-07 01:49:32,598 basehttp 73473 6124662784 "GET /enrollments/application/create/599814a9-849e-4963-8f74-5127551450e0/ HTTP/1.1" 200 70683
+INFO 2025-08-07 01:57:26,625 basehttp 73473 6124662784 "POST /enrollments/application/create/599814a9-849e-4963-8f74-5127551450e0/ HTTP/1.1" 200 71508
+INFO 2025-08-07 02:04:29,072 basehttp 73473 6124662784 "POST /enrollments/application/create/599814a9-849e-4963-8f74-5127551450e0/ HTTP/1.1" 302 0
+INFO 2025-08-07 02:04:29,981 basehttp 73473 6124662784 "GET /enrollments/application/success/ HTTP/1.1" 200 11650
+INFO 2025-08-07 02:05:43,901 basehttp 73473 6141489152 "GET /auth/login/ HTTP/1.1" 200 7409
+INFO 2025-08-07 02:05:51,222 basehttp 73473 6124662784 "GET /auth/login/?next=/ HTTP/1.1" 200 7409
+INFO 2025-08-07 02:05:54,570 basehttp 73473 6141489152 "GET / HTTP/1.1" 200 51303
+INFO 2025-08-07 02:06:05,678 basehttp 73473 6124662784 "GET /enrollments/application/create/75c970b6-2685-446a-8d66-9f8f9d74c6bc/ HTTP/1.1" 200 101503
+INFO 2025-08-07 02:06:19,128 basehttp 73473 6141489152 "GET /enrollments/dashboard/ HTTP/1.1" 200 38777
+INFO 2025-08-07 02:06:27,251 basehttp 73473 6141489152 "GET /enrollments/application/1/associated/ HTTP/1.1" 200 46011
+INFO 2025-08-07 02:07:07,426 basehttp 73473 6124662784 "POST /enrollments/reference/1/approve/ HTTP/1.1" 302 0
+INFO 2025-08-07 02:07:09,427 basehttp 73473 6124662784 "GET /enrollments/application/1/associated/ HTTP/1.1" 200 46154
+INFO 2025-08-07 02:14:18,085 basehttp 73473 6124662784 "POST /enrollments/document/2/verify/ HTTP/1.1" 302 0
+INFO 2025-08-07 02:14:20,108 basehttp 73473 6124662784 "GET /enrollments/application/1/associated/ HTTP/1.1" 200 45652
+WARNING 2025-08-07 02:14:23,200 log 73473 6124662784 Not Found: /media/enrollments/docs/2025/08/unknown/associated/d689603378974af19e8a8454532e8256_hero.png
+WARNING 2025-08-07 02:14:23,201 basehttp 73473 6124662784 "GET /media/enrollments/docs/2025/08/unknown/associated/d689603378974af19e8a8454532e8256_hero.png HTTP/1.1" 404 4430
+WARNING 2025-08-07 02:14:23,318 log 73473 6124662784 Not Found: /static/favicon.ico
+WARNING 2025-08-07 02:14:23,319 basehttp 73473 6124662784 "GET /static/favicon.ico HTTP/1.1" 404 4430
+WARNING 2025-08-07 02:14:28,520 log 73473 6124662784 Not Found: /media/enrollments/docs/2025/08/unknown/associated/d689603378974af19e8a8454532e8256_hero.png
+WARNING 2025-08-07 02:14:28,521 basehttp 73473 6124662784 "GET /media/enrollments/docs/2025/08/unknown/associated/d689603378974af19e8a8454532e8256_hero.png HTTP/1.1" 404 4430
+WARNING 2025-08-07 02:15:36,494 log 73473 6124662784 Not Found: /media/enrollments/docs/2025/08/unknown/associated/a2bc8cb735fc44189206178151f03fec_Application_BAh87q1.pdf
+WARNING 2025-08-07 02:15:36,495 basehttp 73473 6124662784 "GET /media/enrollments/docs/2025/08/unknown/associated/a2bc8cb735fc44189206178151f03fec_Application_BAh87q1.pdf HTTP/1.1" 404 4430
+INFO 2025-08-07 02:15:56,441 basehttp 73473 6141489152 "POST /enrollments/reference/2/approve/ HTTP/1.1" 302 0
+INFO 2025-08-07 02:15:59,326 basehttp 73473 6124662784 "GET /enrollments/application/1/associated/ HTTP/1.1" 200 45305
+INFO 2025-08-07 02:16:09,830 basehttp 73473 6141489152 - Broken pipe from ('127.0.0.1', 60072)
+INFO 2025-08-07 02:16:10,666 basehttp 73473 6124662784 "POST /enrollments/document/1/verify/ HTTP/1.1" 302 0
+INFO 2025-08-07 02:16:12,471 basehttp 73473 6124662784 "GET /enrollments/application/1/associated/ HTTP/1.1" 200 44783
+INFO 2025-08-07 02:19:21,622 basehttp 73473 6124662784 "POST /enrollments/application/1/associated/review/ HTTP/1.1" 302 0
+INFO 2025-08-07 02:19:23,631 basehttp 73473 6124662784 "GET /enrollments/application/1/associated/ HTTP/1.1" 200 45697
+INFO 2025-08-07 02:20:43,421 basehttp 73473 6124662784 "POST /enrollments/application/1/associated/review/ HTTP/1.1" 302 0
+INFO 2025-08-07 02:20:45,245 basehttp 73473 6124662784 "GET /enrollments/application/1/associated/ HTTP/1.1" 200 46897

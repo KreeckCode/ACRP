@@ -11,7 +11,10 @@ migrations/
 .venv/
 venv/
 
-
+media_root
+media/
+/media
+.media
 # Environment variables
 
 # macOS
