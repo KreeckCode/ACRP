@@ -20,10 +20,96 @@
                             </div>
                             <div class="flex space-x-3">
                                 {% if can_export_data %}
-                                <button onclick="exportApplications()" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                                    <i class="bi bi-download mr-2"></i>
-                                    Export
-                                </button>
+                                <!-- Professional Export Dropdown -->
+                                <div class="relative" id="exportDropdown">
+                                    <button 
+                                        onclick="toggleExportDropdown()" 
+                                        class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                    >
+                                        <i class="bi bi-download mr-2"></i>
+                                        Export
+                                        <i class="bi bi-chevron-down ml-2"></i>
+                                    </button>
+                                    <div id="exportMenu" class="hidden absolute right-0 z-10 mt-2 w-72 bg-white rounded-md shadow-lg border border-gray-200">
+                                        <div class="py-2">
+                                            <div class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide border-b border-gray-100">
+                                                Excel Export Options
+                                            </div>
+                                            
+                                            <!-- Summary Export -->
+                                            <button onclick="exportApplications('summary')" class="w-full text-left block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                                                <div class="flex items-start">
+                                                    <i class="bi bi-bar-chart text-blue-500 mt-0.5 mr-3"></i>
+                                                    <div>
+                                                        <div class="font-medium">Executive Summary</div>
+                                                        <div class="text-xs text-gray-500">High-level statistics and overview</div>
+                                                    </div>
+                                                </div>
+                                            </button>
+                                            
+                                            <!-- Detailed Export -->
+                                            <button onclick="exportApplications('detailed')" class="w-full text-left block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                                                <div class="flex items-start">
+                                                    <i class="bi bi-table text-green-500 mt-0.5 mr-3"></i>
+                                                    <div>
+                                                        <div class="font-medium">Detailed Report</div>
+                                                        <div class="text-xs text-gray-500">Complete application information</div>
+                                                    </div>
+                                                </div>
+                                            </button>
+                                            
+                                            <!-- Council Breakdown -->
+                                            <button onclick="exportApplications('council_breakdown')" class="w-full text-left block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                                                <div class="flex items-start">
+                                                    <i class="bi bi-building text-purple-500 mt-0.5 mr-3"></i>
+                                                    <div>
+                                                        <div class="font-medium">Council Breakdown</div>
+                                                        <div class="text-xs text-gray-500">Applications grouped by council</div>
+                                                    </div>
+                                                </div>
+                                            </button>
+                                            
+                                            <!-- Status Report -->
+                                            <button onclick="exportApplications('status_report')" class="w-full text-left block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                                                <div class="flex items-start">
+                                                    <i class="bi bi-clipboard-check text-orange-500 mt-0.5 mr-3"></i>
+                                                    <div>
+                                                        <div class="font-medium">Status Report</div>
+                                                        <div class="text-xs text-gray-500">Applications grouped by status</div>
+                                                    </div>
+                                                </div>
+                                            </button>
+                                            
+                                            <!-- Timeline Report -->
+                                            <button onclick="exportApplications('timeline')" class="w-full text-left block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                                                <div class="flex items-start">
+                                                    <i class="bi bi-clock-history text-indigo-500 mt-0.5 mr-3"></i>
+                                                    <div>
+                                                        <div class="font-medium">Timeline Analysis</div>
+                                                        <div class="text-xs text-gray-500">Applications with submission timeline</div>
+                                                    </div>
+                                                </div>
+                                            </button>
+                                            
+                                            <!-- Contact List -->
+                                            <button onclick="exportApplications('contact_list')" class="w-full text-left block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors border-t border-gray-100">
+                                                <div class="flex items-start">
+                                                    <i class="bi bi-person-lines-fill text-cyan-500 mt-0.5 mr-3"></i>
+                                                    <div>
+                                                        <div class="font-medium">Contact List</div>
+                                                        <div class="text-xs text-gray-500">Contact information only</div>
+                                                    </div>
+                                                </div>
+                                            </button>
+                                            
+                                            <!-- Note about filters -->
+                                            <div class="px-4 py-2 text-xs text-gray-500 bg-blue-50 border-t border-gray-100">
+                                                <i class="bi bi-info-circle mr-1"></i>
+                                                Exports will include current filter settings
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                                 {% endif %}
                                 <a href="{% url 'enrollments:onboarding_start' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
                                     <i class="bi bi-plus mr-2"></i>
@@ -108,13 +194,14 @@
                         </div>
                     </div>
 
+                    <!-- Rest of your existing template stays the same -->
                     <!-- Filters and Search -->
                     <div class="bg-white shadow rounded-lg mb-8">
                         <div class="px-6 py-4 border-b border-gray-200">
                             <h3 class="text-lg font-medium text-gray-900">Filters & Search</h3>
                         </div>
                         <div class="px-6 py-4">
-                            <form method="get" class="space-y-4">
+                            <form method="get" class="space-y-4" id="filterForm">
                                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                                     <!-- Search Query -->
                                     <div>
@@ -208,6 +295,7 @@
                         </div>
                     </div>
 
+                    <!-- Rest of your existing applications table and content... -->
                     <!-- Applications Table -->
                     <div class="bg-white shadow rounded-lg mb-8">
                         <div class="px-6 py-4 border-b border-gray-200">
@@ -382,6 +470,47 @@
     </div>
 
     <script>
+        // Export dropdown functionality
+        function toggleExportDropdown() {
+            const menu = document.getElementById('exportMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        // Close export dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('exportDropdown');
+            const menu = document.getElementById('exportMenu');
+            
+            if (!dropdown.contains(event.target)) {
+                menu.classList.add('hidden');
+            }
+        });
+
+        // Export applications with format and current filters
+        function exportApplications(format) {
+            // Get current filter values
+            const formData = new FormData(document.getElementById('filterForm'));
+            const params = new URLSearchParams(formData);
+            params.append('format', format);
+            
+            // Show loading state
+            showAlert('Preparing ' + format.replace('_', ' ') + ' export...', 'info');
+            
+            // Create export URL with filters
+            const exportUrl = '{% url "enrollments:export_applications" %}?' + params.toString();
+            
+            // Close dropdown
+            document.getElementById('exportMenu').classList.add('hidden');
+            
+            // Trigger download
+            window.location.href = exportUrl;
+            
+            // Show success message after delay
+            setTimeout(() => {
+                showAlert('Export completed successfully!', 'success');
+            }, 2000);
+        }
+
         // Toggle sidebar on mobile
         function toggleSidebar() {
             const sidebar = document.querySelector('.sidebar');
@@ -418,15 +547,6 @@
             }
         });
 
-        // Export applications
-        function exportApplications() {
-            showAlert('Preparing export...', 'info');
-            // Implement export functionality
-            setTimeout(() => {
-                showAlert('Export completed!', 'success');
-            }, 2000);
-        }
-
         // Show alert
         function showAlert(message, type) {
             const colors = {
@@ -438,7 +558,7 @@
             
             const alert = document.createElement('div');
             alert.className = `fixed top-4 right-4 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-50`;
-            alert.textContent = message;
+            alert.innerHTML = `<i class="bi bi-check-circle mr-2"></i>${message}`;
             
             document.body.appendChild(alert);
             
@@ -458,15 +578,6 @@
                 }
             }
         });
-
-        // Auto-submit form on filter change (optional)
-        document.querySelectorAll('select[name="council"], select[name="status"], select[name="app_type"]').forEach(select => {
-            select.addEventListener('change', function() {
-                // Uncomment to auto-submit on filter change
-                // this.form.submit();
-            });
-        });
     </script>
-
 
 {% endblock %}

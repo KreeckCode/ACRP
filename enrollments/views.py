@@ -23,6 +23,14 @@ from django.db import transaction
 from django.utils import timezone
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
+from openpyxl.utils import get_column_letter
+from openpyxl.chart import BarChart, Reference
+
+
+
+
 
 from .models import (
     # Core models
@@ -1226,8 +1234,959 @@ def application_success(request):
     return render(request, template, context)
 
 # ============================================================================
+# APPLICATION Export VIEWS
+# ============================================================================
+
+@login_required
+def export_applications(request):
+    """
+    Professional Excel export with multiple format options.
+    
+    Export formats available:
+    - summary: High-level statistics and summary data
+    - detailed: Complete application information
+    - council_breakdown: Applications grouped by council
+    - status_report: Applications grouped by status
+    - timeline: Applications with timeline data
+    - contact_list: Contact information only
+    """
+    
+    # Get export format from request
+    export_format = request.GET.get('format', 'summary')
+    
+    # Get the same filters as the list view
+    search_query = request.GET.get('search_query')
+    council_filter = request.GET.get('council')
+    status_filter = request.GET.get('status')
+    app_type_filter = request.GET.get('app_type')
+    date_from = request.GET.get('date_from')
+    date_to = request.GET.get('date_to')
+    
+    # Apply filters and get applications data
+    applications_data = get_filtered_applications_for_export(
+        search_query, council_filter, status_filter, 
+        app_type_filter, date_from, date_to
+    )
+    
+    # Route to appropriate export function
+    export_functions = {
+        'summary': export_summary_format,
+        'detailed': export_detailed_format,
+        'council_breakdown': export_council_breakdown_format,
+        'status_report': export_status_report_format,
+        'timeline': export_timeline_format,
+        'contact_list': export_contact_list_format,
+    }
+    
+    export_function = export_functions.get(export_format, export_summary_format)
+    
+    try:
+        response = export_function(applications_data, request)
+        
+        # Log export activity
+        logger.info(
+            f"Applications exported by user {request.user.email} "
+            f"- Format: {export_format}, Count: {len(applications_data)}"
+        )
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"Export failed for user {request.user.email}: {str(e)}")
+        raise
+
+
+def get_filtered_applications_for_export(search_query, council_filter, status_filter, 
+                                       app_type_filter, date_from, date_to):
+    """
+    Get applications data with applied filters for export.
+    Returns a comprehensive list of application dictionaries.
+    """
+    applications_data = []
+    
+    # Define application models
+    app_models = [
+        ('associated', AssociatedApplication),
+        ('designated', DesignatedApplication),
+        ('student', StudentApplication),
+    ]
+    
+    for app_type_name, Model in app_models:
+        # Skip if filtering by specific app type
+        if app_type_filter and app_type_filter != app_type_name:
+            continue
+            
+        # Build queryset with proper relationships
+        qs = Model.objects.select_related(
+            'onboarding_session__selected_council',
+            'onboarding_session__selected_affiliation_type',
+            'submitted_by',
+            'reviewed_by',
+            'approved_by'
+        )
+        
+        # Add designation category for designated applications
+        if app_type_name == 'designated':
+            qs = qs.select_related('designation_category', 'designation_subcategory')
+        
+        # Apply filters
+        if council_filter:
+            qs = qs.filter(onboarding_session__selected_council_id=council_filter)
+        if status_filter:
+            qs = qs.filter(status=status_filter)
+        if date_from:
+            qs = qs.filter(created_at__date__gte=date_from)
+        if date_to:
+            qs = qs.filter(created_at__date__lte=date_to)
+        if search_query:
+            qs = qs.filter(
+                Q(full_names__icontains=search_query) |
+                Q(email__icontains=search_query) |
+                Q(application_number__icontains=search_query)
+            )
+        
+        # Process applications
+        for app in qs:
+            app_data = {
+                'id': app.pk,
+                'application_number': app.application_number,
+                'type': 'Learner' if app_type_name == 'student' else app_type_name.title(),
+                'app_type': app_type_name,
+                
+                # Personal Information
+                'full_names': getattr(app, 'full_names', ''),
+                'first_name': getattr(app, 'first_name', ''),
+                'surname': getattr(app, 'surname', ''),
+                'preferred_name': getattr(app, 'preferred_name', ''),
+                'email': app.email,
+                'cell_phone': getattr(app, 'cell_phone', ''),
+                'home_phone': getattr(app, 'home_phone', ''),
+                'work_phone': getattr(app, 'work_phone', ''),
+                
+                # Identity Information
+                'id_number': getattr(app, 'id_number', ''),
+                'passport_number': getattr(app, 'passport_number', ''),
+                'date_of_birth': getattr(app, 'date_of_birth', ''),
+                'gender': getattr(app, 'gender', ''),
+                'race': getattr(app, 'race', ''),
+                'nationality': getattr(app, 'nationality', ''),
+                'home_language': getattr(app, 'home_language', ''),
+                
+                # Address Information
+                'physical_address': f"{getattr(app, 'physical_address_line1', '')} {getattr(app, 'physical_address_line2', '')}".strip(),
+                'physical_city': getattr(app, 'physical_city', ''),
+                'physical_province': getattr(app, 'physical_province', ''),
+                'physical_code': getattr(app, 'physical_code', ''),
+                'physical_country': getattr(app, 'physical_country', ''),
+                'postal_address': f"{getattr(app, 'postal_address_line1', '')} {getattr(app, 'postal_address_line2', '')}".strip(),
+                'postal_city': getattr(app, 'postal_city', ''),
+                'postal_province': getattr(app, 'postal_province', ''),
+                'postal_code': getattr(app, 'postal_code', ''),
+                'postal_country': getattr(app, 'postal_country', ''),
+                
+                # Council and Affiliation
+                'council': app.onboarding_session.selected_council.code,
+                'council_name': app.onboarding_session.selected_council.name,
+                'affiliation_type': app.onboarding_session.selected_affiliation_type.name if app.onboarding_session.selected_affiliation_type else '',
+                
+                # Application Status and Dates
+                'status': app.status,
+                'created_at': app.created_at,
+                'submitted_at': app.submitted_at,
+                'reviewed_at': getattr(app, 'reviewed_at', ''),
+                'approved_at': getattr(app, 'approved_at', ''),
+                
+                # Staff Information
+                'submitted_by': app.submitted_by.get_full_name() if app.submitted_by else '',
+                'reviewed_by': app.reviewed_by.get_full_name() if app.reviewed_by else '',
+                'approved_by': app.approved_by.get_full_name() if app.approved_by else '',
+                'reviewer_notes': getattr(app, 'reviewer_notes', ''),
+                
+                # Type-specific information
+                'designation_category': '',
+                'designation_subcategory': '',
+                'current_institution': '',
+                'qualification_institution': '',
+                'highest_qualification': '',
+                'years_in_ministry': '',
+                'current_occupation': '',
+                'religious_affiliation': '',
+            }
+            
+            # Add type-specific data
+            if app_type_name == 'designated':
+                app_data.update({
+                    'designation_category': app.designation_category.name if app.designation_category else '',
+                    'designation_subcategory': app.designation_subcategory.name if app.designation_subcategory else '',
+                    'qualification_institution': getattr(app, 'qualification_institution', ''),
+                    'highest_qualification': getattr(app, 'highest_qualification', ''),
+                    'years_in_ministry': getattr(app, 'years_in_ministry', ''),
+                    'current_occupation': getattr(app, 'current_occupation', ''),
+                    'religious_affiliation': getattr(app, 'religious_affiliation', ''),
+                })
+            elif app_type_name == 'student':
+                app_data.update({
+                    'current_institution': getattr(app, 'current_institution', ''),
+                    'qualification_institution': getattr(app, 'current_institution', ''),
+                })
+            
+            applications_data.append(app_data)
+    
+    return applications_data
+
+
+def export_summary_format(applications_data, request):
+    """
+    Export summary statistics and high-level overview.
+    Perfect for executive reports and quick overviews.
+    """
+    workbook = openpyxl.Workbook()
+    
+    # Remove default sheet and create custom sheets
+    workbook.remove(workbook.active)
+    
+    # Create summary sheet
+    summary_sheet = workbook.create_sheet("Executive Summary")
+    
+    # Define styles
+    header_font = Font(name='Calibri', size=14, bold=True, color='FFFFFF')
+    header_fill = PatternFill(start_color='366092', end_color='366092', fill_type='solid')
+    subheader_font = Font(name='Calibri', size=12, bold=True, color='366092')
+    normal_font = Font(name='Calibri', size=11)
+    border = Border(left=Side(style='thin'), right=Side(style='thin'), 
+                   top=Side(style='thin'), bottom=Side(style='thin'))
+    
+    # Title and metadata
+    summary_sheet['A1'] = 'ACRP AMS Application Export - Executive Summary'
+    summary_sheet['A1'].font = Font(name='Calibri', size=16, bold=True, color='366092')
+    summary_sheet['A2'] = f'Generated on: {timezone.now().strftime("%Y-%m-%d %H:%M:%S")}'
+    summary_sheet['A3'] = f'Generated by: {request.user.username}'
+    summary_sheet['A4'] = f'Total Applications: {len(applications_data)}'
+    
+    # Calculate statistics
+    stats = calculate_export_statistics(applications_data)
+    
+    # Overall Statistics Section
+    row = 6
+    summary_sheet[f'A{row}'] = 'OVERALL STATISTICS'
+    summary_sheet[f'A{row}'].font = subheader_font
+    row += 2
+    
+    stats_data = [
+        ['Total Applications', stats['total_applications']],
+        ['Approved Applications', stats['approved_count']],
+        ['Pending Applications', stats['pending_count']],
+        ['Under Review', stats['under_review_count']],
+        ['Rejected Applications', stats['rejected_count']],
+        ['Approval Rate', f"{stats['approval_rate']:.1f}%"],
+    ]
+    
+    for stat_row in stats_data:
+        summary_sheet[f'A{row}'] = stat_row[0]
+        summary_sheet[f'B{row}'] = stat_row[1]
+        summary_sheet[f'A{row}'].font = normal_font
+        summary_sheet[f'B{row}'].font = Font(name='Calibri', size=11, bold=True)
+        row += 1
+    
+    # By Council Section
+    row += 2
+    summary_sheet[f'A{row}'] = 'BY COUNCIL'
+    summary_sheet[f'A{row}'].font = subheader_font
+    row += 1
+    
+    # Headers for council table
+    council_headers = ['Council', 'Total', 'Approved', 'Pending', 'Rejected', 'Approval Rate']
+    for col, header in enumerate(council_headers, 1):
+        cell = summary_sheet.cell(row=row, column=col)
+        cell.value = header
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.border = border
+    row += 1
+    
+    # Council data
+    for council_code, council_stats in stats['by_council'].items():
+        council_data = [
+            council_code,
+            council_stats['total'],
+            council_stats['approved'],
+            council_stats['pending'],
+            council_stats['rejected'],
+            f"{council_stats['approval_rate']:.1f}%"
+        ]
+        for col, value in enumerate(council_data, 1):
+            cell = summary_sheet.cell(row=row, column=col)
+            cell.value = value
+            cell.font = normal_font
+            cell.border = border
+        row += 1
+    
+    # By Application Type Section
+    row += 2
+    summary_sheet[f'A{row}'] = 'BY APPLICATION TYPE'
+    summary_sheet[f'A{row}'].font = subheader_font
+    row += 1
+    
+    # Headers for type table
+    type_headers = ['Application Type', 'Count', 'Percentage']
+    for col, header in enumerate(type_headers, 1):
+        cell = summary_sheet.cell(row=row, column=col)
+        cell.value = header
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.border = border
+    row += 1
+    
+    # Type data
+    for app_type, count in stats['by_type'].items():
+        percentage = (count / stats['total_applications'] * 100) if stats['total_applications'] > 0 else 0
+        type_data = [app_type, count, f"{percentage:.1f}%"]
+        for col, value in enumerate(type_data, 1):
+            cell = summary_sheet.cell(row=row, column=col)
+            cell.value = value
+            cell.font = normal_font
+            cell.border = border
+        row += 1
+    
+    # Auto-adjust column widths
+    for column in summary_sheet.columns:
+        max_length = 0
+        column_letter = get_column_letter(column[0].column)
+        for cell in column:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except:
+                pass
+        adjusted_width = min(max_length + 2, 50)
+        summary_sheet.column_dimensions[column_letter].width = adjusted_width
+    
+    # Create detailed data sheet
+    create_detailed_data_sheet(workbook, applications_data)
+    
+    # Prepare response
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="ACRP_Applications_Summary_{timezone.now().strftime("%Y%m%d_%H%M%S")}.xlsx"'
+    
+    workbook.save(response)
+    return response
+
+
+def export_detailed_format(applications_data, request):
+    """
+    Export complete detailed information for all applications.
+    Perfect for comprehensive analysis and record-keeping.
+    """
+    workbook = openpyxl.Workbook()
+    workbook.remove(workbook.active)
+    
+    # Create detailed sheet
+    detail_sheet = workbook.create_sheet("Detailed Applications")
+    
+    # Define comprehensive headers
+    headers = [
+        'Application ID', 'Application Number', 'Type', 'Status',
+        'Full Names', 'Email', 'Cell Phone', 'Home Phone', 'Work Phone',
+        'ID Number', 'Passport Number', 'Date of Birth', 'Gender', 'Race',
+        'Nationality', 'Home Language', 'Physical Address', 'Physical City',
+        'Physical Province', 'Physical Code', 'Physical Country',
+        'Postal Address', 'Postal City', 'Postal Province', 'Postal Code',
+        'Postal Country', 'Council', 'Council Name', 'Affiliation Type',
+        'Designation Category', 'Designation Subcategory', 'Current Institution',
+        'Qualification Institution', 'Highest Qualification', 'Years in Ministry',
+        'Current Occupation', 'Religious Affiliation', 'Created Date',
+        'Submitted Date', 'Reviewed Date', 'Approved Date', 'Submitted By',
+        'Reviewed By', 'Approved By', 'Reviewer Notes'
+    ]
+    
+    # Style headers
+    header_font = Font(name='Calibri', size=11, bold=True, color='FFFFFF')
+    header_fill = PatternFill(start_color='366092', end_color='366092', fill_type='solid')
+    normal_font = Font(name='Calibri', size=10)
+    border = Border(left=Side(style='thin'), right=Side(style='thin'), 
+                   top=Side(style='thin'), bottom=Side(style='thin'))
+    
+    # Add headers
+    for col, header in enumerate(headers, 1):
+        cell = detail_sheet.cell(row=1, column=col)
+        cell.value = header
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.border = border
+    
+    # Add data
+    for row, app in enumerate(applications_data, 2):
+        data_row = [
+            app['id'], app['application_number'], app['type'], app['status'],
+            app['full_names'], app['email'], app['cell_phone'], app['home_phone'],
+            app['work_phone'], app['id_number'], app['passport_number'],
+            app['date_of_birth'], app['gender'], app['race'], app['nationality'],
+            app['home_language'], app['physical_address'], app['physical_city'],
+            app['physical_province'], app['physical_code'], app['physical_country'],
+            app['postal_address'], app['postal_city'], app['postal_province'],
+            app['postal_code'], app['postal_country'], app['council'],
+            app['council_name'], app['affiliation_type'], app['designation_category'],
+            app['designation_subcategory'], app['current_institution'],
+            app['qualification_institution'], app['highest_qualification'],
+            app['years_in_ministry'], app['current_occupation'],
+            app['religious_affiliation'], app['created_at'], app['submitted_at'],
+            app['reviewed_at'], app['approved_at'], app['submitted_by'],
+            app['reviewed_by'], app['approved_by'], app['reviewer_notes']
+        ]
+        
+        for col, value in enumerate(data_row, 1):
+            cell = detail_sheet.cell(row=row, column=col)
+            cell.value = value
+            cell.font = normal_font
+            cell.border = border
+    
+    # Auto-adjust column widths
+    for column in detail_sheet.columns:
+        max_length = 0
+        column_letter = get_column_letter(column[0].column)
+        for cell in column:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except:
+                pass
+        adjusted_width = min(max_length + 2, 40)
+        detail_sheet.column_dimensions[column_letter].width = adjusted_width
+    
+    # Prepare response
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="ACRP_Applications_Detailed_{timezone.now().strftime("%Y%m%d_%H%M%S")}.xlsx"'
+    
+    workbook.save(response)
+    return response
+
+
+def export_council_breakdown_format(applications_data, request):
+    """
+    Export applications grouped by council with separate sheets.
+    Perfect for council-specific analysis and reporting.
+    """
+    workbook = openpyxl.Workbook()
+    workbook.remove(workbook.active)
+    
+    # Group applications by council
+    council_groups = {}
+    for app in applications_data:
+        council = app['council']
+        if council not in council_groups:
+            council_groups[council] = []
+        council_groups[council].append(app)
+    
+    # Create summary sheet
+    summary_sheet = workbook.create_sheet("Council Summary")
+    create_council_summary_sheet(summary_sheet, council_groups, request)
+    
+    # Create sheet for each council
+    for council_code, council_apps in council_groups.items():
+        council_sheet = workbook.create_sheet(f"{council_code} Applications")
+        create_council_detail_sheet(council_sheet, council_apps, council_code)
+    
+    # Prepare response
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="ACRP_Applications_By_Council_{timezone.now().strftime("%Y%m%d_%H%M%S")}.xlsx"'
+    
+    workbook.save(response)
+    return response
+
+
+def export_contact_list_format(applications_data, request):
+    """
+    Export contact information only.
+    Perfect for communication and outreach purposes.
+    """
+    workbook = openpyxl.Workbook()
+    workbook.remove(workbook.active)
+    
+    contact_sheet = workbook.create_sheet("Contact List")
+    
+    # Headers for contact list
+    headers = [
+        'Full Names', 'Email', 'Cell Phone', 'Home Phone', 'Work Phone',
+        'Application Type', 'Council', 'Status', 'Physical Address',
+        'Physical City', 'Physical Province', 'Postal Address', 'Postal City',
+        'Postal Province', 'Application Number', 'Submitted Date'
+    ]
+    
+    # Style headers
+    header_font = Font(name='Calibri', size=11, bold=True, color='FFFFFF')
+    header_fill = PatternFill(start_color='366092', end_color='366092', fill_type='solid')
+    normal_font = Font(name='Calibri', size=10)
+    
+    # Add headers
+    for col, header in enumerate(headers, 1):
+        cell = contact_sheet.cell(row=1, column=col)
+        cell.value = header
+        cell.font = header_font
+        cell.fill = header_fill
+    
+    # Add contact data
+    for row, app in enumerate(applications_data, 2):
+        contact_data = [
+            app['full_names'], app['email'], app['cell_phone'], app['home_phone'],
+            app['work_phone'], app['type'], app['council'], app['status'],
+            app['physical_address'], app['physical_city'], app['physical_province'],
+            app['postal_address'], app['postal_city'], app['postal_province'],
+            app['application_number'], app['submitted_at']
+        ]
+        
+        for col, value in enumerate(contact_data, 1):
+            cell = contact_sheet.cell(row=row, column=col)
+            cell.value = value
+            cell.font = normal_font
+    
+    # Auto-adjust column widths
+    for column in contact_sheet.columns:
+        max_length = 0
+        column_letter = get_column_letter(column[0].column)
+        for cell in column:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except:
+                pass
+        adjusted_width = min(max_length + 2, 35)
+        contact_sheet.column_dimensions[column_letter].width = adjusted_width
+    
+    # Prepare response
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="ACRP_Contact_List_{timezone.now().strftime("%Y%m%d_%H%M%S")}.xlsx"'
+    
+    workbook.save(response)
+    return response
+
+
+
+
+def calculate_export_statistics(applications_data):
+    """Calculate comprehensive statistics for export."""
+    total_applications = len(applications_data)
+    
+    if total_applications == 0:
+        return {
+            'total_applications': 0,
+            'approved_count': 0,
+            'pending_count': 0,
+            'under_review_count': 0,
+            'rejected_count': 0,
+            'approval_rate': 0,
+            'by_council': {},
+            'by_type': {},
+            'by_status': {}
+        }
+    
+    # Calculate status counts
+    status_counts = {}
+    council_stats = {}
+    type_counts = {}
+    
+    for app in applications_data:
+        # Status counting
+        status = app['status']
+        status_counts[status] = status_counts.get(status, 0) + 1
+        
+        # Council statistics
+        council = app['council']
+        if council not in council_stats:
+            council_stats[council] = {
+                'total': 0, 'approved': 0, 'pending': 0,
+                'under_review': 0, 'rejected': 0, 'approval_rate': 0
+            }
+        
+        council_stats[council]['total'] += 1
+        if status == 'approved':
+            council_stats[council]['approved'] += 1
+        elif status in ['pending', 'submitted']:
+            council_stats[council]['pending'] += 1
+        elif status == 'under_review':
+            council_stats[council]['under_review'] += 1
+        elif status == 'rejected':
+            council_stats[council]['rejected'] += 1
+        
+        # Type counting
+        app_type = app['type']
+        type_counts[app_type] = type_counts.get(app_type, 0) + 1
+    
+    # Calculate approval rates for councils
+    for council, stats in council_stats.items():
+        processed = stats['approved'] + stats['rejected']
+        if processed > 0:
+            stats['approval_rate'] = (stats['approved'] / processed) * 100
+    
+    # Overall approval rate
+    total_approved = status_counts.get('approved', 0)
+    total_rejected = status_counts.get('rejected', 0)
+    total_processed = total_approved + total_rejected
+    overall_approval_rate = (total_approved / total_processed * 100) if total_processed > 0 else 0
+    
+    return {
+        'total_applications': total_applications,
+        'approved_count': status_counts.get('approved', 0),
+        'pending_count': status_counts.get('pending', 0) + status_counts.get('submitted', 0),
+        'under_review_count': status_counts.get('under_review', 0),
+        'rejected_count': status_counts.get('rejected', 0),
+        'approval_rate': overall_approval_rate,
+        'by_council': council_stats,
+        'by_type': type_counts,
+        'by_status': status_counts
+    }
+
+
+def create_detailed_data_sheet(workbook, applications_data):
+    """Create detailed data sheet for summary export."""
+    data_sheet = workbook.create_sheet("Raw Data")
+    
+    # Headers for detailed data
+    headers = [
+        'ID', 'Application Number', 'Type', 'Full Names', 'Email', 'Status',
+        'Council', 'Created Date', 'Submitted Date', 'Cell Phone', 'City',
+        'Province', 'Designation Category', 'Institution'
+    ]
+    
+    # Style definitions
+    header_font = Font(name='Calibri', size=10, bold=True, color='FFFFFF')
+    header_fill = PatternFill(start_color='366092', end_color='366092', fill_type='solid')
+    normal_font = Font(name='Calibri', size=9)
+    border = Border(left=Side(style='thin'), right=Side(style='thin'), 
+                   top=Side(style='thin'), bottom=Side(style='thin'))
+    
+    # Add headers
+    for col, header in enumerate(headers, 1):
+        cell = data_sheet.cell(row=1, column=col)
+        cell.value = header
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.border = border
+    
+    # Add data rows
+    for row, app in enumerate(applications_data, 2):
+        data_row = [
+            app['id'], app['application_number'], app['type'], app['full_names'],
+            app['email'], app['status'], app['council'], app['created_at'],
+            app['submitted_at'], app['cell_phone'], app['physical_city'],
+            app['physical_province'], app['designation_category'], 
+            app['current_institution']
+        ]
+        
+        for col, value in enumerate(data_row, 1):
+            cell = data_sheet.cell(row=row, column=col)
+            cell.value = value
+            cell.font = normal_font
+            cell.border = border
+    
+    # Auto-adjust column widths
+    for column in data_sheet.columns:
+        max_length = 0
+        column_letter = get_column_letter(column[0].column)
+        for cell in column:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except:
+                pass
+        adjusted_width = min(max_length + 2, 30)
+        data_sheet.column_dimensions[column_letter].width = adjusted_width
+
+
+def create_council_summary_sheet(sheet, council_groups, request):
+    """Create council summary sheet."""
+    # Title and metadata
+    sheet['A1'] = 'Council Breakdown Summary'
+    sheet['A1'].font = Font(name='Calibri', size=16, bold=True, color='366092')
+    sheet['A2'] = f'Generated on: {timezone.now().strftime("%Y-%m-%d %H:%M:%S")}'
+    sheet['A3'] = f'Generated by: {request.user.username}'
+    
+    # Define styles
+    header_font = Font(name='Calibri', size=11, bold=True, color='FFFFFF')
+    header_fill = PatternFill(start_color='366092', end_color='366092', fill_type='solid')
+    subheader_font = Font(name='Calibri', size=12, bold=True, color='366092')
+    normal_font = Font(name='Calibri', size=10)
+    border = Border(left=Side(style='thin'), right=Side(style='thin'), 
+                   top=Side(style='thin'), bottom=Side(style='thin'))
+    
+    row = 5
+    
+    # Council summary table
+    sheet[f'A{row}'] = 'COUNCIL SUMMARY'
+    sheet[f'A{row}'].font = subheader_font
+    row += 2
+    
+    # Headers
+    summary_headers = ['Council', 'Total Applications', 'Approved', 'Pending', 'Under Review', 'Rejected', 'Approval Rate']
+    for col, header in enumerate(summary_headers, 1):
+        cell = sheet.cell(row=row, column=col)
+        cell.value = header
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.border = border
+    row += 1
+    
+    # Council data
+    for council_code, council_apps in council_groups.items():
+        stats = calculate_export_statistics(council_apps)
+        council_data = [
+            council_code,
+            stats['total_applications'],
+            stats['approved_count'],
+            stats['pending_count'],
+            stats['under_review_count'],
+            stats['rejected_count'],
+            f"{stats['approval_rate']:.1f}%"
+        ]
+        
+        for col, value in enumerate(council_data, 1):
+            cell = sheet.cell(row=row, column=col)
+            cell.value = value
+            cell.font = normal_font
+            cell.border = border
+        row += 1
+    
+    # Auto-adjust column widths
+    for column in sheet.columns:
+        max_length = 0
+        column_letter = get_column_letter(column[0].column)
+        for cell in column:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except:
+                pass
+        adjusted_width = min(max_length + 2, 25)
+        sheet.column_dimensions[column_letter].width = adjusted_width
+
+
+def create_council_detail_sheet(sheet, council_apps, council_code):
+    """Create individual council detail sheet."""
+    # Title
+    sheet['A1'] = f'{council_code} Council Applications'
+    sheet['A1'].font = Font(name='Calibri', size=14, bold=True, color='366092')
+    sheet['A2'] = f'Total Applications: {len(council_apps)}'
+    
+    # Headers
+    headers = [
+        'Application Number', 'Full Names', 'Email', 'Type', 'Status',
+        'Cell Phone', 'City', 'Province', 'Created Date', 'Submitted Date',
+        'Designation Category', 'Institution'
+    ]
+    
+    # Style definitions
+    header_font = Font(name='Calibri', size=10, bold=True, color='FFFFFF')
+    header_fill = PatternFill(start_color='366092', end_color='366092', fill_type='solid')
+    normal_font = Font(name='Calibri', size=9)
+    border = Border(left=Side(style='thin'), right=Side(style='thin'), 
+                   top=Side(style='thin'), bottom=Side(style='thin'))
+    
+    # Add headers
+    row = 4
+    for col, header in enumerate(headers, 1):
+        cell = sheet.cell(row=row, column=col)
+        cell.value = header
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.border = border
+    
+    # Add application data
+    for app_row, app in enumerate(council_apps, row + 1):
+        data_row = [
+            app['application_number'], app['full_names'], app['email'],
+            app['type'], app['status'], app['cell_phone'], app['physical_city'],
+            app['physical_province'], app['created_at'], app['submitted_at'],
+            app['designation_category'], app['current_institution']
+        ]
+        
+        for col, value in enumerate(data_row, 1):
+            cell = sheet.cell(row=app_row, column=col)
+            cell.value = value
+            cell.font = normal_font
+            cell.border = border
+    
+    # Auto-adjust column widths
+    for column in sheet.columns:
+        max_length = 0
+        column_letter = get_column_letter(column[0].column)
+        for cell in column:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except:
+                pass
+        adjusted_width = min(max_length + 2, 30)
+        sheet.column_dimensions[column_letter].width = adjusted_width
+
+
+def export_status_report_format(applications_data, request):
+    """
+    Export applications grouped by status.
+    Perfect for processing and workflow management.
+    """
+    workbook = openpyxl.Workbook()
+    workbook.remove(workbook.active)
+    
+    # Group applications by status
+    status_groups = {}
+    for app in applications_data:
+        status = app['status']
+        if status not in status_groups:
+            status_groups[status] = []
+        status_groups[status].append(app)
+    
+    # Create summary sheet
+    summary_sheet = workbook.create_sheet("Status Summary")
+    create_status_summary_sheet(summary_sheet, status_groups, request)
+    
+    # Create sheet for each status
+    status_order = ['submitted', 'under_review', 'approved', 'rejected', 'pending', 'draft']
+    for status in status_order:
+        if status in status_groups:
+            status_sheet = workbook.create_sheet(f"{status.title()} Applications")
+            create_status_detail_sheet(status_sheet, status_groups[status], status)
+    
+    # Prepare response
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="ACRP_Status_Report_{timezone.now().strftime("%Y%m%d_%H%M%S")}.xlsx"'
+    
+    workbook.save(response)
+    return response
+
+
+def export_timeline_format(applications_data, request):
+    """
+    Export timeline analysis of applications.
+    Perfect for trend analysis and performance monitoring.
+    """
+    workbook = openpyxl.Workbook()
+    workbook.remove(workbook.active)
+    
+    # Create timeline sheet
+    timeline_sheet = workbook.create_sheet("Timeline Analysis")
+    
+    # Title and metadata
+    timeline_sheet['A1'] = 'Applications Timeline Analysis'
+    timeline_sheet['A1'].font = Font(name='Calibri', size=16, bold=True, color='366092')
+    timeline_sheet['A2'] = f'Generated on: {timezone.now().strftime("%Y-%m-%d %H:%M:%S")}'
+    timeline_sheet['A3'] = f'Period: {applications_data[0]["created_at"].strftime("%Y-%m-%d") if applications_data else "N/A"} to {applications_data[-1]["created_at"].strftime("%Y-%m-%d") if applications_data else "N/A"}'
+    
+    # Headers for timeline data
+    headers = [
+        'Application Number', 'Full Names', 'Type', 'Council', 'Status',
+        'Created Date', 'Submitted Date', 'Reviewed Date', 'Approved Date',
+        'Days to Submit', 'Days to Review', 'Days to Approve', 'Total Processing Days'
+    ]
+    
+    # Style definitions
+    header_font = Font(name='Calibri', size=10, bold=True, color='FFFFFF')
+    header_fill = PatternFill(start_color='366092', end_color='366092', fill_type='solid')
+    normal_font = Font(name='Calibri', size=9)
+    border = Border(left=Side(style='thin'), right=Side(style='thin'), 
+                   top=Side(style='thin'), bottom=Side(style='thin'))
+    
+    # Add headers
+    row = 5
+    for col, header in enumerate(headers, 1):
+        cell = timeline_sheet.cell(row=row, column=col)
+        cell.value = header
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.border = border
+    
+    # Add timeline data
+    for app_row, app in enumerate(applications_data, row + 1):
+        # Calculate timeline metrics
+        created_date = app['created_at']
+        submitted_date = app['submitted_at']
+        reviewed_date = app['reviewed_at']
+        approved_date = app['approved_at']
+        
+        days_to_submit = ''
+        days_to_review = ''
+        days_to_approve = ''
+        total_days = ''
+        
+        if submitted_date and created_date:
+            days_to_submit = (submitted_date - created_date).days
+        
+        if reviewed_date and submitted_date:
+            days_to_review = (reviewed_date - submitted_date).days
+        
+        if approved_date and submitted_date:
+            days_to_approve = (approved_date - submitted_date).days
+            total_days = (approved_date - created_date).days
+        
+        timeline_data = [
+            app['application_number'], app['full_names'], app['type'],
+            app['council'], app['status'], created_date, submitted_date,
+            reviewed_date, approved_date, days_to_submit, days_to_review,
+            days_to_approve, total_days
+        ]
+        
+        for col, value in enumerate(timeline_data, 1):
+            cell = timeline_sheet.cell(row=app_row, column=col)
+            cell.value = value
+            cell.font = normal_font
+            cell.border = border
+    
+    # Auto-adjust column widths
+    for column in timeline_sheet.columns:
+        max_length = 0
+        column_letter = get_column_letter(column[0].column)
+        for cell in column:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except:
+                pass
+        adjusted_width = min(max_length + 2, 25)
+        timeline_sheet.column_dimensions[column_letter].width = adjusted_width
+    
+    # Prepare response
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="ACRP_Timeline_Analysis_{timezone.now().strftime("%Y%m%d_%H%M%S")}.xlsx"'
+    
+    workbook.save(response)
+    return response
+
+
+def create_status_summary_sheet(sheet, status_groups, request):
+    """Create status summary sheet."""
+    # Similar implementation to council summary but for statuses
+    sheet['A1'] = 'Status Summary Report'
+    sheet['A1'].font = Font(name='Calibri', size=16, bold=True, color='366092')
+    # Add status breakdown table here
+    pass
+
+
+def create_status_detail_sheet(sheet, status_apps, status):
+    """Create individual status detail sheet."""
+    # Similar implementation to council detail but for specific status
+    sheet['A1'] = f'{status.title()} Applications'
+    sheet['A1'].font = Font(name='Calibri', size=14, bold=True, color='366092')
+    # Add application details for this status
+    pass
+
+
+
+# ============================================================================
 # APPLICATION MANAGEMENT VIEWS
 # ============================================================================
+
+
+
 
 @login_required
 @permission_required('enrollments.view_baseapplication', raise_exception=True)
@@ -1236,105 +2195,115 @@ def application_list(request):
     Unified list view for all application types with advanced filtering.
     
     Shows applications from all councils and affiliation types in one view.
+    Performance optimized with proper queryset handling.
     """
     # Get search parameters
     search_form = ApplicationSearchForm(request.GET or None)
     
-    # Build unified queryset
-    applications = get_all_applications_queryset()
+    # Initialize filter variables
+    search_query = None
+    council_filter = None
+    affiliation_type_filter = None
+    status_filter = None
+    date_from = None
+    date_to = None
+    app_type_filter = None
     
-    # Apply filters
+    # Apply filters if form is valid
     if search_form.is_valid():
         search_query = search_form.cleaned_data.get('search_query')
-        council = search_form.cleaned_data.get('council')
-        affiliation_type = search_form.cleaned_data.get('affiliation_type')
-        status = search_form.cleaned_data.get('status')
+        council_filter = search_form.cleaned_data.get('council')
+        affiliation_type_filter = search_form.cleaned_data.get('affiliation_type')
+        status_filter = search_form.cleaned_data.get('status')
         date_from = search_form.cleaned_data.get('date_from')
         date_to = search_form.cleaned_data.get('date_to')
+        app_type_filter = request.GET.get('app_type')  # Get from URL params
+    
+    # Get applications using the same logic as export
+    all_applications = []
+    
+    # Define application models
+    app_models = [
+        ('associated', AssociatedApplication),
+        ('designated', DesignatedApplication),
+        ('student', StudentApplication),
+    ]
+    
+    # Base querysets with proper select_related for performance
+    base_select_related = [
+        'onboarding_session__selected_council',
+        'onboarding_session__selected_affiliation_type'
+    ]
+    
+    for name, Model in app_models:
+        # Skip if filtering by specific app type
+        if app_type_filter and app_type_filter != name:
+            continue
+            
+        # Build queryset
+        qs = Model.objects.select_related(*base_select_related)
         
-        # Apply search filters (this gets complex with union queries)
-        # For now, we'll implement basic filtering
-        # In production, consider using Elasticsearch or similar for complex searches
-        
+        # Apply filters
+        if council_filter:
+            qs = qs.filter(onboarding_session__selected_council=council_filter)
+        if affiliation_type_filter:
+            qs = qs.filter(onboarding_session__selected_affiliation_type=affiliation_type_filter)
+        if status_filter:
+            qs = qs.filter(status=status_filter)
+        if date_from:
+            qs = qs.filter(created_at__date__gte=date_from)
+        if date_to:
+            qs = qs.filter(created_at__date__lte=date_to)
         if search_query:
-            # We'll need to filter each model separately then union
-            pass  # Implement complex search as needed
+            qs = qs.filter(
+                Q(full_names__icontains=search_query) |
+                Q(email__icontains=search_query) |
+                Q(application_number__icontains=search_query)
+            )
         
-        if status:
-            # Filter by status across all types
-            pass  # Implement status filtering
+        # Process applications
+        for app in qs.order_by('-created_at'):
+            all_applications.append({
+                'id': app.pk,
+                'type': 'Learner' if name == 'student' else name.title(),  # For display
+                'app_type': name,  # For URL generation - CRITICAL FIX
+                'council': app.onboarding_session.selected_council.code,
+                'council_name': app.onboarding_session.selected_council.name,
+                'name': app.get_display_name(),
+                'email': app.email,
+                'application_number': app.application_number,
+                'status': app.status,
+                'created_at': app.created_at,
+                'submitted_at': app.submitted_at,
+                'affiliation_type': app.onboarding_session.selected_affiliation_type.name if app.onboarding_session.selected_affiliation_type else None,
+                'extra_info': getattr(app, 'current_institution', None) if name == 'student' else 
+                             (app.designation_category.name if hasattr(app, 'designation_category') and app.designation_category else None),
+            })
     
-    # For now, let's get a simpler queryset for demonstration
-    # In production, you'd optimize this with proper indexing and search
+    # Sort by creation date (most recent first)
+    all_applications.sort(key=lambda x: x['created_at'], reverse=True)
     
-    # Get recent applications from all types
-    recent_applications = []
+    # Calculate summary statistics
+    total_applications = len(all_applications)
+    status_counts = {}
+    council_counts = {}
+    type_counts = {}
     
-    # Associated applications
-    associated_apps = AssociatedApplication.objects.select_related(
-        'onboarding_session__selected_council',
-        'onboarding_session__selected_affiliation_type'
-    ).order_by('-created_at')[:50]
+    for app in all_applications:
+        # Status counts
+        status = app['status']
+        status_counts[status] = status_counts.get(status, 0) + 1
+        
+        # Council counts
+        council = app['council']
+        council_counts[council] = council_counts.get(council, 0) + 1
+        
+        # Type counts
+        app_type = app['type']
+        type_counts[app_type] = type_counts.get(app_type, 0) + 1
     
-    for app in associated_apps:
-        recent_applications.append({
-            'id': app.pk,
-            'type': 'Associated',
-            'council': app.onboarding_session.selected_council.code,
-            'name': app.get_display_name(),
-            'email': app.email,
-            'application_number': app.application_number,
-            'status': app.status,
-            'created_at': app.created_at,
-            'submitted_at': app.submitted_at,
-        })
-    
-    # Designated applications
-    designated_apps = DesignatedApplication.objects.select_related(
-        'onboarding_session__selected_council',
-        'onboarding_session__selected_affiliation_type',
-        'designation_category'
-    ).order_by('-created_at')[:50]
-    
-    for app in designated_apps:
-        recent_applications.append({
-            'id': app.pk,
-            'type': 'Designated',
-            'council': app.onboarding_session.selected_council.code,
-            'name': app.get_display_name(),
-            'email': app.email,
-            'application_number': app.application_number,
-            'status': app.status,
-            'created_at': app.created_at,
-            'submitted_at': app.submitted_at,
-            'category': app.designation_category.name if app.designation_category else None,
-        })
-    
-    # Student applications
-    student_apps = StudentApplication.objects.select_related(
-        'onboarding_session__selected_council',
-        'onboarding_session__selected_affiliation_type'
-    ).order_by('-created_at')[:50]
-    
-    for app in student_apps:
-        recent_applications.append({
-            'id': app.pk,
-            'type': 'Student',
-            'council': app.onboarding_session.selected_council.code,
-            'name': app.get_display_name(),
-            'email': app.email,
-            'application_number': app.application_number,
-            'status': app.status,
-            'created_at': app.created_at,
-            'submitted_at': app.submitted_at,
-            'institution': app.current_institution,
-        })
-    
-    # Sort by creation date
-    recent_applications.sort(key=lambda x: x['created_at'], reverse=True)
-    
-    # Paginate
-    paginator = Paginator(recent_applications, ITEMS_PER_PAGE)
+    # Paginate results
+    paginator = Paginator(all_applications, 25)  # 25 items per page
     page_number = request.GET.get('page')
     try:
         applications_page = paginator.page(page_number)
@@ -1343,14 +2312,72 @@ def application_list(request):
     except EmptyPage:
         applications_page = paginator.page(paginator.num_pages)
     
+    # Get available filter options
+    councils = Council.objects.filter(is_active=True).order_by('name')
+    affiliation_types = AffiliationType.objects.filter(is_active=True).order_by('name')
+    
+    # Status choices
+    status_choices = [
+        ('draft', 'Draft'),
+        ('submitted', 'Submitted'),
+        ('under_review', 'Under Review'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+        ('requires_clarification', 'Requires Clarification'),
+    ]
+    
+    # Application type choices
+    app_type_choices = [
+        ('associated', 'Associated'),
+        ('designated', 'Designated'),
+        ('student', 'Learner'),
+    ]
+    
     context = {
         'applications': applications_page,
         'search_form': search_form,
         'page_title': 'All Applications',
-        'total_count': len(recent_applications),
+        'total_count': total_applications,
+        'status_counts': status_counts,
+        'council_counts': council_counts,
+        'type_counts': type_counts,
+        
+        # Filter options
+        'councils': councils,
+        'affiliation_types': affiliation_types,
+        'status_choices': status_choices,
+        'app_type_choices': app_type_choices,
+        
+        # Current filter values
+        'current_filters': {
+            'search_query': search_query,
+            'council': council_filter,
+            'affiliation_type': affiliation_type_filter,
+            'status': status_filter,
+            'date_from': date_from,
+            'date_to': date_to,
+            'app_type': app_type_filter,
+        },
+        
+        # Pagination info
+        'page_info': {
+            'current_page': applications_page.number,
+            'total_pages': paginator.num_pages,
+            'has_previous': applications_page.has_previous(),
+            'has_next': applications_page.has_next(),
+            'start_index': applications_page.start_index(),
+            'end_index': applications_page.end_index(),
+        },
+        
+        # Permission flags
+        'can_delete_applications': is_admin_or_manager(request.user),
+        'can_approve_applications': can_approve_applications(request.user),
+        'can_export_data': request.user.has_perm('enrollments.export_applications'),
     }
     
     return render(request, 'enrollments/applications/list.html', context)
+
+
 
 
 def application_detail(request, pk, app_type):

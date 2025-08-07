@@ -26,6 +26,9 @@ urlpatterns = [
     path('application/<int:pk>/<str:app_type>/review/', views.application_review, name='application_review'),
     path('application/<int:pk>/<str:app_type>/dashboard/', views.application_dashboard, name='application_dashboard'),
     path('applications/<int:pk>/<str:app_type>/delete/', views.application_delete, name='application_delete'),
+
+     path('applications/export/', views.export_applications, name='export_applications'),
+    
     
     # ============================================================================
     # DASHBOARD URLS
