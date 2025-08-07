@@ -1192,3 +1192,227 @@ INFO 2025-08-07 02:19:21,622 basehttp 73473 6124662784 "POST /enrollments/applic
 INFO 2025-08-07 02:19:23,631 basehttp 73473 6124662784 "GET /enrollments/application/1/associated/ HTTP/1.1" 200 45697
 INFO 2025-08-07 02:20:43,421 basehttp 73473 6124662784 "POST /enrollments/application/1/associated/review/ HTTP/1.1" 302 0
 INFO 2025-08-07 02:20:45,245 basehttp 73473 6124662784 "GET /enrollments/application/1/associated/ HTTP/1.1" 200 46897
+INFO 2025-08-07 02:23:33,643 basehttp 73473 6124662784 "GET /enrollments/application/1/associated/ HTTP/1.1" 200 46063
+INFO 2025-08-07 02:23:48,207 basehttp 73473 6141489152 "GET /enrollments/dashboard/ HTTP/1.1" 200 38790
+INFO 2025-08-07 02:24:15,421 basehttp 73473 6141489152 "GET /enrollments/dashboard/ HTTP/1.1" 200 38790
+INFO 2025-08-07 02:27:06,368 basehttp 73473 6141489152 "GET /acrpdevadmin/enrollments/associatedapplication/ HTTP/1.1" 200 35299
+INFO 2025-08-07 02:27:08,511 basehttp 73473 6124662784 "GET /acrpdevadmin/jsi18n/ HTTP/1.1" 200 3342
+WARNING 2025-08-07 02:27:18,796 log 73473 6124662784 Not Found: /enrollments/dashboard/CPSCAS250001
+WARNING 2025-08-07 02:27:18,797 basehttp 73473 6124662784 "GET /enrollments/dashboard/CPSCAS250001 HTTP/1.1" 404 4430
+INFO 2025-08-07 02:27:30,035 basehttp 73473 6141489152 "GET /enrollments/dashboard/ HTTP/1.1" 200 38790
+INFO 2025-08-07 02:27:30,035 basehttp 73473 6141489152 - Broken pipe from ('127.0.0.1', 60172)
+WARNING 2025-08-07 02:27:36,357 log 73473 6124662784 Not Found: /enrollments/dashboard/CPSCAS250001/cpsc
+WARNING 2025-08-07 02:27:36,357 basehttp 73473 6124662784 "GET /enrollments/dashboard/CPSCAS250001/cpsc HTTP/1.1" 404 4430
+WARNING 2025-08-07 02:27:39,624 log 73473 6124662784 Not Found: /enrollments/dashboard/CPSCAS250001/cpsc/
+WARNING 2025-08-07 02:27:39,625 basehttp 73473 6124662784 "GET /enrollments/dashboard/CPSCAS250001/cpsc/ HTTP/1.1" 404 4430
+INFO 2025-08-07 02:27:58,843 autoreload 73473 8574050048 /Users/dave/Documents/projects/ACRP/enrollments/urls.py changed, reloading.
+INFO 2025-08-07 02:27:59,251 autoreload 74487 8574050048 Watching for file changes with StatReloader
+INFO 2025-08-07 02:28:01,593 autoreload 74487 8574050048 /Users/dave/Documents/projects/ACRP/enrollments/urls.py changed, reloading.
+INFO 2025-08-07 02:28:01,817 autoreload 74501 8574050048 Watching for file changes with StatReloader
+WARNING 2025-08-07 02:28:41,341 log 74501 6206107648 Not Found: /enrollments/dashboard/CPSCAS250001/associated
+WARNING 2025-08-07 02:28:41,342 basehttp 74501 6206107648 "GET /enrollments/dashboard/CPSCAS250001/associated HTTP/1.1" 404 4430
+WARNING 2025-08-07 02:28:44,793 log 74501 6222934016 Not Found: /enrollments/dashboard/CPSCAS250001/associated/
+WARNING 2025-08-07 02:28:44,794 basehttp 74501 6222934016 "GET /enrollments/dashboard/CPSCAS250001/associated/ HTTP/1.1" 404 4430
+ERROR 2025-08-07 02:29:00,377 log 74501 6222934016 Internal Server Error: /acrpdevadmin/enrollments/associatedapplication/1/change/
+Traceback (most recent call last):
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/core/handlers/base.py", line 220, in _get_response
+    response = response.render()
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/response.py", line 114, in render
+    self.content = self.rendered_content
+                   ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/response.py", line 92, in rendered_content
+    return template.render(context, self._request)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/backends/django.py", line 107, in render
+    return self.template.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/base.py", line 171, in render
+    return self._render(context)
+           ~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/base.py", line 163, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/base.py", line 1016, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/base.py", line 977, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/loader_tags.py", line 159, in render
+    return compiled_parent._render(context)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/base.py", line 163, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/base.py", line 1016, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/base.py", line 977, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/loader_tags.py", line 159, in render
+    return compiled_parent._render(context)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/base.py", line 163, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/base.py", line 1016, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/base.py", line 977, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/loader_tags.py", line 65, in render
+    result = block.nodelist.render(context)
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/base.py", line 1016, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/base.py", line 977, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/loader_tags.py", line 65, in render
+    result = block.nodelist.render(context)
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/base.py", line 1016, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/base.py", line 977, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/defaulttags.py", line 243, in render
+    nodelist.append(node.render_annotated(context))
+                    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/base.py", line 977, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/loader_tags.py", line 210, in render
+    return template.render(context)
+           ~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/base.py", line 173, in render
+    return self._render(context)
+           ~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/base.py", line 163, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/base.py", line 1016, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/base.py", line 977, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/defaulttags.py", line 243, in render
+    nodelist.append(node.render_annotated(context))
+                    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/base.py", line 977, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/defaulttags.py", line 243, in render
+    nodelist.append(node.render_annotated(context))
+                    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/base.py", line 977, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/defaulttags.py", line 327, in render
+    return nodelist.render(context)
+           ~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/base.py", line 1016, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/base.py", line 977, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/defaulttags.py", line 327, in render
+    return nodelist.render(context)
+           ~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/base.py", line 1016, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/base.py", line 977, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/base.py", line 1081, in render
+    return render_value_in_context(output, context)
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/base.py", line 1058, in render_value_in_context
+    value = str(value)
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/forms/utils.py", line 79, in __str__
+    return self.as_widget()
+           ~~~~~~~~~~~~~~^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/forms/boundfield.py", line 108, in as_widget
+    return widget.render(
+           ~~~~~~~~~~~~~^
+        name=self.html_initial_name if only_initial else self.html_name,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<2 lines>...
+        renderer=self.form.renderer,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/forms/widgets.py", line 329, in render
+    context = self.get_context(name, value, attrs)
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/contrib/admin/widgets.py", line 329, in get_context
+    "rendered_widget": self.widget.render(name, value, attrs),
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/forms/widgets.py", line 329, in render
+    context = self.get_context(name, value, attrs)
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/forms/widgets.py", line 830, in get_context
+    context = super().get_context(name, value, attrs)
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/forms/widgets.py", line 781, in get_context
+    context["widget"]["optgroups"] = self.optgroups(
+                                     ~~~~~~~~~~~~~~^
+        name, context["widget"]["value"], attrs
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/forms/widgets.py", line 721, in optgroups
+    for index, (option_value, option_label) in enumerate(self.choices):
+                                               ~~~~~~~~~^^^^^^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/forms/models.py", line 1425, in __iter__
+    yield self.choice(obj)
+          ~~~~~~~~~~~^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/forms/models.py", line 1439, in choice
+    self.field.label_from_instance(obj),
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/forms/models.py", line 1529, in label_from_instance
+    return str(obj)
+  File "/Users/dave/Documents/projects/ACRP/enrollments/models.py", line 329, in __str__
+    return f"Onboarding: {self.user.username} - {self.status}"
+                          ^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'username'
+ERROR 2025-08-07 02:29:00,565 basehttp 74501 6222934016 "GET /acrpdevadmin/enrollments/associatedapplication/1/change/ HTTP/1.1" 500 5388
+ERROR 2025-08-07 02:29:17,233 log 74501 6206107648 Internal Server Error: /enrollments/dashboard/1/associated/
+Traceback (most recent call last):
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/Users/dave/Documents/projects/ACRP/enrollments/views.py", line 2176, in application_dashboard
+    return render(request, 'enrollments/application_dashboard.html', context)
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/loader.py", line 62, in render_to_string
+    return template.render(context, request)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/backends/django.py", line 107, in render
+    return self.template.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/base.py", line 171, in render
+    return self._render(context)
+           ~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/base.py", line 163, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/base.py", line 1016, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/base.py", line 977, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/template/defaulttags.py", line 480, in render
+    url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/urls/base.py", line 98, in reverse
+    resolved_url = resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+  File "/Users/dave/Documents/projects/ACRP/env/lib/python3.13/site-packages/django/urls/resolvers.py", line 831, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'onboarding' not found. 'onboarding' is not a valid view function or pattern name.
+ERROR 2025-08-07 02:29:17,238 basehttp 74501 6206107648 "GET /enrollments/dashboard/1/associated/ HTTP/1.1" 500 5388
