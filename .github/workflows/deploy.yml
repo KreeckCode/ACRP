@@ -1,0 +1,184 @@
+name: ACRP CI/CD Pipeline
+
+# Trigger conditions
+on:
+  push:
+    branches: [ main ]  # Deploy on push to main
+  pull_request:
+    branches: [ main ]  # Run tests on PRs
+
+# Environment variables
+env:
+  PYTHON_VERSION: 3.11
+
+jobs:
+  # Test Job - runs on all pushes and PRs
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: 'pip'  # Cache pip dependencies for faster builds
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Run Django system checks
+      run: |
+        python manage.py check --deploy
+      env:
+        # Django Core Settings
+        SECRET_KEY: test-secret-key-for-github-actions-very-long-and-secure
+        DEBUG: False
+        ENVIRONMENT: testing
+        
+        # Database Configuration (mock values for testing)
+        DB_NAME: test_db
+        DB_USER: test_user
+        DB_PASS: test_password
+        DB_PASSWORD: test_password
+        DB_HOST: localhost
+        DB_PORT: 5432
+        DB_SSLMODE: disable
+        DB_CONN_MAX_AGE: 0
+        DB_CONN_HEALTH_CHECKS: False
+        DB_ATOMIC_REQUESTS: False
+        
+        # Email Configuration (mock values for CI)
+        EMAIL_HOST: localhost
+        EMAIL_HOST_USER: test@example.com
+        EMAIL_HOST_PASSWORD: test_password
+        EMAIL_PORT: 587
+        DEFAULT_FROM_EMAIL: test@example.com
+        EMAIL_USE_SSL: False
+        EMAIL_USE_TLS: False
+        
+        # AWS Configuration (mock values)
+        AWS_ACCESS_KEY_ID: test_key
+        AWS_SECRET_ACCESS_KEY: test_secret
+        AWS_STORAGE_BUCKET_NAME: test_bucket
+        AWS_S3_REGION_NAME: us-east-1
+        
+        # Digital Ocean Spaces (mock values)
+        DO_SPACES_ACCESS_KEY_ID: test_key
+        DO_SPACES_SECRET_ACCESS_KEY: test_secret
+        DO_SPACES_BUCKET_NAME: test_bucket
+        DO_SPACES_REGION: nyc3
+        DO_SPACES_ENDPOINT_URL: https://test.digitaloceanspaces.com
+        DO_SPACES_CDN_DOMAIN: test.cdn.digitaloceanspaces.com
+        
+        # Security Settings
+        SECURE_SSL_REDIRECT: False
+        ALLOWED_HOSTS: localhost,127.0.0.1
+        
+        # Other Configuration
+        NGINX_CONF: nginx.test.conf
+    
+    - name: Run Django Tests
+      run: |
+        python manage.py test --verbosity=2
+      env:
+        # Reuse the same environment variables from system checks
+        SECRET_KEY: test-secret-key-for-github-actions-very-long-and-secure
+        DEBUG: False
+        ENVIRONMENT: testing
+        DB_NAME: test_db
+        DB_USER: test_user
+        DB_PASS: test_password
+        DB_PASSWORD: test_password
+        DB_HOST: localhost
+        DB_PORT: 5432
+        DB_SSLMODE: disable
+        DB_CONN_MAX_AGE: 0
+        DB_CONN_HEALTH_CHECKS: False
+        DB_ATOMIC_REQUESTS: False
+        EMAIL_HOST: localhost
+        EMAIL_HOST_USER: test@example.com
+        EMAIL_HOST_PASSWORD: test_password
+        EMAIL_PORT: 587
+        DEFAULT_FROM_EMAIL: test@example.com
+        EMAIL_USE_SSL: False
+        EMAIL_USE_TLS: False
+        AWS_ACCESS_KEY_ID: test_key
+        AWS_SECRET_ACCESS_KEY: test_secret
+        AWS_STORAGE_BUCKET_NAME: test_bucket
+        AWS_S3_REGION_NAME: us-east-1
+        DO_SPACES_ACCESS_KEY_ID: test_key
+        DO_SPACES_SECRET_ACCESS_KEY: test_secret
+        DO_SPACES_BUCKET_NAME: test_bucket
+        DO_SPACES_REGION: nyc3
+        DO_SPACES_ENDPOINT_URL: https://test.digitaloceanspaces.com
+        DO_SPACES_CDN_DOMAIN: test.cdn.digitaloceanspaces.com
+        SECURE_SSL_REDIRECT: False
+        ALLOWED_HOSTS: localhost,127.0.0.1
+        NGINX_CONF: nginx.test.conf
+
+  # Deploy Job - only runs on successful push to main
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: test  # Only deploy if tests pass
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup SSH Agent
+      run: |
+        # Start SSH agent and add our deployment key
+        eval $(ssh-agent -s)
+        mkdir -p ~/.ssh
+        echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+        chmod 600 ~/.ssh/deploy_key
+        ssh-add ~/.ssh/deploy_key
+        
+        # Add server to known hosts to prevent interactive prompts
+        ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+    
+    - name: Deploy to Digital Ocean Server
+      run: |
+        ssh -i ~/.ssh/deploy_key ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} '
+          # Navigate to project directory
+          cd /var/www/acrp &&
+          
+          # Pull latest code from main branch
+          git pull origin main &&
+          
+          # Activate virtual environment
+          source env/bin/activate &&
+          
+          # Install/update Python dependencies
+          pip install -r requirements.txt &&
+          
+          # Run Django database migrations
+          python manage.py migrate --noinput &&
+          
+          # Collect static files for production
+          python manage.py collectstatic --noinput &&
+          
+          # Restart the Django application service
+          sudo systemctl restart acrp &&
+          
+          # Reload Nginx to pick up any configuration changes
+          sudo systemctl reload nginx
+        '
+    
+    - name: Deployment Status Notification
+      if: always()  # Run whether deployment succeeded or failed
+      run: |
+        if [ ${{ job.status }} = "success" ]; then
+          echo "ACRP deployment successful!"
+        else
+          echo "ACRP deployment failed!"
+          exit 1
+        fi
