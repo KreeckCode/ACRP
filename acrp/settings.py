@@ -10,9 +10,9 @@ import os
 # Debug environment loading
 print(f"DEBUG value from env: {config('DEBUG', default='NOT_SET')}")
 print(f"EMAIL_HOST from env: {config('EMAIL_HOST', default='NOT_SET')}")
-# ============================================================================
+
 # CORE DJANGO SETTINGS
-# ============================================================================
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -47,9 +47,9 @@ if not DEBUG:
     CSRF_COOKIE_SECURE = False
     X_FRAME_OPTIONS = 'DENY'
 
-# ============================================================================
+
 # APPLICATION DEFINITION - Organized by category for maintainability
-# ============================================================================
+
 
 SECURE_SSL_REDIRECT = False
 # Django Core Applications
@@ -95,9 +95,9 @@ PROJECT_APPS = [
 # Combine all applications - Order matters for some apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + DEVELOPMENT_APPS + PROJECT_APPS
 
-# ============================================================================
+
 # MIDDLEWARE CONFIGURATION - Optimized order for performance and security
-# ============================================================================
+
 
 MIDDLEWARE = [
     # Security middleware (first for early security checks)
@@ -132,16 +132,15 @@ if DEBUG:
         'django_browser_reload.middleware.BrowserReloadMiddleware',
     ])
 
-# ============================================================================
+
 # URL AND ROUTING CONFIGURATION
-# ============================================================================
 
 ROOT_URLCONF = 'acrp.urls'
 WSGI_APPLICATION = 'acrp.wsgi.application'
 
-# ============================================================================
+
 # TEMPLATE CONFIGURATION - Optimized for performance
-# ============================================================================
+
 
 TEMPLATES = [
     {
@@ -171,9 +170,9 @@ TEMPLATES = [
 ]
 
 
-# ============================================================================
+
 # DATABASE CONFIGURATION - Environment-based with PostgreSQL optimization
-# ============================================================================
+
 
 DATABASES = {
     'default': {
@@ -197,9 +196,9 @@ DATABASES = {
 }
 
 
-# ============================================================================
+
 # CACHE CONFIGURATION - Environment-based caching strategy
-# ============================================================================
+
 
 if DEBUG:
     # Development: Local memory cache for quick testing
@@ -227,9 +226,8 @@ else:
         }
     }
 
-# ============================================================================
+
 # SESSION CONFIGURATION - Optimized for performance and security
-# ============================================================================
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_COOKIE_AGE = 86400  # 24 hours
@@ -238,9 +236,9 @@ SESSION_COOKIE_NAME = 'acrp_sessionid'
 SESSION_SAVE_EVERY_REQUEST = False  # Save only when modified
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
-# ============================================================================
+
 # AUTHENTICATION AND AUTHORIZATION
-# ============================================================================
+
 
 # Custom user model
 AUTH_USER_MODEL = 'accounts.User'
@@ -275,16 +273,13 @@ LOGOUT_REDIRECT_URL = '/'
 # Password reset settings
 PASSWORD_RESET_TIMEOUT = 86400  # 24 hours
 
-# ============================================================================
-# STATIC FILES AND MEDIA - Production-optimized serving
-# ============================================================================
 
 # Static files configuration
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static'] if (BASE_DIR / 'static').exists() else []
 
-# Static files finders (optimized order for performance)
+# Static files finders 
 STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
@@ -310,9 +305,9 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
 FILE_UPLOAD_PERMISSIONS = 0o644
 
-# ============================================================================
+
 # EMAIL CONFIGURATION - Environment-based email backend
-# ============================================================================
+
 
 if DEBUG:
     # Development: Console backend for testing
@@ -337,9 +332,9 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='ams@acrp.org.za')
 SERVER_EMAIL = config('SERVER_EMAIL', default=DEFAULT_FROM_EMAIL)
 EMAIL_SUBJECT_PREFIX = '[ACRP] '
 EMAIL_TIMEOUT = 30
-# ============================================================================
+
 # INTERNATIONALIZATION AND LOCALIZATION
-# ============================================================================
+
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = config('TIME_ZONE', default='UTC')
@@ -352,9 +347,8 @@ DATETIME_FORMAT = 'Y-m-d H:i:s'
 DATE_FORMAT = 'Y-m-d'
 TIME_FORMAT = 'H:i:s'
 
-# ============================================================================
+
 # DJANGO REST FRAMEWORK CONFIGURATION
-# ============================================================================
 
 REST_FRAMEWORK = {
     # Authentication classes for API endpoints
@@ -390,9 +384,9 @@ REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'rest_framework.views.exception_handler',
 }
 
-# ============================================================================
+
 # THIRD-PARTY PACKAGE CONFIGURATION
-# ============================================================================
+
 
 # Crispy Forms for better form rendering
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
@@ -408,9 +402,9 @@ GRAPH_MODELS = {
     'group_models': True,
 }
 
-# ============================================================================
+
 # LOGGING CONFIGURATION - Comprehensive logging for debugging and monitoring
-# ============================================================================
+
 
 # Console debug logging flag
 CONSOLE_LOG_DEBUG = config('CONSOLE_LOG_DEBUG', default=False, cast=bool)
@@ -485,9 +479,9 @@ LOGGING = {
 if not DEBUG:
     (BASE_DIR / 'logs').mkdir(exist_ok=True)
 
-# ============================================================================
+
 # DEBUG TOOLBAR CONFIGURATION - Development only
-# ============================================================================
+
 
 if DEBUG:
     DEBUG_TOOLBAR_CONFIG = {
@@ -504,9 +498,9 @@ if DEBUG:
         'localhost',
     ]
 
-# ============================================================================
+
 # CUSTOM APPLICATION SETTINGS - Business logic configuration
-# ============================================================================
+
 
 # CPD (Continuing Professional Development) Tracking Settings
 CPD_SETTINGS = {
@@ -541,9 +535,9 @@ ADMINS = [
 MANAGERS = ADMINS
 
 
-# ============================================================================
+
 # MONITORING AND ANALYTICS - Optional production monitoring
-# ============================================================================
+
 
 # Application monitoring with Sentry (optional)
 MONITORING_ENABLED = config('MONITORING_ENABLED', default=False, cast=bool)
@@ -577,9 +571,9 @@ PERFORMANCE_MONITORING = {
     'ENABLE_PROFILING': DEBUG,
 }
 
-# ============================================================================
+
 # BACKGROUND TASKS CONFIGURATION - Simple deployment approach
-# ============================================================================
+
 
 # Using Django management commands with cron jobs instead of Celery
 BACKGROUND_TASKS = {
@@ -589,9 +583,9 @@ BACKGROUND_TASKS = {
     'MAINTENANCE_WINDOW_HOUR': 2,  # 2 AM
 }
 
-# ============================================================================
+
 # ENVIRONMENT-SPECIFIC OVERRIDES
-# ============================================================================
+
 
 # Development environment overrides
 if DEBUG:
@@ -627,9 +621,9 @@ if 'test' in sys.argv or 'pytest' in sys.modules:
     # Disable logging during tests to reduce noise
     LOGGING['root']['level'] = 'CRITICAL'
 
-# ============================================================================
+
 # SETTINGS VALIDATION - Ensure critical settings are properly configured
-# ============================================================================
+
 
 # Validate essential environment variables
 assert SECRET_KEY, "SECRET_KEY must be set in environment variables"
@@ -644,9 +638,9 @@ if not DEBUG:
 # Set default primary key field type for Django 3.2+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# ============================================================================
+
 # FINAL SETUP AND LOGGING
-# ============================================================================
+
 
 # Log startup information
 logger = logging.getLogger(__name__)
