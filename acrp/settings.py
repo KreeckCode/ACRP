@@ -13,7 +13,6 @@ print(f"EMAIL_HOST from env: {config('EMAIL_HOST', default='NOT_SET')}")
 
 # CORE DJANGO SETTINGS
 
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'
 BASE_DIR = Path(__file__).resolve().parent.parent
 
