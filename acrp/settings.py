@@ -27,10 +27,7 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*').split(',') if config('ALLOW
 
 
 # CSRF and CORS settings for trusted origins
-CSRF_TRUSTED_ORIGINS = config(
-    'CSRF_TRUSTED_ORIGINS', 
-    default='https://kreeck.com,https://www.kreeck.com,https://acrpafrica.co.za,https://www.acrpafrica.co.za,https://acrp.org.za,https://www.acrp.org.za,https://ams.acrpafrica.co.za,https://www.ams.acrpafrica.co.za,https://ams.acrp.org.za,https://www.ams.acrp.org.za',
-)
+CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in config('CSRF_TRUSTED_ORIGINS', default='https://localhost,https://127.0.0.1').split(',') if origin.strip()]
 
 # Security Headers - Applied only in production for maximum security
 if not DEBUG:
