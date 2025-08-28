@@ -18,8 +18,8 @@ print(f"EMAIL_HOST from env: {config('EMAIL_HOST', default='NOT_SET')}")
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Use 'development', 'staging', or 'production'
-ENVIRONMENT = config('ENVIRONMENT', default='development')
-DEBUG = config('DEBUG', default=False, cast=bool)
+ENVIRONMENT = 'production'
+DEBUG = False
 
 # Security settings
 SECRET_KEY = config('SECRET_KEY')
