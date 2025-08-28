@@ -34,4 +34,5 @@ static_files/
 staticfiles/
 # Themes
 theme/
-.theme/
+.theme/logs/
+*.log
