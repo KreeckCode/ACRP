@@ -38,7 +38,7 @@ jobs:
       env:
         # Django Core Settings
         SECRET_KEY: test-secret-key-for-github-actions-very-long-and-secure
-        DEBUG: False
+        DEBUG: True
         ENVIRONMENT: testing
         
         # Database Configuration (mock values for testing)
@@ -98,7 +98,7 @@ jobs:
       env:
         # Reuse the same environment variables from system checks
         SECRET_KEY: test-secret-key-for-github-actions-very-long-and-secure
-        DEBUG: False
+        DEBUG: True
         ENVIRONMENT: testing
         DB_NAME: test_db
         DB_USER: test_user
@@ -129,7 +129,7 @@ jobs:
         DO_SPACES_CDN_DOMAIN: test.cdn.digitaloceanspaces.com
         SECURE_SSL_REDIRECT: False
         ALLOWED_HOSTS: localhost,127.0.0.1
-        
+
         NGINX_CONF: nginx.test.conf
         TIME_ZONE: UTC
         CONTACT_EMAIL: test@acrp.org.za
