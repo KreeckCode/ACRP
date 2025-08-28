@@ -19,7 +19,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Use 'development', 'staging', or 'production'
 ENVIRONMENT = 'production'
-DEBUG = True
+DEBUG = False
 
 # Security settings
 SECRET_KEY = config('SECRET_KEY')
