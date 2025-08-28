@@ -75,6 +75,15 @@ jobs:
         DO_SPACES_REGION: nyc3
         DO_SPACES_ENDPOINT_URL: https://test.digitaloceanspaces.com
         DO_SPACES_CDN_DOMAIN: test.cdn.digitaloceanspaces.com
+
+        # Add these to both env sections in your workflow:
+        TIME_ZONE: UTC
+        CONTACT_EMAIL: test@acrp.org.za
+        SUPPORT_EMAIL: test@acrpafrica.co.za
+        MONITORING_ENABLED: False
+        CONSOLE_LOG_DEBUG: True
+        NPM_BIN_PATH: npm
+        CSRF_TRUSTED_ORIGINS: https://localhost,https://127.0.0.1
         
         # Security Settings
         SECURE_SSL_REDIRECT: False

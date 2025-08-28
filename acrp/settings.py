@@ -23,7 +23,8 @@ DEBUG = False
 
 # Security settings
 SECRET_KEY = config('SECRET_KEY')
-ALLOWED_HOSTS = '*'
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*').split(',') if config('ALLOWED_HOSTS', default='*') != '*' else ['*']
+
 
 # CSRF and CORS settings for trusted origins
 CSRF_TRUSTED_ORIGINS = config(
