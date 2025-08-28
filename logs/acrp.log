@@ -1416,3 +1416,18 @@ Traceback (most recent call last):
     raise NoReverseMatch(msg)
 django.urls.exceptions.NoReverseMatch: Reverse for 'onboarding' not found. 'onboarding' is not a valid view function or pattern name.
 ERROR 2025-08-07 02:29:17,238 basehttp 74501 6206107648 "GET /enrollments/dashboard/1/associated/ HTTP/1.1" 500 5388
+INFO 2025-08-28 22:41:13,063 autoreload 82030 8296423616 Watching for file changes with StatReloader
+INFO 2025-08-28 22:41:16,980 basehttp 82030 6170849280 "GET / HTTP/1.1" 302 0
+INFO 2025-08-28 22:41:16,991 basehttp 82030 6170849280 "GET /auth/login/?next=/ HTTP/1.1" 200 7409
+INFO 2025-08-28 22:41:17,001 basehttp 82030 6170849280 "GET /static/css/auth.bootstrap.css HTTP/1.1" 200 209593
+INFO 2025-08-28 22:41:45,504 basehttp 82030 13035925504 "GET /auth/login/?next=/ HTTP/1.1" 200 7409
+INFO 2025-08-28 22:41:46,799 basehttp 82030 13035925504 "GET /auth/login/?next=/ HTTP/1.1" 200 7409
+INFO 2025-08-28 22:41:46,973 basehttp 82030 13035925504 "GET /auth/login/?next=/ HTTP/1.1" 200 7409
+INFO 2025-08-28 22:42:03,866 autoreload 82240 8296423616 Watching for file changes with StatReloader
+INFO 2025-08-28 22:42:06,641 basehttp 82240 6138834944 "GET /auth/login/?next=/ HTTP/1.1" 200 7409
+INFO 2025-08-28 22:42:07,324 basehttp 82240 6138834944 "GET /auth/login/?next=/ HTTP/1.1" 200 7409
+INFO 2025-08-28 22:42:07,828 basehttp 82240 6138834944 "GET /auth/login/?next=/ HTTP/1.1" 200 7409
+INFO 2025-08-28 22:42:08,955 basehttp 82240 6138834944 "GET /auth/login/?next=/ HTTP/1.1" 200 7409
+INFO 2025-08-28 22:42:09,249 basehttp 82240 6138834944 "GET /auth/login/?next=/ HTTP/1.1" 200 7409
+INFO 2025-08-28 22:42:09,393 basehttp 82240 6138834944 "GET /auth/login/?next=/ HTTP/1.1" 200 7409
+INFO 2025-08-28 22:42:29,769 autoreload 82240 8296423616 /Users/dave/Documents/projects/ACRP/acrp/settings.py changed, reloading.

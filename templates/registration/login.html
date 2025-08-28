@@ -1,190 +1,422 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="en" class="h-full">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     
-    <!-- Title -->
-    <title>{% block title %} ACRP | Welcome {% endblock title %}</title>
+    <!-- Enhanced SEO Title for ACRP -->
+    <title>{% block title %}Login | ACRP Portal - Association of Christian Religious Practitioners{% endblock title %}</title>
     
-    <!-- Favicon -->
+    <!-- Favicon with fallback -->
     <link rel="shortcut icon" href="{% static 'main_media/logo-white-footer.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'main_media/logo.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'main_media/logo.png' %}">
     
-    <!-- SEO Meta Tags -->
-    <meta name="description" content="ACRP Africa Management System streamlines manual processes and simplifies affiliation management by integrating key features such as course delivery, CPD tracking, and payment processing for ministry professionals and affiliates.">
-    <meta name="keywords" content="ACRP, Pastoral Training, Ministry Professionals, CPD, Learner Management, Course Management, Payment Processing, Ministry Development, Africa">
-    <meta name="author" content="ACRP Africa Team">
-
-    <!-- Open Graph / Facebook -->
-    <meta property="og:title" content="ACRP Management System | Empowering Ministry Training">
-    <meta property="og:description" content="ACRP Africa Management System streamlines manual processes and simplifies affiliation management by integrating key features such as course delivery, CPD tracking, and payment processing for ministry professionals and affiliates.">
+    <!-- Enhanced SEO Meta Tags for ACRP -->
+    <meta name="description" content="Secure login to ACRP Portal - Access your professional development courses, CPD tracking, certification management, and ministry resources. Join over 500+ Christian religious practitioners advancing their calling.">
+    <meta name="keywords" content="ACRP login, Christian ministry training, pastoral education, religious practitioner certification, CPD tracking, ministry development, church leadership training, Christian counseling courses, Africa ministry">
+    <meta name="author" content="Association of Christian Religious Practitioners (ACRP)">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#6366f1">
+    
+    <!-- Enhanced Open Graph / Facebook Meta Tags -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="ACRP Portal">
+    <meta property="og:title" content="ACRP Portal Login - Professional Development for Ministry Leaders">
+    <meta property="og:description" content="Access your ACRP Portal to continue your professional development journey. Manage courses, track CPD points, and connect with fellow ministry professionals across Africa.">
+    <meta property="og:image" content="{% static 'main_media/logo.png' %}">
+    <meta property="og:image:alt" content="ACRP Logo - Association of Christian Religious Practitioners">
+    <meta property="og:url" content="https://acrpafrica.co.za/login/">
+    <meta property="og:locale" content="en_ZA">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ACRP Portal Login - Professional Ministry Development">
+    <meta name="twitter:description" content="Access your ACRP Portal for ministry training, CPD tracking, and professional development resources.">
     <meta name="twitter:image" content="{% static 'main_media/logo.png' %}">
-
+    <meta name="twitter:image:alt" content="ACRP Logo">
+    
     <!-- Canonical URL -->
-    <link rel="canonical" href="https://acrpafrica.co.za/">
-
-    <link rel="stylesheet" href="{% static 'css/auth.bootstrap.css' %}">
-    <link href="https://fonts.cdnfonts.com/css/poppins" rel="stylesheet">
-    <link href="https://fonts.cdnfonts.com/css/inter" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600&display=swap" rel="stylesheet">
-
-    <!-- Schema.org Structured Data for SEO -->
-    <script type="application/ld+json">
-        {
-        "@context": "https://schema.org",
-        "@type": "SoftwareApplication",
-        "name": "ACRP Africa Management System",
-        "operatingSystem": "All",
-        "applicationCategory": "BusinessApplication",
-        "description": "ACRP Africa Management System streamlines manual processes and simplifies affiliation management by integrating key features such as course delivery, CPD tracking, and payment processing for ministry professionals and affiliates.",
-        "url": "https://acrpafrica.co.za/",
-        "author": {
-            "@type": "Organization",
-            "name": "ACRP Africa Team"
-        },
-        "aggregateRating": {
-            "@type": "AggregateRating",
-            "ratingValue": "4.5",
-            "reviewCount": "10"
-        }
+    <link rel="canonical" href="https://acrpafrica.co.za/login/">
+    
+    <!-- Preconnect to external domains for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Optimized Font Loading -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'acrp-primary': '#6366f1',
+                        'acrp-secondary': '#4f46e5',
+                        'acrp-dark': '#3730a3',
+                    },
+                    fontFamily: {
+                        'inter': ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
         }
     </script>
-    <style>
-        @import url('https://fonts.cdnfonts.com/css/inter');
-        .mobile-logo {
-            display: none;
-        }
 
-        @media (max-width: 976px) {
-            body {
-                margin: 0rem;
-                padding: 0rem;
-            }
-
-            .right {
-                display: none;
-            }
-
-            .left {
-                display: flex;
-                justify-content: center;
-                height: 95vh;
-                margin: 1rem;
-                padding: 0rem;
-            }
-
-            .terms {}
-
-            .signin-title {
-                display: none;
-            }
-
-            .logo {
-                display: flex;
-            }
-
-            .signup {
-                margin-top: 1rem;
-            }
-
-            .mobile-logo {
-                display: block;
-                display: flex;
-                justify-content: center;
-                margin-bottom: 2rem;
+    <!-- Enhanced Schema.org Structured Data for ACRP -->
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "Association of Christian Religious Practitioners (ACRP)",
+            "alternateName": "ACRP Africa",
+            "url": "https://acrpafrica.co.za/",
+            "logo": "{% static 'main_media/logo.png' %}",
+            "description": "The Association of Christian Religious Practitioners (ACRP) is a professional body for church leaders, pastors, ministers, and Christian ministry leaders. Established in 2014 to provide professional development, certification, and continuous professional development (CPD) for ministry professionals across Africa.",
+            "foundingDate": "2014",
+            "areaServed": "Africa",
+            "memberOf": {
+                "@type": "Organization",
+                "name": "Global Ministry Training Network"
+            },
+            "contactPoint": {
+                "@type": "ContactPoint",
+                "contactType": "customer service",
+                "availableLanguage": ["English", "Afrikaans"]
+            },
+            "sameAs": [
+                "https://www.facebook.com/acrpafrica",
+                "https://www.linkedin.com/company/acrp-africa"
+            ],
+            "offers": {
+                "@type": "Service",
+                "name": "Professional Development for Ministry Leaders",
+                "description": "Comprehensive training, certification, and CPD tracking for Christian religious practitioners including pastors, ministers, and church leaders."
             }
         }
-    </style>
+    </script>
+    
+    <!-- Breadcrumb Schema -->
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [{
+                "@type": "ListItem",
+                "position": 1,
+                "name": "ACRP Home",
+                "item": "https://acrpafrica.co.za/"
+            }, {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Login",
+                "item": "https://acrpafrica.co.za/login/"
+            }]
+        }
+    </script>
 </head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-ZWJJJPS1PT"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
 
-  gtag('config', 'G-ZWJJJPS1PT');
-</script>
-<body>
-    <div class="container">
-        <div class="main-container">
-            <div class="right">
-                <div class="header">
-                    <div class="logo">
-                        <a href="">
-                            <img src="{% static 'main_media/logo.png' %}" alt="s" width="150px">
-                        </a>
-                    </div>
+<body class="h-full bg-white font-inter antialiased">
+    <div class="flex h-screen w-full">
+        <!-- Left Side - Welcome Image/Content (Hidden on mobile) -->
+        <div class="w-full hidden md:inline-block relative bg-gradient-to-br from-acrp-primary to-acrp-dark">
+            <!-- Background Pattern -->
+            <div class="absolute inset-0 bg-black/10"></div>
+            <div class="absolute inset-0" style="background-image: url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.03\'%3E%3Ccircle cx=\'30\' cy=\'30\' r=\'2\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');"></div>
+            
+            <!-- Content Overlay -->
+            <div class="relative h-full flex flex-col items-center justify-center p-12 text-white">
+                <!-- ACRP Logo -->
+                <div class="mb-8">
+                    <img 
+                        src="{% static 'main_media/logo-white-footer.png' %}" 
+                        alt="ACRP Logo - Association of Christian Religious Practitioners" 
+                        class="h-20 w-auto"
+                        width="160"
+                        height="80"
+                    >
                 </div>
-                <div class="center-content-left">
-                    <h5 class="welcome">
-                        Welcome to our <strong>ACRP Portal</strong>.
-                    </h5>
-                    <h1 class="signin">Sign In</h1>
-                </div>
-            </div>
-            <div class="left">
-                <div class="header">
-                    <div class="signup">
-                        <p>don't have an account? <a href="{% url 'enrollments:onboarding_start' %}" class="link">Sign Up</a></p>
-                    </div>
-                </div>
-                <div class="center-content">
-                    <div class="mobile-logo">
-                        <h5 class="">Sign in to your <span style="font-weight: 700;">ACRP</span> account.</h5>
-                    </div>
-                    <h5 class="signin-title pb-4">Sign in to your <span style="font-weight: 700;">ACRP</span> account.</h5>
-                    <form action="{% url 'login' %}" class="form" method="post" id="login-form">
-                        {% csrf_token %}
-                        {% if form.errors %}
-                        <div class="alert alert-danger" role="alert">
-                            <ul>
-                                {% for field, errors in form.errors.items %}
-                                    {% for error in errors %}
-                                        <li>{{ error }}</li>
-                                    {% endfor %}
-                                {% endfor %}
-                            </ul>
-                        </div>
-                        {% endif %}
-                        <div class="inputContainer">
-                            <input type="text" name="username" id="username_id" class="input" placeholder="a" required>
-                            <label for="username_id" class="label">Username or Email</label>
-                        </div>
-                        <div class="inputContainer">
-                            <input type="password" name="password" id="password_id" class="input" placeholder="a" required>
-                            <label for="password_id" class="label">Password</label>
-                        </div>
-                        <div class="buttons">
-                            <p class="small-text">Or sign in with</p>
-                            <div class="forgot">
-                                <p class="small-text mt-3 text-center">
-                                    Forgot password? <a href="{% url 'password_reset' %}" class="link">Reset Password</a>
-                                </p>
-                            </div>
-                            <input type="submit" class="btn btn-secondary" value="Sign in">
-                        </div>
-                    </form>
+                
+                <!-- Welcome Message -->
+                <div class="text-center max-w-md">
+                    <h1 class="text-4xl font-bold mb-4">
+                        Welcome to ACRP Portal
+                    </h1>
+                    <p class="text-xl opacity-90 mb-8">
+                        Your gateway to professional development in Christian ministry
+                    </p>
                     
-                </div>
-                <div class="bottom">
-                    <div class="terms">
-                        <p class="text-center small-text">By continuing, you agree to the kreeck terms of service and privacy notice.</p>
+                    <!-- Features -->
+                    <div class="space-y-4 text-sm opacity-80">
+                        <div class="flex items-center justify-center space-x-2">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.236 4.53L7.53 10.47a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd"/>
+                            </svg>
+                            <span>Professional Ministry Training</span>
+                        </div>
+                        <div class="flex items-center justify-center space-x-2">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.236 4.53L7.53 10.47a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd"/>
+                            </svg>
+                            <span>CPD Points & Certification Management</span>
+                        </div>
+                        <div class="flex items-center justify-center space-x-2">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.236 4.53L7.53 10.47a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd"/>
+                            </svg>
+                            <span>Ministry Community & Resources</span>
+                        </div>
                     </div>
+                </div>
+                
+                <!-- Mission Statement -->
+                <div class="absolute bottom-8 text-center text-sm opacity-75">
+                    <p>"Empowering Christian ministry leaders through professional development since 2014"</p>
                 </div>
             </div>
         </div>
+
+        <!-- Right Side - Login Form -->
+        <div class="w-full flex flex-col items-center justify-center px-6 py-12">
+            <!-- Mobile Logo (Visible only on mobile) -->
+            <div class="md:hidden mb-8">
+                <img 
+                    src="{% static 'main_media/logo.png' %}" 
+                    alt="ACRP Logo" 
+                    class="h-16 w-auto mx-auto"
+                    width="128"
+                    height="80"
+                >
+            </div>
+
+            <!-- Login Form Container -->
+            <form action="{% url 'login' %}" method="post" id="login-form" class="md:w-96 w-80 flex flex-col items-center justify-center">
+                {% csrf_token %}
+                
+                <!-- Header -->
+                <h2 class="text-4xl text-gray-900 font-medium">Sign in</h2>
+                <p class="text-sm text-gray-500/90 mt-3 text-center">
+                    Welcome back! Please sign in to your ACRP Portal
+                </p>
+
+                <!-- Error Messages -->
+                {% if form.errors %}
+                <div class="w-full mt-6 p-4 bg-red-50 border border-red-200 rounded-lg" role="alert">
+                    <div class="flex">
+                        <svg class="w-5 h-5 text-red-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd"/>
+                        </svg>
+                        <div class="ml-3">
+                            <p class="text-sm text-red-800 font-medium">Authentication Error</p>
+                            <div class="mt-1 text-sm text-red-700">
+                                {% for field, errors in form.errors.items %}
+                                    {% for error in errors %}
+                                        <p>{{ error }}</p>
+                                    {% endfor %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Email Input -->
+                <div class="flex items-center w-full bg-transparent border border-gray-300/60 h-12 rounded-full overflow-hidden pl-6 gap-3 mt-8 focus-within:border-acrp-primary focus-within:ring-1 focus-within:ring-acrp-primary transition-all">
+                    <svg width="16" height="11" viewBox="0 0 16 11" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M0 .55.571 0H15.43l.57.55v9.9l-.571.55H.57L0 10.45zm1.143 1.138V9.9h13.714V1.69l-6.503 4.8h-.697zM13.749 1.1H2.25L8 5.356z" fill="#6B7280"/>
+                    </svg>
+                    <input 
+                        type="text" 
+                        name="username" 
+                        id="username_id" 
+                        placeholder="Username or Email" 
+                        class="bg-transparent text-gray-700 placeholder-gray-500/80 outline-none text-sm w-full h-full pr-4" 
+                        required
+                        autocomplete="username"
+                    >                 
+                </div>
+
+                <!-- Password Input -->
+                <div class="flex items-center mt-4 w-full bg-transparent border border-gray-300/60 h-12 rounded-full overflow-hidden pl-6 gap-3 focus-within:border-acrp-primary focus-within:ring-1 focus-within:ring-acrp-primary transition-all">
+                    <svg width="13" height="17" viewBox="0 0 13 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M13 8.5c0-.938-.729-1.7-1.625-1.7h-.812V4.25C10.563 1.907 8.74 0 6.5 0S2.438 1.907 2.438 4.25V6.8h-.813C.729 6.8 0 7.562 0 8.5v6.8c0 .938.729 1.7 1.625 1.7h9.75c.896 0 1.625-.762 1.625-1.7zM4.063 4.25c0-1.406 1.093-2.55 2.437-2.55s2.438 1.144 2.438 2.55V6.8H4.061z" fill="#6B7280"/>
+                    </svg>
+                    <input 
+                        type="password" 
+                        name="password" 
+                        id="password_id" 
+                        placeholder="Password" 
+                        class="bg-transparent text-gray-700 placeholder-gray-500/80 outline-none text-sm w-full h-full" 
+                        required
+                        autocomplete="current-password"
+                    >
+                    <button 
+                        type="button" 
+                        id="toggle-password" 
+                        class="mr-4 text-gray-400 hover:text-gray-600 transition-colors"
+                        aria-label="Toggle password visibility"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Remember Me & Forgot Password -->
+                <div class="w-full flex items-center justify-between mt-6 text-gray-500/80">
+                    <div class="flex items-center gap-2">
+                        <input class="h-4 w-4 rounded border-gray-300 text-acrp-primary focus:ring-acrp-primary" type="checkbox" id="remember-me" name="remember-me">
+                        <label class="text-sm" for="remember-me">Remember me</label>
+                    </div>
+                    <a class="text-sm text-acrp-primary hover:text-acrp-dark hover:underline transition-colors" href="{% url 'password_reset' %}">
+                        Forgot password?
+                    </a>
+                </div>
+
+                <!-- Login Button -->
+                <button 
+                    type="submit" 
+                    id="login-btn"
+                    class="mt-8 w-full h-11 rounded-full text-white bg-acrp-primary hover:bg-acrp-secondary focus:ring-2 focus:ring-acrp-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
+                >
+                    <span class="flex items-center justify-center">
+                        <span id="login-btn-text">Sign in to ACRP Portal</span>
+                    </span>
+                </button>
+
+                <!-- Sign Up Link -->
+                <p class="text-gray-500/90 text-sm mt-6 text-center">
+                    Don't have an account? 
+                    <a class="text-acrp-primary hover:text-acrp-dark hover:underline font-medium transition-colors" href="{% url 'enrollments:onboarding_start' %}">
+                        Join ACRP today
+                    </a>
+                </p>
+
+                <!-- Help Section -->
+                <div class="mt-8 text-center">
+                    <p class="text-xs text-gray-500 mb-2">Need help accessing your account?</p>
+                    <a href="mailto:support@acrpafrica.co.za" class="text-xs text-acrp-primary hover:text-acrp-dark hover:underline">
+                        Contact technical support
+                    </a>
+                </div>
+
+                <!-- Terms and Privacy -->
+                <div class="mt-6 pt-4 border-t border-gray-200/50 w-full">
+                    <p class="text-xs text-center text-gray-500 leading-relaxed">
+                        By signing in, you agree to ACRP's 
+                        <a href="/terms/" class="text-acrp-primary hover:text-acrp-dark hover:underline transition-colors">Terms of Service</a>
+                        and 
+                        <a href="/privacy/" class="text-acrp-primary hover:text-acrp-dark hover:underline transition-colors">Privacy Policy</a>
+                    </p>
+                </div>
+            </form>
+        </div>
     </div>
+
+    <!-- Enhanced JavaScript for better UX -->
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            document.getElementById('login-form').addEventListener('submit', function () {
-                document.getElementById('login-btn').classList.add('disabled');
-                document.getElementById('login-btn').innerHTML = '<i class="fas fa-sign-in-alt"></i> Logging you in . . .';
+            // Form submission handling
+            const loginForm = document.getElementById('login-form');
+            const loginBtn = document.getElementById('login-btn');
+            const loginBtnText = document.getElementById('login-btn-text');
+            const originalBtnText = loginBtnText.textContent;
+
+            loginForm.addEventListener('submit', function (e) {
+                // Prevent double submission
+                if (loginBtn.disabled) {
+                    e.preventDefault();
+                    return;
+                }
+
+                // Update button state
+                loginBtn.disabled = true;
+                loginBtnText.innerHTML = `
+                    <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Signing you in...
+                `;
+                
+                // Re-enable button after 10 seconds as fallback
+                setTimeout(() => {
+                    loginBtn.disabled = false;
+                    loginBtnText.textContent = originalBtnText;
+                }, 10000);
             });
+
+            // Password visibility toggle
+            const togglePassword = document.getElementById('toggle-password');
+            const passwordField = document.getElementById('password_id');
+            
+            if (togglePassword && passwordField) {
+                togglePassword.addEventListener('click', function () {
+                    const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordField.setAttribute('type', type);
+                    
+                    // Update icon
+                    if (type === 'password') {
+                        togglePassword.innerHTML = `
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                            </svg>
+                        `;
+                        togglePassword.setAttribute('aria-label', 'Show password');
+                    } else {
+                        togglePassword.innerHTML = `
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"/>
+                            </svg>
+                        `;
+                        togglePassword.setAttribute('aria-label', 'Hide password');
+                    }
+                });
+            }
+
+            // Analytics tracking (if you have Google Analytics)
+            if (typeof gtag !== 'undefined') {
+                // Track form interactions
+                loginForm.addEventListener('submit', function() {
+                    gtag('event', 'login_attempt', {
+                        'event_category': 'authentication',
+                        'event_label': 'ACRP Portal Login'
+                    });
+                });
+
+                // Track sign up link clicks
+                document.querySelectorAll('a[href*="onboarding_start"]').forEach(link => {
+                    link.addEventListener('click', function() {
+                        gtag('event', 'signup_click', {
+                            'event_category': 'conversion',
+                            'event_label': 'From Login Page'
+                        });
+                    });
+                });
+            }
+        });
+    </script>
+
+    <!-- Google Analytics (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZWJJJPS1PT"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-ZWJJJPS1PT', {
+            'page_title': 'ACRP Portal Login',
+            'page_location': window.location.href,
+            'custom_map': {
+                'custom_parameter_1': 'login_page'
+            }
         });
     </script>
 </body>
-
 </html>
