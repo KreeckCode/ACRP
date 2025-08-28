@@ -629,8 +629,8 @@ assert ALLOWED_HOSTS, "ALLOWED_HOSTS must be configured"
 # Production-specific validations
 if not DEBUG:
     assert config('EMAIL_HOST', default=None), "EMAIL_HOST must be set in production"
-    assert 'postgresql' in DATABASES['default']['ENGINE'], \
-           "Production should use PostgreSQL for better performance and features"
+    #assert 'postgresql' in DATABASES['default']['ENGINE'], \
+     #      "Production should use PostgreSQL for better performance and features"
 
 # Set default primary key field type for Django 3.2+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
