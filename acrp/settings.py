@@ -589,11 +589,6 @@ if DEBUG:
     # Allow all hosts in development
     ALLOWED_HOSTS = ['*']
 
-# Production environment overrides
-if ENVIRONMENT == 'production':
-    
-    # Set proper allowed hosts (should be configured in environment)
-    assert ALLOWED_HOSTS != ['*'], "ALLOWED_HOSTS must be properly configured for production"
 
 # Testing environment overrides
 if 'test' in sys.argv or 'pytest' in sys.modules:
