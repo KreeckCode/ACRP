@@ -404,20 +404,3 @@ def error_403(request, exception):
 
 def error_400(request, exception):
     return render(request, 'error/400.html', status=400)
-
-
-from django.core.mail import send_mail
-from django.conf import settings
-
-def send_contact_message(name, email, subject, message):
-    full_subject = f"{settings.EMAIL_SUBJECT_PREFIX}{subject}"
-    body = f"From: {name} <{email}>\n\n{message}"
-    result = send_mail(
-        full_subject,
-        body,
-        settings.DEFAULT_FROM_EMAIL,
-        ["kreeckinc@gmail.com"],   # Replace with the real destination you want
-        fail_silently=False,
-        html_message=f"<p>From: {name} &lt;{email}&gt;</p><p>{message.replace('\\n','<br>')}</p>"
-    )
-    return result  # 1 if successful, 0 otherwise
