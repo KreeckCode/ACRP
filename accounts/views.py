@@ -156,3 +156,41 @@ def manage_departments(request):
 
     departments = Department.objects.all()
     return render(request, 'accounts/manage_departments.html', {'form': form, 'departments': departments})
+
+
+import logging
+from django.contrib.auth import views as auth_views
+from django.core.mail import send_mail
+from django.conf import settings
+from django.contrib import messages
+from django.urls import reverse_lazy
+
+logger = logging.getLogger(__name__)
+
+class DebugPasswordResetView(auth_views.PasswordResetView):
+    template_name = 'registration/password_reset_form.html'
+    email_template_name = 'registration/password_reset_email.txt'  # Plain text version
+    html_email_template_name = 'registration/password_reset_email.html'  # HTML version
+    subject_template_name = 'registration/password_reset_subject.txt'
+    success_url = reverse_lazy('accounts:password_reset_done')
+    
+    def form_valid(self, form):
+        email = form.cleaned_data['email']
+        
+        # Debug logging
+        logger.info(f"Password reset requested for email: {email}")
+        print(f"DEBUG: Password reset requested for email: {email}")
+        
+        try:
+            # Call parent form_valid (this sends the email)
+            response = super().form_valid(form)
+            
+            return response
+            
+        except Exception as e:
+            logger.error(f"Password reset email failed: {str(e)}")
+            print(f"DEBUG ERROR: Password reset failed: {str(e)}")
+            messages.error(self.request, f"Email sending failed: {str(e)}")
+            return self.form_invalid(form)
+    
+    

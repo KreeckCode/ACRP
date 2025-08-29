@@ -71,6 +71,7 @@ THIRD_PARTY_APPS = [
     'widget_tweaks',
     'tailwind',
     'theme',
+    "anymail",
 ]
 
 # Development-only Applications (conditionally loaded)
@@ -305,29 +306,36 @@ FILE_UPLOAD_PERMISSIONS = 0o644
 # EMAIL CONFIGURATION - Environment-based email backend
 
 
-if DEBUG:
-    # Development: Console backend for testing
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-else:
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = config('EMAIL_HOST')
-    EMAIL_PORT = config('EMAIL_PORT', default=465, cast=int)
-    EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
-    EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
-    EMAIL_HOST_USER = config('EMAIL_HOST_USER')
-    EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
-    
-    # SSL context for certificate issues
-    import ssl
-    EMAIL_SSL_CONTEXT = ssl.create_default_context()
-    EMAIL_SSL_CONTEXT.check_hostname = False
-    EMAIL_SSL_CONTEXT.verify_mode = ssl.CERT_NONE
 
-# Email settings (apply to both development and production)
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='ams@acrp.org.za')
-SERVER_EMAIL = config('SERVER_EMAIL', default=DEFAULT_FROM_EMAIL)
-EMAIL_SUBJECT_PREFIX = '[ACRP] '
-EMAIL_TIMEOUT = 30
+
+
+# EMAIL CONFIGURATION - Force Mailjet API with debugging
+import logging
+
+# Email sender configuration
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='ACRP Portal <dave@kreeck.com>')
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+EMAIL_SUBJECT_PREFIX = config('EMAIL_SUBJECT_PREFIX', default='[ACRP] ')
+
+# Force Mailjet API backend
+EMAIL_BACKEND = "anymail.backends.mailjet.EmailBackend"
+ANYMAIL = {
+    "MAILJET_API_KEY": config('MAILJET_API_KEY'),
+    "MAILJET_SECRET_KEY": config('MAILJET_SECRET_KEY'),
+    "IGNORE_RECIPIENT_STATUS": True,  # Don't fail on unverified recipients
+}
+
+# Password reset settings
+PASSWORD_RESET_TIMEOUT = 86400  # 24 hours
+
+# Email debugging - Add this logger
+EMAIL_LOGGER = logging.getLogger('django.core.mail')
+EMAIL_LOGGER.setLevel(logging.DEBUG)
+
+print(f"EMAIL_BACKEND: {EMAIL_BACKEND}")
+print(f"MAILJET_API_KEY: {config('MAILJET_API_KEY', default='NOT_SET')[:10]}...")
+print(f"DEFAULT_FROM_EMAIL: {DEFAULT_FROM_EMAIL}")
+
 
 # INTERNATIONALIZATION AND LOCALIZATION
 
@@ -620,11 +628,7 @@ if 'test' in sys.argv or 'pytest' in sys.modules:
 assert SECRET_KEY, "SECRET_KEY must be set in environment variables"
 assert ALLOWED_HOSTS, "ALLOWED_HOSTS must be configured"
 
-# Production-specific validations
-if not DEBUG:
-    assert config('EMAIL_HOST', default=None), "EMAIL_HOST must be set in production"
-    #assert 'postgresql' in DATABASES['default']['ENGINE'], \
-     #      "Production should use PostgreSQL for better performance and features"
+
 
 # Set default primary key field type for Django 3.2+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

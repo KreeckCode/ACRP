@@ -195,7 +195,7 @@
             </div>
 
             <!-- Login Form Container -->
-            <form action="{% url 'login' %}" method="post" id="login-form" class="md:w-96 w-80 flex flex-col items-center justify-center">
+            <form action="{% url 'accounts:login' %}" method="post" id="login-form" class="md:w-96 w-80 flex flex-col items-center justify-center">
                 {% csrf_token %}
                 
                 <!-- Header -->
@@ -274,7 +274,7 @@
                         <input class="h-4 w-4 rounded border-gray-300 text-acrp-primary focus:ring-acrp-primary" type="checkbox" id="remember-me" name="remember-me">
                         <label class="text-sm" for="remember-me">Remember me</label>
                     </div>
-                    <a class="text-sm text-acrp-primary hover:text-acrp-dark hover:underline transition-colors" href="{% url 'password_reset' %}">
+                    <a class="text-sm text-acrp-primary hover:text-acrp-dark hover:underline transition-colors" href="{% url 'accounts:password_reset' %}">
                         Forgot password?
                     </a>
                 </div>

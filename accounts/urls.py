@@ -1,4 +1,4 @@
-from django.urls import path, include
+from django.urls import path, include, reverse_lazy
 from django.contrib.auth.views import (
     LoginView,
     LogoutView,
@@ -10,9 +10,10 @@ from django.contrib.auth.views import (
 from . import views
 from django.contrib.auth.views import LoginView
 from django.contrib.auth import views as auth_views
+from accounts.views import DebugPasswordResetView
+app_name = 'accounts'
 
 urlpatterns = [
-    path("", include("django.contrib.auth.urls")),
     path("login/", LoginView.as_view(), name="login"),
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
 
@@ -24,22 +25,22 @@ urlpatterns = [
     # Role and department management URLs
     path("manage_roles/", views.manage_roles, name="manage_roles"),
     path("manage_departments/", views.manage_departments, name="manage_departments"),
-    # Password reset views
-    path("password-reset/", PasswordResetView.as_view(template_name="registration/password_reset.html"), name="password_reset",),
-    path("password-reset/done/",PasswordResetDoneView.as_view(template_name="registration/password_reset_done.html"),name="password_reset_done",
-    ),
-    path(
-        "password-reset-confirm/<uidb64>/<token>/",
-        PasswordResetConfirmView.as_view(
-            template_name="registration/password_reset_confirm.html"
-        ),
-        name="password_reset_confirm",
-    ),
-    path(
-        "password-reset-complete/",
-        PasswordResetCompleteView.as_view(
-            template_name="registration/password_reset_complete.html"
-        ),
-        name="password_reset_complete",
-    ),
+    
+    path('password-reset/', DebugPasswordResetView.as_view(), name='password_reset'),
+
+    path('password-reset/done/', auth_views.PasswordResetDoneView.as_view(
+        template_name='registration/password_reset_done.html',
+        extra_context={'title': 'Password Reset Email Sent'}
+    ), name='password_reset_done'),
+
+    path('password-reset-confirm/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(
+        template_name='registration/password_reset_confirm.html',
+        success_url=reverse_lazy('accounts:password_reset_complete'),
+        extra_context={'title': 'Set Your New ACRP Password'}
+    ), name='password_reset_confirm'),
+
+    path('password-reset-complete/', auth_views.PasswordResetCompleteView.as_view(
+        template_name='registration/password_reset_complete.html',
+        extra_context={'title': 'Password Reset Successful'}
+    ), name='password_reset_complete'),
 ]
