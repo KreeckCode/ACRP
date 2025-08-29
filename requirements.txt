@@ -116,3 +116,4 @@ wcwidth
 webencodings
 whitenoise
 Whoosh
+django-anymail
