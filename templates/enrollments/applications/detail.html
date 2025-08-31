@@ -1129,8 +1129,29 @@
 
                     <!-- Review Panel -->
                     {% if can_review %}
-                    <div class="action-section">
-                        <h6 class="action-title">Administrative Review</h6>
+                        <div class="action-section">
+                            <h6 class="action-title">Administrative Review</h6>
+
+                        <div class="form-group">
+                            <div class="card border-primary">
+                                <div class="card-header bg-primary text-white">
+                                    <h6 class="mb-0">Digital Affiliation Card</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="assign_digital_card" name="assign_digital_card" value="1">
+                                        <label class="form-check-label" for="assign_digital_card">
+                                            <strong>Assign Digital Card</strong>
+                                        </label>
+                                    </div>
+                                    <small class="form-text text-muted">
+                                        Check this box to automatically create and send a digital affiliation card 
+                                        when approving this application. The card will be emailed to the applicant.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
                         
                         {% if application.reviewer_notes %}
                         <div class="alert alert-info">

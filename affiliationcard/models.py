@@ -849,6 +849,7 @@ class CardVerification(models.Model):
         return f"Verification of {self.card.card_number} at {self.verified_at}"
 
 
+
 class CardDelivery(models.Model):
     """
     Track card delivery via email and download events.
@@ -866,17 +867,20 @@ class CardDelivery(models.Model):
     
     STATUS_CHOICES = [
         ('pending', 'Pending'),
+        ('processing', 'Processing'),  # Added for compatibility
         ('sending', 'Sending'),
         ('sent', 'Sent'),
         ('delivered', 'Delivered'),
         ('opened', 'Opened'),
         ('downloaded', 'Downloaded'),
+        ('completed', 'Completed'),  # Added for compatibility
+        ('ready_for_download', 'Ready for Download'),  # Added for compatibility
         ('failed', 'Failed'),
         ('bounced', 'Bounced'),
     ]
     
     card = models.ForeignKey(
-        AffiliationCard,
+        'AffiliationCard',  # Use string reference to avoid import issues
         on_delete=models.CASCADE,
         related_name='deliveries'
     )
@@ -902,21 +906,30 @@ class CardDelivery(models.Model):
     delivered_at = models.DateTimeField(null=True, blank=True)
     opened_at = models.DateTimeField(null=True, blank=True)
     downloaded_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)  # Added for compatibility
     
     # Error tracking
     error_message = models.TextField(blank=True)
+    failure_reason = models.TextField(blank=True)  # Added for enhanced error tracking
     retry_count = models.PositiveIntegerField(default=0)
     max_retries = models.PositiveIntegerField(default=3)
     
     # Email tracking
     email_message_id = models.CharField(max_length=255, blank=True)
+    mailjet_message_id = models.CharField(max_length=255, blank=True)  # Added for Mailjet integration
     bounce_reason = models.TextField(blank=True)
+    
+    # Enhanced email customization fields
+    email_subject = models.CharField(max_length=200, blank=True, help_text="Custom email subject line")
+    email_message = models.TextField(blank=True, help_text="Additional custom message for email")
+    delivery_notes = models.TextField(blank=True, help_text="Internal delivery notes")
     
     # Download tracking
     download_token = models.CharField(max_length=64, blank=True, unique=True)
     download_expires_at = models.DateTimeField(null=True, blank=True)
     download_count = models.PositiveIntegerField(default=0)
     max_downloads = models.PositiveIntegerField(default=5)
+    last_downloaded_at = models.DateTimeField(null=True, blank=True)  # Added for tracking
     
     # File details
     file_format = models.CharField(
@@ -925,6 +938,8 @@ class CardDelivery(models.Model):
         default='pdf'
     )
     file_size_bytes = models.PositiveIntegerField(null=True, blank=True)
+    file_size = models.PositiveIntegerField(null=True, blank=True)  # Alias for compatibility
+    generated_filename = models.CharField(max_length=255, blank=True, help_text="Generated filename for the card file")
     
     class Meta:
         ordering = ['-initiated_at']
@@ -939,13 +954,24 @@ class CardDelivery(models.Model):
         ]
     
     def save(self, *args, **kwargs):
-        """Generate download token if needed."""
+        """Generate download token if needed and set defaults."""
+        # Generate download token for delivery types that need it
         if self.delivery_type in ['email_link', 'sms_link', 'direct_download'] and not self.download_token:
             self.download_token = secrets.token_urlsafe(32)
             
-        if not self.download_expires_at and self.download_token:
-            # Set expiry to 7 days from now
-            self.download_expires_at = timezone.now() + timedelta(days=7)
+        # Set download expiry if token exists but no expiry set
+        if self.download_token and not self.download_expires_at:
+            # Set expiry to 30 days from now for email/sms links, 24 hours for direct download
+            if self.delivery_type == 'direct_download':
+                self.download_expires_at = timezone.now() + timedelta(hours=24)
+            else:
+                self.download_expires_at = timezone.now() + timedelta(days=30)
+        
+        # Ensure compatibility between file_size fields
+        if self.file_size and not self.file_size_bytes:
+            self.file_size_bytes = self.file_size
+        elif self.file_size_bytes and not self.file_size:
+            self.file_size = self.file_size_bytes
         
         super().save(*args, **kwargs)
     
@@ -954,9 +980,11 @@ class CardDelivery(models.Model):
         if not self.download_token:
             return False
         
+        # Check if expired
         if self.download_expires_at and timezone.now() > self.download_expires_at:
             return False
         
+        # Check if max downloads exceeded
         if self.download_count >= self.max_downloads:
             return False
         
@@ -968,9 +996,13 @@ class CardDelivery(models.Model):
             raise ValidationError("Download is no longer valid")
         
         self.download_count += 1
-        if self.status != 'downloaded':
+        self.last_downloaded_at = timezone.now()
+        
+        # Update status if this is the first download
+        if self.status not in ['downloaded', 'completed']:
             self.status = 'downloaded'
-            self.downloaded_at = timezone.now()
+            if not self.downloaded_at:
+                self.downloaded_at = timezone.now()
         
         self.save()
     
@@ -979,12 +1011,49 @@ class CardDelivery(models.Model):
         if not self.download_token:
             return None
         
-        return reverse('affiliationcard:download', args=[self.download_token])
+        return reverse('affiliationcard:download_card', args=[self.download_token])
+    
+    def get_status_display_color(self):
+        """Get CSS color class for status display."""
+        status_colors = {
+            'pending': 'text-yellow-600 bg-yellow-100',
+            'processing': 'text-blue-600 bg-blue-100',
+            'sending': 'text-blue-600 bg-blue-100',
+            'sent': 'text-green-600 bg-green-100',
+            'delivered': 'text-green-600 bg-green-100',
+            'completed': 'text-green-600 bg-green-100',
+            'downloaded': 'text-green-600 bg-green-100',
+            'ready_for_download': 'text-indigo-600 bg-indigo-100',
+            'failed': 'text-red-600 bg-red-100',
+            'bounced': 'text-red-600 bg-red-100',
+        }
+        return status_colors.get(self.status, 'text-gray-600 bg-gray-100')
+    
+    def days_until_expiry(self):
+        """Get days until download expires."""
+        if not self.download_expires_at:
+            return None
+        
+        delta = self.download_expires_at.date() - timezone.now().date()
+        return delta.days if delta.days >= 0 else 0
+    
+    def is_expired(self):
+        """Check if delivery/download is expired."""
+        return not self.is_download_valid() and self.download_expires_at and timezone.now() > self.download_expires_at
+    
+    def get_delivery_method_display(self):
+        """Get human-readable delivery method display."""
+        method_display = {
+            'email_pdf': 'Email with PDF Attachment',
+            'email_link': 'Email with Download Link',
+            'sms_link': 'SMS with Download Link',
+            'direct_download': 'Direct Download',
+            'api_delivery': 'API Delivery',
+        }
+        return method_display.get(self.delivery_type, self.delivery_type.title())
     
     def __str__(self):
         return f"Delivery of {self.card.card_number} to {self.recipient_email} ({self.status})"
-
-
 class CardStatusChange(models.Model):
     """
     Audit trail for card status changes.

@@ -1,0 +1,591 @@
+{% extends "base/external_base.html" %}
+{% load static %}
+
+{% comment %}
+ACRP Affiliation Card Rate Limiting Template
+============================================
+
+This template is displayed when users exceed the verification attempt limit.
+It provides a user-friendly explanation of rate limiting and guidance on when
+they can try again.
+
+Template Features:
+- Clear explanation of rate limiting without technical jargon
+- Visual countdown timer showing when access will be restored
+- Alternative verification methods and contact information
+- Security messaging to reassure users about protective measures
+- Responsive design for all devices
+- Accessibility features with proper ARIA labels
+
+Rate Limiting Context:
+- Default limit: 10 attempts per 60 minutes per IP address
+- Applied to: Card verification endpoints (QR scan, manual lookup, API)
+- Purpose: Prevent abuse, protect system resources, enhance security
+
+Design Philosophy:
+- Reassuring rather than punitive tone
+- Educational about security benefits
+- Provides alternative pathways for legitimate users
+- Professional appearance maintaining ACRP brand trust
+{% endcomment %}
+
+{% block title %}Access Temporarily Limited - ACRP Card Verification{% endblock %}
+
+{% block meta_description %}Verification access temporarily limited for security. Learn when you can try again and alternative verification methods.{% endblock %}
+
+{% block meta_robots %}noindex, nofollow{% endblock %}
+
+{% block page_title %}Access Temporarily Limited{% endblock %}
+
+{% block page_description %}Please wait before trying to verify cards again{% endblock %}
+
+{% block page_header %}
+<div class="mb-8 text-center">
+    <div class="mx-auto h-20 w-20 bg-yellow-100 rounded-full flex items-center justify-center mb-4">
+        <i class="bi bi-shield-exclamation text-yellow-600 text-3xl"></i>
+    </div>
+    <h1 class="text-3xl font-bold text-gray-900">
+        Access Temporarily Limited
+    </h1>
+    <p class="mt-2 text-lg text-gray-600">
+        Too many verification attempts detected
+    </p>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    
+    {% comment %}
+    MAIN EXPLANATION SECTION
+    ========================
+    
+    Clear, non-technical explanation of what happened and why.
+    Uses reassuring language to maintain user confidence.
+    {% endcomment %}
+    
+    <!-- Main Message -->
+    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-8">
+        <div class="flex items-start">
+            <div class="flex-shrink-0">
+                <i class="bi bi-info-circle text-yellow-600 text-xl"></i>
+            </div>
+            <div class="ml-4">
+                <h2 class="text-lg font-medium text-yellow-800 mb-2">
+                    Why is this happening?
+                </h2>
+                <div class="text-sm text-yellow-700 space-y-2">
+                    <p>
+                        We've detected multiple verification attempts from your location in a short time period. 
+                        To protect our system and ensure the security of all affiliation cards, we've temporarily 
+                        limited access from your network.
+                    </p>
+                    <p>
+                        <strong>This is a security feature, not an error.</strong> It helps prevent unauthorized 
+                        access attempts and ensures our verification system remains reliable for all users.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% comment %}
+    COUNTDOWN TIMER SECTION
+    =======================
+    
+    Visual countdown showing when the user can try again.
+    Updates in real-time to provide clear guidance.
+    {% endcomment %}
+    
+    <!-- Countdown Timer -->
+    <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6 mb-8 text-center">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">
+            <i class="bi bi-clock text-blue-600 mr-2"></i>
+            When can I try again?
+        </h3>
+        
+        <div class="bg-gray-50 rounded-lg p-6 mb-4">
+            <div class="text-4xl font-bold text-blue-600 mb-2" id="countdown-timer">
+                59:59
+            </div>
+            <p class="text-sm text-gray-600">
+                Time remaining until access is restored
+            </p>
+        </div>
+        
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div class="flex items-center justify-center">
+                <i class="bi bi-shield-check text-blue-600 mr-2"></i>
+                <span class="text-sm text-blue-800">
+                    Access will automatically restore in <strong id="countdown-text">60 minutes</strong>
+                </span>
+            </div>
+        </div>
+    </div>
+    
+    {% comment %}
+    ALTERNATIVE OPTIONS SECTION
+    ============================
+    
+    Provides legitimate users with alternative ways to verify cards
+    or get assistance while waiting for the rate limit to reset.
+    {% endcomment %}
+    
+    <!-- Alternative Options -->
+    <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6 mb-8">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">
+            <i class="bi bi-lightbulb text-amber-500 mr-2"></i>
+            Need immediate verification?
+        </h3>
+        
+        <div class="space-y-4">
+            
+            <!-- Contact Support -->
+            <div class="flex items-start p-4 bg-gray-50 rounded-lg">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <i class="bi bi-headset text-blue-600"></i>
+                    </div>
+                </div>
+                <div class="ml-4 flex-1">
+                    <h4 class="text-sm font-medium text-gray-900">Contact Support</h4>
+                    <p class="text-sm text-gray-600 mt-1">
+                        Our support team can verify cards manually if you have an urgent need.
+                    </p>
+                    <div class="mt-2 flex space-x-4 text-sm">
+                        <a href="mailto:support@acrpafrica.co.za" class="text-blue-600 hover:text-blue-700 flex items-center">
+                            <i class="bi bi-envelope mr-1"></i>
+                            support@acrpafrica.co.za
+                        </a>
+                        <a href="tel:+27123456789" class="text-blue-600 hover:text-blue-700 flex items-center">
+                            <i class="bi bi-telephone mr-1"></i>
+                            +27 12 345 6789
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Try Different Network -->
+            <div class="flex items-start p-4 bg-gray-50 rounded-lg">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                        <i class="bi bi-wifi text-green-600"></i>
+                    </div>
+                </div>
+                <div class="ml-4 flex-1">
+                    <h4 class="text-sm font-medium text-gray-900">Try a Different Network</h4>
+                    <p class="text-sm text-gray-600 mt-1">
+                        You can try verifying from a different internet connection (mobile data, different WiFi) 
+                        if you need immediate access.
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Manual Verification -->
+            <div class="flex items-start p-4 bg-gray-50 rounded-lg">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                        <i class="bi bi-person-check text-purple-600"></i>
+                    </div>
+                </div>
+                <div class="ml-4 flex-1">
+                    <h4 class="text-sm font-medium text-gray-900">Manual Verification Process</h4>
+                    <p class="text-sm text-gray-600 mt-1">
+                        For critical situations, contact the card holder's council directly for manual verification 
+                        using traditional methods.
+                    </p>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    
+    {% comment %}
+    SECURITY INFORMATION SECTION
+    =============================
+    
+    Educational content about why rate limiting exists and how it protects users.
+    Builds trust by explaining the security benefits.
+    {% endcomment %}
+    
+    <!-- Security Information -->
+    <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">
+            <i class="bi bi-shield-lock text-green-600 mr-2"></i>
+            Why do we have rate limits?
+        </h3>
+        
+        <div class="prose prose-sm max-w-none text-gray-600">
+            <p>
+                Rate limiting is an important security measure that protects the integrity of our 
+                digital card verification system. Here's how it helps:
+            </p>
+            
+            <ul class="mt-4 space-y-2">
+                <li class="flex items-start">
+                    <i class="bi bi-check-circle text-green-500 mr-2 mt-0.5 flex-shrink-0"></i>
+                    <span><strong>Prevents unauthorized access attempts</strong> that could compromise card security</span>
+                </li>
+                <li class="flex items-start">
+                    <i class="bi bi-check-circle text-green-500 mr-2 mt-0.5 flex-shrink-0"></i>
+                    <span><strong>Ensures system reliability</strong> by preventing overload during peak usage</span>
+                </li>
+                <li class="flex items-start">
+                    <i class="bi bi-check-circle text-green-500 mr-2 mt-0.5 flex-shrink-0"></i>
+                    <span><strong>Protects affiliate privacy</strong> by limiting bulk data harvesting attempts</span>
+                </li>
+                <li class="flex items-start">
+                    <i class="bi bi-check-circle text-green-500 mr-2 mt-0.5 flex-shrink-0"></i>
+                    <span><strong>Maintains verification accuracy</strong> by preventing automated false queries</span>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="mt-6 bg-green-50 border border-green-200 rounded-lg p-4">
+            <div class="flex items-center">
+                <i class="bi bi-shield-check text-green-600 mr-2"></i>
+                <span class="text-sm font-medium text-green-800">
+                    Your security and privacy are our top priorities
+                </span>
+            </div>
+        </div>
+    </div>
+    
+    {% comment %}
+    QUICK HELP SECTION
+    ==================
+    
+    Provides immediate assistance and common solutions while users wait.
+    Includes links to documentation and support resources.
+    {% endcomment %}
+    
+    <!-- Quick Help -->
+    <div class="mt-8 text-center">
+        <h4 class="text-md font-medium text-gray-900 mb-4">
+            Need help with card verification?
+        </h4>
+        <div class="flex flex-col sm:flex-row justify-center space-y-2 sm:space-y-0 sm:space-x-4">
+            <a href="#" 
+               class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200"
+               onclick="showToast('Help documentation coming soon!', 'info')">
+                <i class="bi bi-question-circle mr-2"></i>
+                Verification Guide
+            </a>
+            <a href="#" 
+               class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200"
+               onclick="showToast('FAQ page coming soon!', 'info')">
+                <i class="bi bi-chat-square-text mr-2"></i>
+                Frequently Asked Questions
+            </a>
+            <a href="mailto:support@acrpafrica.co.za" 
+               class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200">
+                <i class="bi bi-envelope mr-2"></i>
+                Contact Support
+            </a>
+        </div>
+    </div>
+    
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Custom styling for rate limit page */
+    .countdown-digit {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        font-weight: bold;
+        font-family: 'Courier New', monospace;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Gentle pulsing animation for the timer */
+    .pulse-gentle {
+        animation: pulseGentle 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulseGentle {
+        0%, 100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+        50% {
+            opacity: 0.8;
+            transform: scale(1.02);
+        }
+    }
+    
+    /* Enhanced card hover effects */
+    .help-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+    
+    /* Progress bar animation */
+    .progress-bar {
+        background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+        border-radius: 9999px;
+        height: 4px;
+        animation: progressPulse 3s ease-in-out infinite;
+    }
+    
+    @keyframes progressPulse {
+        0%, 100% { opacity: 0.7; }
+        50% { opacity: 1; }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    /**
+     * Rate Limit Page JavaScript
+     * ===========================
+     * 
+     * This script provides an interactive countdown timer and user guidance
+     * for the rate-limited verification page.
+     */
+    
+    // Rate limit duration in minutes (should match your Django setting)
+    const RATE_LIMIT_MINUTES = 60;
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // Initialize countdown timer
+        initializeCountdown();
+        
+        // Set up auto-redirect when time expires
+        setupAutoRedirect();
+        
+        // Add helpful keyboard shortcuts
+        setupKeyboardShortcuts();
+        
+    });
+    
+    /**
+     * Initialize and start the countdown timer
+     */
+    function initializeCountdown() {
+        
+        // Calculate end time (assuming rate limit started when page loaded)
+        const startTime = new Date();
+        const endTime = new Date(startTime.getTime() + (RATE_LIMIT_MINUTES * 60 * 1000));
+        
+        // Update countdown every second
+        const countdownInterval = setInterval(function() {
+            updateCountdownDisplay(endTime, countdownInterval);
+        }, 1000);
+        
+        // Initial update
+        updateCountdownDisplay(endTime, countdownInterval);
+    }
+    
+    /**
+     * Update the countdown display with remaining time
+     */
+    function updateCountdownDisplay(endTime, intervalId) {
+        const now = new Date();
+        const timeRemaining = endTime - now;
+        
+        if (timeRemaining <= 0) {
+            // Time's up - clear interval and show ready message
+            clearInterval(intervalId);
+            showTimeExpired();
+            return;
+        }
+        
+        // Calculate minutes and seconds
+        const minutes = Math.floor(timeRemaining / (1000 * 60));
+        const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+        
+        // Update timer display
+        const timerElement = document.getElementById('countdown-timer');
+        const textElement = document.getElementById('countdown-text');
+        
+        if (timerElement) {
+            timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            timerElement.classList.add('pulse-gentle');
+        }
+        
+        if (textElement) {
+            if (minutes > 0) {
+                textElement.textContent = `${minutes} minute${minutes !== 1 ? 's' : ''} and ${seconds} second${seconds !== 1 ? 's' : ''}`;
+            } else {
+                textElement.textContent = `${seconds} second${seconds !== 1 ? 's' : ''}`;
+            }
+        }
+        
+        // Update progress bar if it exists
+        const progressBar = document.getElementById('progress-bar');
+        if (progressBar) {
+            const totalTime = RATE_LIMIT_MINUTES * 60 * 1000;
+            const elapsed = totalTime - timeRemaining;
+            const percentage = (elapsed / totalTime) * 100;
+            progressBar.style.width = `${percentage}%`;
+        }
+    }
+    
+    /**
+     * Show message when countdown expires
+     */
+    function showTimeExpired() {
+        const timerElement = document.getElementById('countdown-timer');
+        const textElement = document.getElementById('countdown-text');
+        
+        if (timerElement) {
+            timerElement.textContent = '00:00';
+            timerElement.classList.remove('pulse-gentle');
+            timerElement.classList.add('text-green-600');
+        }
+        
+        if (textElement) {
+            textElement.innerHTML = '<strong class="text-green-600">You can now try verifying cards again!</strong>';
+        }
+        
+        // Show success message and enable redirect
+        showAccessRestored();
+    }
+    
+    /**
+     * Show access restored message and options
+     */
+    function showAccessRestored() {
+        // Create and show success notification
+        const notification = document.createElement('div');
+        notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 max-w-sm';
+        notification.innerHTML = `
+            <div class="flex items-center">
+                <i class="bi bi-check-circle mr-3 text-xl"></i>
+                <div>
+                    <p class="font-medium">Access Restored!</p>
+                    <p class="text-sm mt-1">You can now verify cards again.</p>
+                </div>
+            </div>
+            <div class="mt-3 flex space-x-2">
+                <button onclick="redirectToVerification()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm">
+                    Start Verifying
+                </button>
+                <button onclick="this.parentElement.parentElement.remove()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm">
+                    Stay Here
+                </button>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Auto-remove after 10 seconds if no action taken
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 10000);
+    }
+    
+    /**
+     * Redirect to verification page
+     */
+    function redirectToVerification() {
+        showToast('Redirecting to card verification...', 'success');
+        setTimeout(() => {
+            window.location.href = '{% url "affiliationcard:verify_lookup" %}';
+        }, 1000);
+    }
+    
+    /**
+     * Set up auto-redirect when time expires (optional)
+     */
+    function setupAutoRedirect() {
+        // Uncomment the following to auto-redirect when timer expires
+        /*
+        setTimeout(() => {
+            if (confirm('Rate limit has expired. Would you like to return to card verification?')) {
+                redirectToVerification();
+            }
+        }, RATE_LIMIT_MINUTES * 60 * 1000);
+        */
+    }
+    
+    /**
+     * Set up helpful keyboard shortcuts
+     */
+    function setupKeyboardShortcuts() {
+        document.addEventListener('keydown', function(event) {
+            
+            // 'R' key to refresh countdown
+            if (event.key.toLowerCase() === 'r' && !event.ctrlKey) {
+                event.preventDefault();
+                showToast('Countdown refreshed', 'info');
+                // In a real implementation, you might recalculate the actual remaining time
+            }
+            
+            // 'H' key for help
+            if (event.key.toLowerCase() === 'h' && !event.ctrlKey) {
+                event.preventDefault();
+                document.querySelector('a[href="mailto:support@acrpafrica.co.za"]').click();
+            }
+            
+            // Escape key to go back
+            if (event.key === 'Escape') {
+                if (confirm('Return to the previous page?')) {
+                    window.history.back();
+                }
+            }
+        });
+        
+        // Show keyboard shortcuts hint
+        setTimeout(() => {
+            showToast('Tip: Press H for help, R to refresh, or Escape to go back', 'info');
+        }, 3000);
+    }
+    
+    /**
+     * Utility function to check current rate limit status
+     */
+    function checkRateLimitStatus() {
+        // In a real implementation, this could make an AJAX call to check
+        // if the rate limit has been lifted early
+        showToast('Checking rate limit status...', 'info');
+        
+        // Placeholder for actual implementation
+        setTimeout(() => {
+            showToast('Rate limit is still active. Please wait for the countdown to complete.', 'warning');
+        }, 1000);
+    }
+    
+    /**
+     * Request immediate access (for legitimate use cases)
+     */
+    function requestImmediateAccess() {
+        const reason = prompt('Please provide a brief reason for requesting immediate access:');
+        
+        if (reason && reason.trim()) {
+            // In a real implementation, this would send a request to support
+            showToast('Access request submitted. Support will review your request shortly.', 'success');
+            
+            // Could make AJAX call to log the request
+            console.log('Immediate access requested:', reason);
+        }
+    }
+    
+</script>
+{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "ACRP Card Verification - Access Limited",
+    "description": "Rate limiting information for ACRP digital card verification system",
+    "url": "{{ request.build_absolute_uri }}",
+    "isPartOf": {
+        "@type": "WebSite",
+        "name": "ACRP Management System",
+        "url": "{{ request.scheme }}://{{ request.get_host }}"
+    }
+}
+</script>
+{% endblock %}

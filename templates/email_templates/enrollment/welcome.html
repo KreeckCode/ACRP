@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to ACRP - Application Submitted</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+        .email-container {
+            background-color: #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 300;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 16px;
+        }
+        .content {
+            padding: 30px 25px;
+        }
+        .application-summary {
+            background-color: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .application-summary h3 {
+            margin: 0 0 15px 0;
+            color: #495057;
+            font-size: 18px;
+        }
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .summary-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        .summary-label {
+            font-weight: 600;
+            color: #6c757d;
+        }
+        .summary-value {
+            color: #495057;
+            text-align: right;
+            max-width: 60%;
+        }
+        .next-steps {
+            background-color: #e8f5e8;
+            border: 1px solid #c3e6cb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        .next-steps h3 {
+            margin: 0 0 15px 0;
+            color: #155724;
+            font-size: 18px;
+        }
+        .steps-list {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .steps-list li {
+            margin-bottom: 8px;
+            color: #155724;
+        }
+        .important-info {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        .important-info h3 {
+            margin: 0 0 15px 0;
+            color: #856404;
+            font-size: 18px;
+        }
+        .important-info p {
+            margin: 0;
+            color: #856404;
+        }
+        .contact-info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        .contact-info h3 {
+            margin: 0 0 15px 0;
+            color: #0c5460;
+            font-size: 18px;
+        }
+        .contact-info p {
+            margin: 5px 0;
+            color: #0c5460;
+        }
+        .footer {
+            background-color: #343a40;
+            color: #adb5bd;
+            padding: 25px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .footer p {
+            margin: 5px 0;
+        }
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        .status-badge {
+            display: inline-block;
+            background-color: #28a745;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        @media (max-width: 600px) {
+            .email-container {
+                margin: 10px;
+                border-radius: 5px;
+            }
+            .header, .content {
+                padding: 20px 15px;
+            }
+            .summary-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .summary-value {
+                text-align: left;
+                max-width: 100%;
+                margin-top: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header Section -->
+        <div class="header">
+            <h1>Welcome to ACRP!</h1>
+            <p>Your application has been successfully submitted</p>
+        </div>
+
+        <!-- Main Content -->
+        <div class="content">
+            <p>Dear {{ applicant_name }},</p>
+            
+            <p>Thank you for submitting your application to join the Association of Construction Resource Professionals. We have successfully received your application and are excited to begin the review process.</p>
+
+            <!-- Application Summary -->
+            <div class="application-summary">
+                <h3>Application Summary</h3>
+                <div class="summary-item">
+                    <span class="summary-label">Application Number:</span>
+                    <span class="summary-value"><strong>{{ application_number }}</strong></span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Affiliation Type:</span>
+                    <span class="summary-value">{{ affiliation_type }}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Council:</span>
+                    <span class="summary-value">{{ council_name }}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Submitted Date:</span>
+                    <span class="summary-value">{{ submission_date|date:"F d, Y" }}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Current Status:</span>
+                    <span class="summary-value"><span class="status-badge">Submitted</span></span>
+                </div>
+            </div>
+
+            <!-- Next Steps -->
+            <div class="next-steps">
+                <h3>What Happens Next?</h3>
+                <ol class="steps-list">
+                    <li><strong>Application Review:</strong> Our team will carefully review your application and supporting documents</li>
+                    <li><strong>Document Verification:</strong> We will verify all submitted documents and credentials</li>
+                    <li><strong>Reference Check:</strong> If applicable, we will contact your provided references</li>
+                    <li><strong>Decision Notification:</strong> You will receive an email notification once a decision has been made</li>
+                    <li><strong>Digital Card Issuance:</strong> Upon approval, your digital affiliation card will be sent via email</li>
+                </ol>
+            </div>
+
+            <!-- Important Information -->
+            <div class="important-info">
+                <h3>Important Information</h3>
+                <p><strong>Processing Time:</strong> Applications are typically reviewed within 5-10 business days. Complex applications may require additional time for thorough evaluation.</p>
+            </div>
+
+            <p>During the review process, we may contact you if we need additional information or clarification regarding your application. Please ensure your contact information remains current.</p>
+
+            <p>You can reference your application using the application number <strong>{{ application_number }}</strong> in any correspondence with us.</p>
+
+            <!-- Contact Information -->
+            <div class="contact-info">
+                <h3>Need Assistance?</h3>
+                <p>If you have any questions about your application or the review process, please don't hesitate to contact us:</p>
+                <p><strong>Email:</strong> ams@acrp.org.za</p>
+                <p><strong>Phone:</strong> (+27) 065 214 1536</p>
+                <p><strong>Business Hours:</strong> Monday - Friday, 9:00 AM - 5:00 PM EST</p>
+            </div>
+
+            <p>Thank you for choosing ACRP. We look forward to welcoming you to our professional community.</p>
+            
+            <p>Best regards,<br>
+            <strong>The ACRP Team</strong><br>
+            Association of Construction Resource Professionals</p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>ACRP Portal</strong> - Association of Construction Resource Professionals</p>
+            <p>&copy; {{ current_year }} ACRP. All rights reserved.</p>
+            <p>This is an automated message. Please do not reply directly to this email.</p>
+            <p>For support, please contact: <a href="mailto:ams@acrp.org.za">ams@acrp.org.za</a></p>
+        </div>
+    </div>
+</body>
+</html>

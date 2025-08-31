@@ -1,0 +1,25 @@
+Congratulations! Your ACRP Digital Affiliation Card is Ready
+
+Dear {{ applicant_name }},
+
+Your application has been approved and your digital affiliation card is attached to this email.
+
+Card Details:
+- Card Number: {{ card_number }}
+- Holder: {{ applicant_name }}
+- Council: {{ council_name }}
+- Affiliation Type: {{ affiliation_type }}
+
+You can verify your card status anytime at: {{ verification_url }}
+
+Next Steps:
+1. Save the attached PDF to your device
+2. Print a copy for your records if needed
+3. Use the QR code on your card for quick verification
+
+Best regards,
+ACRP Portal Team
+
+---
+This is an automated message. Please do not reply to this email.
+ACRP Portal © {{ current_year }}

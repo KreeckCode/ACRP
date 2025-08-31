@@ -1,0 +1,1335 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% comment %}
+ACRP Card Template Form Template
+================================
+
+This template provides the creation and editing interface for card templates.
+Admins can design visual templates with custom layouts, colors, and assets.
+
+Template Features:
+- Comprehensive template designer interface
+- Real-time color picker and preview
+- Asset upload for logos and backgrounds
+- Layout configuration with visual positioning
+- Council and type association settings
+- Template validation and testing
+- Responsive form design with progressive disclosure
+
+View Integration:
+- Works with CardTemplateCreateView and UpdateView
+- Uses CardTemplateForm for all form handling
+- Integrates with file upload and validation systems
+- Supports both creation and editing workflows
+
+Data Context (from CardTemplateCreateView):
+- form: CardTemplateForm instance with all template fields
+- Additional context like page_title from get_context_data
+
+Form Fields (CardTemplateForm):
+- name: Template display name
+- description: Template description
+- template_type: Type selection (default, council_specific, etc.)
+- council: Council association (optional)
+- color scheme: primary_color, secondary_color, accent_color, text_color
+- assets: logo_image, background_image file uploads
+- layout_config: JSON configuration for element positioning
+- is_active: Template availability
+- is_default: Default template flag
+
+Design Philosophy:
+- Visual design-first approach with live preview
+- Intuitive form layout with logical grouping
+- Professional template design tools
+- Real-time feedback and validation
+- Accessibility-compliant form design
+{% endcomment %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Card Template - ACRP{% endblock %}
+
+{% block meta_description %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} visual templates for ACRP digital affiliation cards with custom layouts, colors, and branding.{% endblock %}
+
+{% block page_title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Card Template{% endblock %}
+
+{% block page_description %}{% if form.instance.pk %}Modify existing template{% else %}Design a new visual template{% endif %} for digital affiliation cards{% endblock %}
+
+{% block page_header %}
+<div class="mb-8">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 flex items-center">
+                <i class="bi bi-palette text-blue-600 mr-3"></i>
+                {% if form.instance.pk %}
+                Edit Template: {{ form.instance.name }}
+                {% else %}
+                Create New Template
+                {% endif %}
+            </h1>
+            <p class="mt-2 text-sm text-gray-600">
+                {% if form.instance.pk %}
+                Modify the visual design and settings for this template
+                {% else %}
+                Design a custom visual template for digital affiliation cards
+                {% endif %}
+            </p>
+        </div>
+        <div class="mt-4 lg:mt-0 flex space-x-3">
+            <a href="{% url 'affiliationcard:template_list' %}" 
+               class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200">
+                <i class="bi bi-arrow-left mr-2"></i>
+                Back to Templates
+            </a>
+            {% if form.instance.pk %}
+            <button type="button" 
+                    class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                    onclick="previewTemplate()">
+                <i class="bi bi-eye mr-2"></i>
+                Preview
+            </button>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        {% comment %}
+        MAIN TEMPLATE FORM
+        ==================
+        
+        Left side contains the main form for template configuration.
+        Uses progressive disclosure to show relevant options.
+        {% endcomment %}
+        
+        <!-- Template Configuration Form -->
+        <div class="lg:col-span-2">
+            
+            <form method="post" enctype="multipart/form-data" id="template-form" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Basic Information -->
+                <div class="bg-white shadow-sm rounded-lg border border-gray-200">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                            <span class="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-full text-sm font-bold mr-3">1</span>
+                            Basic Information
+                        </h3>
+                        <p class="mt-1 text-sm text-gray-600">Template name, description, and classification</p>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            
+                            <!-- Template Name -->
+                            <div class="md:col-span-2">
+                                <label for="id_name" class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="bi bi-tag mr-1"></i>
+                                    Template Name <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" 
+                                       id="id_name" 
+                                       name="name" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                       value="{{ form.name.value|default:'' }}"
+                                       placeholder="e.g., CGMP Standard Template"
+                                       required>
+                                {% if form.name.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.name.errors %}
+                                    <p><i class="bi bi-exclamation-circle mr-1"></i>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Template Type -->
+                            <div>
+                                <label for="id_template_type" class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="bi bi-layers mr-1"></i>
+                                    Template Type <span class="text-red-500">*</span>
+                                </label>
+                                <select id="id_template_type" 
+                                        name="template_type" 
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                        onchange="handleTemplateTypeChange()"
+                                        required>
+                                    <option value="">Select Type</option>
+                                    <option value="default" {% if form.template_type.value == 'default' %}selected{% endif %}>Default Template</option>
+                                    <option value="council_specific" {% if form.template_type.value == 'council_specific' %}selected{% endif %}>Council Specific</option>
+                                    <option value="designation_specific" {% if form.template_type.value == 'designation_specific' %}selected{% endif %}>Designation Specific</option>
+                                    <option value="custom" {% if form.template_type.value == 'custom' %}selected{% endif %}>Custom Template</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Council Association -->
+                            <div id="council-field">
+                                <label for="id_council" class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="bi bi-building mr-1"></i>
+                                    Associated Council
+                                </label>
+                                <select id="id_council" 
+                                        name="council" 
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="">Universal (All Councils)</option>
+                                    <!-- These would be populated from Council model -->
+                                    <option value="1">CGMP - Christian Gospel Missions</option>
+                                    <option value="2">CEC - Christian Education Council</option>
+                                    <option value="3">CLC - Christian Leadership Council</option>
+                                    <option value="4">CTC - Christian Training Council</option>
+                                </select>
+                                <p class="mt-1 text-xs text-gray-500">Leave blank for universal templates</p>
+                            </div>
+                            
+                            <!-- Description -->
+                            <div class="md:col-span-2">
+                                <label for="id_description" class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="bi bi-text-paragraph mr-1"></i>
+                                    Description
+                                </label>
+                                <textarea id="id_description" 
+                                          name="description" 
+                                          rows="3"
+                                          class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                          placeholder="Describe this template's purpose and design characteristics">{{ form.description.value|default:'' }}</textarea>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Color Scheme -->
+                <div class="bg-white shadow-sm rounded-lg border border-gray-200">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                            <span class="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-full text-sm font-bold mr-3">2</span>
+                            Color Scheme
+                        </h3>
+                        <p class="mt-1 text-sm text-gray-600">Define the color palette for your template</p>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            
+                            <!-- Primary Color -->
+                            <div>
+                                <label for="id_primary_color" class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="bi bi-circle-fill mr-1" style="color: {{ form.primary_color.value|default:'#1f2937' }}"></i>
+                                    Primary Color
+                                </label>
+                                <div class="flex space-x-2">
+                                    <input type="color" 
+                                           id="id_primary_color" 
+                                           name="primary_color" 
+                                           class="w-12 h-10 border border-gray-300 rounded cursor-pointer"
+                                           value="{{ form.primary_color.value|default:'#1f2937' }}"
+                                           onchange="updateColorPreview('primary', this.value)">
+                                    <input type="text" 
+                                           id="primary_color_hex" 
+                                           class="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm font-mono"
+                                           value="{{ form.primary_color.value|default:'#1f2937' }}"
+                                           pattern="^#[0-9A-Fa-f]{6}$"
+                                           placeholder="#1f2937">
+                                </div>
+                                <p class="mt-1 text-xs text-gray-500">Main background color</p>
+                            </div>
+                            
+                            <!-- Secondary Color -->
+                            <div>
+                                <label for="id_secondary_color" class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="bi bi-circle-fill mr-1" style="color: {{ form.secondary_color.value|default:'#6b7280' }}"></i>
+                                    Secondary Color
+                                </label>
+                                <div class="flex space-x-2">
+                                    <input type="color" 
+                                           id="id_secondary_color" 
+                                           name="secondary_color" 
+                                           class="w-12 h-10 border border-gray-300 rounded cursor-pointer"
+                                           value="{{ form.secondary_color.value|default:'#6b7280' }}"
+                                           onchange="updateColorPreview('secondary', this.value)">
+                                    <input type="text" 
+                                           id="secondary_color_hex" 
+                                           class="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm font-mono"
+                                           value="{{ form.secondary_color.value|default:'#6b7280' }}"
+                                           pattern="^#[0-9A-Fa-f]{6}$"
+                                           placeholder="#6b7280">
+                                </div>
+                                <p class="mt-1 text-xs text-gray-500">Secondary elements</p>
+                            </div>
+                            
+                            <!-- Accent Color -->
+                            <div>
+                                <label for="id_accent_color" class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="bi bi-circle-fill mr-1" style="color: {{ form.accent_color.value|default:'#3b82f6' }}"></i>
+                                    Accent Color
+                                </label>
+                                <div class="flex space-x-2">
+                                    <input type="color" 
+                                           id="id_accent_color" 
+                                           name="accent_color" 
+                                           class="w-12 h-10 border border-gray-300 rounded cursor-pointer"
+                                           value="{{ form.accent_color.value|default:'#3b82f6' }}"
+                                           onchange="updateColorPreview('accent', this.value)">
+                                    <input type="text" 
+                                           id="accent_color_hex" 
+                                           class="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm font-mono"
+                                           value="{{ form.accent_color.value|default:'#3b82f6' }}"
+                                           pattern="^#[0-9A-Fa-f]{6}$"
+                                           placeholder="#3b82f6">
+                                </div>
+                                <p class="mt-1 text-xs text-gray-500">Highlights and buttons</p>
+                            </div>
+                            
+                            <!-- Text Color -->
+                            <div>
+                                <label for="id_text_color" class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="bi bi-circle-fill mr-1" style="color: {{ form.text_color.value|default:'#ffffff' }}"></i>
+                                    Text Color
+                                </label>
+                                <div class="flex space-x-2">
+                                    <input type="color" 
+                                           id="id_text_color" 
+                                           name="text_color" 
+                                           class="w-12 h-10 border border-gray-300 rounded cursor-pointer"
+                                           value="{{ form.text_color.value|default:'#ffffff' }}"
+                                           onchange="updateColorPreview('text', this.value)">
+                                    <input type="text" 
+                                           id="text_color_hex" 
+                                           class="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm font-mono"
+                                           value="{{ form.text_color.value|default:'#ffffff' }}"
+                                           pattern="^#[0-9A-Fa-f]{6}$"
+                                           placeholder="#ffffff">
+                                </div>
+                                <p class="mt-1 text-xs text-gray-500">Primary text color</p>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Assets and Images -->
+                <div class="bg-white shadow-sm rounded-lg border border-gray-200">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                            <span class="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-full text-sm font-bold mr-3">3</span>
+                            Assets and Images
+                        </h3>
+                        <p class="mt-1 text-sm text-gray-600">Upload logos and background images for your template</p>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            
+                            <!-- Logo Image -->
+                            <div>
+                                <label for="id_logo_image" class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="bi bi-image mr-1"></i>
+                                    Logo Image
+                                </label>
+                                <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors duration-200">
+                                    {% if form.instance.logo_image %}
+                                    <div class="mb-3">
+                                        <img src="{{ form.instance.logo_image.url }}" 
+                                             class="h-16 w-auto mx-auto rounded border border-gray-200"
+                                             alt="Current logo">
+                                        <p class="text-xs text-gray-600 mt-1">Current logo</p>
+                                    </div>
+                                    {% endif %}
+                                    <input type="file" 
+                                           id="id_logo_image" 
+                                           name="logo_image" 
+                                           class="hidden" 
+                                           accept=".png,.jpg,.jpeg,.svg"
+                                           onchange="handleFileUpload(this, 'logo')">
+                                    <label for="id_logo_image" class="cursor-pointer">
+                                        <i class="bi bi-cloud-upload text-gray-400 text-2xl mb-2"></i>
+                                        <p class="text-sm text-gray-600">Click to upload logo</p>
+                                        <p class="text-xs text-gray-500">PNG, JPG, or SVG (max 2MB)</p>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Background Image -->
+                            <div>
+                                <label for="id_background_image" class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="bi bi-image-fill mr-1"></i>
+                                    Background Image
+                                </label>
+                                <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors duration-200">
+                                    {% if form.instance.background_image %}
+                                    <div class="mb-3">
+                                        <img src="{{ form.instance.background_image.url }}" 
+                                             class="h-16 w-auto mx-auto rounded border border-gray-200"
+                                             alt="Current background">
+                                        <p class="text-xs text-gray-600 mt-1">Current background</p>
+                                    </div>
+                                    {% endif %}
+                                    <input type="file" 
+                                           id="id_background_image" 
+                                           name="background_image" 
+                                           class="hidden" 
+                                           accept=".png,.jpg,.jpeg"
+                                           onchange="handleFileUpload(this, 'background')">
+                                    <label for="id_background_image" class="cursor-pointer">
+                                        <i class="bi bi-cloud-upload text-gray-400 text-2xl mb-2"></i>
+                                        <p class="text-sm text-gray-600">Click to upload background</p>
+                                        <p class="text-xs text-gray-500">PNG or JPG (max 5MB)</p>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Layout Configuration -->
+                <div class="bg-white shadow-sm rounded-lg border border-gray-200">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                            <span class="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-full text-sm font-bold mr-3">4</span>
+                            Layout Configuration
+                        </h3>
+                        <p class="mt-1 text-sm text-gray-600">Customize element positioning and sizing</p>
+                    </div>
+                    <div class="p-6">
+                        
+                        <!-- Layout Presets -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-3">
+                                <i class="bi bi-grid mr-1"></i>
+                                Layout Preset
+                            </label>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                
+                                <button type="button" 
+                                        class="layout-preset p-3 border border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors duration-200"
+                                        onclick="applyLayoutPreset('standard')">
+                                    <div class="text-center">
+                                        <div class="w-full h-16 bg-gray-100 rounded mb-2 relative">
+                                            <div class="absolute top-1 left-1 w-8 h-8 bg-blue-300 rounded"></div>
+                                            <div class="absolute top-1 right-1 w-6 h-6 bg-gray-300 rounded"></div>
+                                            <div class="absolute bottom-1 right-1 w-6 h-6 bg-green-300 rounded"></div>
+                                        </div>
+                                        <span class="text-xs font-medium text-gray-700">Standard Layout</span>
+                                    </div>
+                                </button>
+                                
+                                <button type="button" 
+                                        class="layout-preset p-3 border border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors duration-200"
+                                        onclick="applyLayoutPreset('centered')">
+                                    <div class="text-center">
+                                        <div class="w-full h-16 bg-gray-100 rounded mb-2 relative">
+                                            <div class="absolute top-2 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-blue-300 rounded"></div>
+                                            <div class="absolute bottom-1 left-1 w-6 h-6 bg-gray-300 rounded"></div>
+                                            <div class="absolute bottom-1 right-1 w-6 h-6 bg-green-300 rounded"></div>
+                                        </div>
+                                        <span class="text-xs font-medium text-gray-700">Centered Layout</span>
+                                    </div>
+                                </button>
+                                
+                                <button type="button" 
+                                        class="layout-preset p-3 border border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors duration-200"
+                                        onclick="applyLayoutPreset('minimal')">
+                                    <div class="text-center">
+                                        <div class="w-full h-16 bg-gray-100 rounded mb-2 relative">
+                                            <div class="absolute top-1 left-1 w-6 h-6 bg-blue-300 rounded"></div>
+                                            <div class="absolute bottom-1 right-1 w-6 h-6 bg-green-300 rounded"></div>
+                                        </div>
+                                        <span class="text-xs font-medium text-gray-700">Minimal Layout</span>
+                                    </div>
+                                </button>
+                                
+                            </div>
+                        </div>
+                        
+                        <!-- Advanced Layout Settings -->
+                        <div>
+                            <button type="button" 
+                                    class="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center mb-4"
+                                    onclick="toggleAdvancedLayout()">
+                                <i class="bi bi-chevron-right mr-1 transition-transform duration-200" id="advanced-layout-icon"></i>
+                                Advanced Layout Settings
+                            </button>
+                            
+                            <div class="hidden space-y-4" id="advanced-layout-settings">
+                                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                                    <div class="flex items-center">
+                                        <i class="bi bi-exclamation-triangle text-yellow-600 mr-2"></i>
+                                        <span class="text-sm text-yellow-800">
+                                            Advanced settings require JSON knowledge. Use presets for standard layouts.
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label for="id_layout_config" class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="bi bi-code-square mr-1"></i>
+                                        Layout Configuration (JSON)
+                                    </label>
+                                    <textarea id="id_layout_config" 
+                                              name="layout_config" 
+                                              rows="8"
+                                              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+                                              placeholder='{"card_width": 850, "card_height": 540, "photo_position": {"x": 50, "y": 50}}'>{{ form.layout_config.value|default:'{}' }}</textarea>
+                                    <p class="mt-1 text-xs text-gray-500">
+                                        JSON configuration for element positioning and sizing
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                <!-- Template Settings -->
+                <div class="bg-white shadow-sm rounded-lg border border-gray-200">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                            <span class="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-full text-sm font-bold mr-3">5</span>
+                            Template Settings
+                        </h3>
+                        <p class="mt-1 text-sm text-gray-600">Configure template availability and default status</p>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-4">
+                            
+                            <!-- Template Status -->
+                            <div class="flex items-center space-x-6">
+                                
+                                <div>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" 
+                                               id="id_is_active" 
+                                               name="is_active" 
+                                               class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                               {% if form.instance.is_active or not form.instance.pk %}checked{% endif %}>
+                                        <span class="ml-2 text-sm font-medium text-gray-700">
+                                            <i class="bi bi-toggle-on mr-1"></i>
+                                            Active Template
+                                        </span>
+                                    </label>
+                                    <p class="ml-6 text-xs text-gray-500">Available for card generation</p>
+                                </div>
+                                
+                                <div>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" 
+                                               id="id_is_default" 
+                                               name="is_default" 
+                                               class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                               {% if form.instance.is_default %}checked{% endif %}>
+                                        <span class="ml-2 text-sm font-medium text-gray-700">
+                                            <i class="bi bi-star mr-1"></i>
+                                            Default Template
+                                        </span>
+                                    </label>
+                                    <p class="ml-6 text-xs text-gray-500">Use as default for this council</p>
+                                </div>
+                                
+                            </div>
+                            
+                            <!-- Warning for Default Template -->
+                            <div class="hidden bg-amber-50 border border-amber-200 rounded-lg p-4" id="default-warning">
+                                <div class="flex items-start">
+                                    <i class="bi bi-exclamation-triangle text-amber-600 mr-2 mt-0.5"></i>
+                                    <div class="text-sm text-amber-700">
+                                        <p class="font-medium">Setting as Default Template</p>
+                                        <p class="mt-1">This will replace the current default template for the selected council. Existing cards will not be affected.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Form Actions -->
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+                    <div class="flex space-x-4">
+                        <button type="submit" 
+                                id="save-btn"
+                                class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200">
+                            <i class="bi bi-check-circle mr-2"></i>
+                            <span id="save-btn-text">
+                                {% if form.instance.pk %}Update Template{% else %}Create Template{% endif %}
+                            </span>
+                            <div class="hidden ml-2 loading-spinner">
+                                <i class="bi bi-arrow-clockwise"></i>
+                            </div>
+                        </button>
+                        
+                        <button type="button" 
+                                class="inline-flex items-center px-4 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                                onclick="previewTemplate()">
+                            <i class="bi bi-eye mr-2"></i>
+                            Preview Template
+                        </button>
+                    </div>
+                    
+                    <div class="text-sm text-gray-500">
+                        <i class="bi bi-info-circle mr-1"></i>
+                        Changes will affect future card generations
+                    </div>
+                </div>
+                
+            </form>
+            
+        </div>
+        
+        {% comment %}
+        LIVE PREVIEW SIDEBAR
+        ====================
+        
+        Right sidebar shows real-time preview of the template being designed.
+        Updates as user changes colors, uploads assets, or modifies settings.
+        {% endcomment %}
+        
+        <!-- Live Preview Sidebar -->
+        <div class="lg:col-span-1">
+            
+            <div class="bg-white shadow-sm rounded-lg border border-gray-200 sticky top-6">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                        <i class="bi bi-eye text-blue-600 mr-2"></i>
+                        Live Preview
+                    </h3>
+                    <p class="mt-1 text-sm text-gray-600">Real-time preview of your template</p>
+                </div>
+                <div class="p-6">
+                    
+                    <!-- Card Preview -->
+                    <div class="mb-6">
+                        <div id="card-preview" 
+                             class="w-full h-32 rounded-lg border-2 border-gray-200 relative overflow-hidden"
+                             style="background: linear-gradient(135deg, {{ form.primary_color.value|default:'#1f2937' }}, {{ form.secondary_color.value|default:'#6b7280' }});">
+                            
+                            <!-- Sample Card Content -->
+                            <div class="absolute inset-0 p-3 text-white" style="color: {{ form.text_color.value|default:'#ffffff' }};">
+                                
+                                <!-- Logo Position -->
+                                <div class="absolute top-2 right-2 w-6 h-6 bg-white bg-opacity-20 rounded flex items-center justify-center">
+                                    <i class="bi bi-building text-xs"></i>
+                                </div>
+                                
+                                <!-- Photo Position -->
+                                <div class="absolute top-2 left-2 w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                                    <i class="bi bi-person text-xs"></i>
+                                </div>
+                                
+                                <!-- Sample Text -->
+                                <div class="absolute bottom-2 left-2 text-xs">
+                                    <div class="font-semibold">John Doe</div>
+                                    <div class="text-xs opacity-75">CGMPCAST240001</div>
+                                </div>
+                                
+                                <!-- QR Code Position -->
+                                <div class="absolute bottom-2 right-2 w-6 h-6 bg-white bg-opacity-20 rounded flex items-center justify-center">
+                                    <i class="bi bi-qr-code text-xs"></i>
+                                </div>
+                                
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500 text-center mt-2">Preview updates as you make changes</p>
+                    </div>
+                    
+                    <!-- Color Palette Display -->
+                    <div class="mb-6">
+                        <h4 class="text-sm font-medium text-gray-700 mb-3">Color Palette</h4>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="flex items-center space-x-2">
+                                <div id="primary-color-preview" 
+                                     class="w-4 h-4 rounded border border-gray-300"
+                                     style="background-color: {{ form.primary_color.value|default:'#1f2937' }}"></div>
+                                <span class="text-xs text-gray-600">Primary</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <div id="secondary-color-preview" 
+                                     class="w-4 h-4 rounded border border-gray-300"
+                                     style="background-color: {{ form.secondary_color.value|default:'#6b7280' }}"></div>
+                                <span class="text-xs text-gray-600">Secondary</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <div id="accent-color-preview" 
+                                     class="w-4 h-4 rounded border border-gray-300"
+                                     style="background-color: {{ form.accent_color.value|default:'#3b82f6' }}"></div>
+                                <span class="text-xs text-gray-600">Accent</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <div id="text-color-preview" 
+                                     class="w-4 h-4 rounded border border-gray-300"
+                                     style="background-color: {{ form.text_color.value|default:'#ffffff' }}"></div>
+                                <span class="text-xs text-gray-600">Text</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Template Information -->
+                    <div class="text-sm text-gray-600 space-y-2">
+                        <div class="flex justify-between">
+                            <span>Template Type:</span>
+                            <span id="preview-type" class="text-gray-900">{% if form.instance.pk %}{{ form.instance.get_template_type_display }}{% else %}Not selected{% endif %}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Council:</span>
+                            <span id="preview-council" class="text-gray-900">{% if form.instance.council %}{{ form.instance.council.code }}{% else %}Universal{% endif %}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Status:</span>
+                            <span id="preview-status" class="text-gray-900">
+                                {% if form.instance.is_active or not form.instance.pk %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Color picker enhancements */
+    input[type="color"] {
+        -webkit-appearance: none;
+        border: none;
+        cursor: pointer;
+    }
+    
+    input[type="color"]::-webkit-color-swatch-wrapper {
+        padding: 0;
+    }
+    
+    input[type="color"]::-webkit-color-swatch {
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+    }
+    
+    /* File upload styling */
+    .file-upload-area {
+        transition: all 0.3s ease;
+    }
+    
+    .file-upload-area:hover {
+        border-color: #3b82f6;
+        background-color: #eff6ff;
+    }
+    
+    .file-upload-area.dragover {
+        border-color: #2563eb;
+        background-color: #dbeafe;
+        transform: scale(1.02);
+    }
+    
+    /* Layout preset styling */
+    .layout-preset.selected {
+        border-color: #3b82f6;
+        background-color: #eff6ff;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    /* Live preview animations */
+    #card-preview {
+        transition: all 0.3s ease;
+    }
+    
+    #card-preview.updating {
+        transform: scale(0.95);
+        opacity: 0.7;
+    }
+    
+    /* Form section animations */
+    .form-section {
+        animation: slideInUp 0.5s ease-out;
+    }
+    
+    @keyframes slideInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Enhanced focus states */
+    .form-field:focus {
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        border-color: #3b82f6;
+    }
+    
+    /* Loading animation */
+    .loading-spinner i {
+        animation: spin 1s linear infinite;
+    }
+    
+    /* Sticky sidebar enhancements */
+    .sticky {
+        top: 1.5rem;
+    }
+    
+    @media (max-width: 1024px) {
+        .sticky {
+            position: static;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    /**
+     * Template Form JavaScript
+     * =========================
+     * 
+     * This script handles the interactive template designer functionality,
+     * including live preview updates, color management, and layout configuration.
+     */
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // Initialize template form
+        initializeTemplateForm();
+        
+        // Set up color management
+        setupColorManagement();
+        
+        // Set up file upload handling
+        setupFileUpload();
+        
+        // Set up live preview
+        setupLivePreview();
+        
+        // Set up form validation
+        setupFormValidation();
+        
+    });
+    
+    /**
+     * Initialize template form functionality
+     */
+    function initializeTemplateForm() {
+        
+        // Handle form submission
+        document.getElementById('template-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            handleFormSubmission();
+        });
+        
+        // Set up field change listeners
+        document.querySelectorAll('input, select, textarea').forEach(field => {
+            field.addEventListener('change', updateLivePreview);
+        });
+        
+        // Initial preview update
+        updateLivePreview();
+        
+    }
+    
+    /**
+     * Set up color management functionality
+     */
+    function setupColorManagement() {
+        
+        // Sync color pickers with hex inputs
+        const colorFields = ['primary', 'secondary', 'accent', 'text'];
+        
+        colorFields.forEach(colorType => {
+            const colorPicker = document.getElementById(`id_${colorType}_color`);
+            const hexInput = document.getElementById(`${colorType}_color_hex`);
+            
+            if (colorPicker && hexInput) {
+                // Color picker changes hex input
+                colorPicker.addEventListener('change', function() {
+                    hexInput.value = this.value;
+                    updateColorPreview(colorType, this.value);
+                    updateLivePreview();
+                });
+                
+                // Hex input changes color picker
+                hexInput.addEventListener('change', function() {
+                    if (this.value.match(/^#[0-9A-Fa-f]{6}$/)) {
+                        colorPicker.value = this.value;
+                        updateColorPreview(colorType, this.value);
+                        updateLivePreview();
+                    }
+                });
+            }
+        });
+        
+    }
+    
+    /**
+     * Update color preview elements
+     */
+    function updateColorPreview(colorType, colorValue) {
+        
+        // Update preview swatch
+        const previewElement = document.getElementById(`${colorType}-color-preview`);
+        if (previewElement) {
+            previewElement.style.backgroundColor = colorValue;
+        }
+        
+        // Update icon color in label
+        const labelIcon = document.querySelector(`label[for="id_${colorType}_color"] i`);
+        if (labelIcon) {
+            labelIcon.style.color = colorValue;
+        }
+        
+    }
+    
+    /**
+     * Set up file upload handling with drag and drop
+     */
+    function setupFileUpload() {
+        
+        // Set up drag and drop for file areas
+        const uploadAreas = document.querySelectorAll('.border-dashed');
+        
+        uploadAreas.forEach(area => {
+            
+            area.addEventListener('dragover', function(event) {
+                event.preventDefault();
+                this.classList.add('dragover');
+            });
+            
+            area.addEventListener('dragleave', function(event) {
+                event.preventDefault();
+                this.classList.remove('dragover');
+            });
+            
+            area.addEventListener('drop', function(event) {
+                event.preventDefault();
+                this.classList.remove('dragover');
+                
+                const files = event.dataTransfer.files;
+                if (files.length > 0) {
+                    const fileInput = this.querySelector('input[type="file"]');
+                    if (fileInput) {
+                        fileInput.files = files;
+                        handleFileUpload(fileInput, fileInput.id.includes('logo') ? 'logo' : 'background');
+                    }
+                }
+            });
+            
+        });
+        
+    }
+    
+    /**
+     * Handle file upload with preview
+     */
+    function handleFileUpload(input, type) {
+        
+        const file = input.files[0];
+        if (!file) return;
+        
+        // Validate file type
+        const allowedTypes = type === 'logo' ? 
+            ['image/png', 'image/jpeg', 'image/svg+xml'] : 
+            ['image/png', 'image/jpeg'];
+        
+        if (!allowedTypes.includes(file.type)) {
+            showToast(`Invalid file type for ${type}. Please use ${allowedTypes.join(', ').replace('image/', '').toUpperCase()}.`, 'error');
+            return;
+        }
+        
+        // Validate file size
+        const maxSize = type === 'logo' ? 2 * 1024 * 1024 : 5 * 1024 * 1024; // 2MB for logo, 5MB for background
+        if (file.size > maxSize) {
+            showToast(`File too large. Maximum size is ${Math.round(maxSize / (1024 * 1024))}MB.`, 'error');
+            return;
+        }
+        
+        // Show preview
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const preview = input.parentElement.querySelector('img');
+            if (preview) {
+                preview.src = event.target.result;
+            } else {
+                // Create new preview
+                const previewImg = document.createElement('img');
+                previewImg.src = event.target.result;
+                previewImg.className = 'h-16 w-auto mx-auto rounded border border-gray-200 mb-2';
+                previewImg.alt = `${type} preview`;
+                
+                const uploadIcon = input.parentElement.querySelector('.bi-cloud-upload');
+                if (uploadIcon) {
+                    uploadIcon.parentElement.insertBefore(previewImg, uploadIcon);
+                }
+            }
+            
+            updateLivePreview();
+        };
+        reader.readAsDataURL(file);
+        
+        showToast(`${type.charAt(0).toUpperCase() + type.slice(1)} uploaded successfully`, 'success');
+    }
+    
+    /**
+     * Set up live preview updates
+     */
+    function setupLivePreview() {
+        // Live preview is updated by updateLivePreview function
+    }
+    
+    /**
+     * Update live preview based on current form values
+     */
+    function updateLivePreview() {
+        
+        const cardPreview = document.getElementById('card-preview');
+        if (!cardPreview) return;
+        
+        // Get current color values
+        const primaryColor = document.getElementById('id_primary_color').value;
+        const secondaryColor = document.getElementById('id_secondary_color').value;
+        const textColor = document.getElementById('id_text_color').value;
+        
+        // Update preview background
+        cardPreview.style.background = `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`;
+        
+        // Update text color
+        const textElements = cardPreview.querySelectorAll('div[style*="color"]');
+        textElements.forEach(element => {
+            element.style.color = textColor;
+        });
+        
+        // Update preview info in sidebar
+        updatePreviewInfo();
+        
+        // Add updating animation
+        cardPreview.classList.add('updating');
+        setTimeout(() => {
+            cardPreview.classList.remove('updating');
+        }, 300);
+        
+    }
+    
+    /**
+     * Update preview information in sidebar
+     */
+    function updatePreviewInfo() {
+        
+        // Update template type
+        const templateType = document.getElementById('id_template_type').value;
+        const previewType = document.getElementById('preview-type');
+        if (previewType && templateType) {
+            const typeLabels = {
+                'default': 'Default Template',
+                'council_specific': 'Council Specific',
+                'designation_specific': 'Designation Specific',
+                'custom': 'Custom Template'
+            };
+            previewType.textContent = typeLabels[templateType] || 'Not selected';
+        }
+        
+        // Update council
+        const council = document.getElementById('id_council');
+        const previewCouncil = document.getElementById('preview-council');
+        if (previewCouncil && council) {
+            previewCouncil.textContent = council.options[council.selectedIndex]?.text.split(' - ')[0] || 'Universal';
+        }
+        
+        // Update status
+        const isActive = document.getElementById('id_is_active').checked;
+        const previewStatus = document.getElementById('preview-status');
+        if (previewStatus) {
+            previewStatus.textContent = isActive ? 'Active' : 'Inactive';
+        }
+        
+    }
+    
+    /**
+     * Handle template type changes
+     */
+    function handleTemplateTypeChange() {
+        const templateType = document.getElementById('id_template_type').value;
+        const councilField = document.getElementById('council-field');
+        
+        // Show/hide council field based on type
+        if (templateType === 'council_specific' || templateType === 'designation_specific') {
+            councilField.style.display = 'block';
+        } else {
+            councilField.style.display = 'none';
+        }
+        
+        updateLivePreview();
+    }
+    
+    /**
+     * Apply layout preset
+     */
+    function applyLayoutPreset(presetType) {
+        
+        let layoutConfig = {};
+        
+        switch(presetType) {
+            case 'standard':
+                layoutConfig = {
+                    card_width: 850,
+                    card_height: 540,
+                    photo_position: {x: 50, y: 50},
+                    logo_position: {x: 700, y: 30},
+                    qr_position: {x: 700, y: 400},
+                    photo_size: 120,
+                    logo_size: 80,
+                    qr_size: 100
+                };
+                break;
+            case 'centered':
+                layoutConfig = {
+                    card_width: 850,
+                    card_height: 540,
+                    photo_position: {x: 375, y: 50},
+                    logo_position: {x: 50, y: 450},
+                    qr_position: {x: 700, y: 450},
+                    photo_size: 100,
+                    logo_size: 60,
+                    qr_size: 80
+                };
+                break;
+            case 'minimal':
+                layoutConfig = {
+                    card_width: 850,
+                    card_height: 540,
+                    photo_position: {x: 50, y: 200},
+                    logo_position: {x: 700, y: 50},
+                    qr_position: {x: 700, y: 400},
+                    photo_size: 80,
+                    logo_size: 60,
+                    qr_size: 80
+                };
+                break;
+        }
+        
+        // Update layout config textarea
+        const layoutConfigField = document.getElementById('id_layout_config');
+        if (layoutConfigField) {
+            layoutConfigField.value = JSON.stringify(layoutConfig, null, 2);
+        }
+        
+        // Visual feedback
+        document.querySelectorAll('.layout-preset').forEach(preset => {
+            preset.classList.remove('selected');
+        });
+        event.target.closest('.layout-preset').classList.add('selected');
+        
+        showToast(`Applied ${presetType} layout preset`, 'success');
+        updateLivePreview();
+    }
+    
+    /**
+     * Toggle advanced layout settings
+     */
+    function toggleAdvancedLayout() {
+        const panel = document.getElementById('advanced-layout-settings');
+        const icon = document.getElementById('advanced-layout-icon');
+        
+        panel.classList.toggle('hidden');
+        icon.classList.toggle('rotate-90');
+    }
+    
+    /**
+     * Set up form validation
+     */
+    function setupFormValidation() {
+        
+        // Template name validation
+        document.getElementById('id_name').addEventListener('blur', function() {
+            if (!this.value.trim()) {
+                this.classList.add('border-red-500');
+                showToast('Template name is required', 'error');
+            } else {
+                this.classList.remove('border-red-500');
+                this.classList.add('border-green-500');
+            }
+        });
+        
+        // Color validation
+        document.querySelectorAll('input[pattern="^#[0-9A-Fa-f]{6}$"]').forEach(input => {
+            input.addEventListener('blur', function() {
+                const pattern = /^#[0-9A-Fa-f]{6}$/;
+                if (this.value && !pattern.test(this.value)) {
+                    this.classList.add('border-red-500');
+                    showToast('Invalid hex color format. Use #RRGGBB format.', 'error');
+                } else {
+                    this.classList.remove('border-red-500');
+                }
+            });
+        });
+        
+        // JSON validation for layout config
+        document.getElementById('id_layout_config').addEventListener('blur', function() {
+            if (this.value.trim()) {
+                try {
+                    JSON.parse(this.value);
+                    this.classList.remove('border-red-500');
+                    this.classList.add('border-green-500');
+                } catch (e) {
+                    this.classList.add('border-red-500');
+                    showToast('Invalid JSON format in layout configuration', 'error');
+                }
+            }
+        });
+        
+    }
+    
+    /**
+     * Handle form submission with validation
+     */
+    function handleFormSubmission() {
+        
+        // Validate form
+        if (!validateForm()) {
+            return;
+        }
+        
+        const saveBtn = document.getElementById('save-btn');
+        const saveBtnText = document.getElementById('save-btn-text');
+        const spinner = saveBtn.querySelector('.loading-spinner');
+        
+        // Show loading state
+        saveBtnText.textContent = '{% if form.instance.pk %}Updating...{% else %}Creating...{% endif %}';
+        spinner.classList.remove('hidden');
+        saveBtn.disabled = true;
+        saveBtn.classList.add('opacity-75', 'cursor-not-allowed');
+        
+        showToast('{% if form.instance.pk %}Updating template...{% else %}Creating template...{% endif %}', 'info');
+        
+        // Submit form
+        document.getElementById('template-form').submit();
+    }
+    
+    /**
+     * Validate entire form
+     */
+    function validateForm() {
+        let isValid = true;
+        
+        // Check required fields
+        const requiredFields = document.querySelectorAll('input[required], select[required]');
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                field.classList.add('border-red-500');
+                isValid = false;
+            }
+        });
+        
+        // Validate JSON if provided
+        const layoutConfig = document.getElementById('id_layout_config');
+        if (layoutConfig.value.trim()) {
+            try {
+                JSON.parse(layoutConfig.value);
+            } catch (e) {
+                layoutConfig.classList.add('border-red-500');
+                showToast('Layout configuration contains invalid JSON', 'error');
+                isValid = false;
+            }
+        }
+        
+        if (!isValid) {
+            showToast('Please correct the highlighted fields', 'error');
+        }
+        
+        return isValid;
+    }
+    
+    /**
+     * Preview template functionality
+     */
+    function previewTemplate() {
+        showToast('Opening template preview...', 'info');
+        
+        // In a real implementation, this would:
+        // 1. Collect current form data
+        // 2. Generate preview card with current settings
+        // 3. Open modal or new window with preview
+        // 4. Allow testing with sample data
+        
+        // For now, show current live preview in larger modal
+        const previewData = collectFormData();
+        openPreviewModal(previewData);
+    }
+    
+    /**
+     * Collect current form data
+     */
+    function collectFormData() {
+        return {
+            name: document.getElementById('id_name').value,
+            template_type: document.getElementById('id_template_type').value,
+            primary_color: document.getElementById('id_primary_color').value,
+            secondary_color: document.getElementById('id_secondary_color').value,
+            accent_color: document.getElementById('id_accent_color').value,
+            text_color: document.getElementById('id_text_color').value,
+            layout_config: document.getElementById('id_layout_config').value,
+            is_active: document.getElementById('id_is_active').checked,
+            is_default: document.getElementById('id_is_default').checked
+        };
+    }
+    
+    /**
+     * Open preview modal (placeholder)
+     */
+    function openPreviewModal(previewData) {
+        // Placeholder for preview modal functionality
+        console.log('Preview data:', previewData);
+        showToast('Full preview modal functionality coming soon!', 'info');
+    }
+    
+    /**
+     * Auto-save form data
+     */
+    function autoSaveFormData() {
+        const formData = collectFormData();
+        sessionStorage.setItem('templateFormData', JSON.stringify(formData));
+    }
+    
+    /**
+     * Load saved form data
+     */
+    function loadSavedFormData() {
+        const savedData = sessionStorage.getItem('templateFormData');
+        if (savedData) {
+            try {
+                const formData = JSON.parse(savedData);
+                
+                // Restore form values
+                Object.keys(formData).forEach(key => {
+                    const element = document.getElementById(`id_${key}`);
+                    if (element) {
+                        if (element.type === 'checkbox') {
+                            element.checked = formData[key];
+                        } else {
+                            element.value = formData[key] || '';
+                        }
+                    }
+                });
+                
+                updateLivePreview();
+                showToast('Form data restored from auto-save', 'info');
+                
+            } catch (e) {
+                console.error('Error loading saved form data:', e);
+            }
+        }
+    }
+    
+    /**
+     * Clear auto-saved data
+     */
+    function clearAutoSave() {
+        sessionStorage.removeItem('templateFormData');
+    }
+    
+</script>
+{% endblock %}

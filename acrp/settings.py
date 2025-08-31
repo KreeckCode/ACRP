@@ -302,11 +302,20 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
 FILE_UPLOAD_PERMISSIONS = 0o644
 
+# Download link settings
+DEFAULT_DOWNLOAD_EXPIRY_DAYS = 30
+DEFAULT_MAX_DOWNLOADS = 5
+
+# Base URL for building absolute URLs (important for download links)
+BASE_URL = 'https://kreeck.com'  # Replace with your domain
+DEFAULT_FROM_EMAIL = 'dave@kreeck.com'
+DEFAULT_REPLY_TO_EMAIL = 'ams@acrp.org.za'
+# File and card settings
+MAX_CARD_FILE_SIZE = 5 * 1024 * 1024  # 5MB
+CARD_DEFAULT_FORMAT = 'pdf'
+CARD_IMAGE_DPI = 300
 
 # EMAIL CONFIGURATION - Environment-based email backend
-
-
-
 
 
 # EMAIL CONFIGURATION - Force Mailjet API with debugging
@@ -332,9 +341,7 @@ PASSWORD_RESET_TIMEOUT = 86400  # 24 hours
 EMAIL_LOGGER = logging.getLogger('django.core.mail')
 EMAIL_LOGGER.setLevel(logging.DEBUG)
 
-print(f"EMAIL_BACKEND: {EMAIL_BACKEND}")
-print(f"MAILJET_API_KEY: {config('MAILJET_API_KEY', default='NOT_SET')[:10]}...")
-print(f"DEFAULT_FROM_EMAIL: {DEFAULT_FROM_EMAIL}")
+
 
 
 # INTERNATIONALIZATION AND LOCALIZATION

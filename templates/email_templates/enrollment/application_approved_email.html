@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Approved - ACRP</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+        .email-container {
+            background-color: #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 32px;
+            font-weight: 300;
+        }
+        .header p {
+            margin: 15px 0 0 0;
+            opacity: 0.95;
+            font-size: 18px;
+            font-weight: 500;
+        }
+        .celebration-badge {
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50px;
+            padding: 10px 20px;
+            display: inline-block;
+            margin-top: 15px;
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .content {
+            padding: 30px 25px;
+        }
+        .approval-summary {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border: 1px solid #c3e6cb;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 25px 0;
+            text-align: center;
+        }
+        .approval-summary h3 {
+            margin: 0 0 15px 0;
+            color: #155724;
+            font-size: 20px;
+        }
+        .approval-summary p {
+            margin: 0;
+            color: #155724;
+            font-size: 16px;
+        }
+        .application-details {
+            background-color: #f8f9fa;
+            border-left: 4px solid #28a745;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .application-details h3 {
+            margin: 0 0 15px 0;
+            color: #495057;
+            font-size: 18px;
+        }
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .detail-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: #6c757d;
+        }
+        .detail-value {
+            color: #495057;
+            text-align: right;
+            max-width: 60%;
+            font-weight: 500;
+        }
+        .card-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 25px 0;
+            text-align: center;
+        }
+        .card-info h3 {
+            margin: 0 0 15px 0;
+            font-size: 20px;
+            font-weight: 500;
+        }
+        .card-info p {
+            margin: 10px 0;
+            opacity: 0.95;
+        }
+        .card-links {
+            margin-top: 20px;
+        }
+        .card-link {
+            display: inline-block;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            margin: 5px 10px;
+            font-weight: 600;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        .card-link:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            color: white;
+            text-decoration: none;
+        }
+        .next-steps {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        .next-steps h3 {
+            margin: 0 0 15px 0;
+            color: #856404;
+            font-size: 18px;
+        }
+        .steps-list {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .steps-list li {
+            margin-bottom: 10px;
+            color: #856404;
+            font-weight: 500;
+        }
+        .verification-info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        .verification-info h3 {
+            margin: 0 0 15px 0;
+            color: #0c5460;
+            font-size: 18px;
+        }
+        .verification-info p {
+            margin: 10px 0;
+            color: #0c5460;
+        }
+        .verification-link {
+            display: inline-block;
+            background-color: #17a2b8;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: 600;
+        }
+        .verification-link:hover {
+            background-color: #138496;
+            color: white;
+            text-decoration: none;
+        }
+        .contact-info {
+            background-color: #e2e3e5;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+            text-align: center;
+        }
+        .contact-info h3 {
+            margin: 0 0 15px 0;
+            color: #383d41;
+        }
+        .contact-info p {
+            margin: 5px 0;
+            color: #383d41;
+        }
+        .footer {
+            background-color: #343a40;
+            color: #adb5bd;
+            padding: 25px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .footer p {
+            margin: 5px 0;
+        }
+        .footer a {
+            color: #28a745;
+            text-decoration: none;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        .status-badge {
+            display: inline-block;
+            background-color: #28a745;
+            color: white;
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        @media (max-width: 600px) {
+            .email-container {
+                margin: 10px;
+                border-radius: 5px;
+            }
+            .header, .content {
+                padding: 20px 15px;
+            }
+            .detail-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .detail-value {
+                text-align: left;
+                max-width: 100%;
+                margin-top: 5px;
+            }
+            .card-link {
+                display: block;
+                margin: 10px 0;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header Section -->
+        <div class="header">
+            <h1>Congratulations!</h1>
+            <p>Your ACRP Application Has Been Approved</p>
+            <div class="celebration-badge">Welcome to ACRP!</div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="content">
+            <div class="approval-summary">
+                <h3>🎉 Application Approved Successfully! 🎉</h3>
+                <p>Welcome to the Association of Construction Resource Professionals community!</p>
+            </div>
+
+            <p>Dear {{ applicant_name }},</p>
+            
+            <p>We are delighted to inform you that your application for ACRP membership has been <strong>approved</strong>! After careful review of your qualifications and supporting documents, we are pleased to welcome you to our professional community.</p>
+
+            <!-- Application Details -->
+            <div class="application-details">
+                <h3>Application Details</h3>
+                <div class="detail-item">
+                    <span class="detail-label">Application Number:</span>
+                    <span class="detail-value"><strong>{{ application_number }}</strong></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Affiliation Type:</span>
+                    <span class="detail-value">{{ affiliation_type.name }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Council:</span>
+                    <span class="detail-value">{{ council.name }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Status:</span>
+                    <span class="detail-value"><span class="status-badge">Approved</span></span>
+                </div>
+            </div>
+
+            <!-- Digital Card Information -->
+            <div class="card-info">
+                <h3>📱 Your Digital Affiliation Card</h3>
+                <p>As an approved member, you will receive your digital affiliation card via email shortly. This card serves as your official proof of ACRP membership.</p>
+                <p><strong>Keep an eye on your inbox for your digital card!</strong></p>
+                
+                <div class="card-links">
+                    <a href="{{ request.scheme }}://{{ request.get_host }}{% url 'affiliationcard:verify_lookup' %}" class="card-link">
+                        🔍 Card Verification Portal
+                    </a>
+                </div>
+            </div>
+
+            <!-- Next Steps -->
+            <div class="next-steps">
+                <h3>What Happens Next?</h3>
+                <ol class="steps-list">
+                    <li><strong>Digital Card Delivery:</strong> Your official digital affiliation card will be sent to this email address within the next few hours</li>
+                    <li><strong>Save Your Card:</strong> Download and save the PDF card to your device for easy access</li>
+                    <li><strong>Print if Needed:</strong> You can print a physical copy of your card for your records</li>
+                    <li><strong>Start Using Benefits:</strong> Begin enjoying all the benefits and privileges of ACRP membership</li>
+                    <li><strong>Stay Connected:</strong> Watch for important updates and communications from ACRP</li>
+                </ol>
+            </div>
+
+            <!-- Verification Information -->
+            <div class="verification-info">
+                <h3>Card Verification & Public Directory</h3>
+                <p>Once you receive your digital card, anyone can verify your membership status using:</p>
+                <ul>
+                    <li><strong>QR Code:</strong> The QR code on your digital card provides instant verification</li>
+                    <li><strong>Card Number:</strong> Your unique card number can be used for manual verification</li>
+                    <li><strong>Online Portal:</strong> Our public verification system is available 24/7</li>
+                </ul>
+                <p>Share these verification options with colleagues, employers, or clients who need to confirm your ACRP membership status.</p>
+                
+                <a href="{{ request.scheme }}://{{ request.get_host }}{% url 'affiliationcard:verify_lookup' %}" class="verification-link">
+                    Access Verification Portal
+                </a>
+            </div>
+
+            <p>Your membership in ACRP represents your commitment to professional excellence in the construction resource industry. We are excited to have you as part of our community and look forward to supporting your professional growth.</p>
+
+            <p>If you have any questions about your membership or need assistance with your digital card, please don't hesitate to contact our support team.</p>
+
+            <!-- Contact Information -->
+            <div class="contact-info">
+                <h3>Need Support?</h3>
+                <p><strong>Email:</strong> ams@acrp.org.za</p>
+                <p><strong>Phone:</strong> (+27) 065 214 1536</p>
+                <p><strong>Hours:</strong> Monday - Friday, 9:00 AM - 5:00 PM EST</p>
+            </div>
+
+            <p>Once again, congratulations on your successful application and welcome to ACRP!</p>
+            
+            <p>Best regards,<br>
+            <strong>The ACRP Team</strong><br>
+            Association of Construction Resource Professionals</p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>ACRP Portal</strong> - Association of Construction Resource Professionals</p>
+            <p>&copy; {{ current_year }} ACRP. All rights reserved.</p>
+            <p>This is an automated message. Please do not reply directly to this email.</p>
+            <p>For support, please contact: <a href="mailto:ams@acrp.org.za">ams@acrp.org.za</a></p>
+        </div>
+    </div>
+</body>
+</html>

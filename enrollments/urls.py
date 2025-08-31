@@ -4,6 +4,7 @@ from . import views
 
 app_name = 'enrollments'
 
+
 urlpatterns = [
     
     path('onboarding/', views.onboarding_start, name='onboarding_start'),

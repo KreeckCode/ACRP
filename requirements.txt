@@ -117,3 +117,4 @@ webencodings
 whitenoise
 Whoosh
 django-anymail
+mailjet-rest

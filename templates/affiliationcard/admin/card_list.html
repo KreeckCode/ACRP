@@ -1,0 +1,1220 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% comment %}
+ACRP Affiliation Card List Template
+===================================
+
+This template provides a comprehensive listing and management interface for all
+affiliation cards in the system. It supports advanced filtering, search,
+bulk operations, and detailed card information display.
+
+Template Features:
+- Advanced search and filtering system
+- Pagination for large datasets
+- Bulk selection and operations
+- Responsive table design with mobile-friendly cards
+- Real-time status indicators
+- Export and download capabilities
+- Accessibility-compliant design
+
+View Integration:
+- Works with CardListView class-based view
+- Supports all filter parameters (search, status, council, affiliation_type)
+- Handles pagination context
+- Displays filter choices from context
+
+Data Context (from CardListView):
+- cards: Paginated queryset of AffiliationCard objects
+- status_choices: Available card status options
+- council_choices: Available council options  
+- affiliation_type_choices: Available affiliation type options
+- search_query, selected_status, selected_council, selected_affiliation_type: Current filter values
+
+Design Philosophy:
+- Information-dense but scannable layout
+- Progressive disclosure of card details
+- Batch operations for administrative efficiency
+- Mobile-first responsive design
+- Clear visual hierarchy and status communication
+{% endcomment %}
+
+{% block title %}Affiliation Cards - ACRP{% endblock %}
+
+{% block meta_description %}Browse and manage all ACRP digital affiliation cards with advanced filtering, search, and bulk operations.{% endblock %}
+
+{% block page_title %}Affiliation Cards{% endblock %}
+
+{% block page_description %}Browse, search, and manage all digital affiliation cards{% endblock %}
+
+{% block page_header %}
+<div class="mb-8">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 flex items-center">
+                <i class="bi bi-credit-card text-blue-600 mr-3"></i>
+                Affiliation Cards
+                {% if cards %}
+                <span class="ml-3 text-lg font-normal text-gray-500">
+                    ({{ cards|length }} of {{ cards.paginator.count }} cards)
+                </span>
+                {% endif %}
+            </h1>
+            <p class="mt-2 text-sm text-gray-600">
+                Manage and monitor all digital affiliation cards across councils
+            </p>
+        </div>
+        <div class="mt-4 lg:mt-0 flex space-x-3">
+            <a href="{% url 'affiliationcard:dashboard' %}" 
+               class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200">
+                <i class="bi bi-speedometer2 mr-2"></i>
+                Dashboard
+            </a>
+            <button type="button" 
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200"
+                    onclick="toggleBulkMode()">
+                <i class="bi bi-check-square mr-2"></i>
+                <span id="bulk-mode-text">Bulk Actions</span>
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    
+    {% comment %}
+    SEARCH AND FILTER SECTION
+    ==========================
+    
+    Comprehensive filtering interface allowing users to find specific cards
+    based on multiple criteria. Uses GET parameters to maintain filter state.
+    {% endcomment %}
+    
+    <!-- Search and Filter Bar -->
+    <div class="bg-white shadow-sm rounded-lg border border-gray-200">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                <i class="bi bi-funnel text-gray-500 mr-2"></i>
+                Search & Filter Cards
+            </h3>
+        </div>
+        <div class="p-6">
+            <form method="get" class="space-y-4" id="filter-form">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    
+                    <!-- Search Field -->
+                    <div class="lg:col-span-2">
+                        <label for="search" class="block text-sm font-medium text-gray-700 mb-1">
+                            <i class="bi bi-search mr-1"></i>
+                            Search Cards
+                        </label>
+                        <input type="text" 
+                               id="search" 
+                               name="search" 
+                               value="{{ search_query }}"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                               placeholder="Card number, name, email, or surname...">
+                        <p class="mt-1 text-xs text-gray-500">Search by card number, affiliate name, surname, or email</p>
+                    </div>
+                    
+                    <!-- Status Filter -->
+                    <div>
+                        <label for="status" class="block text-sm font-medium text-gray-700 mb-1">
+                            <i class="bi bi-flag mr-1"></i>
+                            Status
+                        </label>
+                        <select id="status" 
+                                name="status" 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
+                            <option value="">All Statuses</option>
+                            {% for value, label in status_choices %}
+                            <option value="{{ value }}" {% if value == selected_status %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Council Filter -->
+                    <div>
+                        <label for="council" class="block text-sm font-medium text-gray-700 mb-1">
+                            <i class="bi bi-building mr-1"></i>
+                            Council
+                        </label>
+                        <select id="council" 
+                                name="council" 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
+                            <option value="">All Councils</option>
+                            {% for council_code, council_name in council_choices %}
+                            <option value="{{ council_code }}" {% if council_code == selected_council %}selected{% endif %}>
+                                {{ council_code }} - {{ council_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                </div>
+                
+                <!-- Second Row of Filters -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    
+                    <!-- Affiliation Type Filter -->
+                    <div>
+                        <label for="affiliation_type" class="block text-sm font-medium text-gray-700 mb-1">
+                            <i class="bi bi-person-badge mr-1"></i>
+                            Affiliation Type
+                        </label>
+                        <select id="affiliation_type" 
+                                name="affiliation_type" 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
+                            <option value="">All Types</option>
+                            {% for affiliation_type, _ in affiliation_type_choices %}
+                            <option value="{{ affiliation_type }}" {% if affiliation_type == selected_affiliation_type %}selected{% endif %}>
+                                {{ affiliation_type|title }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="md:col-span-2 flex items-end space-x-2">
+                        <button type="submit" 
+                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                            <i class="bi bi-funnel mr-2"></i>
+                            Apply Filters
+                        </button>
+                        <a href="{% url 'affiliationcard:card_list' %}" 
+                           class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                            <i class="bi bi-x-circle mr-2"></i>
+                            Clear
+                        </a>
+                        <button type="button" 
+                                class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                                onclick="exportResults()">
+                            <i class="bi bi-download mr-2"></i>
+                            Export
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    {% comment %}
+    BULK OPERATIONS PANEL
+    =====================
+    
+    Hidden panel that appears when bulk mode is activated.
+    Allows administrators to perform operations on multiple cards simultaneously.
+    {% endcomment %}
+    
+    <!-- Bulk Operations Panel (Hidden by default) -->
+    <div class="hidden bg-amber-50 border border-amber-200 rounded-lg p-4" id="bulk-operations-panel">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <i class="bi bi-check-square text-amber-600 mr-2"></i>
+                <span class="text-sm font-medium text-amber-800">
+                    <span id="selected-count">0</span> cards selected
+                </span>
+            </div>
+            <div class="flex space-x-2">
+                <button type="button" 
+                        class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700"
+                        onclick="bulkOperation('issue')">
+                    <i class="bi bi-play-circle mr-1"></i>
+                    Issue Selected
+                </button>
+                <button type="button" 
+                        class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-white bg-yellow-600 hover:bg-yellow-700"
+                        onclick="bulkOperation('suspend')">
+                    <i class="bi bi-pause-circle mr-1"></i>
+                    Suspend Selected
+                </button>
+                <button type="button" 
+                        class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-white bg-blue-600 hover:bg-blue-700"
+                        onclick="bulkOperation('email')">
+                    <i class="bi bi-envelope mr-1"></i>
+                    Email Selected
+                </button>
+                <button type="button" 
+                        class="inline-flex items-center px-3 py-1 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50"
+                        onclick="clearSelection()">
+                    Clear Selection
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    {% comment %}
+    CARD LISTING SECTION
+    ====================
+    
+    Main content area displaying cards in a responsive table/card layout.
+    Includes detailed information, status indicators, and action buttons.
+    {% endcomment %}
+    
+    <!-- Card Listing -->
+    <div class="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
+        
+        <!-- Table Header with Sort Options -->
+        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="hidden" id="bulk-select-all">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="select-all-cards" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            <span class="ml-2 text-sm text-gray-700">Select All</span>
+                        </label>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900">
+                        {% if cards %}
+                            {{ cards.paginator.count }} Card{{ cards.paginator.count|pluralize }}
+                        {% else %}
+                            No Cards Found
+                        {% endif %}
+                    </h3>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <!-- View Toggle -->
+                    <div class="flex border border-gray-300 rounded-md">
+                        <button type="button" 
+                                class="px-3 py-1 text-xs font-medium rounded-l-md bg-blue-600 text-white border-r border-blue-700" 
+                                id="table-view-btn"
+                                onclick="switchView('table')">
+                            <i class="bi bi-table"></i>
+                        </button>
+                        <button type="button" 
+                                class="px-3 py-1 text-xs font-medium rounded-r-md bg-white text-gray-700 hover:bg-gray-50" 
+                                id="card-view-btn"
+                                onclick="switchView('cards')">
+                            <i class="bi bi-grid-3x3"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {% if cards %}
+        
+        {% comment %}
+        TABLE VIEW
+        ==========
+        
+        Primary view showing cards in a responsive table format.
+        Includes all essential information with inline actions.
+        {% endcomment %}
+        
+        <!-- Table View -->
+        <div id="table-view" class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <!-- Bulk Selection Column (Hidden by default) -->
+                        <th scope="col" class="hidden bulk-select-column px-6 py-3 text-left">
+                            <span class="sr-only">Select</span>
+                        </th>
+                        
+                        <!-- Card Number -->
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <a href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.council %}council={{ request.GET.council }}&{% endif %}sort=card_number" 
+                               class="flex items-center hover:text-gray-700">
+                                Card Number
+                                <i class="bi bi-chevron-expand ml-1 text-xs"></i>
+                            </a>
+                        </th>
+                        
+                        <!-- Affiliate Information -->
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Affiliate Information
+                        </th>
+                        
+                        <!-- Council & Type -->
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Council & Type
+                        </th>
+                        
+                        <!-- Status -->
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                        </th>
+                        
+                        <!-- Dates -->
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Issue / Expiry
+                        </th>
+                        
+                        <!-- Verifications -->
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Verifications
+                        </th>
+                        
+                        <!-- Actions -->
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for card in cards %}
+                    <tr class="hover:bg-gray-50 transition-colors duration-150" data-card-id="{{ card.id }}">
+                        
+                        <!-- Bulk Selection Checkbox (Hidden by default) -->
+                        <td class="hidden bulk-select-column px-6 py-4">
+                            <input type="checkbox" 
+                                   class="card-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                                   value="{{ card.id }}"
+                                   data-card-number="{{ card.card_number }}">
+                        </td>
+                        
+                        <!-- Card Number -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">
+                                <a href="{% url 'affiliationcard:card_detail' pk=card.pk %}" 
+                                   class="hover:text-blue-600 transition-colors duration-150">
+                                    {{ card.card_number }}
+                                </a>
+                            </div>
+                            <div class="text-xs text-gray-500">
+                                Created {{ card.created_at|timesince }} ago
+                            </div>
+                        </td>
+                        
+                        <!-- Affiliate Information -->
+                        <td class="px-6 py-4">
+                            <div class="flex items-center">
+                                {% if card.affiliate_photo %}
+                                <div class="flex-shrink-0 h-10 w-10">
+                                    <img class="h-10 w-10 rounded-full object-cover" 
+                                         src="{{ card.affiliate_photo.url }}" 
+                                         alt="{{ card.get_display_name }}">
+                                </div>
+                                {% else %}
+                                <div class="flex-shrink-0 h-10 w-10 bg-gray-300 rounded-full flex items-center justify-center">
+                                    <i class="bi bi-person text-gray-600"></i>
+                                </div>
+                                {% endif %}
+                                <div class="ml-3">
+                                    <div class="text-sm font-medium text-gray-900">
+                                        {{ card.get_display_name }}
+                                    </div>
+                                    <div class="text-sm text-gray-500">
+                                        {{ card.affiliate_email }}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        
+                        <!-- Council & Type -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ card.council_code }}</div>
+                            <div class="text-sm text-gray-500">{{ card.affiliation_type|title }}</div>
+                        </td>
+                        
+                        <!-- Status -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if card.status == 'active' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <i class="bi bi-check-circle mr-1"></i>
+                                Active
+                            </span>
+                            {% elif card.status == 'pending_assignment' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                <i class="bi bi-clock mr-1"></i>
+                                Pending
+                            </span>
+                            {% elif card.status == 'assigned' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                <i class="bi bi-bookmark mr-1"></i>
+                                Assigned
+                            </span>
+                            {% elif card.status == 'expired' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                <i class="bi bi-exclamation-triangle mr-1"></i>
+                                Expired
+                            </span>
+                            {% elif card.status == 'suspended' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                <i class="bi bi-pause-circle mr-1"></i>
+                                Suspended
+                            </span>
+                            {% elif card.status == 'revoked' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                <i class="bi bi-x-circle mr-1"></i>
+                                Revoked
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                {{ card.get_status_display }}
+                            </span>
+                            {% endif %}
+                        </td>
+                        
+                        <!-- Dates -->
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <div class="space-y-1">
+                                {% if card.date_issued %}
+                                <div class="flex items-center">
+                                    <i class="bi bi-calendar-check text-green-600 mr-1"></i>
+                                    {{ card.date_issued|date:"M d, Y" }}
+                                </div>
+                                {% endif %}
+                                {% if card.date_expires %}
+                                <div class="flex items-center">
+                                    <i class="bi bi-calendar-x text-red-600 mr-1"></i>
+                                    {{ card.date_expires|date:"M d, Y" }}
+                                    {% with days=card.days_until_expiry %}
+                                    {% if days is not None %}
+                                        {% if days > 0 %}
+                                        <span class="ml-1 text-xs text-orange-600">({{ days }} days)</span>
+                                        {% elif days == 0 %}
+                                        <span class="ml-1 text-xs text-red-600">(Today)</span>
+                                        {% else %}
+                                        <span class="ml-1 text-xs text-red-600">({% if days < 0 %}{{ days|slice:"1:" }}{% else %}0{% endif %} days ago)</span>
+                                        {% endif %}
+                                    {% endif %}
+                                    {% endwith %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </td>
+                        
+                        <!-- Verifications -->
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <div class="text-center">
+                                <div class="text-lg font-semibold text-gray-900">{{ card.total_verifications }}</div>
+                                <div class="text-xs text-gray-500">
+                                    {% if card.last_verified_at %}
+                                    Last: {{ card.last_verified_at|timesince }} ago
+                                    {% else %}
+                                    Never verified
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        
+                        <!-- Actions -->
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div class="flex items-center justify-end space-x-2">
+                                
+                                <!-- View Details -->
+                                <a href="{% url 'affiliationcard:card_detail' pk=card.pk %}" 
+                                   class="text-blue-600 hover:text-blue-700 transition-colors duration-150"
+                                   title="View Details">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                
+                                {% if card.status == 'assigned' %}
+                                <!-- Issue Card -->
+                                <button type="button" 
+                                        class="text-green-600 hover:text-green-700 transition-colors duration-150"
+                                        onclick="quickAction('issue', '{{ card.id }}', '{{ card.card_number }}')"
+                                        title="Issue Card">
+                                    <i class="bi bi-play-circle"></i>
+                                </button>
+                                {% endif %}
+                                
+                                {% if card.status == 'active' %}
+                                <!-- Send Card -->
+                                <a href="{% url 'affiliationcard:send_card' pk=card.pk %}" 
+                                   class="text-purple-600 hover:text-purple-700 transition-colors duration-150"
+                                   title="Send Card">
+                                    <i class="bi bi-send"></i>
+                                </a>
+                                {% endif %}
+                                
+                                <!-- Quick Actions Dropdown -->
+                                <div class="relative">
+                                    <button type="button" 
+                                            class="text-gray-400 hover:text-gray-600 transition-colors duration-150"
+                                            onclick="toggleCardActions('{{ card.id }}')"
+                                            title="More Actions">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                    <div class="hidden absolute right-0 z-10 mt-1 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5" 
+                                         id="card-actions-{{ card.id }}">
+                                        <div class="py-1">
+                                            {% if card.status == 'active' %}
+                                            <button type="button" 
+                                                    class="block w-full text-left px-4 py-2 text-sm text-yellow-700 hover:bg-yellow-50"
+                                                    onclick="quickAction('suspend', '{{ card.id }}', '{{ card.card_number }}')">
+                                                <i class="bi bi-pause-circle mr-2"></i>Suspend Card
+                                            </button>
+                                            {% endif %}
+                                            {% if card.status == 'suspended' %}
+                                            <button type="button" 
+                                                    class="block w-full text-left px-4 py-2 text-sm text-green-700 hover:bg-green-50"
+                                                    onclick="quickAction('reactivate', '{{ card.id }}', '{{ card.card_number }}')">
+                                                <i class="bi bi-play-circle mr-2"></i>Reactivate Card
+                                            </button>
+                                            {% endif %}
+                                            <button type="button" 
+                                                    class="block w-full text-left px-4 py-2 text-sm text-blue-700 hover:bg-blue-50"
+                                                    onclick="quickAction('regenerate', '{{ card.id }}', '{{ card.card_number }}')">
+                                                <i class="bi bi-arrow-clockwise mr-2"></i>Regenerate Token
+                                            </button>
+                                            <a href="{% url 'affiliationcard:verify_lookup' %}?card_number={{ card.card_number }}" 
+                                               target="_blank"
+                                               class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                                <i class="bi bi-shield-check mr-2"></i>Verify Card
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% comment %}
+        CARD VIEW (MOBILE-FRIENDLY)
+        ============================
+        
+        Alternative view showing cards in a grid layout.
+        More suitable for mobile devices and visual browsing.
+        {% endcomment %}
+        
+        <!-- Card View (Hidden by default) -->
+        <div id="card-view" class="hidden p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for card in cards %}
+                <div class="bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow duration-200" 
+                     data-card-id="{{ card.id }}">
+                    
+                    <!-- Card Header -->
+                    <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
+                        <div class="flex items-center justify-between">
+                            <div class="hidden bulk-select-column">
+                                <input type="checkbox" 
+                                       class="card-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                                       value="{{ card.id }}">
+                            </div>
+                            <div class="text-sm font-medium text-gray-900">
+                                {{ card.card_number }}
+                            </div>
+                            <div>
+                                {% if card.status == 'active' %}
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    Active
+                                </span>
+                                {% elif card.status == 'pending_assignment' %}
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                    Pending
+                                </span>
+                                {% elif card.status == 'assigned' %}
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    Assigned
+                                </span>
+                                {% else %}
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                    {{ card.get_status_display }}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Card Content -->
+                    <div class="p-4">
+                        <div class="flex items-center mb-3">
+                            {% if card.affiliate_photo %}
+                            <img class="h-12 w-12 rounded-full object-cover" 
+                                 src="{{ card.affiliate_photo.url }}" 
+                                 alt="{{ card.get_display_name }}">
+                            {% else %}
+                            <div class="h-12 w-12 bg-gray-300 rounded-full flex items-center justify-center">
+                                <i class="bi bi-person text-gray-600"></i>
+                            </div>
+                            {% endif %}
+                            <div class="ml-3 flex-1 min-w-0">
+                                <p class="text-sm font-medium text-gray-900 truncate">
+                                    {{ card.get_display_name }}
+                                </p>
+                                <p class="text-sm text-gray-500 truncate">
+                                    {{ card.council_code }} • {{ card.affiliation_type|title }}
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <!-- Card Details -->
+                        <div class="space-y-2 text-sm">
+                            {% if card.date_issued %}
+                            <div class="flex items-center text-gray-600">
+                                <i class="bi bi-calendar-check mr-2 text-green-600"></i>
+                                Issued: {{ card.date_issued|date:"M d, Y" }}
+                            </div>
+                            {% endif %}
+                            {% if card.date_expires %}
+                            <div class="flex items-center text-gray-600">
+                                <i class="bi bi-calendar-x mr-2 text-red-600"></i>
+                                Expires: {{ card.date_expires|date:"M d, Y" }}
+                            </div>
+                            {% endif %}
+                            <div class="flex items-center text-gray-600">
+                                <i class="bi bi-shield-check mr-2 text-blue-600"></i>
+                                {{ card.total_verifications }} verification{{ card.total_verifications|pluralize }}
+                            </div>
+                        </div>
+                        
+                        <!-- Card Actions -->
+                        <div class="mt-4 flex space-x-2">
+                            <a href="{% url 'affiliationcard:card_detail' pk=card.pk %}" 
+                               class="flex-1 text-center px-3 py-2 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                View Details
+                            </a>
+                            {% if card.status == 'assigned' %}
+                            <button type="button" 
+                                    class="flex-1 text-center px-3 py-2 border border-transparent text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
+                                    onclick="quickAction('issue', '{{ card.id }}', '{{ card.card_number }}')">
+                                Issue Card
+                            </button>
+                            {% elif card.status == 'active' %}
+                            <a href="{% url 'affiliationcard:send_card' pk=card.pk %}" 
+                               class="flex-1 text-center px-3 py-2 border border-transparent text-xs font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700">
+                                Send Card
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        {% else %}
+        
+        {% comment %}
+        EMPTY STATE
+        ===========
+        
+        Displayed when no cards match the current filters.
+        Provides helpful guidance and quick actions to resolve the situation.
+        {% endcomment %}
+        
+        <div class="text-center py-12">
+            <div class="mx-auto h-24 w-24 text-gray-400 mb-4">
+                <i class="bi bi-credit-card text-6xl"></i>
+            </div>
+            <h3 class="mt-2 text-lg font-medium text-gray-900">No cards found</h3>
+            
+            {% if search_query or selected_status or selected_council or selected_affiliation_type %}
+            <p class="mt-1 text-sm text-gray-500 mb-6">
+                No cards match your current filters. Try adjusting your search criteria.
+            </p>
+            <div class="flex justify-center space-x-3">
+                <a href="{% url 'affiliationcard:card_list' %}" 
+                   class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+                    <i class="bi bi-x-circle mr-2"></i>
+                    Clear Filters
+                </a>
+                <button type="button" 
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                        onclick="document.getElementById('search').focus()">
+                    <i class="bi bi-search mr-2"></i>
+                    Modify Search
+                </button>
+            </div>
+            {% else %}
+            <p class="mt-1 text-sm text-gray-500 mb-6">
+                No affiliation cards have been created yet.
+            </p>
+            <div class="flex justify-center">
+                <a href="{% url 'enrollments:enrollment_dashboard' %}" 
+                   class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+                    <i class="bi bi-plus mr-2"></i>
+                    Review Pending Applications
+                </a>
+            </div>
+            {% endif %}
+        </div>
+        
+        {% endif %}
+        
+    </div>
+    
+    {% comment %}
+    PAGINATION SECTION
+    ==================
+    
+    Standard Django pagination with enhanced styling and navigation.
+    Shows current page info and provides easy navigation.
+    {% endcomment %}
+    
+    <!-- Pagination -->
+    {% if cards.has_other_pages %}
+    <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 rounded-lg border border-gray-200">
+        <div class="flex-1 flex justify-between sm:hidden">
+            {% if cards.has_previous %}
+            <a href="?page={{ cards.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.council %}&council={{ request.GET.council }}{% endif %}{% if request.GET.affiliation_type %}&affiliation_type={{ request.GET.affiliation_type }}{% endif %}" 
+               class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                Previous
+            </a>
+            {% endif %}
+            {% if cards.has_next %}
+            <a href="?page={{ cards.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.council %}&council={{ request.GET.council }}{% endif %}{% if request.GET.affiliation_type %}&affiliation_type={{ request.GET.affiliation_type }}{% endif %}" 
+               class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                Next
+            </a>
+            {% endif %}
+        </div>
+        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+            <div>
+                <p class="text-sm text-gray-700">
+                    Showing <span class="font-medium">{{ cards.start_index }}</span> to <span class="font-medium">{{ cards.end_index }}</span> of <span class="font-medium">{{ cards.paginator.count }}</span> results
+                </p>
+            </div>
+            <div>
+                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                    
+                    {% if cards.has_previous %}
+                    <a href="?page={{ cards.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.council %}&council={{ request.GET.council }}{% endif %}{% if request.GET.affiliation_type %}&affiliation_type={{ request.GET.affiliation_type }}{% endif %}" 
+                       class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                    {% endif %}
+                    
+                    {% for num in cards.paginator.page_range %}
+                        {% if num == cards.number %}
+                        <span class="relative inline-flex items-center px-4 py-2 border border-blue-500 bg-blue-50 text-sm font-medium text-blue-600">
+                            {{ num }}
+                        </span>
+                        {% elif num > cards.number|add:'-3' and num < cards.number|add:'3' %}
+                        <a href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.council %}&council={{ request.GET.council }}{% endif %}{% if request.GET.affiliation_type %}&affiliation_type={{ request.GET.affiliation_type }}{% endif %}" 
+                           class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                            {{ num }}
+                        </a>
+                        {% elif num == cards.paginator.page_range.0 or num == cards.paginator.page_range|last %}
+                        <a href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.council %}&council={{ request.GET.council }}{% endif %}{% if request.GET.affiliation_type %}&affiliation_type={{ request.GET.affiliation_type }}{% endif %}" 
+                           class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                            {{ num }}
+                        </a>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if cards.has_next %}
+                    <a href="?page={{ cards.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.council %}&council={{ request.GET.council }}{% endif %}{% if request.GET.affiliation_type %}&affiliation_type={{ request.GET.affiliation_type }}{% endif %}" 
+                       class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                    {% endif %}
+                    
+                </nav>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Enhanced table styling */
+    .hover-row:hover {
+        background-color: #f9fafb;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Bulk selection styling */
+    .bulk-mode .bulk-select-column {
+        display: table-cell !important;
+    }
+    
+    .bulk-mode #bulk-select-all {
+        display: block !important;
+    }
+    
+    .bulk-mode #bulk-operations-panel {
+        display: block !important;
+    }
+    
+    /* Card view animations */
+    .card-enter {
+        animation: slideInUp 0.3s ease-out;
+    }
+    
+    @keyframes slideInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Status indicator animations */
+    .status-badge {
+        transition: all 0.2s ease-in-out;
+    }
+    
+    .status-badge:hover {
+        transform: scale(1.05);
+    }
+    
+    /* Table row selection highlighting */
+    tr.selected {
+        background-color: #eff6ff !important;
+        border-left: 4px solid #3b82f6;
+    }
+    
+    /* Mobile responsive table adjustments */
+    @media (max-width: 768px) {
+        .table-responsive {
+            font-size: 0.75rem;
+        }
+        
+        .mobile-hide {
+            display: none;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    /**
+     * Card List Management JavaScript
+     * ===============================
+     * 
+     * This script handles all interactive functionality for the card listing page,
+     * including filtering, bulk operations, view switching, and quick actions.
+     */
+    
+    let bulkModeActive = false;
+    let selectedCards = new Set();
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // Initialize card list functionality
+        initializeCardList();
+        
+        // Set up search auto-submit
+        setupSearchAutoSubmit();
+        
+        // Initialize bulk operations
+        initializeBulkOperations();
+        
+        // Set up quick actions
+        setupQuickActions();
+        
+    });
+    
+    /**
+     * Initialize card list with event listeners and functionality
+     */
+    function initializeCardList() {
+        console.log('Card list initialized');
+        
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.relative')) {
+                document.querySelectorAll('[id^="card-actions-"]').forEach(dropdown => {
+                    dropdown.classList.add('hidden');
+                });
+            }
+        });
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(event) {
+            // Ctrl+F for search focus
+            if (event.ctrlKey && event.key === 'f') {
+                event.preventDefault();
+                document.getElementById('search').focus();
+            }
+            
+            // Escape to clear search
+            if (event.key === 'Escape') {
+                if (document.getElementById('search').value) {
+                    document.getElementById('search').value = '';
+                    document.getElementById('filter-form').submit();
+                }
+            }
+        });
+    }
+    
+    /**
+     * Set up auto-submit for search field after typing pause
+     */
+    function setupSearchAutoSubmit() {
+        const searchInput = document.getElementById('search');
+        let searchTimeout;
+        
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(function() {
+                // Auto-submit after 1 second of no typing
+                document.getElementById('filter-form').submit();
+            }, 1000);
+        });
+    }
+    
+    /**
+     * Initialize bulk operations functionality
+     */
+    function initializeBulkOperations() {
+        
+        // Select all checkbox
+        document.getElementById('select-all-cards')?.addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.card-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+                toggleCardSelection(checkbox.value, this.checked);
+            });
+            updateSelectedCount();
+        });
+        
+        // Individual card checkboxes
+        document.querySelectorAll('.card-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                toggleCardSelection(this.value, this.checked);
+                updateSelectedCount();
+                
+                // Update select all checkbox
+                const allCheckboxes = document.querySelectorAll('.card-checkbox');
+                const checkedCheckboxes = document.querySelectorAll('.card-checkbox:checked');
+                const selectAllCheckbox = document.getElementById('select-all-cards');
+                
+                if (selectAllCheckbox) {
+                    selectAllCheckbox.checked = allCheckboxes.length === checkedCheckboxes.length;
+                    selectAllCheckbox.indeterminate = checkedCheckboxes.length > 0 && checkedCheckboxes.length < allCheckboxes.length;
+                }
+            });
+        });
+    }
+    
+    /**
+     * Toggle bulk mode on/off
+     */
+    function toggleBulkMode() {
+        bulkModeActive = !bulkModeActive;
+        const body = document.body;
+        const bulkModeText = document.getElementById('bulk-mode-text');
+        
+        if (bulkModeActive) {
+            body.classList.add('bulk-mode');
+            bulkModeText.textContent = 'Exit Bulk Mode';
+            showToast('Bulk mode activated. Select cards to perform operations.', 'info');
+        } else {
+            body.classList.remove('bulk-mode');
+            bulkModeText.textContent = 'Bulk Actions';
+            clearSelection();
+            showToast('Bulk mode deactivated.', 'info');
+        }
+    }
+    
+    /**
+     * Toggle card selection for bulk operations
+     */
+    function toggleCardSelection(cardId, selected) {
+        const row = document.querySelector(`tr[data-card-id="${cardId}"]`);
+        
+        if (selected) {
+            selectedCards.add(cardId);
+            row?.classList.add('selected');
+        } else {
+            selectedCards.delete(cardId);
+            row?.classList.remove('selected');
+        }
+    }
+    
+    /**
+     * Update selected card count display
+     */
+    function updateSelectedCount() {
+        const countElement = document.getElementById('selected-count');
+        if (countElement) {
+            countElement.textContent = selectedCards.size;
+        }
+    }
+    
+    /**
+     * Clear all card selections
+     */
+    function clearSelection() {
+        selectedCards.clear();
+        document.querySelectorAll('.card-checkbox').forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        document.querySelectorAll('tr.selected').forEach(row => {
+            row.classList.remove('selected');
+        });
+        updateSelectedCount();
+    }
+    
+    /**
+     * Switch between table and card view
+     */
+    function switchView(viewType) {
+        const tableView = document.getElementById('table-view');
+        const cardView = document.getElementById('card-view');
+        const tableBtn = document.getElementById('table-view-btn');
+        const cardBtn = document.getElementById('card-view-btn');
+        
+        if (viewType === 'table') {
+            tableView.classList.remove('hidden');
+            cardView.classList.add('hidden');
+            tableBtn.classList.add('bg-blue-600', 'text-white');
+            tableBtn.classList.remove('bg-white', 'text-gray-700');
+            cardBtn.classList.add('bg-white', 'text-gray-700');
+            cardBtn.classList.remove('bg-blue-600', 'text-white');
+        } else {
+            tableView.classList.add('hidden');
+            cardView.classList.remove('hidden');
+            cardBtn.classList.add('bg-blue-600', 'text-white');
+            cardBtn.classList.remove('bg-white', 'text-gray-700');
+            tableBtn.classList.add('bg-white', 'text-gray-700');
+            tableBtn.classList.remove('bg-blue-600', 'text-white');
+            
+            // Add entrance animation to cards
+            document.querySelectorAll('#card-view > div > div').forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.1}s`;
+                card.classList.add('card-enter');
+            });
+        }
+        
+        // Save preference
+        localStorage.setItem('cardListView', viewType);
+    }
+    
+    /**
+     * Setup quick actions functionality
+     */
+    function setupQuickActions() {
+        // Load saved view preference
+        const savedView = localStorage.getItem('cardListView');
+        if (savedView === 'cards') {
+            switchView('cards');
+        }
+    }
+    
+    /**
+     * Toggle card actions dropdown
+     */
+    function toggleCardActions(cardId) {
+        const dropdown = document.getElementById(`card-actions-${cardId}`);
+        
+        // Close other dropdowns
+        document.querySelectorAll('[id^="card-actions-"]').forEach(d => {
+            if (d !== dropdown) d.classList.add('hidden');
+        });
+        
+        dropdown.classList.toggle('hidden');
+    }
+    
+    /**
+     * Perform quick action on individual card
+     */
+    function quickAction(action, cardId, cardNumber) {
+        let confirmMessage = '';
+        let actionUrl = '';
+        
+        switch(action) {
+            case 'issue':
+                confirmMessage = `Issue card ${cardNumber}? This will activate the card and send it to the affiliate.`;
+                actionUrl = `/card/admin/cards/${cardId}/issue/`;
+                break;
+            case 'suspend':
+                confirmMessage = `Suspend card ${cardNumber}? The card will be temporarily deactivated.`;
+                actionUrl = `/card/admin/cards/${cardId}/suspend/`;
+                break;
+            case 'reactivate':
+                confirmMessage = `Reactivate card ${cardNumber}? The card will be restored to active status.`;
+                actionUrl = `/card/admin/cards/${cardId}/reactivate/`;
+                break;
+            case 'regenerate':
+                confirmMessage = `Regenerate verification token for card ${cardNumber}? This will invalidate the current QR code.`;
+                actionUrl = `/card/admin/cards/${cardId}/regenerate/`;
+                break;
+            default:
+                showToast('Unknown action requested', 'error');
+                return;
+        }
+        
+        if (confirm(confirmMessage)) {
+            // In a real implementation, this would make a POST request to the action URL
+            showToast(`${action.charAt(0).toUpperCase() + action.slice(1)} action would be performed on card ${cardNumber}`, 'info');
+            
+            // Close any open dropdowns
+            document.querySelectorAll('[id^="card-actions-"]').forEach(dropdown => {
+                dropdown.classList.add('hidden');
+            });
+        }
+    }
+    
+    /**
+     * Perform bulk operation on selected cards
+     */
+    function bulkOperation(operation) {
+        if (selectedCards.size === 0) {
+            showToast('No cards selected for bulk operation', 'warning');
+            return;
+        }
+        
+        let confirmMessage = '';
+        
+        switch(operation) {
+            case 'issue':
+                confirmMessage = `Issue ${selectedCards.size} selected cards? This will activate them and send them to affiliates.`;
+                break;
+            case 'suspend':
+                confirmMessage = `Suspend ${selectedCards.size} selected cards? They will be temporarily deactivated.`;
+                break;
+            case 'email':
+                confirmMessage = `Send cards to ${selectedCards.size} selected affiliates via email?`;
+                break;
+            default:
+                showToast('Unknown bulk operation', 'error');
+                return;
+        }
+        
+        if (confirm(confirmMessage)) {
+            // In a real implementation, this would submit to the bulk_operations view
+            showToast(`Bulk ${operation} would be performed on ${selectedCards.size} cards`, 'info');
+            
+            // Reset selection after operation
+            setTimeout(() => {
+                clearSelection();
+                toggleBulkMode(); // Exit bulk mode
+            }, 2000);
+        }
+    }
+    
+    /**
+     * Export current results
+     */
+    function exportResults() {
+        const currentParams = new URLSearchParams(window.location.search);
+        currentParams.set('export', 'csv');
+        
+        // In a real implementation, this would generate a download
+        showToast('Export functionality would download filtered results as CSV', 'info');
+    }
+    
+    /**
+     * Advanced search functionality
+     */
+    function openAdvancedSearch() {
+        // Implementation for advanced search modal
+        showToast('Advanced search modal would open here', 'info');
+    }
+    
+    /**
+     * Refresh card list
+     */
+    function refreshCardList() {
+        showToast('Refreshing card list...', 'info');
+        setTimeout(() => {
+            window.location.reload();
+        }, 500);
+    }
+    
+</script>
+{% endblock %}

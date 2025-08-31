@@ -1,0 +1,985 @@
+{% extends "base/external_base.html" %}
+{% load static %}
+
+{% comment %}
+ACRP Public Card Verification Lookup Template
+==============================================
+
+This template provides the main public interface for verifying ACRP affiliation cards.
+Anyone can enter a card number to verify an affiliate's status and credentials.
+
+Template Features:
+- Clean, professional public-facing design
+- Simple card number input with validation
+- Real-time form feedback and validation
+- Security messaging to build trust
+- Responsive design for all devices
+- Accessibility-compliant with ARIA labels
+- Rate limiting integration and error handling
+
+View Integration:
+- Works with verify_lookup view function
+- Uses CardLookupForm for input validation
+- Handles verification_result context for displaying results
+- Integrates with rate limiting system
+
+Data Context (from verify_lookup view):
+- form: CardLookupForm instance with card_number and verification_purpose fields
+- verification_result: Dictionary containing verification outcome
+  - success: Boolean indicating if verification succeeded
+  - card: AffiliationCard object (if found)
+  - verification: CardVerification object (if successful)
+  - error: Error type (if failed)
+  - message: User-friendly error message (if failed)
+
+Security Features:
+- Rate limiting protection (10 attempts per hour per IP)
+- No sensitive information exposure in error messages
+- Audit trail logging for all verification attempts
+- CSRF protection for form submissions
+
+Design Philosophy:
+- Public-facing professional appearance
+- Trust-building through clear communication
+- Minimal cognitive load for users
+- Clear call-to-action and guidance
+- Error states that guide users to solutions
+{% endcomment %}
+
+{% block title %}Verify Affiliation Card - ACRP{% endblock %}
+
+{% block meta_description %}Verify the authenticity and status of ACRP digital affiliation cards. Enter a card number to check affiliate credentials and membership status.{% endblock %}
+
+{% block meta_keywords %}ACRP, card verification, affiliate verification, digital card, ministry credentials{% endblock %}
+
+{% block page_title %}Verify Affiliation Card{% endblock %}
+
+{% block page_description %}Enter a card number to verify affiliate credentials and membership status{% endblock %}
+
+{% block page_header %}
+<div class="mb-8 text-center">
+    <div class="mx-auto h-20 w-20 bg-blue-100 rounded-full flex items-center justify-center mb-6">
+        <i class="bi bi-shield-check text-blue-600 text-3xl"></i>
+    </div>
+    <h1 class="text-4xl font-bold text-gray-900 mb-3">
+        Verify Affiliation Card
+    </h1>
+    <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+        Verify the authenticity and current status of ACRP digital affiliation cards. 
+        Enter the card number below to check affiliate credentials.
+    </p>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    
+    {% comment %}
+    MAIN VERIFICATION FORM SECTION
+    ==============================
+    
+    Primary form for card number input and verification purpose.
+    Features prominent design to encourage usage and build confidence.
+    {% endcomment %}
+    
+    {% if not verification_result %}
+    <!-- Verification Form -->
+    <div class="bg-white shadow-lg rounded-lg border border-gray-200 overflow-hidden mb-8">
+        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-8 border-b border-gray-200">
+            <div class="text-center">
+                <h2 class="text-2xl font-semibold text-gray-900 mb-2">
+                    <i class="bi bi-credit-card text-blue-600 mr-2"></i>
+                    Enter Card Details
+                </h2>
+                <p class="text-sm text-gray-600">
+                    Please enter the card number exactly as it appears on the affiliation card
+                </p>
+            </div>
+        </div>
+        
+        <div class="p-8">
+            <form method="post" id="verification-form" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Card Number Input -->
+                <div>
+                    <label for="id_card_number" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="bi bi-credit-card mr-1"></i>
+                        Card Number <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <input type="text" 
+                               id="id_card_number" 
+                               name="card_number" 
+                               class="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400"
+                               placeholder="e.g., CGMPCAST240001"
+                               value="{{ form.card_number.value|default:'' }}"
+                               autocomplete="off"
+                               maxlength="20"
+                               pattern="[A-Z0-9]+"
+                               required>
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                            <i class="bi bi-credit-card text-gray-400"></i>
+                        </div>
+                    </div>
+                    {% if form.card_number.errors %}
+                    <div class="mt-2 text-sm text-red-600">
+                        {% for error in form.card_number.errors %}
+                        <p class="flex items-center">
+                            <i class="bi bi-exclamation-circle mr-1"></i>
+                            {{ error }}
+                        </p>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <p class="mt-2 text-xs text-gray-500">
+                        Card numbers are typically 13-15 characters long and contain letters and numbers only
+                    </p>
+                </div>
+                
+                <!-- Verification Purpose (Optional) -->
+                <div>
+                    <label for="id_verification_purpose" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="bi bi-info-circle mr-1"></i>
+                        Purpose of Verification <span class="text-gray-400">(Optional)</span>
+                    </label>
+                    <select id="id_verification_purpose" 
+                            name="verification_purpose" 
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Select purpose (optional)</option>
+                        <option value="employment_verification">Employment Verification</option>
+                        <option value="service_request">Service Request</option>
+                        <option value="event_entry">Event Entry</option>
+                        <option value="credential_check">Credential Check</option>
+                        <option value="partnership_verification">Partnership Verification</option>
+                        <option value="other">Other</option>
+                    </select>
+                    <p class="mt-2 text-xs text-gray-500">
+                        This helps us understand how our verification system is being used
+                    </p>
+                </div>
+                
+                <!-- Submit Button -->
+                <div class="pt-4">
+                    <button type="submit" 
+                            id="verify-btn"
+                            class="w-full inline-flex justify-center items-center px-6 py-4 border border-transparent text-lg font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 hover:shadow-lg">
+                        <i class="bi bi-shield-check mr-2"></i>
+                        <span id="verify-btn-text">Verify Card</span>
+                        <div class="hidden ml-2 loading-spinner">
+                            <i class="bi bi-arrow-clockwise"></i>
+                        </div>
+                    </button>
+                </div>
+                
+            </form>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% comment %}
+    VERIFICATION RESULT SECTION
+    ===========================
+    
+    Displays the result of card verification attempts.
+    Shows both successful verifications and error states with appropriate styling.
+    {% endcomment %}
+    
+    {% if verification_result %}
+    <!-- Verification Result -->
+    <div class="bg-white shadow-lg rounded-lg border border-gray-200 overflow-hidden mb-8">
+        
+        {% if verification_result.success %}
+        <!-- Successful Verification -->
+        <div class="bg-gradient-to-r from-green-50 to-emerald-50 px-6 py-8 border-b border-green-200">
+            <div class="text-center">
+                <div class="mx-auto h-16 w-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                    <i class="bi bi-check-circle text-green-600 text-2xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-green-800 mb-2">
+                    Card Verified Successfully
+                </h2>
+                <p class="text-sm text-green-700">
+                    This is a valid ACRP affiliation card
+                </p>
+            </div>
+        </div>
+        
+        <div class="p-8">
+            {% with card=verification_result.card %}
+            
+            <!-- Affiliate Information -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                
+                <!-- Left Column: Primary Information -->
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <i class="bi bi-person-badge text-blue-600 mr-2"></i>
+                        Affiliate Information
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        
+                        <!-- Affiliate Photo and Name -->
+                        <div class="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+                            {% if card.affiliate_photo %}
+                            <img class="h-16 w-16 rounded-full object-cover border-2 border-gray-300" 
+                                 src="{{ card.affiliate_photo.url }}" 
+                                 alt="{{ card.get_display_name }}">
+                            {% else %}
+                            <div class="h-16 w-16 bg-gray-300 rounded-full flex items-center justify-center border-2 border-gray-400">
+                                <i class="bi bi-person text-gray-600 text-xl"></i>
+                            </div>
+                            {% endif %}
+                            <div>
+                                <h4 class="text-xl font-bold text-gray-900">{{ card.get_display_name }}</h4>
+                                <p class="text-sm text-gray-600">{{ card.get_card_type_display }}</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Card Details -->
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between py-2 border-b border-gray-200">
+                                <span class="text-sm font-medium text-gray-600">Card Number:</span>
+                                <span class="text-sm font-bold text-gray-900 font-mono">{{ card.card_number }}</span>
+                            </div>
+                            <div class="flex items-center justify-between py-2 border-b border-gray-200">
+                                <span class="text-sm font-medium text-gray-600">Council:</span>
+                                <span class="text-sm text-gray-900">{{ card.council_name }} ({{ card.council_code }})</span>
+                            </div>
+                            <div class="flex items-center justify-between py-2 border-b border-gray-200">
+                                <span class="text-sm font-medium text-gray-600">Affiliation Type:</span>
+                                <span class="text-sm text-gray-900">{{ card.affiliation_type|title }}</span>
+                            </div>
+                            {% if card.designation_category %}
+                            <div class="flex items-center justify-between py-2 border-b border-gray-200">
+                                <span class="text-sm font-medium text-gray-600">Designation:</span>
+                                <span class="text-sm text-gray-900">{{ card.designation_category }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                <!-- Right Column: Status and Validity -->
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <i class="bi bi-info-circle text-blue-600 mr-2"></i>
+                        Card Status & Validity
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        
+                        <!-- Current Status -->
+                        <div class="p-4 bg-gray-50 rounded-lg">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-medium text-gray-600">Current Status:</span>
+                                {% if card.status == 'active' %}
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                    <i class="bi bi-check-circle mr-1"></i>
+                                    Active
+                                </span>
+                                {% elif card.status == 'expired' %}
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                                    <i class="bi bi-exclamation-triangle mr-1"></i>
+                                    Expired
+                                </span>
+                                {% elif card.status == 'suspended' %}
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
+                                    <i class="bi bi-pause-circle mr-1"></i>
+                                    Suspended
+                                </span>
+                                {% else %}
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                                    {{ card.get_status_display }}
+                                </span>
+                                {% endif %}
+                            </div>
+                            
+                            {% if card.status == 'active' %}
+                            <p class="text-sm text-green-700">
+                                <i class="bi bi-check-circle mr-1"></i>
+                                This card is currently valid and active
+                            </p>
+                            {% elif card.status == 'expired' %}
+                            <p class="text-sm text-red-700">
+                                <i class="bi bi-exclamation-triangle mr-1"></i>
+                                This card has expired and requires renewal
+                            </p>
+                            {% elif card.status == 'suspended' %}
+                            <p class="text-sm text-orange-700">
+                                <i class="bi bi-pause-circle mr-1"></i>
+                                This card is temporarily suspended
+                            </p>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Date Information -->
+                        <div class="space-y-3">
+                            {% if card.date_issued %}
+                            <div class="flex items-center justify-between py-2 border-b border-gray-200">
+                                <span class="text-sm font-medium text-gray-600 flex items-center">
+                                    <i class="bi bi-calendar-check text-green-600 mr-1"></i>
+                                    Issued:
+                                </span>
+                                <span class="text-sm text-gray-900">{{ card.date_issued|date:"F d, Y" }}</span>
+                            </div>
+                            {% endif %}
+                            
+                            {% if card.date_expires %}
+                            <div class="flex items-center justify-between py-2 border-b border-gray-200">
+                                <span class="text-sm font-medium text-gray-600 flex items-center">
+                                    <i class="bi bi-calendar-x text-red-600 mr-1"></i>
+                                    Expires:
+                                </span>
+                                <span class="text-sm text-gray-900">{{ card.date_expires|date:"F d, Y" }}</span>
+                            </div>
+                            
+                            <!-- Days Until Expiry -->
+                            {% with days=card.days_until_expiry %}
+                            {% if days is not None %}
+                            <div class="p-3 rounded-lg {% if days <= 0 %}bg-red-50 border border-red-200{% elif days <= 30 %}bg-yellow-50 border border-yellow-200{% else %}bg-green-50 border border-green-200{% endif %}">
+                                <div class="flex items-center justify-center">
+                                    {% if days <= 0 %}
+                                    <i class="bi bi-exclamation-triangle text-red-600 mr-2"></i>
+                                    <span class="text-sm font-medium text-red-700">
+                                        Expired {% if days < 0 %}{{ days|slice:"1:" }}{% else %}0{% endif %} days ago
+                                    </span>
+                                    {% elif days <= 30 %}
+                                    <i class="bi bi-exclamation-circle text-yellow-600 mr-2"></i>
+                                    <span class="text-sm font-medium text-yellow-700">
+                                        Expires in {{ days }} day{{ days|pluralize }}
+                                    </span>
+                                    {% else %}
+                                    <i class="bi bi-check-circle text-green-600 mr-2"></i>
+                                    <span class="text-sm font-medium text-green-700">
+                                        Valid for {{ days }} more day{{ days|pluralize }}
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% endwith %}
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Verification Statistics -->
+                        <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-blue-900">{{ card.total_verifications }}</div>
+                                <div class="text-sm text-blue-700">
+                                    Total Verification{{ card.total_verifications|pluralize }}
+                                </div>
+                                {% if card.last_verified_at %}
+                                <div class="text-xs text-blue-600 mt-1">
+                                    Last verified {{ card.last_verified_at|timesince }} ago
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+            </div>
+            
+            {% endwith %}
+            
+            <!-- Verification Record Info -->
+            <div class="mt-8 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                <div class="flex items-center text-sm text-gray-600">
+                    <i class="bi bi-clock-history mr-2"></i>
+                    <span>
+                        Verification completed on {{ verification_result.verification.verified_at|date:"F d, Y \a\t H:i" }}
+                        (Verification ID: {{ verification_result.verification.id }})
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        {% else %}
+        <!-- Verification Failed -->
+        <div class="bg-gradient-to-r from-red-50 to-pink-50 px-6 py-8 border-b border-red-200">
+            <div class="text-center">
+                <div class="mx-auto h-16 w-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                    <i class="bi bi-x-circle text-red-600 text-2xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-red-800 mb-2">
+                    Card Verification Failed
+                </h2>
+                <p class="text-sm text-red-700">
+                    {{ verification_result.message }}
+                </p>
+            </div>
+        </div>
+        
+        <div class="p-8">
+            
+            <!-- Error Details -->
+            <div class="mb-6">
+                {% if verification_result.error == 'card_not_found' %}
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <h3 class="text-sm font-medium text-yellow-800 mb-2">
+                        <i class="bi bi-search mr-1"></i>
+                        Card Not Found
+                    </h3>
+                    <p class="text-sm text-yellow-700">
+                        No card was found with this number. Please check the following:
+                    </p>
+                    <ul class="mt-2 text-sm text-yellow-700 space-y-1">
+                        <li class="flex items-center">
+                            <i class="bi bi-arrow-right text-yellow-600 mr-2"></i>
+                            Verify the card number is entered correctly
+                        </li>
+                        <li class="flex items-center">
+                            <i class="bi bi-arrow-right text-yellow-600 mr-2"></i>
+                            Ensure there are no extra spaces or characters
+                        </li>
+                        <li class="flex items-center">
+                            <i class="bi bi-arrow-right text-yellow-600 mr-2"></i>
+                            Check that the card number is complete
+                        </li>
+                    </ul>
+                </div>
+                {% else %}
+                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <h3 class="text-sm font-medium text-red-800 mb-2">
+                        <i class="bi bi-exclamation-triangle mr-1"></i>
+                        Verification Error
+                    </h3>
+                    <p class="text-sm text-red-700">
+                        {{ verification_result.message }}
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Try Again Button -->
+            <div class="text-center">
+                <button type="button" 
+                        class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                        onclick="resetForm()">
+                    <i class="bi bi-arrow-clockwise mr-2"></i>
+                    Try Another Card
+                </button>
+            </div>
+            
+        </div>
+        {% endif %}
+        
+        <!-- Action Buttons -->
+        <div class="px-8 py-6 bg-gray-50 border-t border-gray-200">
+            <div class="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-4">
+                {% if verification_result.success %}
+                <button type="button" 
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                        onclick="printVerification()">
+                    <i class="bi bi-printer mr-2"></i>
+                    Print Verification
+                </button>
+                {% endif %}
+                <button type="button" 
+                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+                        onclick="resetForm()">
+                    <i class="bi bi-plus-circle mr-2"></i>
+                    Verify Another Card
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% comment %}
+    INFORMATION AND HELP SECTION
+    =============================
+    
+    Provides additional context, help information, and security notices
+    for public users who may not be familiar with the system.
+    {% endcomment %}
+    
+    <!-- Information Section -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <!-- How It Works -->
+        <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <i class="bi bi-lightbulb text-yellow-500 mr-2"></i>
+                How Card Verification Works
+            </h3>
+            <div class="space-y-3 text-sm text-gray-600">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                        <span class="text-xs font-bold text-blue-600">1</span>
+                    </div>
+                    <p>Enter the complete card number as shown on the affiliation card</p>
+                </div>
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                        <span class="text-xs font-bold text-blue-600">2</span>
+                    </div>
+                    <p>Our system securely checks the card against our database</p>
+                </div>
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                        <span class="text-xs font-bold text-blue-600">3</span>
+                    </div>
+                    <p>You receive instant verification of the affiliate's current status</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Security Notice -->
+        <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <i class="bi bi-shield-lock text-green-600 mr-2"></i>
+                Security & Privacy
+            </h3>
+            <div class="space-y-3 text-sm text-gray-600">
+                <div class="flex items-start">
+                    <i class="bi bi-check-circle text-green-500 mr-2 mt-0.5 flex-shrink-0"></i>
+                    <p>All verification attempts are logged for security purposes</p>
+                </div>
+                <div class="flex items-start">
+                    <i class="bi bi-check-circle text-green-500 mr-2 mt-0.5 flex-shrink-0"></i>
+                    <p>No personal information is stored from your verification request</p>
+                </div>
+                <div class="flex items-start">
+                    <i class="bi bi-check-circle text-green-500 mr-2 mt-0.5 flex-shrink-0"></i>
+                    <p>Rate limiting protects against unauthorized access attempts</p>
+                </div>
+                <div class="flex items-start">
+                    <i class="bi bi-check-circle text-green-500 mr-2 mt-0.5 flex-shrink-0"></i>
+                    <p>All data transmission is encrypted and secure</p>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+    
+    {% comment %}
+    ALTERNATIVE VERIFICATION METHODS
+    ================================
+    
+    Information about QR code scanning and other verification options
+    available to users.
+    {% endcomment %}
+    
+    <!-- Alternative Methods -->
+    <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+        <h3 class="text-lg font-semibold text-blue-900 mb-4 text-center">
+            <i class="bi bi-qr-code text-blue-600 mr-2"></i>
+            Alternative Verification Methods
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <!-- QR Code Scanning -->
+            <div class="text-center">
+                <div class="mx-auto h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center mb-3">
+                    <i class="bi bi-qr-code-scan text-blue-600 text-xl"></i>
+                </div>
+                <h4 class="text-sm font-semibold text-blue-900 mb-2">QR Code Scanning</h4>
+                <p class="text-sm text-blue-700">
+                    Use your smartphone camera to scan the QR code on the back of any ACRP card 
+                    for instant verification
+                </p>
+            </div>
+            
+            <!-- Mobile App -->
+            <div class="text-center">
+                <div class="mx-auto h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center mb-3">
+                    <i class="bi bi-phone text-blue-600 text-xl"></i>
+                </div>
+                <h4 class="text-sm font-semibold text-blue-900 mb-2">Mobile App</h4>
+                <p class="text-sm text-blue-700">
+                    Download the ACRP mobile app for quick card verification and additional 
+                    member services (coming soon)
+                </p>
+            </div>
+            
+        </div>
+    </div>
+    
+    {% comment %}
+    CONTACT AND SUPPORT SECTION
+    ============================
+    
+    Contact information for users who need assistance or have questions
+    about the verification process.
+    {% endcomment %}
+    
+    <!-- Contact Information -->
+    <div class="mt-8 text-center">
+        <h4 class="text-lg font-medium text-gray-900 mb-4">
+            Need Help or Have Questions?
+        </h4>
+        <div class="flex flex-col sm:flex-row justify-center space-y-2 sm:space-y-0 sm:space-x-6">
+            <a href="mailto:support@acrpafrica.co.za" 
+               class="inline-flex items-center text-blue-600 hover:text-blue-700 transition-colors duration-200">
+                <i class="bi bi-envelope mr-2"></i>
+                support@acrpafrica.co.za
+            </a>
+            <a href="tel:+27123456789" 
+               class="inline-flex items-center text-blue-600 hover:text-blue-700 transition-colors duration-200">
+                <i class="bi bi-telephone mr-2"></i>
+                +27 12 345 6789
+            </a>
+            <a href="#" 
+               class="inline-flex items-center text-blue-600 hover:text-blue-700 transition-colors duration-200"
+               onclick="showToast('Help documentation coming soon!', 'info')">
+                <i class="bi bi-question-circle mr-2"></i>
+                Help Documentation
+            </a>
+        </div>
+    </div>
+    
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Custom styling for verification form */
+    #id_card_number {
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+    }
+    
+    #id_card_number:focus {
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    /* Loading animation for verify button */
+    .loading-spinner i {
+        animation: spin 1s linear infinite;
+    }
+    
+    /* Success verification animations */
+    .verification-success {
+        animation: successPulse 0.6s ease-out;
+    }
+    
+    @keyframes successPulse {
+        0% {
+            transform: scale(0.95);
+            opacity: 0;
+        }
+        50% {
+            transform: scale(1.02);
+        }
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+    
+    /* Card number formatting */
+    .card-number-display {
+        font-family: 'Courier New', monospace;
+        letter-spacing: 0.1em;
+        background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+        border: 1px solid #d1d5db;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.375rem;
+    }
+    
+    /* Enhanced hover effects */
+    .info-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+    
+    /* Print-friendly styling */
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+        
+        .print-only {
+            display: block !important;
+        }
+        
+        .bg-gradient-to-r {
+            background: #f3f4f6 !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    /**
+     * Card Verification JavaScript
+     * ============================
+     * 
+     * This script handles the interactive elements of the card verification form,
+     * including real-time validation, form submission, and result display.
+     */
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // Initialize verification form
+        initializeVerificationForm();
+        
+        // Set up form validation
+        setupFormValidation();
+        
+        // Add keyboard shortcuts
+        setupKeyboardShortcuts();
+        
+        // Focus on card number input
+        const cardNumberInput = document.getElementById('id_card_number');
+        if (cardNumberInput && !cardNumberInput.value) {
+            cardNumberInput.focus();
+        }
+        
+    });
+    
+    /**
+     * Initialize verification form with event listeners
+     */
+    function initializeVerificationForm() {
+        
+        const form = document.getElementById('verification-form');
+        const cardNumberInput = document.getElementById('id_card_number');
+        
+        if (!form || !cardNumberInput) return;
+        
+        // Format card number input as user types
+        cardNumberInput.addEventListener('input', function() {
+            // Convert to uppercase and remove invalid characters
+            let value = this.value.replace(/[^A-Z0-9]/g, '').toUpperCase();
+            
+            // Limit length
+            if (value.length > 20) {
+                value = value.substring(0, 20);
+            }
+            
+            this.value = value;
+            
+            // Real-time validation feedback
+            validateCardNumber(value);
+        });
+        
+        // Handle form submission
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            handleFormSubmission();
+        });
+        
+    }
+    
+    /**
+     * Real-time card number validation
+     */
+    function validateCardNumber(cardNumber) {
+        const input = document.getElementById('id_card_number');
+        const submitBtn = document.getElementById('verify-btn');
+        
+        // Remove existing validation classes
+        input.classList.remove('border-red-500', 'border-green-500');
+        
+        if (cardNumber.length === 0) {
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            return;
+        }
+        
+        // Basic validation (adjust pattern based on your card number format)
+        const isValidFormat = /^[A-Z]{2,8}C[A-Z]{2}\d{7}$/.test(cardNumber);
+        const isValidLength = cardNumber.length >= 10 && cardNumber.length <= 20;
+        
+        if (isValidLength && cardNumber.length >= 10) {
+            input.classList.add('border-green-500');
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        } else {
+            input.classList.add('border-red-500');
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+    }
+    
+    /**
+     * Handle form submission with loading states
+     */
+    function handleFormSubmission() {
+        const submitBtn = document.getElementById('verify-btn');
+        const submitBtnText = document.getElementById('verify-btn-text');
+        const spinner = submitBtn.querySelector('.loading-spinner');
+        const cardNumber = document.getElementById('id_card_number').value;
+        
+        // Validate card number before submission
+        if (!cardNumber || cardNumber.length < 10) {
+            showToast('Please enter a valid card number', 'error');
+            return;
+        }
+        
+        // Show loading state
+        submitBtnText.textContent = 'Verifying...';
+        spinner.classList.remove('hidden');
+        submitBtn.disabled = true;
+        submitBtn.classList.add('opacity-75');
+        
+        // Log verification attempt
+        console.log('Verifying card:', cardNumber);
+        
+        // Submit form
+        document.getElementById('verification-form').submit();
+    }
+    
+    /**
+     * Set up form validation
+     */
+    function setupFormValidation() {
+        
+        // Prevent form submission with invalid data
+        document.getElementById('verification-form').addEventListener('submit', function(event) {
+            const cardNumber = document.getElementById('id_card_number').value;
+            
+            if (!cardNumber || cardNumber.length < 10) {
+                event.preventDefault();
+                showToast('Please enter a complete card number', 'error');
+                return false;
+            }
+            
+            return true;
+        });
+        
+    }
+    
+    /**
+     * Reset form to initial state
+     */
+    function resetForm() {
+        // Clear form
+        document.getElementById('id_card_number').value = '';
+        document.getElementById('id_verification_purpose').selectedIndex = 0;
+        
+        // Reset button state
+        const submitBtn = document.getElementById('verify-btn');
+        const submitBtnText = document.getElementById('verify-btn-text');
+        const spinner = submitBtn.querySelector('.loading-spinner');
+        
+        if (submitBtnText) submitBtnText.textContent = 'Verify Card';
+        if (spinner) spinner.classList.add('hidden');
+        submitBtn.disabled = true;
+        submitBtn.classList.add('opacity-50');
+        
+        // Focus on input
+        document.getElementById('id_card_number').focus();
+        
+        // Reload page to clear verification result
+        if (window.location.search) {
+            window.location.href = window.location.pathname;
+        }
+    }
+    
+    /**
+     * Print verification result
+     */
+    function printVerification() {
+        // Add print-specific styling
+        const printCSS = `
+            <style media="print">
+                body * { visibility: hidden; }
+                .verification-result, .verification-result * { visibility: visible; }
+                .verification-result { position: absolute; left: 0; top: 0; width: 100%; }
+                .no-print { display: none !important; }
+            </style>
+        `;
+        
+        // Add print styles temporarily
+        document.head.insertAdjacentHTML('beforeend', printCSS);
+        
+        // Print
+        window.print();
+        
+        // Remove print styles
+        setTimeout(() => {
+            const printStyle = document.querySelector('style[media="print"]');
+            if (printStyle) printStyle.remove();
+        }, 1000);
+    }
+    
+    /**
+     * Set up keyboard shortcuts for better UX
+     */
+    function setupKeyboardShortcuts() {
+        document.addEventListener('keydown', function(event) {
+            
+            // Enter key to submit (when not in form field)
+            if (event.key === 'Enter' && event.target.tagName !== 'INPUT' && event.target.tagName !== 'SELECT') {
+                const submitBtn = document.getElementById('verify-btn');
+                if (submitBtn && !submitBtn.disabled) {
+                    handleFormSubmission();
+                }
+            }
+            
+            // Escape key to reset form
+            if (event.key === 'Escape') {
+                resetForm();
+            }
+            
+            // Ctrl+P to print (if verification shown)
+            if (event.ctrlKey && event.key === 'p') {
+                if (document.querySelector('.verification-success')) {
+                    event.preventDefault();
+                    printVerification();
+                }
+            }
+            
+        });
+    }
+    
+    /**
+     * Auto-format card number as user types (optional enhancement)
+     */
+    function formatCardNumber(input) {
+        let value = input.replace(/[^A-Z0-9]/g, '');
+        
+        // Add spacing every 4 characters for readability (optional)
+        // value = value.replace(/(.{4})/g, '$1 ').trim();
+        
+        return value;
+    }
+    
+    /**
+     * Validate card number format (enhanced)
+     */
+    function isValidCardNumberFormat(cardNumber) {
+        // Implement your specific card number validation rules
+        // This is a basic example - adjust based on your actual format
+        
+        const patterns = [
+            /^[A-Z]{2,8}C[A-Z]{2}\d{7}$/,  // Standard format: CGMPCAST240001
+            /^[A-Z0-9]{10,20}$/             // Fallback: Any alphanumeric 10-20 chars
+        ];
+        
+        return patterns.some(pattern => pattern.test(cardNumber));
+    }
+    
+</script>
+{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "ACRP Card Verification",
+    "description": "Verify the authenticity and status of ACRP digital affiliation cards",
+    "url": "{{ request.build_absolute_uri }}",
+    "isPartOf": {
+        "@type": "WebSite",
+        "name": "ACRP Management System",
+        "url": "{{ request.scheme }}://{{ request.get_host }}"
+    },
+    "provider": {
+        "@type": "Organization",
+        "name": "Association of Christian Religious Practitioners",
+        "url": "https://acrpafrica.co.za/"
+    }
+}
+</script>
+{% endblock %}

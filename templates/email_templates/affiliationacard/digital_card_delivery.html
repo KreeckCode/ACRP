@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your ACRP Digital Affiliation Card</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+        .email-container {
+            background-color: #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 300;
+        }
+        .header p {
+            margin: 15px 0 0 0;
+            opacity: 0.95;
+            font-size: 16px;
+        }
+        .card-badge {
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 25px;
+            padding: 8px 16px;
+            display: inline-block;
+            margin-top: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .content {
+            padding: 30px 25px;
+        }
+        .card-info {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        .card-info h3 {
+            margin: 0 0 15px 0;
+            color: #495057;
+            font-size: 18px;
+        }
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .info-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #6c757d;
+        }
+        .info-value {
+            color: #495057;
+            text-align: right;
+            max-width: 60%;
+            font-weight: 500;
+        }
+        .attachment-notice {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+            text-align: center;
+        }
+        .attachment-notice h3 {
+            margin: 0 0 10px 0;
+            font-size: 18px;
+        }
+        .attachment-notice p {
+            margin: 5px 0;
+            opacity: 0.95;
+        }
+        .verification-section {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        .verification-section h3 {
+            margin: 0 0 15px 0;
+            color: #0c5460;
+            font-size: 18px;
+        }
+        .verification-section p {
+            margin: 10px 0;
+            color: #0c5460;
+        }
+        .verification-link {
+            display: inline-block;
+            background-color: #17a2b8;
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            margin: 10px 0;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+        .verification-link:hover {
+            background-color: #138496;
+            color: white;
+            text-decoration: none;
+        }
+        .instructions {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        .instructions h3 {
+            margin: 0 0 15px 0;
+            color: #856404;
+            font-size: 18px;
+        }
+        .instructions ol {
+            margin: 0;
+            padding-left: 20px;
+            color: #856404;
+        }
+        .instructions li {
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        .contact-section {
+            background-color: #e2e3e5;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+            text-align: center;
+        }
+        .contact-section h3 {
+            margin: 0 0 10px 0;
+            color: #383d41;
+        }
+        .contact-section p {
+            margin: 5px 0;
+            color: #383d41;
+        }
+        .footer {
+            background-color: #343a40;
+            color: #adb5bd;
+            padding: 25px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .footer p {
+            margin: 5px 0;
+        }
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        @media (max-width: 600px) {
+            .email-container {
+                margin: 10px;
+                border-radius: 5px;
+            }
+            .header, .content {
+                padding: 20px 15px;
+            }
+            .info-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .info-value {
+                text-align: left;
+                max-width: 100%;
+                margin-top: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header Section -->
+        <div class="header">
+            <h1>Your Digital Card is Here!</h1>
+            <p>ACRP Digital Affiliation Card Delivery</p>
+            <div class="card-badge">Card Attached</div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="content">
+            <p>Dear {{ applicant_name }},</p>
+            
+            <p>Congratulations! Your ACRP digital affiliation card is now ready and attached to this email as a PDF document.</p>
+
+            <!-- Card Information -->
+            <div class="card-info">
+                <h3>Your Card Details</h3>
+                <div class="info-item">
+                    <span class="info-label">Card Number:</span>
+                    <span class="info-value"><strong>{{ card_number }}</strong></span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Cardholder:</span>
+                    <span class="info-value">{{ applicant_name }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Council:</span>
+                    <span class="info-value">{{ council_name }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Affiliation Type:</span>
+                    <span class="info-value">{{ affiliation_type }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Status:</span>
+                    <span class="info-value"><strong>Active</strong></span>
+                </div>
+            </div>
+
+            <!-- Attachment Notice -->
+            <div class="attachment-notice">
+                <h3>📎 Your Card is Attached</h3>
+                <p>Your official digital affiliation card is attached to this email as a PDF file.</p>
+                <p><strong>Look for the attachment to download your card!</strong></p>
+            </div>
+
+            <!-- Instructions -->
+            <div class="instructions">
+                <h3>How to Use Your Digital Card</h3>
+                <ol>
+                    <li><strong>Download:</strong> Save the attached PDF to your computer or mobile device</li>
+                    <li><strong>Store Safely:</strong> Keep a backup copy in a secure location</li>
+                    <li><strong>Print if Needed:</strong> You can print a physical copy for your records</li>
+                    <li><strong>Use QR Code:</strong> The QR code on your card provides instant verification</li>
+                    <li><strong>Share for Verification:</strong> Others can verify your status using the card number or QR code</li>
+                </ol>
+            </div>
+
+            <!-- Verification Section -->
+            <div class="verification-section">
+                <h3>Card Verification</h3>
+                <p>Your card includes a unique QR code and card number for instant verification of your ACRP membership status.</p>
+                <p><strong>Verification Methods:</strong></p>
+                <ul>
+                    <li>QR Code scanning for instant verification</li>
+                    <li>Manual card number lookup</li>
+                    <li>Online verification portal</li>
+                </ul>
+                
+                <a href="{{ verification_url }}" class="verification-link">
+                    Verify Your Card Online
+                </a>
+            </div>
+
+            <p>Your digital affiliation card serves as official proof of your ACRP membership and professional standing. Keep it accessible for when you need to demonstrate your affiliation to colleagues, clients, or employers.</p>
+
+            <p>If you experience any issues downloading or accessing your card, please contact our support team immediately.</p>
+
+            <!-- Contact Information -->
+            <div class="contact-section">
+                <h3>Need Help?</h3>
+                <p><strong>Support Email:</strong> ams@acrp.org.za</p>
+                <p><strong>Phone:</strong> (+27) 065 214 1536</p>
+                <p><strong>Hours:</strong> Monday - Friday, 9:00 AM - 5:00 PM EST</p>
+            </div>
+
+            <p>Welcome to the ACRP digital card system!</p>
+            
+            <p>Best regards,<br>
+            <strong>The ACRP Card Administration Team</strong><br>
+            Association of Construction Resource Professionals</p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>ACRP Digital Cards</strong> - Association of Construction Resource Professionals</p>
+            <p>&copy; {{ current_year }} ACRP. All rights reserved.</p>
+            <p>This is an automated delivery. Please do not reply to this email.</p>
+            <p>For support: <a href="mailto:ams@acrp.org.za">ams@acrp.org.za</a></p>
+        </div>
+    </div>
+</body>
+</html>

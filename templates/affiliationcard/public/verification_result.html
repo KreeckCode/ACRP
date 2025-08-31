@@ -1,0 +1,933 @@
+{% extends "base/external_base.html" %}
+{% load static %}
+
+{% comment %}
+ACRP Card Verification Result Template
+======================================
+
+This template displays the result of QR code verification attempts.
+It's called when users scan QR codes or click verification links.
+
+Template Features:
+- Instant verification result display (success/failure)
+- Comprehensive card information for successful verifications
+- Clear error messaging for failed verifications
+- Security indicators and trust signals
+- Responsive design optimized for mobile (QR scanning)
+- Accessibility features with proper ARIA labels
+- Print-friendly layout for verification records
+
+View Integration:
+- Works with verify_token view function
+- Receives verification_result context dictionary
+- Handles both successful and failed verification scenarios
+- Integrates with rate limiting and security systems
+
+Data Context (from verify_token view):
+- verification_result: Dictionary containing verification outcome
+  - success: Boolean indicating if verification succeeded
+  - card: AffiliationCard object (if found)
+  - verification: CardVerification object (if successful)  
+  - error: Error type ('invalid_token', 'system_error')
+  - message: User-friendly error message (if failed)
+
+Security Features:
+- No sensitive information exposure
+- Verification audit trail logging
+- Token validation and expiry checking
+- Rate limiting integration
+
+Design Philosophy:
+- Mobile-first (many QR scans happen on phones)
+- Clear success/failure communication
+- Professional verification certificate appearance
+- Trust-building through detailed information display
+- Minimal cognitive load for quick verification decisions
+{% endcomment %}
+
+{% block title %}Card Verification Result - ACRP{% endblock %}
+
+{% block meta_description %}ACRP digital affiliation card verification result. View verified affiliate credentials and membership status.{% endblock %}
+
+{% block meta_robots %}noindex, nofollow{% endblock %}
+
+{% block page_title %}Card Verification Result{% endblock %}
+
+{% block page_description %}Verification result for ACRP digital affiliation card{% endblock %}
+
+{% block page_header %}
+<div class="mb-8 text-center">
+    {% if verification_result.success %}
+    <div class="mx-auto h-20 w-20 bg-green-100 rounded-full flex items-center justify-center mb-4 verification-success">
+        <i class="bi bi-check-circle text-green-600 text-3xl"></i>
+    </div>
+    <h1 class="text-3xl font-bold text-green-800">
+        Card Verified Successfully
+    </h1>
+    <p class="mt-2 text-lg text-green-700">
+        This is a valid ACRP affiliation card
+    </p>
+    {% else %}
+    <div class="mx-auto h-20 w-20 bg-red-100 rounded-full flex items-center justify-center mb-4">
+        <i class="bi bi-x-circle text-red-600 text-3xl"></i>
+    </div>
+    <h1 class="text-3xl font-bold text-red-800">
+        Card Verification Failed
+    </h1>
+    <p class="mt-2 text-lg text-red-700">
+        Unable to verify this card
+    </p>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    
+    {% if verification_result.success %}
+    
+    {% comment %}
+    SUCCESSFUL VERIFICATION DISPLAY
+    ===============================
+    
+    Shows comprehensive information about the verified card and affiliate.
+    Designed to look like an official verification certificate.
+    {% endcomment %}
+    
+    {% with card=verification_result.card verification=verification_result.verification %}
+    
+    <!-- Verification Certificate -->
+    <div class="bg-white shadow-lg rounded-lg border border-gray-200 overflow-hidden mb-8 verification-certificate">
+        
+        <!-- Certificate Header -->
+        <div class="bg-gradient-to-r from-green-50 to-emerald-50 px-8 py-6 border-b border-green-200">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <img src="{% static 'main_media/logo.png' %}" 
+                         class="h-12 w-12 mr-4" 
+                         alt="ACRP Logo">
+                    <div>
+                        <h2 class="text-xl font-bold text-green-800">
+                            ACRP Digital Verification Certificate
+                        </h2>
+                        <p class="text-sm text-green-700">
+                            Association of Christian Religious Practitioners
+                        </p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="text-lg font-bold text-green-800">VERIFIED</div>
+                    <div class="text-xs text-green-600">{{ verification.verified_at|date:"M d, Y H:i" }}</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Certificate Content -->
+        <div class="p-8">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                <!-- Left Column: Affiliate Information -->
+                <div class="lg:col-span-2">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+                        <i class="bi bi-person-badge text-blue-600 mr-2"></i>
+                        Verified Affiliate Information
+                    </h3>
+                    
+                    <!-- Affiliate Photo and Name -->
+                    <div class="flex items-center space-x-6 mb-6 p-4 bg-gray-50 rounded-lg">
+                        {% if card.affiliate_photo %}
+                        <img class="h-24 w-24 rounded-full object-cover border-4 border-white shadow-lg" 
+                             src="{{ card.affiliate_photo.url }}" 
+                             alt="{{ card.get_display_name }}">
+                        {% else %}
+                        <div class="h-24 w-24 bg-gray-300 rounded-full flex items-center justify-center border-4 border-white shadow-lg">
+                            <i class="bi bi-person text-gray-600 text-2xl"></i>
+                        </div>
+                        {% endif %}
+                        <div>
+                            <h4 class="text-2xl font-bold text-gray-900 mb-1">{{ card.get_display_name }}</h4>
+                            <p class="text-lg text-blue-600 font-medium">{{ card.get_card_type_display }}</p>
+                            <p class="text-sm text-gray-600">{{ card.council_name }}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Detailed Information -->
+                    <div class="space-y-4">
+                        
+                        <!-- Card Details -->
+                        <div class="bg-white border border-gray-200 rounded-lg p-4">
+                            <h4 class="text-md font-semibold text-gray-900 mb-3 flex items-center">
+                                <i class="bi bi-credit-card text-gray-600 mr-2"></i>
+                                Card Details
+                            </h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="font-medium text-gray-600">Card Number:</span>
+                                    <span class="font-mono font-bold text-gray-900">{{ card.card_number }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="font-medium text-gray-600">Council:</span>
+                                    <span class="text-gray-900">{{ card.council_code }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="font-medium text-gray-600">Affiliation:</span>
+                                    <span class="text-gray-900">{{ card.affiliation_type|title }}</span>
+                                </div>
+                                {% if card.designation_category %}
+                                <div class="flex justify-between">
+                                    <span class="font-medium text-gray-600">Designation:</span>
+                                    <span class="text-gray-900">{{ card.designation_category }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Validity Information -->
+                        <div class="bg-white border border-gray-200 rounded-lg p-4">
+                            <h4 class="text-md font-semibold text-gray-900 mb-3 flex items-center">
+                                <i class="bi bi-calendar-check text-gray-600 mr-2"></i>
+                                Validity Information
+                            </h4>
+                            <div class="space-y-3 text-sm">
+                                {% if card.date_issued %}
+                                <div class="flex items-center justify-between">
+                                    <span class="font-medium text-gray-600">Issue Date:</span>
+                                    <span class="text-gray-900">{{ card.date_issued|date:"F d, Y" }}</span>
+                                </div>
+                                {% endif %}
+                                
+                                {% if card.date_expires %}
+                                <div class="flex items-center justify-between">
+                                    <span class="font-medium text-gray-600">Expiry Date:</span>
+                                    <span class="text-gray-900">{{ card.date_expires|date:"F d, Y" }}</span>
+                                </div>
+                                
+                                <!-- Validity Status -->
+                                {% with days=card.days_until_expiry %}
+                                {% if days is not None %}
+                                <div class="mt-3 p-3 rounded-lg text-center {% if days <= 0 %}bg-red-100 border border-red-200{% elif days <= 30 %}bg-yellow-100 border border-yellow-200{% else %}bg-green-100 border border-green-200{% endif %}">
+                                    {% if days <= 0 %}
+                                    <div class="flex items-center justify-center">
+                                        <i class="bi bi-exclamation-triangle text-red-600 mr-2"></i>
+                                        <span class="font-semibold text-red-700">
+                                            Expired {% if days < 0 %}{{ days|slice:"1:" }}{% else %}0{% endif %} days ago
+                                        </span>
+                                    </div>
+                                    {% elif days <= 30 %}
+                                    <div class="flex items-center justify-center">
+                                        <i class="bi bi-exclamation-circle text-yellow-600 mr-2"></i>
+                                        <span class="font-semibold text-yellow-700">
+                                            Expires in {{ days }} day{{ days|pluralize }}
+                                        </span>
+                                    </div>
+                                    {% else %}
+                                    <div class="flex items-center justify-center">
+                                        <i class="bi bi-check-circle text-green-600 mr-2"></i>
+                                        <span class="font-semibold text-green-700">
+                                            Valid for {{ days }} more day{{ days|pluralize }}
+                                        </span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                                {% endwith %}
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                <!-- Right Column: Security and Verification Info -->
+                <div>
+                    
+                    <!-- Verification Status -->
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
+                        <div class="text-center">
+                            <div class="mx-auto h-16 w-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                                <i class="bi bi-shield-check text-green-600 text-2xl"></i>
+                            </div>
+                            <h3 class="text-lg font-bold text-green-800 mb-2">
+                                Authenticity Confirmed
+                            </h3>
+                            <p class="text-sm text-green-700">
+                                This card has been verified against the official ACRP database
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Current Status -->
+                    <div class="bg-white border border-gray-200 rounded-lg p-4 mb-6">
+                        <h4 class="text-md font-semibold text-gray-900 mb-3 text-center">
+                            Current Card Status
+                        </h4>
+                        <div class="text-center">
+                            {% if card.status == 'active' %}
+                            <div class="inline-flex items-center px-4 py-2 rounded-full text-lg font-semibold bg-green-100 text-green-800 mb-2">
+                                <i class="bi bi-check-circle mr-2"></i>
+                                ACTIVE
+                            </div>
+                            <p class="text-sm text-green-700">Card is currently valid and active</p>
+                            {% elif card.status == 'expired' %}
+                            <div class="inline-flex items-center px-4 py-2 rounded-full text-lg font-semibold bg-red-100 text-red-800 mb-2">
+                                <i class="bi bi-exclamation-triangle mr-2"></i>
+                                EXPIRED
+                            </div>
+                            <p class="text-sm text-red-700">Card has expired and requires renewal</p>
+                            {% elif card.status == 'suspended' %}
+                            <div class="inline-flex items-center px-4 py-2 rounded-full text-lg font-semibold bg-orange-100 text-orange-800 mb-2">
+                                <i class="bi bi-pause-circle mr-2"></i>
+                                SUSPENDED
+                            </div>
+                            <p class="text-sm text-orange-700">Card is temporarily suspended</p>
+                            {% else %}
+                            <div class="inline-flex items-center px-4 py-2 rounded-full text-lg font-semibold bg-gray-100 text-gray-800 mb-2">
+                                {{ card.get_status_display|upper }}
+                            </div>
+                            <p class="text-sm text-gray-700">Please contact ACRP for status clarification</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Verification Metadata -->
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                        <h4 class="text-md font-semibold text-blue-900 mb-3 text-center">
+                            <i class="bi bi-info-circle mr-1"></i>
+                            Verification Details
+                        </h4>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-blue-700">Verified At:</span>
+                                <span class="text-blue-900">{{ verification.verified_at|date:"M d, Y H:i" }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-blue-700">Method:</span>
+                                <span class="text-blue-900">
+                                    {% if verification.verification_type == 'qr_scan' %}
+                                    <i class="bi bi-qr-code mr-1"></i>QR Code Scan
+                                    {% else %}
+                                    <i class="bi bi-search mr-1"></i>{{ verification.get_verification_type_display }}
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-blue-700">Verification ID:</span>
+                                <span class="text-blue-900 font-mono text-xs">{{ verification.id }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Usage Statistics -->
+                    <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                        <h4 class="text-md font-semibold text-purple-900 mb-3 text-center">
+                            <i class="bi bi-bar-chart mr-1"></i>
+                            Card Usage
+                        </h4>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-purple-900 mb-1">{{ card.total_verifications }}</div>
+                            <div class="text-sm text-purple-700">Total Verification{{ card.total_verifications|pluralize }}</div>
+                            {% if card.last_verified_at and card.total_verifications > 1 %}
+                            <div class="text-xs text-purple-600 mt-1">
+                                Previous: {{ card.last_verified_at|timesince }} ago
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                </div>
+                
+            </div>
+        </div>
+        
+        <!-- Certificate Footer -->
+        <div class="px-8 py-6 bg-gray-50 border-t border-gray-200">
+            <div class="flex flex-col sm:flex-row items-center justify-between space-y-3 sm:space-y-0">
+                <div class="flex items-center text-sm text-gray-600">
+                    <i class="bi bi-shield-lock mr-2"></i>
+                    <span>This verification is cryptographically secured and logged</span>
+                </div>
+                <div class="flex space-x-3">
+                    <button type="button" 
+                            class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 no-print"
+                            onclick="printCertificate()">
+                        <i class="bi bi-printer mr-2"></i>
+                        Print Certificate
+                    </button>
+                    <button type="button" 
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 no-print"
+                            onclick="verifyAnotherCard()">
+                        <i class="bi bi-plus-circle mr-2"></i>
+                        Verify Another Card
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% endwith %}
+    
+    {% else %}
+    
+    {% comment %}
+    FAILED VERIFICATION DISPLAY
+    ============================
+    
+    Shows error information and guidance for failed verification attempts.
+    Provides helpful suggestions without exposing security details.
+    {% endcomment %}
+    
+    <!-- Verification Failed -->
+    <div class="bg-white shadow-lg rounded-lg border border-gray-200 overflow-hidden mb-8">
+        
+        <!-- Error Header -->
+        <div class="bg-gradient-to-r from-red-50 to-pink-50 px-8 py-6 border-b border-red-200">
+            <div class="text-center">
+                <h2 class="text-xl font-bold text-red-800 mb-2">
+                    Card Could Not Be Verified
+                </h2>
+                <p class="text-sm text-red-700">
+                    {{ verification_result.message }}
+                </p>
+            </div>
+        </div>
+        
+        <!-- Error Details and Guidance -->
+        <div class="p-8">
+            
+            {% if verification_result.error == 'invalid_token' %}
+            <!-- Invalid Token Error -->
+            <div class="mb-6">
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold text-yellow-800 mb-3 flex items-center">
+                        <i class="bi bi-exclamation-triangle mr-2"></i>
+                        Invalid Verification Token
+                    </h3>
+                    <p class="text-sm text-yellow-700 mb-4">
+                        The verification token in this QR code or link is not valid. This could indicate:
+                    </p>
+                    <ul class="space-y-2 text-sm text-yellow-700">
+                        <li class="flex items-start">
+                            <i class="bi bi-arrow-right text-yellow-600 mr-2 mt-0.5 flex-shrink-0"></i>
+                            <span>The QR code may be damaged or corrupted</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="bi bi-arrow-right text-yellow-600 mr-2 mt-0.5 flex-shrink-0"></i>
+                            <span>The card may be counterfeit or unauthorized</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="bi bi-arrow-right text-yellow-600 mr-2 mt-0.5 flex-shrink-0"></i>
+                            <span>The verification link may be expired or invalid</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Security Warning -->
+            <div class="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
+                <h3 class="text-lg font-semibold text-red-800 mb-3 flex items-center">
+                    <i class="bi bi-shield-exclamation mr-2"></i>
+                    Security Alert
+                </h3>
+                <p class="text-sm text-red-700">
+                    <strong>Warning:</strong> This may be a counterfeit or tampered card. 
+                    If you received this card from someone claiming ACRP affiliation, 
+                    please report this incident to ACRP immediately.
+                </p>
+            </div>
+            
+            {% else %}
+            <!-- System Error -->
+            <div class="mb-6">
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                        <i class="bi bi-exclamation-circle mr-2"></i>
+                        System Error
+                    </h3>
+                    <p class="text-sm text-gray-700 mb-4">
+                        A technical error occurred while processing your verification request. 
+                        This is likely a temporary issue.
+                    </p>
+                    <div class="bg-blue-50 border border-blue-200 rounded p-3">
+                        <p class="text-sm text-blue-700">
+                            <i class="bi bi-lightbulb mr-1"></i>
+                            Please try again in a few moments, or use manual card number verification if urgent.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- What to Do Next -->
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-blue-900 mb-4 text-center">
+                    <i class="bi bi-question-circle mr-2"></i>
+                    What Should You Do?
+                </h3>
+                <div class="space-y-4">
+                    
+                    <!-- Try Manual Verification -->
+                    <div class="flex items-center p-3 bg-white rounded border border-blue-200">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                <i class="bi bi-search text-blue-600"></i>
+                            </div>
+                        </div>
+                        <div class="ml-4 flex-1">
+                            <h4 class="text-sm font-medium text-blue-900">Try Manual Verification</h4>
+                            <p class="text-sm text-blue-700">Enter the card number manually to verify</p>
+                        </div>
+                        <div class="ml-4">
+                            <a href="{% url 'affiliationcard:verify_lookup' %}" 
+                               class="inline-flex items-center px-3 py-1 border border-blue-300 text-xs font-medium rounded text-blue-700 bg-white hover:bg-blue-50">
+                                Try Now
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Contact Support -->
+                    <div class="flex items-center p-3 bg-white rounded border border-blue-200">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                <i class="bi bi-headset text-blue-600"></i>
+                            </div>
+                        </div>
+                        <div class="ml-4 flex-1">
+                            <h4 class="text-sm font-medium text-blue-900">Contact ACRP Support</h4>
+                            <p class="text-sm text-blue-700">Get assistance with verification issues</p>
+                        </div>
+                        <div class="ml-4">
+                            <a href="mailto:support@acrpafrica.co.za" 
+                               class="inline-flex items-center px-3 py-1 border border-blue-300 text-xs font-medium rounded text-blue-700 bg-white hover:bg-blue-50">
+                                Contact
+                            </a>
+                        </div>
+                    </div>
+                    
+                    {% if verification_result.error == 'invalid_token' %}
+                    <!-- Report Counterfeit -->
+                    <div class="flex items-center p-3 bg-white rounded border border-red-200">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                                <i class="bi bi-exclamation-triangle text-red-600"></i>
+                            </div>
+                        </div>
+                        <div class="ml-4 flex-1">
+                            <h4 class="text-sm font-medium text-red-900">Report Suspected Counterfeit</h4>
+                            <p class="text-sm text-red-700">Help protect others by reporting suspicious cards</p>
+                        </div>
+                        <div class="ml-4">
+                            <a href="mailto:security@acrpafrica.co.za?subject=Suspected Counterfeit Card" 
+                               class="inline-flex items-center px-3 py-1 border border-red-300 text-xs font-medium rounded text-red-700 bg-white hover:bg-red-50">
+                                Report
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    
+    {% endif %}
+    
+    {% comment %}
+    ADDITIONAL INFORMATION SECTION
+    ==============================
+    
+    Provides context about ACRP verification system and additional resources
+    for users who may need more information.
+    {% endcomment %}
+    
+    <!-- Additional Information -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <!-- About ACRP Verification -->
+        <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <i class="bi bi-info-circle text-blue-600 mr-2"></i>
+                About ACRP Card Verification
+            </h3>
+            <div class="space-y-3 text-sm text-gray-600">
+                <p>
+                    The Association of Christian Religious Practitioners (ACRP) digital card 
+                    verification system ensures the authenticity of member credentials.
+                </p>
+                <p>
+                    All ACRP members receive digital affiliation cards that can be instantly 
+                    verified through our secure system, providing confidence in their 
+                    professional standing and qualifications.
+                </p>
+                <div class="bg-blue-50 border border-blue-200 rounded p-3 mt-4">
+                    <p class="text-blue-700 text-xs">
+                        <i class="bi bi-shield-check mr-1"></i>
+                        This verification system is monitored 24/7 for security and accuracy
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Contact and Support -->
+        <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <i class="bi bi-headset text-green-600 mr-2"></i>
+                Support & Contact
+            </h3>
+            <div class="space-y-4">
+                
+                <!-- Email Support -->
+                <div class="flex items-center p-3 bg-gray-50 rounded">
+                    <i class="bi bi-envelope text-blue-600 mr-3"></i>
+                    <div>
+                        <div class="text-sm font-medium text-gray-900">Email Support</div>
+                        <a href="mailto:support@acrpafrica.co.za" 
+                           class="text-sm text-blue-600 hover:text-blue-700">
+                            support@acrpafrica.co.za
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Phone Support -->
+                <div class="flex items-center p-3 bg-gray-50 rounded">
+                    <i class="bi bi-telephone text-green-600 mr-3"></i>
+                    <div>
+                        <div class="text-sm font-medium text-gray-900">Phone Support</div>
+                        <a href="tel:+27123456789" 
+                           class="text-sm text-blue-600 hover:text-blue-700">
+                            +27 12 345 6789
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Operating Hours -->
+                <div class="flex items-center p-3 bg-gray-50 rounded">
+                    <i class="bi bi-clock text-purple-600 mr-3"></i>
+                    <div>
+                        <div class="text-sm font-medium text-gray-900">Support Hours</div>
+                        <div class="text-sm text-gray-600">Monday - Friday: 8:00 AM - 5:00 PM (SAST)</div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+    </div>
+    
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Certificate-style styling */
+    .verification-certificate {
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    
+    /* Success animation */
+    .verification-success {
+        animation: successBounce 0.8s ease-out;
+    }
+    
+    @keyframes successBounce {
+        0% {
+            transform: scale(0);
+            opacity: 0;
+        }
+        50% {
+            transform: scale(1.1);
+            opacity: 0.8;
+        }
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+    
+    /* Print-specific styling */
+    @media print {
+        body {
+            background: white !important;
+        }
+        
+        .verification-certificate {
+            box-shadow: none !important;
+            border: 2px solid #000 !important;
+        }
+        
+        .no-print {
+            display: none !important;
+        }
+        
+        .bg-gradient-to-r {
+            background: #f9fafb !important;
+            border-bottom: 2px solid #000 !important;
+        }
+        
+        /* Ensure important text is visible in print */
+        .text-green-800, .text-blue-900, .text-purple-900 {
+            color: #000 !important;
+        }
+        
+        /* Print header */
+        .print-only {
+            display: block !important;
+        }
+    }
+    
+    /* Mobile-specific enhancements */
+    @media (max-width: 768px) {
+        .verification-certificate {
+            margin: -1rem;
+            border-radius: 0;
+        }
+        
+        .grid-cols-1.lg\\:grid-cols-3 {
+            gap: 1.5rem;
+        }
+    }
+    
+    /* Status indicator animations */
+    .status-badge {
+        animation: statusPulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes statusPulse {
+        0%, 100% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.05);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    /**
+     * Verification Result JavaScript
+     * ==============================
+     * 
+     * This script handles interactive elements of the verification result page,
+     * including printing, sharing, and navigation functionality.
+     */
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // Initialize result page
+        initializeVerificationResult();
+        
+        // Set up print functionality
+        setupPrintFunctionality();
+        
+        // Add keyboard shortcuts
+        setupKeyboardShortcuts();
+        
+        // Log verification view (for analytics)
+        logVerificationView();
+        
+    });
+    
+    /**
+     * Initialize verification result page
+     */
+    function initializeVerificationResult() {
+        
+        // Add success animation if verification succeeded
+        {% if verification_result.success %}
+        const successElement = document.querySelector('.verification-success');
+        if (successElement) {
+            // Add entrance animation
+            setTimeout(() => {
+                successElement.classList.add('animate-bounce');
+            }, 500);
+        }
+        
+        // Show success notification
+        setTimeout(() => {
+            showToast('Card verification completed successfully!', 'success');
+        }, 1000);
+        {% endif %}
+        
+        // Auto-focus for screen readers
+        const mainHeading = document.querySelector('h1');
+        if (mainHeading) {
+            mainHeading.setAttribute('tabindex', '-1');
+            mainHeading.focus();
+        }
+        
+    }
+    
+    /**
+     * Set up print functionality for verification certificates
+     */
+    function setupPrintFunctionality() {
+        
+        // Enhance print layout
+        window.addEventListener('beforeprint', function() {
+            // Add print timestamp
+            const printTimestamp = document.createElement('div');
+            printTimestamp.className = 'print-only text-xs text-gray-600 text-center mt-4';
+            printTimestamp.innerHTML = `
+                <p>Printed on ${new Date().toLocaleString()} | ACRP Card Verification System</p>
+                <p>This is an official verification record from the ACRP database.</p>
+            `;
+            
+            const certificate = document.querySelector('.verification-certificate');
+            if (certificate) {
+                certificate.appendChild(printTimestamp);
+            }
+        });
+        
+        window.addEventListener('afterprint', function() {
+            // Clean up print elements
+            const printElements = document.querySelectorAll('.print-only');
+            printElements.forEach(el => el.remove());
+        });
+    }
+    
+    /**
+     * Print verification certificate
+     */
+    function printCertificate() {
+        // Show print preparation message
+        showToast('Preparing verification certificate for printing...', 'info');
+        
+        setTimeout(() => {
+            window.print();
+        }, 500);
+    }
+    
+    /**
+     * Navigate to verify another card
+     */
+    function verifyAnotherCard() {
+        // Clear any stored state
+        sessionStorage.removeItem('lastVerificationResult');
+        
+        // Navigate to lookup page
+        window.location.href = '{% url "affiliationcard:verify_lookup" %}';
+    }
+    
+    /**
+     * Set up keyboard shortcuts
+     */
+    function setupKeyboardShortcuts() {
+        document.addEventListener('keydown', function(event) {
+            
+            // Ctrl+P for print (successful verifications only)
+            if (event.ctrlKey && event.key === 'p') {
+                {% if verification_result.success %}
+                event.preventDefault();
+                printCertificate();
+                {% endif %}
+            }
+            
+            // 'N' key for new verification
+            if (event.key.toLowerCase() === 'n' && !event.ctrlKey && !event.altKey) {
+                event.preventDefault();
+                verifyAnotherCard();
+            }
+            
+            // Escape key to go back
+            if (event.key === 'Escape') {
+                if (confirm('Return to card verification page?')) {
+                    verifyAnotherCard();
+                }
+            }
+            
+        });
+    }
+    
+    /**
+     * Log verification view for analytics
+     */
+    function logVerificationView() {
+        // Log the verification result view
+        console.log('Verification result viewed:', {
+            success: {{ verification_result.success|yesno:"true,false" }},
+            {% if verification_result.success %}
+            cardNumber: '{{ verification_result.card.card_number }}',
+            verificationId: '{{ verification_result.verification.id }}',
+            {% endif %}
+            timestamp: new Date().toISOString()
+        });
+        
+        // In a real implementation, this could send analytics data
+        // to track verification system usage and success rates
+    }
+    
+    /**
+     * Share verification result (for successful verifications)
+     */
+    function shareVerification() {
+        {% if verification_result.success %}
+        if (navigator.share) {
+            navigator.share({
+                title: 'ACRP Card Verification',
+                text: 'Card {{ verification_result.card.card_number }} has been verified as authentic',
+                url: window.location.href
+            }).catch(console.error);
+        } else {
+            // Fallback: copy URL to clipboard
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(window.location.href).then(() => {
+                    showToast('Verification link copied to clipboard', 'success');
+                });
+            }
+        }
+        {% endif %}
+    }
+    
+    /**
+     * Report security issue
+     */
+    function reportSecurityIssue() {
+        const email = 'security@acrpafrica.co.za';
+        const subject = 'Security Issue Report - Card Verification';
+        const body = `
+I am reporting a potential security issue with card verification:
+
+Verification Details:
+- Date/Time: ${new Date().toLocaleString()}
+- URL: ${window.location.href}
+- Issue Type: {{ verification_result.error|default:"Unknown" }}
+
+Additional Information:
+[Please describe the issue in detail]
+        `.trim();
+        
+        const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        window.location.href = mailtoLink;
+    }
+    
+</script>
+{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "ACRP Card Verification Result",
+    "description": "Verification result for ACRP digital affiliation card",
+    "url": "{{ request.build_absolute_uri }}",
+    "isPartOf": {
+        "@type": "WebSite",
+        "name": "ACRP Management System",
+        "url": "{{ request.scheme }}://{{ request.get_host }}"
+    }
+    {% if verification_result.success %},
+    "about": {
+        "@type": "Person",
+        "name": "{{ verification_result.card.get_display_name }}",
+        "memberOf": {
+            "@type": "Organization",
+            "name": "{{ verification_result.card.council_name }}"
+        }
+    }
+    {% endif %}
+}
+</script>
+{% endblock %}

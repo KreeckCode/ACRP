@@ -1,0 +1,757 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% comment %}
+ACRP Affiliation Card Analytics Dashboard Template
+=================================================
+
+This template provides comprehensive analytics and reporting for digital affiliation cards.
+It includes interactive charts, detailed statistics, trend analysis, and performance metrics.
+
+Template Features:
+- Interactive charts using Chart.js for data visualization
+- Real-time statistics with trend indicators
+- Council performance comparison
+- Verification activity analysis
+- Card lifecycle metrics
+- Export functionality for reports
+- Responsive design with advanced filtering
+- Professional data presentation with drill-down capabilities
+
+Data Context (from views.analytics_dashboard):
+- card_stats: Dictionary with card status breakdowns
+- verification_stats: Verification metrics and trends
+- council_breakdown: Council-specific analytics
+- daily_verifications: Time-series verification data
+- date_range: Analysis period information
+{% endcomment %}
+
+{% block title %}Card Analytics Dashboard - ACRP{% endblock %}
+
+{% block meta_description %}Comprehensive analytics dashboard for ACRP digital affiliation cards with interactive charts, trends, and performance metrics.{% endblock %}
+
+{% block page_title %}Card Analytics Dashboard{% endblock %}
+
+{% block page_description %}Advanced analytics and performance insights for digital card management{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<style>
+    .chart-container {
+        position: relative;
+        height: 400px;
+        width: 100%;
+        margin-bottom: 2rem;
+    }
+    
+    .metric-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .trend-up {
+        color: #10b981;
+    }
+    
+    .trend-down {
+        color: #ef4444;
+    }
+    
+    .trend-neutral {
+        color: #6b7280;
+    }
+    
+    .filter-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        color: white;
+    }
+    
+    .analytics-grid {
+        display: grid;
+        gap: 1.5rem;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    }
+    
+    @keyframes countUp {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .animate-count {
+        animation: countUp 0.6s ease-out;
+    }
+</style>
+{% endblock %}
+
+{% block page_header %}
+<div class="mb-8">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 flex items-center">
+                <i class="bi bi-bar-chart text-indigo-600 mr-3"></i>
+                Card Analytics Dashboard
+            </h1>
+            <p class="mt-2 text-sm text-gray-600">
+                Comprehensive analytics and insights for digital affiliation card performance
+            </p>
+        </div>
+        <div class="mt-4 sm:mt-0 flex space-x-3">
+            <button type="button" 
+                    class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200"
+                    onclick="exportAnalytics('pdf')">
+                <i class="bi bi-download mr-2"></i>
+                Export PDF
+            </button>
+            <button type="button" 
+                    class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200"
+                    onclick="exportAnalytics('excel')">
+                <i class="bi bi-file-earmark-spreadsheet mr-2"></i>
+                Export Excel
+            </button>
+            <a href="{% url 'affiliationcard:dashboard' %}" 
+               class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 transition-colors duration-200">
+                <i class="bi bi-arrow-left mr-2"></i>
+                Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    
+    <!-- Date Range Filter -->
+    <div class="filter-section">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h3 class="text-lg font-semibold mb-1">Analysis Period</h3>
+                <p class="text-sm opacity-90">{{ date_range }}</p>
+            </div>
+            <div class="mt-4 sm:mt-0">
+                <select id="dateRangeFilter" 
+                        class="px-4 py-2 bg-white bg-opacity-20 border border-white border-opacity-30 rounded-lg text-white placeholder-white placeholder-opacity-75 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50">
+                    <option value="7">Last 7 Days</option>
+                    <option value="30" selected>Last 30 Days</option>
+                    <option value="90">Last 90 Days</option>
+                    <option value="365">Last Year</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Key Performance Indicators -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        
+        <!-- Total Verifications -->
+        <div class="metric-card bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200 hover:shadow-md transition-all duration-300">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                            <i class="bi bi-shield-check text-purple-600 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <p class="text-sm font-medium text-gray-500 uppercase tracking-wide">Total Verifications</p>
+                        <p class="text-3xl font-bold text-gray-900 animate-count">{{ verification_stats.total|default:"0" }}</p>
+                        <p class="text-sm text-purple-600 flex items-center mt-1">
+                            <i class="bi bi-arrow-up-right mr-1"></i>
+                            <span id="verification-growth">Loading...</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- QR Scans -->
+        <div class="metric-card bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200 hover:shadow-md transition-all duration-300">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                            <i class="bi bi-qr-code text-blue-600 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <p class="text-sm font-medium text-gray-500 uppercase tracking-wide">QR Code Scans</p>
+                        <p class="text-3xl font-bold text-gray-900 animate-count">{{ verification_stats.qr_scans|default:"0" }}</p>
+                        <p class="text-sm text-gray-600">
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function() {
+                                    const qrScans = {{ verification_stats.qr_scans|default:0 }};
+                                    const totalVerifications = {{ verification_stats.total|default:1 }};
+                                    const percentage = Math.round((qrScans / totalVerifications) * 100 * 10) / 10;
+                                    document.currentScript.parentElement.innerHTML = percentage + '% of total';
+                                });
+                            </script>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Manual Lookups -->
+        <div class="metric-card bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200 hover:shadow-md transition-all duration-300">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                            <i class="bi bi-search text-green-600 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <p class="text-sm font-medium text-gray-500 uppercase tracking-wide">Manual Lookups</p>
+                        <p class="text-3xl font-bold text-gray-900 animate-count">{{ verification_stats.manual_lookups|default:"0" }}</p>
+                        <p class="text-sm text-gray-600">
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function() {
+                                    const manualLookups = {{ verification_stats.manual_lookups|default:0 }};
+                                    const totalVerifications = {{ verification_stats.total|default:1 }};
+                                    const percentage = Math.round((manualLookups / totalVerifications) * 100 * 10) / 10;
+                                    document.currentScript.parentElement.innerHTML = percentage + '% of total';
+                                });
+                            </script>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Activity -->
+        <div class="metric-card bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200 hover:shadow-md transition-all duration-300">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                            <i class="bi bi-activity text-orange-600 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <p class="text-sm font-medium text-gray-500 uppercase tracking-wide">Recent Activity</p>
+                        <p class="text-3xl font-bold text-gray-900 animate-count">{{ verification_stats.last_30_days|default:"0" }}</p>
+                        <p class="text-sm text-gray-600">Last 30 days</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+    
+    <!-- Charts Section -->
+    <div class="analytics-grid">
+        
+        <!-- Verification Trends Chart -->
+        <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6 lg:col-span-2">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-medium text-gray-900">Verification Trends</h3>
+                <div class="flex space-x-2">
+                    <button type="button" class="px-3 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors" 
+                            onclick="updateTrendChart('daily')">Daily</button>
+                    <button type="button" class="px-3 py-1 text-xs font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors" 
+                            onclick="updateTrendChart('weekly')">Weekly</button>
+                    <button type="button" class="px-3 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors" 
+                            onclick="updateTrendChart('monthly')">Monthly</button>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="verificationTrendsChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Card Status Distribution -->
+        <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-6">Card Status Distribution</h3>
+            <div class="chart-container" style="height: 300px;">
+                <canvas id="cardStatusChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Council Performance -->
+        <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-medium text-gray-900">Council Performance</h3>
+                <button type="button" 
+                        class="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                        onclick="expandCouncilView()">
+                    View All
+                </button>
+            </div>
+            <div class="space-y-4 max-h-80 overflow-y-auto">
+                {% for council in council_breakdown %}
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-gray-900 truncate">
+                            {{ council.council_code }}
+                        </p>
+                        <div class="flex items-center mt-1">
+                            <div class="flex-1 bg-gray-200 rounded-full h-2 mr-2">
+                                <div class="bg-indigo-600 h-2 rounded-full" 
+                                     style="width: {% widthratio council.active council.total 100 %}%"></div>
+                            </div>
+                            <span class="text-xs text-gray-600 flex-shrink-0">
+                                {{ council.active }}/{{ council.total }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-8">
+                    <i class="bi bi-inbox text-gray-400 text-2xl mb-2"></i>
+                    <p class="text-sm text-gray-500">No council data available</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Verification Methods -->
+        <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-6">Verification Methods</h3>
+            <div class="chart-container" style="height: 300px;">
+                <canvas id="verificationMethodsChart"></canvas>
+            </div>
+        </div>
+        
+    </div>
+    
+    <!-- Detailed Statistics Table -->
+    <div class="bg-white shadow-sm rounded-lg border border-gray-200">
+        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <h3 class="text-lg font-medium text-gray-900">Detailed Analytics</h3>
+            <div class="flex space-x-2">
+                <button type="button" 
+                        class="px-3 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+                        onclick="refreshAnalytics()">
+                    <i class="bi bi-arrow-clockwise mr-1"></i>
+                    Refresh
+                </button>
+            </div>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Metric
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Current Value
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Previous Period
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Change
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Trend
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            Total Cards
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ card_stats.total|default:"0" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <span id="previous-total">--</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <span id="change-total" class="trend-neutral">--</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <i class="bi bi-arrow-up text-green-500 mr-1"></i>
+                                <span class="text-sm text-gray-900">Growing</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            Active Cards
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ card_stats.active|default:"0" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <span id="previous-active">--</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <span id="change-active" class="trend-neutral">--</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <i class="bi bi-arrow-up text-green-500 mr-1"></i>
+                                <span class="text-sm text-gray-900">Growing</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            Total Verifications
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ verification_stats.total|default:"0" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <span id="previous-verifications">--</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <span id="change-verifications" class="trend-neutral">--</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <i class="bi bi-arrow-up text-green-500 mr-1"></i>
+                                <span class="text-sm text-gray-900">Active</span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // Chart.js default configuration
+    Chart.defaults.font.family = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+    Chart.defaults.plugins.legend.position = 'bottom';
+    Chart.defaults.plugins.legend.labels.padding = 20;
+    Chart.defaults.plugins.legend.labels.usePointStyle = true;
+    
+    // Initialize all charts
+    initializeVerificationTrendsChart();
+    initializeCardStatusChart();
+    initializeVerificationMethodsChart();
+    
+    // Set up auto-refresh
+    setInterval(refreshAnalytics, 60000); // Refresh every minute
+});
+
+/**
+ * Initialize Verification Trends Chart
+ */
+function initializeVerificationTrendsChart() {
+    const ctx = document.getElementById('verificationTrendsChart').getContext('2d');
+    
+    // Prepare data from Django context
+    const dailyData = {{ daily_verifications|safe }};
+    const labels = dailyData.map(item => {
+        const date = new Date(item.date);
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    });
+    const data = dailyData.map(item => item.count);
+    
+    window.verificationTrendsChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Verifications',
+                data: data,
+                borderColor: '#6366f1',
+                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#6366f1',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 5,
+                pointHoverRadius: 7
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleColor: '#ffffff',
+                    bodyColor: '#ffffff',
+                    cornerRadius: 8,
+                    displayColors: false
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: '#6b7280'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(107, 114, 128, 0.1)'
+                    },
+                    ticks: {
+                        color: '#6b7280'
+                    }
+                }
+            }
+        }
+    });
+}
+
+/**
+ * Initialize Card Status Distribution Chart
+ */
+function initializeCardStatusChart() {
+    const ctx = document.getElementById('cardStatusChart').getContext('2d');
+    
+    const cardStats = {
+        total: {{ card_stats.total|default:0 }},
+        active: {{ card_stats.active|default:0 }},
+        pending: {{ card_stats.pending|default:0 }},
+        expired: {{ card_stats.expired|default:0 }},
+        suspended: {{ card_stats.suspended|default:0 }}
+    };
+    
+    window.cardStatusChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Active', 'Pending', 'Expired', 'Suspended'],
+            datasets: [{
+                data: [
+                    cardStats.active,
+                    cardStats.pending,
+                    cardStats.expired,
+                    cardStats.suspended
+                ],
+                backgroundColor: [
+                    '#10b981',  // green
+                    '#f59e0b',  // yellow
+                    '#ef4444',  // red
+                    '#6b7280'   // gray
+                ],
+                borderWidth: 0,
+                hoverBorderWidth: 2,
+                hoverBorderColor: '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '50%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 15,
+                        font: {
+                            size: 12
+                        }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((context.parsed / total) * 100).toFixed(1);
+                            return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+/**
+ * Initialize Verification Methods Chart
+ */
+function initializeVerificationMethodsChart() {
+    const ctx = document.getElementById('verificationMethodsChart').getContext('2d');
+    
+    const verificationStats = {
+        qr_scans: {{ verification_stats.qr_scans|default:0 }},
+        manual_lookups: {{ verification_stats.manual_lookups|default:0 }},
+        api_verifications: {{ verification_stats.total|default:0 }} - {{ verification_stats.qr_scans|default:0 }} - {{ verification_stats.manual_lookups|default:0 }}
+    };
+    
+    window.verificationMethodsChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['QR Scans', 'Manual Lookups', 'API Calls'],
+            datasets: [{
+                label: 'Verifications',
+                data: [
+                    verificationStats.qr_scans,
+                    verificationStats.manual_lookups,
+                    Math.max(0, verificationStats.api_verifications)
+                ],
+                backgroundColor: [
+                    'rgba(59, 130, 246, 0.8)',
+                    'rgba(16, 185, 129, 0.8)',
+                    'rgba(245, 158, 11, 0.8)'
+                ],
+                borderColor: [
+                    '#3b82f6',
+                    '#10b981',
+                    '#f59e0b'
+                ],
+                borderWidth: 2,
+                borderRadius: 4,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: '#6b7280'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(107, 114, 128, 0.1)'
+                    },
+                    ticks: {
+                        color: '#6b7280'
+                    }
+                }
+            }
+        }
+    });
+}
+
+/**
+ * Update trend chart based on time period
+ */
+function updateTrendChart(period) {
+    // Update active button state
+    document.querySelectorAll('[onclick*="updateTrendChart"]').forEach(btn => {
+        btn.classList.remove('bg-indigo-600', 'text-white');
+        btn.classList.add('bg-gray-100', 'text-gray-700');
+    });
+    event.target.classList.remove('bg-gray-100', 'text-gray-700');
+    event.target.classList.add('bg-indigo-600', 'text-white');
+    
+    // Here you would typically make an AJAX call to get new data
+    // For now, we'll simulate it
+    showToast(`Updated chart to show ${period} view`, 'info');
+}
+
+/**
+ * Export analytics data
+ */
+function exportAnalytics(format) {
+    showToast(`Exporting analytics data as ${format.toUpperCase()}...`, 'info');
+    
+    // Make request to export endpoint
+    const exportUrl = `{% url 'affiliationcard:generate_report' %}?format=${format}&type=analytics`;
+    
+    // Create form and submit
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = exportUrl;
+    
+    // Add CSRF token
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    if (csrfToken) {
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+    }
+    
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+}
+
+/**
+ * Refresh analytics data
+ */
+function refreshAnalytics() {
+    showToast('Refreshing analytics...', 'info');
+    
+    // In a real implementation, this would make AJAX calls to update data
+    setTimeout(() => {
+        showToast('Analytics refreshed', 'success');
+        // Update charts with new data
+        // window.verificationTrendsChart.update();
+        // window.cardStatusChart.update();
+        // window.verificationMethodsChart.update();
+    }, 1000);
+}
+
+/**
+ * Expand council view
+ */
+function expandCouncilView() {
+    // This would typically open a modal or navigate to detailed council analytics
+    showToast('Detailed council view coming soon!', 'info');
+}
+
+/**
+ * Handle date range filter change
+ */
+document.getElementById('dateRangeFilter')?.addEventListener('change', function() {
+    const days = this.value;
+    showToast(`Updating analytics for last ${days} days...`, 'info');
+    
+    // In real implementation, would reload page or make AJAX call
+    setTimeout(() => {
+        location.reload();
+    }, 1000);
+});
+
+</script>
+{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "ACRP Card Analytics Dashboard",
+    "description": "Comprehensive analytics dashboard for ACRP digital affiliation cards",
+    "url": "{{ request.build_absolute_uri }}",
+    "isPartOf": {
+        "@type": "WebSite",
+        "name": "ACRP Management System",
+        "url": "{{ request.scheme }}://{{ request.get_host }}"
+    }
+}
+</script>
+{% endblock %}

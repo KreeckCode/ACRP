@@ -17,8 +17,12 @@ public_patterns = [
     # API endpoint for programmatic verification
     path('api/verify/', views.api_verify, name='api_verify'),
     
-    # Secure card download with token
+    # Secure card download with token - CRITICAL: This must be uncommented!
     path('download/<str:token>/', views.download_card, name='download_card'),
+    
+    # Optional: Download expired/invalid pages (you may need to create these views)
+    # path('download/expired/', views.download_expired, name='download_expired'),
+    # path('download/invalid/', views.download_invalid, name='download_invalid'),
 ]
 
 # ============================================================================
@@ -43,49 +47,30 @@ admin_patterns = [
     
     # Bulk operations
     path('bulk-operations/', views.bulk_operations, name='bulk_operations'),
-]
-
-# ============================================================================
-# CARD TEMPLATE MANAGEMENT URLS - Admin only
-# ============================================================================
-template_patterns = [
-    # Template list and management
+    
+    # Template management URLs
     path('templates/', views.CardTemplateListView.as_view(), name='template_list'),
     path('templates/create/', views.CardTemplateCreateView.as_view(), name='template_create'),
-]
-
-# ============================================================================
-# ANALYTICS AND REPORTING URLS - Admin only
-# ============================================================================
-analytics_patterns = [
-    # Analytics dashboard
-    path('analytics/', views.analytics_dashboard, name='analytics'),
     
-    # Report generation
+    # Analytics and reporting URLs
+    path('analytics/', views.analytics_dashboard, name='analytics'),
     path('reports/', views.generate_report, name='generate_report'),
     path('reports/custom/', views.generate_report, name='custom_report'),
     
+    # System administration (if you have system_settings view)
+    # path('settings/', views.system_settings, name='system_settings'),
 ]
-
-
 
 # ============================================================================
 # MAIN URL PATTERNS
 # ============================================================================
 urlpatterns = [
-    # Root redirect to dashboard for authenticated users, verify for anonymous
+    # Redirect for root URL
     path('', RedirectView.as_view(pattern_name='affiliationcard:dashboard'), name='root'),
     
-    # Public verification endpoints (no 'admin' prefix)
+    # Public verification endpoints (includes download URLs)
     path('', include(public_patterns)),
     
-    # Admin interface
+    # Admin interface with all sub-patterns included
     path('admin/', include(admin_patterns)),
-    
-    # Template management
-    path('admin/', include(template_patterns)),
-    
-    # Analytics and reporting
-    path('admin/', include(analytics_patterns)),
-    
 ]

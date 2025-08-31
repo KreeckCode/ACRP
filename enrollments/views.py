@@ -28,8 +28,9 @@ from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
 from openpyxl.utils import get_column_letter
 from openpyxl.chart import BarChart, Reference
 
+from django.contrib.contenttypes.models import ContentType
 
-
+from affiliationcard.views import assign_card_programmatically
 
 
 from .models import (
@@ -643,6 +644,16 @@ def application_create(request, session_id):
                 saved_documents = Document.objects.filter(content_type=content_type, object_id=application.pk)
                 logger.info(f"Total documents in DB: {saved_documents.count()}")
                 
+                
+                # Send welcome email to the applicant
+                try:
+                    send_welcome_email(application)
+                    logger.info(f"Welcome email sent for application {application.application_number}")
+                except Exception as e:
+                    logger.warning(f"Failed to send welcome email for application {application.application_number}: {str(e)}")
+                    # Don't fail the application submission if email fails
+                    pass
+                
                 request.session['application_success'] = {
                     'application_number': application.application_number,
                     'affiliation_type': session.selected_affiliation_type.name,
@@ -1000,7 +1011,7 @@ def create_mock_document_formset():
     
     return MockFormset()
 
-# Add this new view for the success page
+
 def application_success(request):
     """
     Success page after application submission.
@@ -1025,213 +1036,62 @@ def application_success(request):
     }
     
     return render(request, 'enrollments/applications/success.html', context)
+
+
+
+
+def send_welcome_email(application):
     """
-    Create application based on completed onboarding session.
+    Send welcome email when application is successfully submitted.
     
-    Dynamically selects the appropriate form based on affiliation type
-    and handles all related models (qualifications, references, etc.).
+    Args:
+        application: The submitted application instance
     """
     try:
-        session = OnboardingSession.objects.select_related(
-            'selected_affiliation_type', 'selected_council',
-            'selected_designation_category', 'selected_designation_subcategory'
-        ).get(session_id=session_id)
-    except OnboardingSession.DoesNotExist:
-        messages.error(request, "Invalid onboarding session.")
-        return redirect('enrollments:onboarding_start')
-    
-    # Validate session is complete
-    if not session.is_complete():
-        messages.error(request, "Please complete the onboarding process.")
-        return redirect('enrollments:onboarding_start')
-    
-    # Check if application already exists for this session
-    if hasattr(session, 'application'):
-        messages.info(request, "Application already exists for this session.")
-        return redirect('enrollments:application_detail', 
-                       pk=session.application.pk, 
-                       app_type=session.selected_affiliation_type.code)
-    
-    # Get appropriate form class
-    form_class_map = {
-        'associated': AssociatedApplicationForm,
-        'designated': DesignatedApplicationForm,
-        'student': StudentApplicationForm,
-    }
-    
-    form_class = form_class_map.get(session.selected_affiliation_type.code)
-    if not form_class:
-        messages.error(request, "Invalid affiliation type.")
-        return redirect('enrollments:onboarding_start')
-    
-    if request.method == 'POST':
-        # Create main application form
-        form = form_class(
-            request.POST, 
-            request=request,
-            onboarding_session=session
+        from django.template.loader import render_to_string
+        from django.core.mail import EmailMultiAlternatives
+        from django.conf import settings
+        import logging
+        
+        logger = logging.getLogger(__name__)
+        
+        # Context for email template
+        context = {
+            'application': application,
+            'applicant_name': application.get_display_name(),
+            'application_number': application.application_number,
+            'affiliation_type': application.onboarding_session.selected_affiliation_type.name,
+            'council_name': application.onboarding_session.selected_council.name,
+            'submission_date': application.created_at,
+            'current_year': timezone.now().year,
+        }
+        
+        # Render HTML email template
+        subject = f"Welcome to ACRP - Application {application.application_number} Received"
+        html_content = render_to_string('email_templates/enrollment/welcome.html', context)
+        
+        # Create email with HTML content only (as requested)
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body='',  # Empty body since we're using HTML only
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[application.email],
+            reply_to=[settings.DEFAULT_FROM_EMAIL],  # Set reply-to address
         )
         
-        # Initialize formsets based on application type
-        formsets = {}
-        if session.selected_affiliation_type.code == 'designated':
-            # Only show formsets for designated applications
-            formsets = {
-                'qualifications': AcademicQualificationFormSet(request.POST, prefix='qualifications'),
-                'experiences': PracticalExperienceFormSet(request.POST, prefix='experiences'),
-                'references': ReferenceFormSet(request.POST, prefix='references'),
-                'documents': DocumentFormSet(request.POST, request.FILES, prefix='documents'),
-            }
-        elif session.selected_affiliation_type.code in ['associated', 'student']:
-            # For associated and student, only show references and documents
-            formsets = {
-                'references': ReferenceFormSet(request.POST, prefix='references'),
-                'documents': DocumentFormSet(request.POST, request.FILES, prefix='documents'),
-            }
+        # Attach HTML content
+        email.attach_alternative(html_content, "text/html")
         
-        # Validate main form
-        form_valid = form.is_valid()
+        # Send email
+        email.send()
         
-        # Log form errors for debugging
-        if not form_valid:
-            logger.warning(f"Main form errors: {form.errors}")
-            messages.error(request, "Please correct the main form errors.")
+        logger.info(f"Welcome email sent successfully for application {application.application_number} to {application.email}")
         
-        # Validate formsets
-        formsets_valid = True
-        for formset_name, formset in formsets.items():
-            if not formset.is_valid():
-                formsets_valid = False
-                logger.error(f"Formset {formset_name} validation failed: {formset.errors}")
-                logger.error(f"Formset {formset_name} non-form errors: {formset.non_form_errors()}")
-        
-        if form_valid and formsets_valid:
-            try:
-                # Save main application first
-                application = form.save(commit=False)
-                application.onboarding_session = session
-                
-                # Set designation fields for designated applications
-                if session.selected_affiliation_type.code == 'designated':
-                    application.designation_category = session.selected_designation_category
-                    application.designation_subcategory = session.selected_designation_subcategory
-                
-                application.save()
-                
-                # Get content type for this application
-                content_type = ContentType.objects.get_for_model(application.__class__)
-                
-                # Save formsets with proper handling
-                for formset_name, formset in formsets.items():
-                    if formset_name in ['qualifications', 'experiences']:
-                        # Direct foreign key relationship - standard inline formset
-                        formset.instance = application
-                        formset.save()
-                    
-                    elif formset_name in ['references', 'documents']:
-                        # Generic foreign key relationship - manual handling
-                        instances = formset.save(commit=False)
-                        for instance in instances:
-                            instance.content_type = content_type
-                            instance.object_id = application.pk
-                            instance.content_object = application
-                            
-                            # Set additional fields for documents
-                            if formset_name == 'documents' and request.user.is_authenticated:
-                                instance.uploaded_by = request.user
-                            
-                            instance.save()
-                        
-                        # Handle deleted instances
-                        for obj in formset.deleted_objects:
-                            obj.delete()
-                
-                logger.info(f"Application created: {application.application_number} from session {session_id}")
-                
-                # Clear caches
-                cache.delete_many([
-                    'application_statistics',
-                    'recent_applications',
-                ])
-                
-                messages.success(
-                    request, 
-                    f"Your {session.selected_affiliation_type.name} application has been submitted successfully!"
-                )
-                
-                return redirect('enrollments:application_dashboard', 
-                               pk=application.pk, 
-                               app_type=session.selected_affiliation_type.code)
-                
-            except Exception as e:
-                logger.error(f"Error creating application: {str(e)}")
-                logger.error(f"Exception type: {type(e)}")
-                logger.error(f"Traceback: {traceback.format_exc()}")
-                messages.error(request, "An error occurred while creating your application. Please try again.")
-        
-        else:
-            # Form validation failed
-            logger.warning(f"Application form validation failed")
-            if not form_valid:
-                logger.warning(f"Form errors: {form.errors}")
-            for formset_name, formset in formsets.items():
-                if formset.errors:
-                    logger.warning(f"{formset_name} formset errors: {formset.errors}")
-            
-            messages.error(request, "Please correct the errors below and try again.")
-    
-    else:
-        # GET request - create empty forms
-        form = form_class(
-            request=request,
-            onboarding_session=session
-        )
-        
-        # Initialize empty formsets
-        formsets = {}
-        if session.selected_affiliation_type.code == 'designated':
-            formsets = {
-                'qualifications': AcademicQualificationFormSet(prefix='qualifications'),
-                'experiences': PracticalExperienceFormSet(prefix='experiences'),
-                'references': ReferenceFormSet(prefix='references'),
-                'documents': DocumentFormSet(prefix='documents'),
-            }
-        elif session.selected_affiliation_type.code in ['associated', 'student']:
-            formsets = {
-                'references': ReferenceFormSet(prefix='references'),
-                'documents': DocumentFormSet(prefix='documents'),
-            }
-    
-    # Determine form sections to show
-    show_qualifications = session.selected_affiliation_type.code == 'designated'
-    show_experiences = session.selected_affiliation_type.code == 'designated'
-    show_references = True  # All application types have references
-    show_documents = True   # All application types have documents
-    
-    context = {
-        'form': form,
-        'formsets': formsets,
-        'session': session,
-        'show_qualifications': show_qualifications,
-        'show_experiences': show_experiences,
-        'show_references': show_references,
-        'show_documents': show_documents,
-        'page_title': f'Create {session.selected_affiliation_type.name} Application',
-        'council_name': session.selected_council.name,
-        'affiliation_type': session.selected_affiliation_type.name,
-    }
-    
-    # Use different templates for different application types
-    template_map = {
-        'associated': 'enrollments/applications/associated_form.html',
-        'designated': 'enrollments/applications/designated_form.html',
-        'student': 'enrollments/applications/student_form.html',
-    }
-    
-    template = template_map.get(session.selected_affiliation_type.code, 
-                               'enrollments/applications/base_form.html')
-    
-    return render(request, template, context)
+    except Exception as e:
+        # Log error but don't raise exception to avoid breaking application submission
+        logger.error(f"Failed to send welcome email for application {application.application_number}: {str(e)}")
+        # Don't re-raise the exception - we don't want email failures to break application submission
+
 
 # ============================================================================
 # APPLICATION Export VIEWS
@@ -3087,6 +2947,44 @@ def application_review(request, pk, app_type):
             
             # Save the application
             application.save()
+
+            # Handle digital card assignment if requested
+            # Check if the checkbox was checked (it will be in POST if checked)
+            assign_digital_card = 'assign_digital_card' in request.POST
+            
+            if assign_digital_card and status == 'approved':
+                try:
+                    from affiliationcard.views import assign_card_programmatically
+                    
+                    # Get content type for this application model
+                    content_type = ContentType.objects.get_for_model(application.__class__)
+                    
+                    # Check if card already exists to prevent duplicates
+                    from affiliationcard.models import AffiliationCard
+                    existing_card = AffiliationCard.objects.filter(
+                        content_type=content_type,
+                        object_id=application.pk,
+                        status__in=['assigned', 'active']
+                    ).first()
+                    
+                    if not existing_card:
+                        # Create and send the digital card
+                        card = assign_card_programmatically(
+                            content_type=content_type,
+                            object_id=application.pk,
+                            assigned_by=request.user,
+                            send_email=True,
+                            request=request
+                        )
+                        
+                        messages.success(request, f"Digital card {card.card_number} assigned and sent to {application.email}")
+                        logger.info(f"Digital card {card.card_number} assigned to application {application.application_number}")
+                    else:
+                        messages.info(request, f"Digital card already exists: {existing_card.card_number}")
+                        
+                except Exception as e:
+                    logger.error(f"Failed to assign digital card for application {application.application_number}: {str(e)}")
+                    messages.warning(request, "Application approved but digital card assignment failed. You can assign it manually from the card administration.")
             
             # Log the status change
             logger.info(f"Application {application.application_number} status changed from {old_status} to {status} by {request.user}")
@@ -3097,9 +2995,9 @@ def application_review(request, pk, app_type):
             # Send notification email if needed
             try:
                 if status == 'approved':
-                    send_application_approved_email(application)
+                    send_application_approved_email(application, request)
                 elif status == 'rejected' and rejection_reason:
-                    send_application_rejected_email(application, rejection_reason)
+                    send_application_rejected_email(application, rejection_reason, request)
             except Exception as e:
                 logger.warning(f"Failed to send notification email: {str(e)}")
                 # Don't fail the status update if email fails
@@ -3118,11 +3016,15 @@ def application_review(request, pk, app_type):
     return redirect('enrollments:application_detail', pk=pk, app_type=app_type)
 
 
-def send_application_approved_email(application):
-    """Send email notification when application is approved using template"""
+
+
+
+def send_application_approved_email(application, request=None):
+    """Send email notification when application is approved using HTML template only"""
     try:
         from django.template.loader import render_to_string
         from django.core.mail import EmailMultiAlternatives
+        from django.conf import settings
         
         # Context for email template
         context = {
@@ -3131,19 +3033,21 @@ def send_application_approved_email(application):
             'affiliation_type': application.onboarding_session.selected_affiliation_type,
             'applicant_name': application.get_display_name(),
             'application_number': application.application_number,
+            'current_year': timezone.now().year,
+            'request': request,  # Add request to context for building URLs
         }
         
-        # Render email templates
+        # Render HTML email template only
         subject = f"Application Approved - {application.application_number}"
         html_content = render_to_string('email_templates/enrollment/application_approved_email.html', context)
-        text_content = render_to_string('email_templates/enrollment/application_approved_email.txt', context)
         
-        # Create email
+        # Create email with HTML only
         email = EmailMultiAlternatives(
             subject=subject,
-            body=text_content,
+            body='',  # Empty body since we're using HTML only
             from_email=settings.DEFAULT_FROM_EMAIL,
             to=[application.email],
+            reply_to=[settings.DEFAULT_FROM_EMAIL],
         )
         email.attach_alternative(html_content, "text/html")
         
@@ -3157,11 +3061,12 @@ def send_application_approved_email(application):
         raise
 
 
-def send_application_rejected_email(application, rejection_reason):
-    """Send email notification when application is rejected using template"""
+def send_application_rejected_email(application, rejection_reason, request=None):
+    """Send email notification when application is rejected using HTML template only"""
     try:
         from django.template.loader import render_to_string
         from django.core.mail import EmailMultiAlternatives
+        from django.conf import settings
         
         # Context for email template
         context = {
@@ -3171,19 +3076,21 @@ def send_application_rejected_email(application, rejection_reason):
             'applicant_name': application.get_display_name(),
             'application_number': application.application_number,
             'rejection_reason': rejection_reason,
+            'current_year': timezone.now().year,
+            'request': request,  # Add request to context for building URLs
         }
         
-        # Render email templates
+        # Render HTML email template only
         subject = f"Application Status Update - {application.application_number}"
         html_content = render_to_string('email_templates/enrollment/application_rejected_email.html', context)
-        text_content = render_to_string('email_templates/enrollment/application_rejected_email.txt', context)
         
-        # Create email
+        # Create email with HTML only
         email = EmailMultiAlternatives(
             subject=subject,
-            body=text_content,
+            body='',  # Empty body since we're using HTML only
             from_email=settings.DEFAULT_FROM_EMAIL,
             to=[application.email],
+            reply_to=[settings.DEFAULT_FROM_EMAIL],
         )
         email.attach_alternative(html_content, "text/html")
         
@@ -3195,10 +3102,6 @@ def send_application_rejected_email(application, rejection_reason):
     except Exception as e:
         logger.error(f"Failed to send rejection email for {application.application_number}: {str(e)}")
         raise
-
-
-
-
     
 # ============================================================================
 # DASHBOARD AND STATISTICS

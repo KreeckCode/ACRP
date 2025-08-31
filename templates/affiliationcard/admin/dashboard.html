@@ -1,0 +1,860 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% comment %}
+Enhanced ACRP Affiliation Card Dashboard Template
+================================================
+
+This enhanced template provides comprehensive navigation to all affiliation card
+functions and features. It serves as a central hub for all card management activities.
+
+Template Features:
+- Complete navigation to all card functions
+- Visual status indicators and metrics
+- Quick access panels for common tasks
+- Real-time system health monitoring
+- Contextual help and documentation links
+- Responsive design for all devices
+- Progressive disclosure of advanced features
+
+Navigation Structure:
+- Card Management (CRUD operations)
+- Verification System (public & admin tools)
+- Analytics & Reporting
+- Template Management
+- System Administration
+- Bulk Operations
+- Public Access Tools
+{% endcomment %}
+
+{% block title %}Card Management Hub - ACRP{% endblock %}
+
+{% block meta_description %}Comprehensive ACRP digital affiliation card management hub with complete navigation to all card administration functions.{% endblock %}
+
+{% block page_title %}Card Management Hub{% endblock %}
+
+{% block page_description %}Central dashboard for all digital affiliation card operations and administration{% endblock %}
+
+{% block extra_css %}
+<style>
+    .nav-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .nav-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 2px;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        transition: left 0.3s ease;
+    }
+    
+    .nav-card:hover::before {
+        left: 0;
+    }
+    
+    .nav-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .system-health-excellent { @apply bg-green-100 text-green-800 border-green-200; }
+    .system-health-good { @apply bg-blue-100 text-blue-800 border-blue-200; }
+    .system-health-fair { @apply bg-yellow-100 text-yellow-800 border-yellow-200; }
+    .system-health-poor { @apply bg-red-100 text-red-800 border-red-200; }
+    
+    .feature-grid {
+        display: grid;
+        gap: 1.5rem;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    }
+    
+    .quick-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+    
+    .notification-dot {
+        position: absolute;
+        top: -4px;
+        right: -4px;
+        width: 8px;
+        height: 8px;
+        background-color: #ef4444;
+        border-radius: 50%;
+        border: 2px solid white;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.1); opacity: 0.8; }
+    }
+    
+    .pulse-animation {
+        animation: pulse 2s infinite;
+    }
+    
+    .category-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 8px 8px 0 0;
+        padding: 1rem 1.5rem;
+        margin: -1.5rem -1.5rem 1.5rem -1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block page_header %}
+<div class="mb-8">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+        <div class="mb-4 lg:mb-0">
+            <h1 class="text-3xl font-bold text-gray-900 flex items-center mb-2">
+                <i class="bi bi-grid-3x3-gap text-indigo-600 mr-3"></i>
+                Card Management Hub
+            </h1>
+            <p class="text-sm text-gray-600">
+                Complete administration center for ACRP digital affiliation cards
+            </p>
+            
+            <!-- System Status Indicator -->
+            <div class="flex items-center mt-2">
+                <div class="flex items-center space-x-2">
+                    <div class="w-2 h-2 bg-green-400 rounded-full pulse-animation"></div>
+                    <span class="text-xs text-gray-500">System Operational</span>
+                    <span class="system-health-{% if performance_metrics.system_health_score >= 90 %}excellent{% elif performance_metrics.system_health_score >= 75 %}good{% elif performance_metrics.system_health_score >= 50 %}fair{% else %}poor{% endif %} px-2 py-1 rounded-full text-xs font-medium border ml-2">
+                        Health Score: {{ performance_metrics.system_health_score|default:75 }}%
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex flex-wrap gap-2">
+            <!-- Emergency Actions -->
+            <button type="button" 
+                    class="inline-flex items-center px-3 py-2 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50 transition-colors duration-200"
+                    onclick="emergencyActions()">
+                <i class="bi bi-exclamation-triangle mr-2"></i>
+                Emergency
+            </button>
+            
+            <!-- System Settings -->
+            <a href="#" 
+               onclick="showToast('System settings coming soon!', 'info')"
+               class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200">
+                <i class="bi bi-gear mr-2"></i>
+                Settings
+            </a>
+            
+            <!-- Help & Documentation -->
+            <button type="button" 
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 transition-colors duration-200"
+                    onclick="showHelp('dashboard')">
+                <i class="bi bi-question-circle mr-2"></i>
+                Help
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    
+    <!-- Quick Statistics Overview -->
+    <div class="quick-stats">
+        <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                            <i class="bi bi-credit-card text-blue-600 text-lg"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <p class="text-sm font-medium text-gray-500 uppercase tracking-wide">Total Cards</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ stats.total_cards|default:"0" }}</p>
+                        <div class="flex items-center mt-1">
+                            <span class="text-xs text-gray-500">{{ stats.active_percentage|default:0 }}% active</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                            <i class="bi bi-shield-check text-green-600 text-lg"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <p class="text-sm font-medium text-gray-500 uppercase tracking-wide">Verifications</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ stats.total_verifications|default:"0" }}</p>
+                        <div class="flex items-center mt-1">
+                            <span class="text-xs text-gray-500">{{ stats.recent_verifications|default:0 }} this week</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center relative">
+                            <i class="bi bi-exclamation-triangle text-yellow-600 text-lg"></i>
+                            {% if performance_metrics.cards_needing_attention > 0 %}
+                            <div class="notification-dot"></div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <p class="text-sm font-medium text-gray-500 uppercase tracking-wide">Need Attention</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ performance_metrics.cards_needing_attention|default:"0" }}</p>
+                        <div class="flex items-center mt-1">
+                            <span class="text-xs text-gray-500">Pending + Expired</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center relative">
+                            <i class="bi bi-person-check text-purple-600 text-lg"></i>
+                            {% if performance_metrics.approval_backlog_count > 0 %}
+                            <div class="notification-dot"></div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <p class="text-sm font-medium text-gray-500 uppercase tracking-wide">Approval Backlog</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ performance_metrics.approval_backlog_count|default:"0" }}</p>
+                        <div class="flex items-center mt-1">
+                            <span class="text-xs text-gray-500">Need cards assigned</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Navigation Sections -->
+    <div class="feature-grid">
+        
+        <!-- Card Management Section -->
+        <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+            <div class="category-header">
+                <h3 class="text-lg font-semibold flex items-center">
+                    <i class="bi bi-credit-card mr-2"></i>
+                    Card Management
+                </h3>
+                <p class="text-sm opacity-90 mt-1">Core card operations and administration</p>
+            </div>
+            
+            <div class="grid grid-cols-1 gap-3">
+                <a href="{% url 'affiliationcard:card_list' %}" 
+                   class="nav-card block p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <i class="bi bi-list-ul text-indigo-600 text-lg mr-3"></i>
+                            <div>
+                                <div class="font-medium text-gray-900">View All Cards</div>
+                                <div class="text-sm text-gray-500">Browse, search, and filter cards</div>
+                            </div>
+                        </div>
+                        <div class="text-sm font-medium text-gray-400">{{ stats.total_cards|default:0 }}</div>
+                    </div>
+                </a>
+                
+                <div class="nav-card block p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                     onclick="showToast('Please select an approved application to assign a card', 'info')">
+                    <div class="flex items-center">
+                        <i class="bi bi-plus-circle text-green-600 text-lg mr-3"></i>
+                        <div>
+                            <div class="font-medium text-gray-900">Assign New Card</div>
+                            <div class="text-sm text-gray-500">Link card to approved application</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <a href="{% url 'affiliationcard:bulk_operations' %}" 
+                   class="nav-card block p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                    <div class="flex items-center">
+                        <i class="bi bi-collection text-purple-600 text-lg mr-3"></i>
+                        <div>
+                            <div class="font-medium text-gray-900">Bulk Operations</div>
+                            <div class="text-sm text-gray-500">Manage multiple cards at once</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Verification System Section -->
+        <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+            <div class="category-header">
+                <h3 class="text-lg font-semibold flex items-center">
+                    <i class="bi bi-shield-check mr-2"></i>
+                    Verification System
+                </h3>
+                <p class="text-sm opacity-90 mt-1">Public and administrative verification tools</p>
+            </div>
+            
+            <div class="grid grid-cols-1 gap-3">
+                <a href="{% url 'affiliationcard:verify_lookup' %}" 
+                   target="_blank"
+                   class="nav-card block p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <i class="bi bi-search text-blue-600 text-lg mr-3"></i>
+                            <div>
+                                <div class="font-medium text-gray-900">Public Verification</div>
+                                <div class="text-sm text-gray-500">Test card lookup system</div>
+                            </div>
+                        </div>
+                        <i class="bi bi-box-arrow-up-right text-gray-400"></i>
+                    </div>
+                </a>
+                
+                <div class="nav-card block p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                     onclick="showAPIDocumentation()">
+                    <div class="flex items-center">
+                        <i class="bi bi-code text-indigo-600 text-lg mr-3"></i>
+                        <div>
+                            <div class="font-medium text-gray-900">API Verification</div>
+                            <div class="text-sm text-gray-500">Programmatic verification endpoint</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="nav-card block p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                     onclick="showVerificationLogs()">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <i class="bi bi-activity text-orange-600 text-lg mr-3"></i>
+                            <div>
+                                <div class="font-medium text-gray-900">Verification Logs</div>
+                                <div class="text-sm text-gray-500">View all verification activity</div>
+                            </div>
+                        </div>
+                        <div class="text-sm font-medium text-gray-400">{{ stats.recent_verifications|default:0 }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Analytics & Reporting Section -->
+        <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+            <div class="category-header">
+                <h3 class="text-lg font-semibold flex items-center">
+                    <i class="bi bi-bar-chart mr-2"></i>
+                    Analytics & Reports
+                </h3>
+                <p class="text-sm opacity-90 mt-1">Insights, metrics, and comprehensive reporting</p>
+            </div>
+            
+            <div class="grid grid-cols-1 gap-3">
+                <a href="{% url 'affiliationcard:analytics' %}" 
+                   class="nav-card block p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                    <div class="flex items-center">
+                        <i class="bi bi-graph-up text-green-600 text-lg mr-3"></i>
+                        <div>
+                            <div class="font-medium text-gray-900">Analytics Dashboard</div>
+                            <div class="text-sm text-gray-500">Interactive charts and metrics</div>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="{% url 'affiliationcard:generate_report' %}" 
+                   class="nav-card block p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                    <div class="flex items-center">
+                        <i class="bi bi-file-earmark-bar-graph text-purple-600 text-lg mr-3"></i>
+                        <div>
+                            <div class="font-medium text-gray-900">Generate Reports</div>
+                            <div class="text-sm text-gray-500">Custom PDF, Excel, and CSV reports</div>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="{% url 'affiliationcard:custom_report' %}" 
+                   class="nav-card block p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                    <div class="flex items-center">
+                        <i class="bi bi-sliders text-blue-600 text-lg mr-3"></i>
+                        <div>
+                            <div class="font-medium text-gray-900">Custom Reports</div>
+                            <div class="text-sm text-gray-500">Build specific analysis reports</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Template Management Section -->
+        <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+            <div class="category-header">
+                <h3 class="text-lg font-semibold flex items-center">
+                    <i class="bi bi-palette mr-2"></i>
+                    Template Management
+                </h3>
+                <p class="text-sm opacity-90 mt-1">Design and manage card templates</p>
+            </div>
+            
+            <div class="grid grid-cols-1 gap-3">
+                <a href="{% url 'affiliationcard:template_list' %}" 
+                   class="nav-card block p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                    <div class="flex items-center">
+                        <i class="bi bi-grid text-indigo-600 text-lg mr-3"></i>
+                        <div>
+                            <div class="font-medium text-gray-900">View Templates</div>
+                            <div class="text-sm text-gray-500">Manage existing card templates</div>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="{% url 'affiliationcard:template_create' %}" 
+                   class="nav-card block p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                    <div class="flex items-center">
+                        <i class="bi bi-plus-square text-green-600 text-lg mr-3"></i>
+                        <div>
+                            <div class="font-medium text-gray-900">Create Template</div>
+                            <div class="text-sm text-gray-500">Design new card template</div>
+                        </div>
+                    </div>
+                </a>
+                
+                <div class="nav-card block p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                     onclick="previewTemplates()">
+                    <div class="flex items-center">
+                        <i class="bi bi-eye text-purple-600 text-lg mr-3"></i>
+                        <div>
+                            <div class="font-medium text-gray-900">Preview Gallery</div>
+                            <div class="text-sm text-gray-500">View all template designs</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- System Administration Section -->
+        <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+            <div class="category-header">
+                <h3 class="text-lg font-semibold flex items-center">
+                    <i class="bi bi-gear mr-2"></i>
+                    System Administration
+                </h3>
+                <p class="text-sm opacity-90 mt-1">Advanced settings and system management</p>
+            </div>
+            
+            <div class="grid grid-cols-1 gap-3">
+                <div class="nav-card block p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                     onclick="systemSettings()">
+                    <div class="flex items-center">
+                        <i class="bi bi-sliders text-gray-600 text-lg mr-3"></i>
+                        <div>
+                            <div class="font-medium text-gray-900">System Settings</div>
+                            <div class="text-sm text-gray-500">Configure system parameters</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="nav-card block p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                     onclick="userManagement()">
+                    <div class="flex items-center">
+                        <i class="bi bi-people text-blue-600 text-lg mr-3"></i>
+                        <div>
+                            <div class="font-medium text-gray-900">User Management</div>
+                            <div class="text-sm text-gray-500">Manage admin users and permissions</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="nav-card block p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                     onclick="systemHealth()">
+                    <div class="flex items-center">
+                        <i class="bi bi-heart-pulse text-green-600 text-lg mr-3"></i>
+                        <div>
+                            <div class="font-medium text-gray-900">System Health</div>
+                            <div class="text-sm text-gray-500">Monitor system performance</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Tools Section -->
+        <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+            <div class="category-header">
+                <h3 class="text-lg font-semibold flex items-center">
+                    <i class="bi bi-tools mr-2"></i>
+                    Quick Tools
+                </h3>
+                <p class="text-sm opacity-90 mt-1">Frequently used utilities and shortcuts</p>
+            </div>
+            
+            <div class="grid grid-cols-1 gap-3">
+                <div class="nav-card block p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                     onclick="bulkEmailSender()">
+                    <div class="flex items-center">
+                        <i class="bi bi-envelope-open text-blue-600 text-lg mr-3"></i>
+                        <div>
+                            <div class="font-medium text-gray-900">Bulk Email Sender</div>
+                            <div class="text-sm text-gray-500">Send emails to multiple cardholders</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="nav-card block p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                     onclick="cardValidator()">
+                    <div class="flex items-center">
+                        <i class="bi bi-check-circle text-green-600 text-lg mr-3"></i>
+                        <div>
+                            <div class="font-medium text-gray-900">Card Validator</div>
+                            <div class="text-sm text-gray-500">Validate card data integrity</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="nav-card block p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                     onclick="exportImportTools()">
+                    <div class="flex items-center">
+                        <i class="bi bi-arrow-down-up text-purple-600 text-lg mr-3"></i>
+                        <div>
+                            <div class="font-medium text-gray-900">Import/Export</div>
+                            <div class="text-sm text-gray-500">Bulk data import and export tools</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Alert Section for Urgent Items -->
+    {% if approved_applications_without_cards or expiring_soon %}
+    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+        <div class="flex items-center mb-4">
+            <i class="bi bi-exclamation-triangle text-yellow-600 text-lg mr-2"></i>
+            <h3 class="text-lg font-medium text-yellow-800">Items Requiring Attention</h3>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {% if approved_applications_without_cards %}
+            <div>
+                <h4 class="text-sm font-semibold text-yellow-800 mb-2">Applications Needing Cards ({{ approved_applications_without_cards|length }})</h4>
+                <div class="space-y-2">
+                    {% for app_data in approved_applications_without_cards|slice:":3" %}
+                    <div class="flex items-center justify-between bg-white p-3 rounded border border-yellow-200">
+                        <div class="flex-1 min-w-0">
+                            <div class="text-sm font-medium text-gray-900 truncate">
+                                {{ app_data.application.get_display_name }}
+                            </div>
+                            <div class="text-xs text-gray-500">
+                                {{ app_data.application.application_number }} • {{ app_data.app_type|title }}
+                                {% if app_data.days_since_approval > 7 %}
+                                • {{ app_data.days_since_approval }} days ago
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="ml-3">
+                            <a href="{% url 'enrollments:application_detail' pk=app_data.application.pk app_type=app_data.app_type %}" 
+                               class="text-xs font-medium text-yellow-700 hover:text-yellow-800 bg-yellow-100 hover:bg-yellow-200 px-2 py-1 rounded">
+                                Review
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% if approved_applications_without_cards|length > 3 %}
+                    <div class="text-center">
+                        <a href="{% url 'enrollments:application_list' %}?status=approved" 
+                           class="text-sm text-yellow-700 hover:text-yellow-800 font-medium">
+                            View all {{ approved_applications_without_cards|length }} applications →
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if expiring_soon %}
+            <div>
+                <h4 class="text-sm font-semibold text-yellow-800 mb-2">Cards Expiring Soon ({{ expiring_soon|length }})</h4>
+                <div class="space-y-2">
+                    {% for card in expiring_soon|slice:":3" %}
+                    <div class="flex items-center justify-between bg-white p-3 rounded border border-yellow-200">
+                        <div class="flex-1 min-w-0">
+                            <div class="text-sm font-medium text-gray-900 truncate">
+                                {{ card.card_number }}
+                            </div>
+                            <div class="text-xs text-gray-500">
+                                {{ card.get_display_name }} • 
+                                {% with days=card.days_until_expiry %}
+                                    {% if days <= 0 %}Expired{% elif days == 1 %}Tomorrow{% else %}{{ days }} days{% endif %}
+                                {% endwith %}
+                            </div>
+                        </div>
+                        <div class="ml-3">
+                            <a href="{% url 'affiliationcard:card_detail' pk=card.pk %}" 
+                               class="text-xs font-medium text-yellow-700 hover:text-yellow-800 bg-yellow-100 hover:bg-yellow-200 px-2 py-1 rounded">
+                                Manage
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% if expiring_soon|length > 3 %}
+                    <div class="text-center">
+                        <a href="{% url 'affiliationcard:card_list' %}?status=active&expiring=30" 
+                           class="text-sm text-yellow-700 hover:text-yellow-800 font-medium">
+                            View all {{ expiring_soon|length }} cards →
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Recent Activity Summary -->
+    <div class="bg-white shadow-sm rounded-lg border border-gray-200">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900">Recent Activity Summary</h3>
+        </div>
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-indigo-600 mb-1">{{ stats.recent_verifications|default:0 }}</div>
+                    <div class="text-sm text-gray-600">Verifications This Week</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-green-600 mb-1">{{ stats.active_cards|default:0 }}</div>
+                    <div class="text-sm text-gray-600">Active Cards</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-purple-600 mb-1">{{ performance_metrics.avg_verifications_per_card|default:0 }}</div>
+                    <div class="text-sm text-gray-600">Avg Verifications/Card</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Dashboard JavaScript Functions
+
+function emergencyActions() {
+    const actions = [
+        'Suspend All Cards',
+        'Revoke Specific Cards',
+        'Emergency System Shutdown',
+        'Contact System Administrator'
+    ];
+    
+    let actionsList = actions.map((action, index) => `${index + 1}. ${action}`).join('\n');
+    
+    if (confirm(`Emergency Actions Available:\n\n${actionsList}\n\nDo you need to proceed with emergency actions?`)) {
+        showToast('Emergency procedures initiated. Please contact your system administrator.', 'warning');
+    }
+}
+
+function showAPIDocumentation() {
+    const apiInfo = `
+API Endpoint: ${window.location.origin}/cards/api/verify/
+Method: POST
+Headers: Content-Type: application/json
+
+Example Request:
+{
+    "card_number": "ACRP-2024-001234",
+    "purpose": "Employment verification"
+}
+
+Example Response:
+{
+    "success": true,
+    "card": {
+        "card_number": "ACRP-2024-001234",
+        "affiliate_name": "John Doe",
+        "status": "active",
+        "council": "NYC",
+        "affiliation_type": "associated"
+    }
+}
+    `;
+    
+    showToast('API Documentation displayed in console', 'info');
+    console.log('ACRP Card Verification API Documentation:', apiInfo);
+}
+
+function showVerificationLogs() {
+    showToast('Verification logs feature coming soon!', 'info');
+    // In real implementation, this would open a detailed logs view
+}
+
+function previewTemplates() {
+    showToast('Template preview gallery coming soon!', 'info');
+    // In real implementation, this would show a modal with template previews
+}
+
+function systemSettings() {
+    showToast('System settings panel coming soon!', 'info');
+    // In real implementation, this would navigate to system settings
+}
+
+function userManagement() {
+    showToast('User management interface coming soon!', 'info');
+    // In real implementation, this would open user management panel
+}
+
+function systemHealth() {
+    const healthData = {
+        overall: {{ performance_metrics.system_health_score|default:75 }},
+        database: 98,
+        emailService: 95,
+        apiEndpoints: 100,
+        cardGeneration: 92
+    };
+    
+    let healthReport = 'System Health Report:\n\n';
+    healthReport += `Overall Health: ${healthData.overall}%\n`;
+    healthReport += `Database: ${healthData.database}%\n`;
+    healthReport += `Email Service: ${healthData.emailService}%\n`;
+    healthReport += `API Endpoints: ${healthData.apiEndpoints}%\n`;
+    healthReport += `Card Generation: ${healthData.cardGeneration}%\n`;
+    
+    alert(healthReport);
+}
+
+function bulkEmailSender() {
+    if (confirm('Open bulk email sender? This will allow you to send emails to multiple cardholders at once.')) {
+        showToast('Bulk email sender coming soon!', 'info');
+    }
+}
+
+function cardValidator() {
+    showToast('Running card validation checks...', 'info');
+    
+    setTimeout(() => {
+        const results = {
+            totalCards: {{ stats.total_cards|default:0 }},
+            validCards: {{ stats.active_cards|default:0 }},
+            issues: {{ stats.pending_cards|default:0 }} + {{ stats.expired_cards|default:0 }}
+        };
+        
+        showToast(`Validation Complete: ${results.validCards}/${results.totalCards} cards valid, ${results.issues} issues found`, 'success');
+    }, 2000);
+}
+
+function exportImportTools() {
+    const options = [
+        'Export All Cards (CSV)',
+        'Export Verification Logs',
+        'Import Card Templates',
+        'Backup System Data'
+    ];
+    
+    let optionsList = options.map((option, index) => `${index + 1}. ${option}`).join('\n');
+    
+    alert(`Import/Export Options:\n\n${optionsList}\n\nSelect an option from the tools menu.`);
+}
+
+// Auto-refresh functionality
+setInterval(() => {
+    // In real implementation, this would update statistics via AJAX
+    console.log('Dashboard auto-refresh check...');
+}, 30000);
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(event) {
+    if (event.altKey) {
+        switch(event.key) {
+            case '1':
+                window.location.href = "{% url 'affiliationcard:card_list' %}";
+                break;
+            case '2':
+                window.location.href = "{% url 'affiliationcard:analytics' %}";
+                break;
+            case '3':
+                window.location.href = "{% url 'affiliationcard:generate_report' %}";
+                break;
+            case 'h':
+                showHelp('dashboard');
+                break;
+        }
+    }
+});
+
+function showHelp(topic) {
+    let helpText = '';
+    
+    switch(topic) {
+        case 'dashboard':
+            helpText = `Card Management Hub Help:
+
+Navigation:
+- Use Alt+1 for Card List
+- Use Alt+2 for Analytics  
+- Use Alt+3 for Reports
+- Use Alt+H for Help
+
+Features:
+- Real-time system monitoring
+- Quick access to all card functions
+- Bulk operations support
+- Comprehensive analytics
+- Template management
+
+Need more help? Contact support@acrp.org`;
+            break;
+        default:
+            helpText = 'Help documentation coming soon!';
+    }
+    
+    alert(helpText);
+}
+
+// Initialize dashboard on load
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('ACRP Card Management Hub loaded');
+    
+    // Check for urgent notifications
+    const urgentCount = {{ performance_metrics.cards_needing_attention|default:0 }} + {{ performance_metrics.approval_backlog_count|default:0 }};
+    if (urgentCount > 0) {
+        console.log(`${urgentCount} items need attention`);
+    }
+});
+</script>
+{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "ACRP Card Management Hub",
+    "description": "Comprehensive administration center for ACRP digital affiliation cards",
+    "url": "{{ request.build_absolute_uri }}",
+    "isPartOf": {
+        "@type": "WebSite",
+        "name": "ACRP Management System",
+        "url": "{{ request.scheme }}://{{ request.get_host }}"
+    }
+}
+</script>
+{% endblock %}

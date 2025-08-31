@@ -1,0 +1,913 @@
+{% extends "base/external_base.html" %}
+{% load static %}
+
+
+{% block title %}Download Your ACRP Card - {{ card.card_number }}{% endblock %}
+
+{% block meta_description %}Securely download your ACRP digital affiliation card in your preferred format. Valid download link with secure access.{% endblock %}
+
+{% block meta_robots %}noindex, nofollow{% endblock %}
+
+{% block page_title %}Download Your Card{% endblock %}
+
+{% block page_description %}Secure download for {{ card.get_display_name }}{% endblock %}
+
+{% block page_header %}
+<div class="mb-8 text-center">
+    <div class="mx-auto h-20 w-20 bg-green-100 rounded-full flex items-center justify-center mb-4">
+        <i class="bi bi-download text-green-600 text-3xl"></i>
+    </div>
+    <h1 class="text-3xl font-bold text-gray-900">
+        Download Your ACRP Card
+    </h1>
+    <p class="mt-2 text-lg text-gray-600">
+        Your digital affiliation card is ready for download
+    </p>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    
+    {% comment %}
+    CARD INFORMATION SECTION
+    ========================
+    
+    Display card details and affiliate information to confirm
+    the user is downloading the correct card.
+    {% endcomment %}
+    
+    <!-- Card Information -->
+    <div class="bg-white shadow-lg rounded-lg border border-gray-200 overflow-hidden mb-8">
+        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-6 border-b border-blue-200">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <img src="{% static 'main_media/logo.png' %}" 
+                         class="h-12 w-12 mr-4" 
+                         alt="ACRP Logo">
+                    <div>
+                        <h2 class="text-xl font-bold text-blue-900">
+                            ACRP Digital Affiliation Card
+                        </h2>
+                        <p class="text-sm text-blue-700">
+                            Association of Christian Religious Practitioners
+                        </p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="text-lg font-bold text-blue-900">READY</div>
+                    <div class="text-xs text-blue-600">{{ delivery.initiated_at|date:"M d, Y" }}</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Card Preview -->
+        <div class="p-6">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:space-x-8">
+                
+                <!-- Affiliate Information -->
+                <div class="flex-1 mb-6 lg:mb-0">
+                    <div class="flex items-center space-x-6 mb-4">
+                        {% if card.affiliate_photo %}
+                        <img class="h-24 w-24 rounded-full object-cover border-4 border-gray-200 shadow-md" 
+                             src="{{ card.affiliate_photo.url }}" 
+                             alt="{{ card.get_display_name }}">
+                        {% else %}
+                        <div class="h-24 w-24 bg-gray-200 rounded-full flex items-center justify-center border-4 border-gray-300 shadow-md">
+                            <i class="bi bi-person text-gray-500 text-2xl"></i>
+                        </div>
+                        {% endif %}
+                        <div>
+                            <h3 class="text-2xl font-bold text-gray-900 mb-1">{{ card.get_display_name }}</h3>
+                            <p class="text-lg text-blue-600 font-medium">{{ card.get_card_type_display }}</p>
+                            <p class="text-sm text-gray-600">{{ card.council_name }}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Card Details Grid -->
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div class="bg-gray-50 p-3 rounded">
+                            <div class="font-medium text-gray-600">Card Number</div>
+                            <div class="font-mono font-bold text-gray-900">{{ card.card_number }}</div>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded">
+                            <div class="font-medium text-gray-600">Status</div>
+                            <div class="font-bold {% if card.status == 'active' %}text-green-600{% else %}text-gray-600{% endif %}">
+                                {{ card.get_status_display }}
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded">
+                            <div class="font-medium text-gray-600">Council</div>
+                            <div class="text-gray-900">{{ card.council_code }}</div>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded">
+                            <div class="font-medium text-gray-600">Valid Until</div>
+                            <div class="text-gray-900">
+                                {% if card.date_expires %}
+                                {{ card.date_expires|date:"M d, Y" }}
+                                {% else %}
+                                No expiry
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- QR Code Preview -->
+                <div class="flex-shrink-0 text-center">
+                    <div class="bg-white border-2 border-gray-200 rounded-lg p-4 shadow-sm">
+                        <div class="w-32 h-32 bg-gray-100 rounded border-2 border-dashed border-gray-300 flex items-center justify-center mb-3">
+                            <i class="bi bi-qr-code text-gray-500 text-3xl"></i>
+                        </div>
+                        <p class="text-xs text-gray-600">QR Code for instant verification</p>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    
+    {% comment %}
+    DOWNLOAD CONFIGURATION SECTION
+    ===============================
+    
+    Form for selecting download format and initiating the download.
+    Includes validation and security information.
+    {% endcomment %}
+    
+    <!-- Download Configuration -->
+    <div class="bg-white shadow-sm rounded-lg border border-gray-200 mb-8">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                <i class="bi bi-gear text-blue-600 mr-2"></i>
+                Download Configuration
+            </h3>
+            <p class="mt-1 text-sm text-gray-600">Select your preferred format and download your card</p>
+        </div>
+        <div class="p-6">
+            
+            <form method="post" id="download-form">
+                {% csrf_token %}
+                <input type="hidden" name="download_token" value="{{ delivery.download_token }}">
+                
+                <!-- Format Selection -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-4">
+                        <i class="bi bi-file-earmark mr-1"></i>
+                        Choose File Format
+                    </label>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        
+                        <!-- PDF Format -->
+                        <label class="relative cursor-pointer">
+                            <input type="radio" name="file_format" value="pdf" class="sr-only peer" checked>
+                            <div class="p-6 border-2 border-gray-200 rounded-lg peer-checked:border-green-500 peer-checked:bg-green-50 hover:border-gray-300 transition-colors duration-200">
+                                <div class="text-center">
+                                    <i class="bi bi-file-pdf text-3xl text-red-600 mb-3"></i>
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-2">PDF Document</h4>
+                                    <div class="text-sm text-gray-600 space-y-1">
+                                        <div class="flex items-center justify-center">
+                                            <i class="bi bi-check-circle text-green-500 mr-1"></i>
+                                            <span>Professional format</span>
+                                        </div>
+                                        <div class="flex items-center justify-center">
+                                            <i class="bi bi-check-circle text-green-500 mr-1"></i>
+                                            <span>Print-ready</span>
+                                        </div>
+                                        <div class="flex items-center justify-center">
+                                            <i class="bi bi-check-circle text-green-500 mr-1"></i>
+                                            <span>Universal compatibility</span>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3 text-xs font-medium text-green-700 bg-green-100 px-2 py-1 rounded">
+                                        RECOMMENDED
+                                    </div>
+                                </div>
+                            </div>
+                        </label>
+                        
+                        <!-- PNG Format -->
+                        <label class="relative cursor-pointer">
+                            <input type="radio" name="file_format" value="png" class="sr-only peer">
+                            <div class="p-6 border-2 border-gray-200 rounded-lg peer-checked:border-green-500 peer-checked:bg-green-50 hover:border-gray-300 transition-colors duration-200">
+                                <div class="text-center">
+                                    <i class="bi bi-image text-3xl text-blue-600 mb-3"></i>
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-2">PNG Image</h4>
+                                    <div class="text-sm text-gray-600 space-y-1">
+                                        <div class="flex items-center justify-center">
+                                            <i class="bi bi-check-circle text-green-500 mr-1"></i>
+                                            <span>High quality</span>
+                                        </div>
+                                        <div class="flex items-center justify-center">
+                                            <i class="bi bi-check-circle text-green-500 mr-1"></i>
+                                            <span>Transparent background</span>
+                                        </div>
+                                        <div class="flex items-center justify-center">
+                                            <i class="bi bi-check-circle text-green-500 mr-1"></i>
+                                            <span>Web-friendly</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </label>
+                        
+                        <!-- JPG Format -->
+                        <label class="relative cursor-pointer">
+                            <input type="radio" name="file_format" value="jpg" class="sr-only peer">
+                            <div class="p-6 border-2 border-gray-200 rounded-lg peer-checked:border-green-500 peer-checked:bg-green-50 hover:border-gray-300 transition-colors duration-200">
+                                <div class="text-center">
+                                    <i class="bi bi-image-fill text-3xl text-orange-600 mb-3"></i>
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-2">JPG Image</h4>
+                                    <div class="text-sm text-gray-600 space-y-1">
+                                        <div class="flex items-center justify-center">
+                                            <i class="bi bi-check-circle text-green-500 mr-1"></i>
+                                            <span>Smaller file size</span>
+                                        </div>
+                                        <div class="flex items-center justify-center">
+                                            <i class="bi bi-check-circle text-green-500 mr-1"></i>
+                                            <span>Fast download</span>
+                                        </div>
+                                        <div class="flex items-center justify-center">
+                                            <i class="bi bi-check-circle text-green-500 mr-1"></i>
+                                            <span>Mobile-friendly</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </label>
+                        
+                    </div>
+                </div>
+
+                <!-- Terms / Agreement -->
+                <div class="mb-6">
+                <label class="flex items-start space-x-3 text-sm text-gray-700">
+                    <input id="agree_terms" name="agree_terms" type="checkbox" class="mt-1 rounded border-gray-300 shadow-sm focus:ring focus:ring-green-200" />
+                    <span>
+                    I confirm I am authorised to download this card and I accept the <a href="" class="text-indigo-600 hover:underline">terms of use</a>.
+                    </span>
+                </label>
+
+                {% if form.agree_terms.errors %}
+                <p class="mt-2 text-xs text-red-600">
+                    {{ form.agree_terms.errors.as_text|safe }}
+                </p>
+                {% endif %}
+                </div>
+
+                
+                <!-- Download Button -->
+                <div class="text-center">
+                    <button type="submit" 
+                            id="download-btn"
+                            class="inline-flex items-center px-8 py-4 border border-transparent text-lg font-medium rounded-lg shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200 hover:shadow-lg">
+                        <i class="bi bi-download mr-3"></i>
+                        <span id="download-btn-text">Download My Card</span>
+                        <div class="hidden ml-3 loading-spinner">
+                            <i class="bi bi-arrow-clockwise"></i>
+                        </div>
+                    </button>
+                    
+                    <div class="mt-4 flex items-center justify-center text-sm text-gray-500">
+                        <i class="bi bi-shield-check mr-2 text-green-500"></i>
+                        <span>Secure download • {{ delivery.download_count }} of {{ delivery.max_downloads }} attempts used</span>
+                    </div>
+                </div>
+                
+            </form>
+            
+        </div>
+    </div>
+    
+    {% comment %}
+    DOWNLOAD INFORMATION SECTION
+    ============================
+    
+    Provides important information about download limits, security, and usage.
+    Helps users understand what they're downloading and how to use it.
+    {% endcomment %}
+    
+    <!-- Download Information -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        
+        <!-- Download Details -->
+        <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <i class="bi bi-info-circle text-blue-600 mr-2"></i>
+                Download Information
+            </h3>
+            <div class="space-y-3 text-sm">
+                <div class="flex items-center justify-between py-2 border-b border-gray-200">
+                    <span class="font-medium text-gray-600">Download Expires:</span>
+                    <span class="text-gray-900">
+                        {% if delivery.download_expires_at %}
+                        {{ delivery.download_expires_at|date:"M d, Y H:i" }}
+                        {% else %}
+                        No expiry
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="flex items-center justify-between py-2 border-b border-gray-200">
+                    <span class="font-medium text-gray-600">Attempts Remaining:</span>
+                    <span class="text-gray-900">
+                        {{ delivery.max_downloads|add:delivery.download_count|add:"-"|add:delivery.download_count|default:"0" }} of {{ delivery.max_downloads }}
+                    </span>
+                </div>
+                <div class="flex items-center justify-between py-2 border-b border-gray-200">
+                    <span class="font-medium text-gray-600">Initiated By:</span>
+                    <span class="text-gray-900">
+                        {% if delivery.initiated_by %}
+                        {{ delivery.initiated_by.get_full_name|default:delivery.initiated_by.username }}
+                        {% else %}
+                        System
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="flex items-center justify-between py-2">
+                    <span class="font-medium text-gray-600">Delivery ID:</span>
+                    <span class="text-gray-900 font-mono text-xs">{{ delivery.id }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Security Notice -->
+        <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <i class="bi bi-shield-lock text-green-600 mr-2"></i>
+                Security & Usage
+            </h3>
+            <div class="space-y-3 text-sm text-gray-600">
+                <div class="flex items-start">
+                    <i class="bi bi-check-circle text-green-500 mr-2 mt-0.5 flex-shrink-0"></i>
+                    <span>This download link is unique and secure</span>
+                </div>
+                <div class="flex items-start">
+                    <i class="bi bi-check-circle text-green-500 mr-2 mt-0.5 flex-shrink-0"></i>
+                    <span>Your card contains verification QR codes</span>
+                </div>
+                <div class="flex items-start">
+                    <i class="bi bi-check-circle text-green-500 mr-2 mt-0.5 flex-shrink-0"></i>
+                    <span>Files are generated fresh for each download</span>
+                </div>
+                <div class="flex items-start">
+                    <i class="bi bi-check-circle text-green-500 mr-2 mt-0.5 flex-shrink-0"></i>
+                    <span>All downloads are logged for security</span>
+                </div>
+            </div>
+            
+            <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
+                <p class="text-xs text-blue-700">
+                    <i class="bi bi-lightbulb mr-1"></i>
+                    <strong>Tip:</strong> Save your card to your phone's digital wallet or print copies for backup
+                </p>
+            </div>
+        </div>
+        
+    </div>
+    
+    {% comment %}
+    USAGE INSTRUCTIONS SECTION
+    ===========================
+    
+    Provides comprehensive guidance on how to use the digital card
+    after download, including verification and presentation tips.
+    {% endcomment %}
+    
+    <!-- Usage Instructions -->
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
+        <h3 class="text-lg font-semibold text-blue-900 mb-4 text-center">
+            <i class="bi bi-question-circle mr-2"></i>
+            How to Use Your Digital Card
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <!-- Step 1: Download -->
+            <div class="text-center">
+                <div class="mx-auto h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center mb-3">
+                    <span class="text-blue-600 font-bold">1</span>
+                </div>
+                <h4 class="text-sm font-semibold text-blue-900 mb-2">Download & Save</h4>
+                <p class="text-sm text-blue-700">
+                    Download your card and save it to your phone, computer, or print copies for your records
+                </p>
+            </div>
+            
+            <!-- Step 2: Present -->
+            <div class="text-center">
+                <div class="mx-auto h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center mb-3">
+                    <span class="text-blue-600 font-bold">2</span>
+                </div>
+                <h4 class="text-sm font-semibold text-blue-900 mb-2">Present When Requested</h4>
+                <p class="text-sm text-blue-700">
+                    Show your digital card when asked to verify your ACRP affiliation and professional standing
+                </p>
+            </div>
+            
+            <!-- Step 3: Verify -->
+            <div class="text-center">
+                <div class="mx-auto h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center mb-3">
+                    <span class="text-blue-600 font-bold">3</span>
+                </div>
+                <h4 class="text-sm font-semibold text-blue-900 mb-2">Enable Verification</h4>
+                <p class="text-sm text-blue-700">
+                    Others can scan the QR code or enter your card number at acrpafrica.co.za/verify to confirm authenticity
+                </p>
+            </div>
+            
+        </div>
+    </div>
+    
+    {% comment %}
+    DOWNLOAD RESTRICTIONS SECTION
+    ==============================
+    
+    Important information about download limits and expiry.
+    Helps users understand the security measures in place.
+    {% endcomment %}
+    
+    <!-- Download Restrictions -->
+    {% if delivery.download_expires_at or delivery.max_downloads > 1 %}
+    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-8">
+        <h3 class="text-lg font-semibold text-yellow-800 mb-4 flex items-center">
+            <i class="bi bi-exclamation-triangle mr-2"></i>
+            Important Download Information
+        </h3>
+        <div class="space-y-3 text-sm text-yellow-700">
+            {% if delivery.download_expires_at %}
+            <div class="flex items-start">
+                <i class="bi bi-clock text-yellow-600 mr-2 mt-0.5 flex-shrink-0"></i>
+                <div>
+                    <span class="font-medium">Download Link Expires:</span>
+                    <span class="ml-1">{{ delivery.download_expires_at|date:"F d, Y \a\t H:i" }}</span>
+                    <div class="text-xs text-yellow-600 mt-1">
+                        After this time, you'll need to request a new download link
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if delivery.max_downloads > 1 %}
+            <div class="flex items-start">
+                <i class="bi bi-download text-yellow-600 mr-2 mt-0.5 flex-shrink-0"></i>
+                <div>
+                    <span class="font-medium">Download Limit:</span>
+                    <span class="ml-1">{{ delivery.max_downloads }} attempts allowed</span>
+                    <div class="text-xs text-yellow-600 mt-1">
+                        You have {{ delivery.max_downloads|add:delivery.download_count|add:"-"|add:delivery.download_count|default:"0" }} downloads remaining
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="flex items-start">
+                <i class="bi bi-lightbulb text-yellow-600 mr-2 mt-0.5 flex-shrink-0"></i>
+                <div>
+                    <span class="font-medium">Recommendation:</span>
+                    <span class="ml-1">Download your card now and save multiple copies for future use</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% comment %}
+    HELP AND SUPPORT SECTION
+    =========================
+    
+    Contact information and support resources for users who need assistance
+    with downloading or using their digital cards.
+    {% endcomment %}
+    
+    <!-- Help and Support -->
+    <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4 text-center">
+            <i class="bi bi-headset text-green-600 mr-2"></i>
+            Need Help?
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <!-- Email Support -->
+            <div class="text-center">
+                <div class="mx-auto h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center mb-3">
+                    <i class="bi bi-envelope text-blue-600"></i>
+                </div>
+                <h4 class="text-sm font-semibold text-gray-900 mb-2">Email Support</h4>
+                <a href="mailto:support@acrpafrica.co.za" 
+                   class="text-sm text-blue-600 hover:text-blue-700 transition-colors duration-200">
+                    support@acrpafrica.co.za
+                </a>
+                <p class="text-xs text-gray-500 mt-1">Response within 24 hours</p>
+            </div>
+            
+            <!-- Phone Support -->
+            <div class="text-center">
+                <div class="mx-auto h-12 w-12 bg-green-100 rounded-full flex items-center justify-center mb-3">
+                    <i class="bi bi-telephone text-green-600"></i>
+                </div>
+                <h4 class="text-sm font-semibold text-gray-900 mb-2">Phone Support</h4>
+                <a href="tel:+27123456789" 
+                   class="text-sm text-blue-600 hover:text-blue-700 transition-colors duration-200">
+                    +27 12 345 6789
+                </a>
+                <p class="text-xs text-gray-500 mt-1">Mon-Fri: 8:00 AM - 5:00 PM</p>
+            </div>
+            
+            <!-- Help Documentation -->
+            <div class="text-center">
+                <div class="mx-auto h-12 w-12 bg-purple-100 rounded-full flex items-center justify-center mb-3">
+                    <i class="bi bi-book text-purple-600"></i>
+                </div>
+                <h4 class="text-sm font-semibold text-gray-900 mb-2">Help Docs</h4>
+                <a href="#" 
+                   class="text-sm text-blue-600 hover:text-blue-700 transition-colors duration-200"
+                   onclick="showToast('Help documentation coming soon!', 'info')">
+                    User Guide
+                </a>
+                <p class="text-xs text-gray-500 mt-1">Step-by-step instructions</p>
+            </div>
+            
+        </div>
+    </div>
+    
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Enhanced radio button styling for format selection */
+    input[type="radio"]:checked + div {
+        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    /* Download button enhancement */
+    #download-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Loading animation */
+    .loading-spinner i {
+        animation: spin 1s linear infinite;
+    }
+    
+    /* Card preview styling */
+    .card-preview {
+        background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+        color: white;
+        transform: perspective(1000px) rotateY(-5deg);
+        transition: transform 0.3s ease;
+    }
+    
+    .card-preview:hover {
+        transform: perspective(1000px) rotateY(0deg);
+    }
+    
+    /* Mobile optimizations */
+    @media (max-width: 768px) {
+        .grid-cols-1.md\\:grid-cols-3 {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        
+        .text-lg {
+            font-size: 1rem;
+        }
+        
+        .text-3xl {
+            font-size: 1.5rem;
+        }
+    }
+    
+    /* Download progress indicator */
+    .download-progress {
+        background: linear-gradient(90deg, #10b981, #059669);
+        height: 4px;
+        border-radius: 2px;
+        transition: width 0.5s ease;
+    }
+    
+    /* Accessibility enhancements */
+    .focus\\:ring-green-500:focus {
+        ring-color: #10b981;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
+    
+    /* Print-friendly styling */
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+        
+        body {
+            background: white !important;
+        }
+        
+        .bg-gradient-to-r, .bg-gradient-to-br {
+            background: #f9fafb !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    /**
+     * Card Download JavaScript
+     * ========================
+     * 
+     * This script handles the secure card download process, including format selection,
+     * download tracking, and user experience enhancements.
+     */
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // Initialize download page
+        initializeDownloadPage();
+        
+        // Set up form handling
+        setupFormHandling();
+        
+        // Check download validity
+        checkDownloadValidity();
+        
+        // Set up security features
+        setupSecurityFeatures();
+        
+    });
+    
+    /**
+     * Initialize download page functionality
+     */
+    function initializeDownloadPage() {
+        console.log('Card download page initialized');
+        
+        // Show welcome message
+        setTimeout(() => {
+            showToast('Your card is ready for download! Select a format below.', 'success');
+        }, 1000);
+        
+        // Track page view
+        logDownloadPageView();
+        
+        // Set up download expiry warning
+        setupExpiryWarning();
+    }
+    
+    /**
+     * Set up form handling with validation
+     */
+    function setupFormHandling() {
+        
+        const form = document.getElementById('download-form');
+        
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            handleDownloadSubmission();
+        });
+        
+        // Track format selection changes
+        document.querySelectorAll('input[name="file_format"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                logFormatSelection(this.value);
+                updateDownloadButton(this.value);
+            });
+        });
+        
+    }
+    
+    /**
+     * Handle download form submission
+     */
+    function handleDownloadSubmission() {
+        
+        // Get selected format
+        const selectedFormat = document.querySelector('input[name="file_format"]:checked').value;
+        
+        // Show loading state
+        const downloadBtn = document.getElementById('download-btn');
+        const downloadBtnText = document.getElementById('download-btn-text');
+        const spinner = downloadBtn.querySelector('.loading-spinner');
+        
+        downloadBtnText.textContent = 'Generating...';
+        spinner.classList.remove('hidden');
+        downloadBtn.disabled = true;
+        downloadBtn.classList.add('opacity-75', 'cursor-not-allowed');
+        
+        // Show progress message
+        showToast(`Generating ${selectedFormat.toUpperCase()} card file...`, 'info');
+        
+        // Log download attempt
+        console.log('Download attempted:', {
+            cardNumber: '{{ card.card_number }}',
+            format: selectedFormat,
+            deliveryId: '{{ delivery.id }}',
+            timestamp: new Date().toISOString()
+        });
+        
+        // Submit form (this will trigger the actual download)
+        document.getElementById('download-form').submit();
+    }
+    
+    /**
+     * Update download button text based on selected format
+     */
+    function updateDownloadButton(format) {
+        const downloadBtnText = document.getElementById('download-btn-text');
+        const formatNames = {
+            'pdf': 'Download PDF Card',
+            'png': 'Download PNG Image',
+            'jpg': 'Download JPG Image'
+        };
+        
+        downloadBtnText.textContent = formatNames[format] || 'Download My Card';
+    }
+    
+    /**
+     * Check download validity and show warnings if needed
+     */
+    function checkDownloadValidity() {
+        
+        // Check remaining downloads
+        const remainingDownloads = {{ delivery.max_downloads }} - {{ delivery.download_count }};
+        
+        if (remainingDownloads <= 2) {
+            showToast(`Warning: Only ${remainingDownloads} download attempts remaining`, 'warning');
+        }
+        
+        // Check expiry time
+        {% if delivery.download_expires_at %}
+        const expiryTime = new Date('{{ delivery.download_expires_at|date:"c" }}');
+        const now = new Date();
+        const timeUntilExpiry = expiryTime - now;
+        
+        if (timeUntilExpiry < 24 * 60 * 60 * 1000) { // Less than 24 hours
+            const hoursRemaining = Math.floor(timeUntilExpiry / (60 * 60 * 1000));
+            showToast(`Download link expires in ${hoursRemaining} hours`, 'warning');
+        }
+        {% endif %}
+        
+    }
+    
+    /**
+     * Set up download expiry warning system
+     */
+    function setupExpiryWarning() {
+        {% if delivery.download_expires_at %}
+        const expiryTime = new Date('{{ delivery.download_expires_at|date:"c" }}');
+        const now = new Date();
+        const timeUntilExpiry = expiryTime - now;
+        
+        // Show countdown if expiring soon
+        if (timeUntilExpiry > 0 && timeUntilExpiry < 60 * 60 * 1000) { // Less than 1 hour
+            startExpiryCountdown(expiryTime);
+        }
+        {% endif %}
+    }
+    
+    /**
+     * Start countdown timer for download expiry
+     */
+    function startExpiryCountdown(expiryTime) {
+        const countdownInterval = setInterval(function() {
+            const now = new Date();
+            const timeRemaining = expiryTime - now;
+            
+            if (timeRemaining <= 0) {
+                clearInterval(countdownInterval);
+                showDownloadExpired();
+                return;
+            }
+            
+            const minutes = Math.floor(timeRemaining / (1000 * 60));
+            const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+            
+            // Update any countdown display
+            console.log(`Download expires in ${minutes}:${seconds.toString().padStart(2, '0')}`);
+            
+        }, 1000);
+    }
+    
+    /**
+     * Handle download expiry
+     */
+    function showDownloadExpired() {
+        // Disable download button
+        const downloadBtn = document.getElementById('download-btn');
+        downloadBtn.disabled = true;
+        downloadBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        downloadBtn.innerHTML = '<i class="bi bi-clock mr-2"></i>Download Expired';
+        
+        // Show expiry message
+        showToast('Download link has expired. Please request a new one.', 'error');
+        
+        // Could redirect to request new download page
+        setTimeout(() => {
+            if (confirm('Your download link has expired. Would you like to request a new one?')) {
+                window.location.href = 'mailto:support@acrpafrica.co.za?subject=Request New Card Download&body=Please send me a new download link for card {{ card.card_number }}';
+            }
+        }, 3000);
+    }
+    
+    /**
+     * Set up security features
+     */
+    function setupSecurityFeatures() {
+        
+        // Prevent right-click context menu (optional security measure)
+        document.addEventListener('contextmenu', function(event) {
+            event.preventDefault();
+            showToast('Right-click disabled for security', 'info');
+        });
+        
+        // Detect developer tools (basic deterrent)
+        setInterval(function() {
+            if (window.outerHeight - window.innerHeight > 200 || 
+                window.outerWidth - window.innerWidth > 200) {
+                console.clear();
+                console.log('%cSecure Download Page', 'color: red; font-size: 24px; font-weight: bold;');
+                console.log('%cThis page contains secure content. Unauthorized access attempts are logged.', 'color: orange; font-size: 14px;');
+            }
+        }, 1000);
+        
+    }
+    
+    /**
+     * Log download page view for analytics
+     */
+    function logDownloadPageView() {
+        console.log('Download page viewed:', {
+            cardNumber: '{{ card.card_number }}',
+            deliveryId: '{{ delivery.id }}',
+            remainingDownloads: {{ delivery.max_downloads }} - {{ delivery.download_count }},
+            userAgent: navigator.userAgent,
+            timestamp: new Date().toISOString()
+        });
+    }
+    
+    /**
+     * Log format selection for analytics
+     */
+    function logFormatSelection(format) {
+        console.log('Format selected:', {
+            format: format,
+            cardNumber: '{{ card.card_number }}',
+            timestamp: new Date().toISOString()
+        });
+    }
+    
+    /**
+     * Save card to digital wallet (future enhancement)
+     */
+    function saveToWallet() {
+        if ('serviceWorker' in navigator) {
+            showToast('Digital wallet integration coming soon!', 'info');
+            // Future implementation for adding cards to Apple Wallet, Google Pay, etc.
+        } else {
+            showToast('Digital wallet not supported on this device', 'warning');
+        }
+    }
+    
+    /**
+     * Share download link (if applicable)
+     */
+    function shareDownload() {
+        if (navigator.share) {
+            navigator.share({
+                title: 'ACRP Digital Card Download',
+                text: 'Download link for ACRP affiliation card {{ card.card_number }}',
+                url: window.location.href
+            }).catch(console.error);
+        } else {
+            // Fallback: copy URL
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(window.location.href).then(() => {
+                    showToast('Download link copied to clipboard', 'success');
+                });
+            }
+        }
+    }
+    
+</script>
+{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "DownloadAction",
+    "name": "Download ACRP Digital Card",
+    "description": "Secure download of ACRP digital affiliation card {{ card.card_number }}",
+    "url": "{{ request.build_absolute_uri }}",
+    "object": {
+        "@type": "DigitalDocument",
+        "name": "ACRP Affiliation Card {{ card.card_number }}",
+        "description": "Digital affiliation card for {{ card.get_display_name }}",
+        "author": {
+            "@type": "Organization",
+            "name": "Association of Christian Religious Practitioners"
+        }
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,694 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% comment %}
+ACRP Affiliation Card Detail Template
+====================================
+
+This template provides a comprehensive view of a single digital affiliation card.
+It displays all card information, history, verification logs, and administrative actions.
+
+Template Features:
+- Complete card information display
+- Visual card preview with QR code
+- Verification history and statistics
+- Status change history
+- Delivery records and tracking
+- Administrative action buttons
+- Related application information
+- Security and audit trail
+- Mobile-responsive design
+- Print-friendly layout option
+
+Data Context (from views.CardDetailView):
+- card: AffiliationCard instance with all related data
+- recent_verifications: Latest verification events
+- recent_deliveries: Delivery history
+- status_history: Status change log
+- verification_stats: Statistical summary
+{% endcomment %}
+
+{% block title %}Card {{ card.card_number }} - ACRP{% endblock %}
+
+{% block meta_description %}Detailed view of ACRP digital affiliation card {{ card.card_number }} with verification history and administrative controls.{% endblock %}
+
+{% block page_title %}Card Detail: {{ card.card_number }}{% endblock %}
+
+{% block page_description %}Complete information and management for digital affiliation card {{ card.card_number }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card-preview {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 12px;
+        padding: 20px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .card-preview::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="white" opacity="0.1"/></svg>') repeat;
+        background-size: 20px 20px;
+    }
+    
+    .card-content {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .status-active { @apply bg-green-100 text-green-800 border-green-200; }
+    .status-pending { @apply bg-yellow-100 text-yellow-800 border-yellow-200; }
+    .status-assigned { @apply bg-blue-100 text-blue-800 border-blue-200; }
+    .status-expired { @apply bg-red-100 text-red-800 border-red-200; }
+    .status-suspended { @apply bg-gray-100 text-gray-800 border-gray-200; }
+    .status-revoked { @apply bg-red-100 text-red-800 border-red-200; }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+    }
+    
+    .timeline-item:last-child .timeline-line {
+        display: none;
+    }
+    
+    .action-button {
+        transition: all 0.3s ease;
+    }
+    
+    .action-button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    @media print {
+        .no-print { display: none !important; }
+        .card-preview { background: #f3f4f6 !important; color: #1f2937 !important; }
+    }
+</style>
+{% endblock %}
+
+{% block page_header %}
+<div class="mb-8">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <div class="flex items-center space-x-3 mb-2">
+                <a href="{% url 'affiliationcard:dashboard' %}" 
+                   class="text-gray-400 hover:text-gray-600">
+                    <i class="bi bi-arrow-left text-lg"></i>
+                </a>
+                <h1 class="text-3xl font-bold text-gray-900 flex items-center">
+                    <i class="bi bi-credit-card text-indigo-600 mr-3"></i>
+                    Card {{ card.card_number }}
+                </h1>
+                <span class="status-{{ card.status|lower }} px-3 py-1 rounded-full text-sm font-medium border">
+                    {{ card.get_status_display }}
+                </span>
+            </div>
+            <p class="text-sm text-gray-600">
+                {{ card.get_display_name }} • {{ card.council_name }} • {{ card.affiliation_type|title }}
+            </p>
+        </div>
+        <div class="mt-4 sm:mt-0 flex space-x-3 no-print">
+            <!-- Quick Actions -->
+            <button type="button" 
+                    class="action-button inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                    onclick="window.print()">
+                <i class="bi bi-printer mr-2"></i>
+                Print
+            </button>
+            
+            {% if card.status == 'active' or card.status == 'assigned' %}
+            <a href="{% url 'affiliationcard:send_card' pk=card.pk %}" 
+               class="action-button inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                <i class="bi bi-send mr-2"></i>
+                Send Card
+            </a>
+            {% endif %}
+            
+            <button type="button" 
+                    class="action-button inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
+                    onclick="openStatusUpdateModal()">
+                <i class="bi bi-gear mr-2"></i>
+                Update Status
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    
+    <!-- Card Overview Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Card Visual Preview -->
+        <div class="lg:col-span-1">
+            <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Card Preview</h3>
+                
+                <div class="card-preview">
+                    <div class="card-content">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <div class="text-xs opacity-75 mb-1">ACRP DIGITAL CARD</div>
+                                <div class="text-lg font-bold">{{ card.card_number }}</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xs opacity-75">{{ card.council_code }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-2 mb-4">
+                            <div class="text-sm font-medium">{{ card.get_display_name }}</div>
+                            <div class="text-xs opacity-90">{{ card.affiliation_type|title }}</div>
+                            <div class="text-xs opacity-75">
+                                {% if card.date_expires %}
+                                Expires: {{ card.date_expires|date:"M Y" }}
+                                {% else %}
+                                No Expiration
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between items-end">
+                            <div>
+                                <div class="text-xs opacity-75">
+                                    {% if card.date_issued %}
+                                    Issued: {{ card.date_issued|date:"M d, Y" }}
+                                    {% else %}
+                                    Not Yet Issued
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="w-12 h-12 bg-white bg-opacity-20 rounded flex items-center justify-center">
+                                <i class="bi bi-qr-code text-lg"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Verification Links -->
+                <div class="mt-4 space-y-2">
+                    <a href="{% url 'affiliationcard:verify_token' token=card.verification_token %}" 
+                       target="_blank"
+                       class="block w-full text-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                        <i class="bi bi-shield-check mr-2"></i>
+                        Test Verification
+                    </a>
+                    <a href="{% url 'affiliationcard:verify_lookup' %}" 
+                       target="_blank"
+                       class="block w-full text-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                        <i class="bi bi-search mr-2"></i>
+                        Public Lookup
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Card Information -->
+        <div class="lg:col-span-2">
+            <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-6">Card Information</h3>
+                
+                <div class="info-grid">
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Card Number</dt>
+                        <dd class="mt-1 text-sm text-gray-900 font-mono">{{ card.card_number }}</dd>
+                    </div>
+                    
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Status</dt>
+                        <dd class="mt-1">
+                            <span class="status-{{ card.status|lower }} px-2 py-1 rounded-full text-xs font-medium border">
+                                {{ card.get_status_display }}
+                            </span>
+                        </dd>
+                    </div>
+                    
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Cardholder Name</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ card.get_display_name }}</dd>
+                    </div>
+                    
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Email Address</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                            {% if card.affiliate_email %}
+                                <a href="mailto:{{ card.affiliate_email }}" class="text-indigo-600 hover:text-indigo-500">
+                                    {{ card.affiliate_email }}
+                                </a>
+                            {% else %}
+                                <span class="text-gray-400">Not available</span>
+                            {% endif %}
+                        </dd>
+                    </div>
+                    
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Council</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ card.council_name }} ({{ card.council_code }})</dd>
+                    </div>
+                    
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Affiliation Type</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ card.affiliation_type|title }}</dd>
+                    </div>
+                    
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Date Issued</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                            {% if card.date_issued %}
+                                {{ card.date_issued|date:"F d, Y" }}
+                            {% else %}
+                                <span class="text-gray-400">Not yet issued</span>
+                            {% endif %}
+                        </dd>
+                    </div>
+                    
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Expiration Date</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                            {% if card.date_expires %}
+                                {{ card.date_expires|date:"F d, Y" }}
+                                {% with days=card.days_until_expiry %}
+                                    {% if days >= 0 %}
+                                        <span class="text-xs text-gray-500">({{ days }} days remaining)</span>
+                                    {% else %}
+                                        <span class="text-xs text-red-500">(Expired {{ days|slice:"1:" }} days ago)</span>
+                                    {% endif %}
+                                {% endwith %}
+                            {% else %}
+                                <span class="text-gray-400">No expiration</span>
+                            {% endif %}
+                        </dd>
+                    </div>
+                    
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Created</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ card.created_at|date:"F d, Y g:i A" }}</dd>
+                    </div>
+                    
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Last Updated</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ card.updated_at|date:"F d, Y g:i A" }}</dd>
+                    </div>
+                    
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Assigned By</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                            {% if card.assigned_by %}
+                                {{ card.assigned_by.get_full_name|default:card.assigned_by.username }}
+                            {% else %}
+                                <span class="text-gray-400">System</span>
+                            {% endif %}
+                        </dd>
+                    </div>
+                    
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Card Template</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                            {% if card.card_template %}
+                                {{ card.card_template.name }}
+                            {% else %}
+                                <span class="text-gray-400">Default</span>
+                            {% endif %}
+                        </dd>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Statistics and Activity Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        
+        <!-- Verification Statistics -->
+        <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+            <h4 class="text-sm font-medium text-gray-500 mb-4">Verification Stats</h4>
+            <div class="space-y-4">
+                <div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Total</span>
+                        <span class="text-lg font-bold text-gray-900">{{ verification_stats.total|default:0 }}</span>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Last 30 days</span>
+                        <span class="text-sm font-medium text-gray-900">{{ verification_stats.last_30_days|default:0 }}</span>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Last 7 days</span>
+                        <span class="text-sm font-medium text-gray-900">{{ verification_stats.last_7_days|default:0 }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="lg:col-span-3">
+            <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+                <h4 class="text-sm font-medium text-gray-500 mb-4">Quick Actions</h4>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    
+                    {% if card.status == 'active' or card.status == 'assigned' %}
+                    <button type="button" 
+                            class="action-button flex flex-col items-center p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                            onclick="regenerateCard()">
+                        <i class="bi bi-arrow-clockwise text-lg text-gray-600 mb-1"></i>
+                        <span class="text-xs text-gray-700">Regenerate</span>
+                    </button>
+                    {% endif %}
+                    
+                    <button type="button" 
+                            class="action-button flex flex-col items-center p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                            onclick="downloadCard()">
+                        <i class="bi bi-download text-lg text-gray-600 mb-1"></i>
+                        <span class="text-xs text-gray-700">Download</span>
+                    </button>
+                    
+                    <button type="button" 
+                            class="action-button flex flex-col items-center p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                            onclick="duplicateCard()">
+                        <i class="bi bi-files text-lg text-gray-600 mb-1"></i>
+                        <span class="text-xs text-gray-700">Duplicate</span>
+                    </button>
+                    
+                    {% if card.status == 'active' %}
+                    <button type="button" 
+                            class="action-button flex flex-col items-center p-3 border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
+                            onclick="suspendCard()">
+                        <i class="bi bi-pause-circle text-lg text-red-600 mb-1"></i>
+                        <span class="text-xs text-red-700">Suspend</span>
+                    </button>
+                    {% elif card.status == 'suspended' %}
+                    <button type="button" 
+                            class="action-button flex flex-col items-center p-3 border border-green-300 rounded-lg hover:bg-green-50 transition-colors"
+                            onclick="reactivateCard()">
+                        <i class="bi bi-play-circle text-lg text-green-600 mb-1"></i>
+                        <span class="text-xs text-green-700">Reactivate</span>
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Detailed Activity Sections -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        <!-- Recent Verifications -->
+        <div class="bg-white shadow-sm rounded-lg border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">Recent Verifications</h3>
+            </div>
+            <div class="p-0">
+                {% if recent_verifications %}
+                <div class="divide-y divide-gray-200">
+                    {% for verification in recent_verifications %}
+                    <div class="px-6 py-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <div class="text-sm font-medium text-gray-900">
+                                    {% if verification.verification_type == 'qr_scan' %}
+                                    <i class="bi bi-qr-code mr-1"></i>QR Code Scan
+                                    {% elif verification.verification_type == 'manual_lookup' %}
+                                    <i class="bi bi-search mr-1"></i>Manual Lookup
+                                    {% elif verification.verification_type == 'api_verification' %}
+                                    <i class="bi bi-code mr-1"></i>API Call
+                                    {% else %}
+                                    {{ verification.get_verification_type_display }}
+                                    {% endif %}
+                                </div>
+                                <div class="text-sm text-gray-500">
+                                    {{ verification.verified_at|date:"M d, Y g:i A" }}
+                                </div>
+                                {% if verification.verification_purpose %}
+                                <div class="text-xs text-gray-400">
+                                    Purpose: {{ verification.verification_purpose }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div>
+                                {% if verification.was_successful %}
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <i class="bi bi-check-circle mr-1"></i>Success
+                                </span>
+                                {% else %}
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                    <i class="bi bi-x-circle mr-1"></i>Failed
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-8">
+                    <i class="bi bi-shield-check text-gray-400 text-3xl mb-2"></i>
+                    <p class="text-sm text-gray-500">No verifications recorded</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Status History -->
+        <div class="bg-white shadow-sm rounded-lg border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">Status History</h3>
+            </div>
+            <div class="p-6">
+                {% if status_history %}
+                <div class="space-y-4">
+                    {% for change in status_history %}
+                    <div class="timeline-item relative pl-6">
+                        <div class="timeline-line absolute left-2 top-6 w-0.5 h-full bg-gray-200"></div>
+                        <div class="timeline-dot absolute left-0 top-2 w-4 h-4 bg-indigo-600 rounded-full border-2 border-white shadow"></div>
+                        
+                        <div class="min-w-0">
+                            <div class="text-sm font-medium text-gray-900">
+                                {% if change.old_status != change.new_status %}
+                                Changed from <span class="font-mono text-xs bg-gray-100 px-1 rounded">{{ change.old_status }}</span>
+                                to <span class="font-mono text-xs bg-gray-100 px-1 rounded">{{ change.new_status }}</span>
+                                {% else %}
+                                Status updated: <span class="font-mono text-xs bg-gray-100 px-1 rounded">{{ change.new_status }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="text-sm text-gray-500">
+                                {{ change.changed_at|date:"M d, Y g:i A" }}
+                                {% if change.changed_by %}
+                                by {{ change.changed_by.get_full_name|default:change.changed_by.username }}
+                                {% endif %}
+                            </div>
+                            {% if change.reason %}
+                            <div class="text-xs text-gray-400 mt-1">
+                                {{ change.reason }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-8">
+                    <i class="bi bi-clock-history text-gray-400 text-3xl mb-2"></i>
+                    <p class="text-sm text-gray-500">No status changes recorded</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Delivery Records -->
+    {% if recent_deliveries %}
+    <div class="bg-white shadow-sm rounded-lg border border-gray-200">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900">Delivery History</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Type
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Recipient
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Date
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for delivery in recent_deliveries %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ delivery.get_delivery_type_display }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ delivery.recipient_name }}</div>
+                            <div class="text-sm text-gray-500">{{ delivery.recipient_email }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                {% if delivery.status == 'completed' %}bg-green-100 text-green-800
+                                {% elif delivery.status == 'failed' %}bg-red-100 text-red-800
+                                {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                {{ delivery.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ delivery.initiated_at|date:"M d, Y g:i A" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium no-print">
+                            {% if delivery.download_token and delivery.is_download_valid %}
+                            <a href="{% url 'affiliationcard:download_card' token=delivery.download_token %}" 
+                               class="text-indigo-600 hover:text-indigo-900">Download</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+    
+</div>
+
+<!-- Status Update Modal -->
+<div id="statusUpdateModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 no-print">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Update Card Status</h3>
+            <form method="post" action="{% url 'affiliationcard:update_card_status' pk=card.pk %}">
+                {% csrf_token %}
+                <div class="mb-4">
+                    <label for="new_status" class="block text-sm font-medium text-gray-700 mb-2">New Status</label>
+                    <select id="new_status" name="new_status" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="active">Active</option>
+                        <option value="suspended">Suspended</option>
+                        <option value="expired">Expired</option>
+                        <option value="revoked">Revoked</option>
+                    </select>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="reason" class="block text-sm font-medium text-gray-700 mb-2">Reason</label>
+                    <textarea id="reason" name="reason" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="flex items-center">
+                        <input type="checkbox" name="notify_affiliate" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                        <span class="ml-2 text-sm text-gray-600">Notify affiliate via email</span>
+                    </label>
+                </div>
+                
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="closeStatusUpdateModal()" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-indigo-700">
+                        Update Status
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function openStatusUpdateModal() {
+        document.getElementById('statusUpdateModal').classList.remove('hidden');
+        document.getElementById('new_status').value = '{{ card.status }}';
+    }
+    
+    function closeStatusUpdateModal() {
+        document.getElementById('statusUpdateModal').classList.add('hidden');
+    }
+    
+    function regenerateCard() {
+        if (confirm('Are you sure you want to regenerate this card? This will create new verification tokens and may invalidate existing links.')) {
+            // Implementation for card regeneration
+            showToast('Card regeneration feature coming soon!', 'info');
+        }
+    }
+    
+    function downloadCard() {
+        // Implementation for card download
+        showToast('Generating card download...', 'info');
+        // In real implementation, this would trigger the download
+    }
+    
+    function duplicateCard() {
+        if (confirm('Are you sure you want to create a duplicate of this card?')) {
+            // Implementation for card duplication
+            showToast('Card duplication feature coming soon!', 'info');
+        }
+    }
+    
+    function suspendCard() {
+        if (confirm('Are you sure you want to suspend this card? The cardholder will not be able to use it until reactivated.')) {
+            openStatusUpdateModal();
+            document.getElementById('new_status').value = 'suspended';
+            document.getElementById('reason').value = 'Administrative suspension';
+        }
+    }
+    
+    function reactivateCard() {
+        if (confirm('Are you sure you want to reactivate this card?')) {
+            openStatusUpdateModal();
+            document.getElementById('new_status').value = 'active';
+            document.getElementById('reason').value = 'Administrative reactivation';
+        }
+    }
+    
+    // Close modal when clicking outside
+    document.getElementById('statusUpdateModal').addEventListener('click', function(event) {
+        if (event.target === this) {
+            closeStatusUpdateModal();
+        }
+    });
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeStatusUpdateModal();
+        }
+    });
+</script>
+{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "ACRP Card {{ card.card_number }} Detail",
+    "description": "Detailed view of ACRP digital affiliation card {{ card.card_number }}",
+    "url": "{{ request.build_absolute_uri }}"
+}
+</script>
+{% endblock %}

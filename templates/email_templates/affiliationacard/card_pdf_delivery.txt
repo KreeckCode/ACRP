@@ -1,0 +1,77 @@
+# email_templates/affiliationcard/card_pdf_delivery.txt
+
+Your ACRP Digital Card - {{ card_number }}
+
+Dear {{ recipient_name }},
+
+Your ACRP digital affiliation card has been generated and is attached to this email as a PDF file. This card serves as official verification of your affiliation status.
+
+CARD DETAILS:
+- Card Number: {{ card_number }}
+- Council: {{ council_name }}
+- Affiliation Type: {{ affiliation_type }}
+- Status: {{ card.get_status_display }}
+{% if card.date_expires %}
+- Expires: {{ card.date_expires|date:"F d, Y" }}
+{% endif %}
+
+HOW TO USE YOUR DIGITAL CARD:
+1. Download the PDF: Save the attached PDF file to your device
+2. Print if needed: You can print the card on standard business card stock
+3. Mobile access: Keep the PDF on your phone for easy access
+4. QR Code: The QR code on your card allows instant verification
+5. Share for verification: Others can verify your status by scanning the QR code
+
+SECURITY NOTICE: This card contains a unique verification code. Do not share this card with unauthorized individuals. If you suspect your card has been compromised, please contact us immediately to request a replacement.
+
+If you have any questions about your digital card or need assistance, please contact our support team at support@kreeck.com.
+
+Thank you for your continued participation in the ACRP program.
+
+Best regards,
+ACRP Digital Cards Team
+{{ system_name }}
+
+---
+This is an automated message from the {{ system_name }}.
+© {{ current_year }} ACRP. All rights reserved.
+
+If you have received this email in error, please delete it immediately and notify the sender.
+
+# ======================================================================
+
+# email_templates/affiliationcard/card_link_delivery.txt
+
+Download Your ACRP Digital Card - {{ card_number }}
+
+Dear {{ recipient_name }},
+
+Your ACRP digital affiliation card has been generated and is ready for download. Use the secure link below to access your card.
+
+SECURE DOWNLOAD LINK:
+{{ download_url }}
+
+IMPORTANT: This download link will expire on {{ expiry_date|date:"F d, Y \a\t g:i A" }} and can be used up to {{ max_downloads }} times.
+
+CARD DETAILS:
+- Card Number: {{ card_number }}
+- Council: {{ council_name }}
+- Affiliation Type: {{ affiliation_type }}
+
+DOWNLOAD INSTRUCTIONS:
+1. Click the link above or copy and paste it into your web browser
+2. Select your preferred file format (PDF, PNG, or JPG)
+3. Download and save your card to your device
+4. Keep your card accessible on your mobile device for verification purposes
+
+The secure download page will allow you to choose your preferred format and download your card multiple times (up to {{ max_downloads }} downloads) before the link expires.
+
+If you encounter any issues downloading your card or have questions, please contact our support team at support@kreeck.com.
+
+Best regards,
+ACRP Digital Cards Team
+{{ system_name }}
+
+---
+This is an automated message from the {{ system_name }}.
+© {{ current_year }} ACRP. All rights reserved.

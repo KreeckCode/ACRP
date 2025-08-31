@@ -1,0 +1,831 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% comment %}
+ACRP Card Template List Template
+================================
+
+This template provides the administrative interface for managing card templates.
+Admins can view, create, edit, and manage visual templates for different councils.
+
+Template Features:
+- Visual template gallery with previews
+- Template type filtering and categorization
+- Council-specific template organization
+- Template status management (active/inactive)
+- Bulk operations for template management
+- Responsive grid layout with detailed information
+- Template preview and editing capabilities
+
+View Integration:
+- Works with CardTemplateListView class-based view
+- Uses CardTemplate model for data display
+- Integrates with template creation and editing workflows
+- Supports filtering and search functionality
+
+Data Context (from CardTemplateListView):
+- templates: QuerySet of CardTemplate objects
+- Additional context like page_title from get_context_data
+
+Template Model Fields (CardTemplate):
+- name: Template display name
+- description: Template description
+- template_type: default, council_specific, designation_specific, custom
+- council: Associated council (optional)
+- is_active: Template availability status
+- is_default: Default template flag
+- created_at/updated_at: Timestamps
+- color scheme: primary_color, secondary_color, accent_color, text_color
+- assets: logo_image, background_image
+- layout_config: JSON configuration for layout
+
+Design Philosophy:
+- Visual-first approach showing template previews
+- Clear organization by council and type
+- Easy template management workflow
+- Professional admin interface
+- Quick actions for common operations
+{% endcomment %}
+
+{% block title %}Card Templates - ACRP{% endblock %}
+
+{% block meta_description %}Manage ACRP digital card templates for different councils and affiliation types. Create, edit, and organize visual templates.{% endblock %}
+
+{% block page_title %}Card Templates{% endblock %}
+
+{% block page_description %}Manage visual templates for digital affiliation cards{% endblock %}
+
+{% block page_header %}
+<div class="mb-8">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 flex items-center">
+                <i class="bi bi-palette text-blue-600 mr-3"></i>
+                Card Templates
+                {% if templates %}
+                <span class="ml-3 text-lg font-normal text-gray-500">
+                    ({{ templates|length }} template{{ templates|length|pluralize }})
+                </span>
+                {% endif %}
+            </h1>
+            <p class="mt-2 text-sm text-gray-600">
+                Design and manage visual templates for digital affiliation cards
+            </p>
+        </div>
+        <div class="mt-4 lg:mt-0 flex space-x-3">
+            <a href="{% url 'affiliationcard:dashboard' %}" 
+               class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200">
+                <i class="bi bi-speedometer2 mr-2"></i>
+                Dashboard
+            </a>
+            <a href="{% url 'affiliationcard:template_create' %}" 
+               class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200">
+                <i class="bi bi-plus mr-2"></i>
+                Create Template
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    
+    {% comment %}
+    TEMPLATE FILTER AND SEARCH SECTION
+    ===================================
+    
+    Filtering interface for finding specific templates by type,
+    council, or status. Helps organize large template collections.
+    {% endcomment %}
+    
+    <!-- Filter Bar -->
+    <div class="bg-white shadow-sm rounded-lg border border-gray-200">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                <i class="bi bi-funnel text-gray-500 mr-2"></i>
+                Filter Templates
+            </h3>
+        </div>
+        <div class="p-6">
+            <form method="get" class="space-y-4" id="filter-form">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    
+                    <!-- Template Type Filter -->
+                    <div>
+                        <label for="template_type" class="block text-sm font-medium text-gray-700 mb-1">
+                            <i class="bi bi-tag mr-1"></i>
+                            Template Type
+                        </label>
+                        <select id="template_type" 
+                                name="template_type" 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
+                            <option value="">All Types</option>
+                            <option value="default">Default Templates</option>
+                            <option value="council_specific">Council Specific</option>
+                            <option value="designation_specific">Designation Specific</option>
+                            <option value="custom">Custom Templates</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Council Filter -->
+                    <div>
+                        <label for="council" class="block text-sm font-medium text-gray-700 mb-1">
+                            <i class="bi bi-building mr-1"></i>
+                            Council
+                        </label>
+                        <select id="council" 
+                                name="council" 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
+                            <option value="">All Councils</option>
+                            <option value="universal">Universal</option>
+                            <!-- These would be populated from Council model -->
+                            <option value="CGMP">CGMP</option>
+                            <option value="CEC">CEC</option>
+                            <option value="CLC">CLC</option>
+                            <option value="CTC">CTC</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Status Filter -->
+                    <div>
+                        <label for="status" class="block text-sm font-medium text-gray-700 mb-1">
+                            <i class="bi bi-toggle-on mr-1"></i>
+                            Status
+                        </label>
+                        <select id="status" 
+                                name="status" 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
+                            <option value="">All Statuses</option>
+                            <option value="active">Active Only</option>
+                            <option value="inactive">Inactive Only</option>
+                            <option value="default">Default Templates</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="flex items-end space-x-2">
+                        <button type="submit" 
+                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200">
+                            <i class="bi bi-funnel mr-2"></i>
+                            Apply
+                        </button>
+                        <a href="{% url 'affiliationcard:template_list' %}" 
+                           class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200">
+                            <i class="bi bi-x-circle mr-2"></i>
+                            Clear
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    {% comment %}
+    TEMPLATE GALLERY SECTION
+    ========================
+    
+    Main content area displaying templates in a visual grid format.
+    Each template shows preview, details, and management actions.
+    {% endcomment %}
+    
+    {% if templates %}
+    <!-- Template Gallery -->
+    <div class="bg-white shadow-sm rounded-lg border border-gray-200">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-medium text-gray-900">
+                    {{ templates|length }} Template{{ templates|length|pluralize }}
+                </h3>
+                <div class="flex items-center space-x-2">
+                    <!-- View Toggle -->
+                    <div class="flex border border-gray-300 rounded-md">
+                        <button type="button" 
+                                class="px-3 py-1 text-xs font-medium rounded-l-md bg-blue-600 text-white border-r border-blue-700" 
+                                id="grid-view-btn"
+                                onclick="switchView('grid')">
+                            <i class="bi bi-grid-3x3"></i>
+                        </button>
+                        <button type="button" 
+                                class="px-3 py-1 text-xs font-medium rounded-r-md bg-white text-gray-700 hover:bg-gray-50" 
+                                id="list-view-btn"
+                                onclick="switchView('list')">
+                            <i class="bi bi-list-ul"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Grid View -->
+        <div id="grid-view" class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for template in templates %}
+                <div class="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-200 template-card">
+                    
+                    <!-- Template Preview -->
+                    <div class="relative h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                        {% if template.background_image %}
+                        <img src="{{ template.background_image.url }}" 
+                             class="w-full h-full object-cover" 
+                             alt="{{ template.name }} background">
+                        {% else %}
+                        <!-- Template Color Preview -->
+                        <div class="w-full h-full flex items-center justify-center" 
+                             style="background: linear-gradient(135deg, {{ template.primary_color }}, {{ template.secondary_color }});">
+                            <div class="text-center text-white">
+                                <i class="bi bi-credit-card text-4xl mb-2 opacity-75"></i>
+                                <div class="text-sm font-medium opacity-90">{{ template.name }}</div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Template Status Overlay -->
+                        <div class="absolute top-2 right-2">
+                            {% if template.is_default %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                <i class="bi bi-star-fill mr-1"></i>
+                                Default
+                            </span>
+                            {% endif %}
+                            {% if not template.is_active %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 ml-1">
+                                <i class="bi bi-pause-circle mr-1"></i>
+                                Inactive
+                            </span>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Template Type Badge -->
+                        <div class="absolute bottom-2 left-2">
+                            {% if template.template_type == 'default' %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <i class="bi bi-gear mr-1"></i>
+                                Default
+                            </span>
+                            {% elif template.template_type == 'council_specific' %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                <i class="bi bi-building mr-1"></i>
+                                Council
+                            </span>
+                            {% elif template.template_type == 'designation_specific' %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                <i class="bi bi-person-badge mr-1"></i>
+                                Designation
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                <i class="bi bi-brush mr-1"></i>
+                                Custom
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Template Information -->
+                    <div class="p-4">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex-1 min-w-0">
+                                <h4 class="text-lg font-semibold text-gray-900 truncate">
+                                    {{ template.name }}
+                                </h4>
+                                <p class="text-sm text-gray-600 mt-1">
+                                    {% if template.council %}
+                                    {{ template.council.code }} - {{ template.council.name }}
+                                    {% else %}
+                                    Universal Template
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        
+                        {% if template.description %}
+                        <p class="text-sm text-gray-600 mb-4 line-clamp-2">
+                            {{ template.description }}
+                        </p>
+                        {% endif %}
+                        
+                        <!-- Color Scheme -->
+                        <div class="flex items-center space-x-2 mb-4">
+                            <span class="text-xs font-medium text-gray-600">Colors:</span>
+                            <div class="w-4 h-4 rounded-full border border-gray-300" 
+                                 style="background-color: {{ template.primary_color }}"
+                                 title="Primary: {{ template.primary_color }}"></div>
+                            <div class="w-4 h-4 rounded-full border border-gray-300" 
+                                 style="background-color: {{ template.secondary_color }}"
+                                 title="Secondary: {{ template.secondary_color }}"></div>
+                            <div class="w-4 h-4 rounded-full border border-gray-300" 
+                                 style="background-color: {{ template.accent_color }}"
+                                 title="Accent: {{ template.accent_color }}"></div>
+                        </div>
+                        
+                        <!-- Template Actions -->
+                        <div class="flex space-x-2">
+                            <button type="button" 
+                                    class="flex-1 text-center px-3 py-2 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                                    onclick="previewTemplate('{{ template.id }}')">
+                                <i class="bi bi-eye mr-1"></i>
+                                Preview
+                            </button>
+                            <a href="#" 
+                               class="flex-1 text-center px-3 py-2 border border-transparent text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                               onclick="showToast('Template editing coming soon!', 'info')">
+                                <i class="bi bi-pencil mr-1"></i>
+                                Edit
+                            </a>
+                            <div class="relative">
+                                <button type="button" 
+                                        class="px-2 py-2 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                                        onclick="toggleTemplateActions('{{ template.id }}')"
+                                        title="More Actions">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <div class="hidden absolute right-0 z-10 mt-1 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5" 
+                                     id="template-actions-{{ template.id }}">
+                                    <div class="py-1">
+                                        {% if template.is_active %}
+                                        <button type="button" 
+                                                class="block w-full text-left px-4 py-2 text-sm text-orange-700 hover:bg-orange-50"
+                                                onclick="templateAction('deactivate', '{{ template.id }}', '{{ template.name }}')">
+                                            <i class="bi bi-pause-circle mr-2"></i>Deactivate
+                                        </button>
+                                        {% else %}
+                                        <button type="button" 
+                                                class="block w-full text-left px-4 py-2 text-sm text-green-700 hover:bg-green-50"
+                                                onclick="templateAction('activate', '{{ template.id }}', '{{ template.name }}')">
+                                            <i class="bi bi-play-circle mr-2"></i>Activate
+                                        </button>
+                                        {% endif %}
+                                        
+                                        {% if not template.is_default %}
+                                        <button type="button" 
+                                                class="block w-full text-left px-4 py-2 text-sm text-blue-700 hover:bg-blue-50"
+                                                onclick="templateAction('set_default', '{{ template.id }}', '{{ template.name }}')">
+                                            <i class="bi bi-star mr-2"></i>Set as Default
+                                        </button>
+                                        {% endif %}
+                                        
+                                        <button type="button" 
+                                                class="block w-full text-left px-4 py-2 text-sm text-purple-700 hover:bg-purple-50"
+                                                onclick="templateAction('duplicate', '{{ template.id }}', '{{ template.name }}')">
+                                            <i class="bi bi-files mr-2"></i>Duplicate
+                                        </button>
+                                        
+                                        <div class="border-t border-gray-100"></div>
+                                        
+                                        <button type="button" 
+                                                class="block w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50"
+                                                onclick="templateAction('delete', '{{ template.id }}', '{{ template.name }}')">
+                                            <i class="bi bi-trash mr-2"></i>Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Template Metadata -->
+                        <div class="mt-3 text-xs text-gray-500 border-t border-gray-200 pt-3">
+                            <div class="flex items-center justify-between">
+                                <span>Created {{ template.created_at|timesince }} ago</span>
+                                {% if template.created_by %}
+                                <span>by {{ template.created_by.get_full_name|default:template.created_by.username }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- List View (Hidden by default) -->
+        <div id="list-view" class="hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Template
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Type & Council
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Colors
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Status
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Created
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for template in templates %}
+                        <tr class="hover:bg-gray-50 transition-colors duration-150">
+                            
+                            <!-- Template Name -->
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="h-10 w-16 rounded border border-gray-300 flex-shrink-0 mr-4"
+                                         style="background: linear-gradient(135deg, {{ template.primary_color }}, {{ template.secondary_color }});">
+                                    </div>
+                                    <div>
+                                        <div class="text-sm font-medium text-gray-900">{{ template.name }}</div>
+                                        {% if template.description %}
+                                        <div class="text-sm text-gray-500 truncate max-w-xs">{{ template.description }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            
+                            <!-- Type & Council -->
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ template.get_template_type_display }}</div>
+                                <div class="text-sm text-gray-500">
+                                    {% if template.council %}
+                                    {{ template.council.code }}
+                                    {% else %}
+                                    Universal
+                                    {% endif %}
+                                </div>
+                            </td>
+                            
+                            <!-- Colors -->
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex space-x-1">
+                                    <div class="w-4 h-4 rounded border border-gray-300" 
+                                         style="background-color: {{ template.primary_color }}"
+                                         title="Primary: {{ template.primary_color }}"></div>
+                                    <div class="w-4 h-4 rounded border border-gray-300" 
+                                         style="background-color: {{ template.secondary_color }}"
+                                         title="Secondary: {{ template.secondary_color }}"></div>
+                                    <div class="w-4 h-4 rounded border border-gray-300" 
+                                         style="background-color: {{ template.accent_color }}"
+                                         title="Accent: {{ template.accent_color }}"></div>
+                                </div>
+                            </td>
+                            
+                            <!-- Status -->
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex flex-col space-y-1">
+                                    {% if template.is_active %}
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        <i class="bi bi-check-circle mr-1"></i>
+                                        Active
+                                    </span>
+                                    {% else %}
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                        <i class="bi bi-pause-circle mr-1"></i>
+                                        Inactive
+                                    </span>
+                                    {% endif %}
+                                    
+                                    {% if template.is_default %}
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                        <i class="bi bi-star mr-1"></i>
+                                        Default
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            
+                            <!-- Created -->
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <div>{{ template.created_at|date:"M d, Y" }}</div>
+                                {% if template.created_by %}
+                                <div class="text-xs">{{ template.created_by.username }}</div>
+                                {% endif %}
+                            </td>
+                            
+                            <!-- Actions -->
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <div class="flex items-center justify-end space-x-2">
+                                    <button type="button" 
+                                            class="text-blue-600 hover:text-blue-700"
+                                            onclick="previewTemplate('{{ template.id }}')"
+                                            title="Preview">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <a href="#" 
+                                       class="text-green-600 hover:text-green-700"
+                                       onclick="showToast('Template editing coming soon!', 'info')"
+                                       title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <button type="button" 
+                                            class="text-gray-400 hover:text-gray-600"
+                                            onclick="toggleTemplateActions('{{ template.id }}')"
+                                            title="More Actions">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+    </div>
+    
+    {% else %}
+    
+    {% comment %}
+    EMPTY STATE SECTION
+    ===================
+    
+    Displayed when no templates exist or match current filters.
+    Provides guidance and quick actions to create templates.
+    {% endcomment %}
+    
+    <!-- Empty State -->
+    <div class="bg-white shadow-sm rounded-lg border border-gray-200">
+        <div class="text-center py-12">
+            <div class="mx-auto h-24 w-24 text-gray-400 mb-4">
+                <i class="bi bi-palette text-6xl"></i>
+            </div>
+            <h3 class="mt-2 text-lg font-medium text-gray-900">No card templates found</h3>
+            <p class="mt-1 text-sm text-gray-500 mb-6">
+                Get started by creating your first card template
+            </p>
+            <div class="flex justify-center space-x-3">
+                <a href="{% url 'affiliationcard:template_create' %}" 
+                   class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+                    <i class="bi bi-plus mr-2"></i>
+                    Create First Template
+                </a>
+                <button type="button" 
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                        onclick="showToast('Template import functionality coming soon!', 'info')">
+                    <i class="bi bi-upload mr-2"></i>
+                    Import Template
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    {% endif %}
+    
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Template card hover effects */
+    .template-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Color preview styling */
+    .color-preview {
+        transition: transform 0.2s ease;
+    }
+    
+    .color-preview:hover {
+        transform: scale(1.2);
+    }
+    
+    /* Template preview overlay */
+    .template-preview-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .template-card:hover .template-preview-overlay {
+        opacity: 1;
+    }
+    
+    /* List view enhancements */
+    #list-view table {
+        font-size: 0.875rem;
+    }
+    
+    /* Line clamp for descriptions */
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    
+    /* Template type badges */
+    .template-type-badge {
+        animation: fadeInScale 0.3s ease-out;
+    }
+    
+    @keyframes fadeInScale {
+        from {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+    
+    /* Grid animation */
+    .template-card {
+        animation: slideInUp 0.4s ease-out;
+    }
+    
+    .template-card:nth-child(1) { animation-delay: 0.1s; }
+    .template-card:nth-child(2) { animation-delay: 0.2s; }
+    .template-card:nth-child(3) { animation-delay: 0.3s; }
+    .template-card:nth-child(4) { animation-delay: 0.4s; }
+    .template-card:nth-child(5) { animation-delay: 0.5s; }
+    .template-card:nth-child(6) { animation-delay: 0.6s; }
+    
+    @keyframes slideInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    /**
+     * Template Management JavaScript
+     * ==============================
+     * 
+     * This script handles all interactive functionality for the template management page,
+     * including view switching, template actions, and preview functionality.
+     */
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // Initialize template list
+        initializeTemplateList();
+        
+        // Set up view switching
+        setupViewSwitching();
+        
+        // Set up template actions
+        setupTemplateActions();
+        
+    });
+    
+    /**
+     * Initialize template list functionality
+     */
+    function initializeTemplateList() {
+        console.log('Template list initialized');
+        
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.relative')) {
+                document.querySelectorAll('[id^="template-actions-"]').forEach(dropdown => {
+                    dropdown.classList.add('hidden');
+                });
+            }
+        });
+        
+        // Load saved view preference
+        const savedView = localStorage.getItem('templateListView');
+        if (savedView === 'list') {
+            switchView('list');
+        }
+    }
+    
+    /**
+     * Set up view switching between grid and list
+     */
+    function setupViewSwitching() {
+        // View switching is handled by switchView function (defined below)
+    }
+    
+    /**
+     * Switch between grid and list view
+     */
+    function switchView(viewType) {
+        const gridView = document.getElementById('grid-view');
+        const listView = document.getElementById('list-view');
+        const gridBtn = document.getElementById('grid-view-btn');
+        const listBtn = document.getElementById('list-view-btn');
+        
+        if (viewType === 'grid') {
+            gridView.classList.remove('hidden');
+            listView.classList.add('hidden');
+            gridBtn.classList.add('bg-blue-600', 'text-white');
+            gridBtn.classList.remove('bg-white', 'text-gray-700');
+            listBtn.classList.add('bg-white', 'text-gray-700');
+            listBtn.classList.remove('bg-blue-600', 'text-white');
+        } else {
+            gridView.classList.add('hidden');
+            listView.classList.remove('hidden');
+            listBtn.classList.add('bg-blue-600', 'text-white');
+            listBtn.classList.remove('bg-white', 'text-gray-700');
+            gridBtn.classList.add('bg-white', 'text-gray-700');
+            gridBtn.classList.remove('bg-blue-600', 'text-white');
+        }
+        
+        // Save preference
+        localStorage.setItem('templateListView', viewType);
+    }
+    
+    /**
+     * Set up template action functionality
+     */
+    function setupTemplateActions() {
+        // Actions are handled by individual functions below
+    }
+    
+    /**
+     * Toggle template actions dropdown
+     */
+    function toggleTemplateActions(templateId) {
+        const dropdown = document.getElementById(`template-actions-${templateId}`);
+        
+        // Close other dropdowns
+        document.querySelectorAll('[id^="template-actions-"]').forEach(d => {
+            if (d !== dropdown) d.classList.add('hidden');
+        });
+        
+        dropdown.classList.toggle('hidden');
+    }
+    
+    /**
+     * Perform template action
+     */
+    function templateAction(action, templateId, templateName) {
+        let confirmMessage = '';
+        
+        switch(action) {
+            case 'activate':
+                confirmMessage = `Activate template "${templateName}"? It will be available for card generation.`;
+                break;
+            case 'deactivate':
+                confirmMessage = `Deactivate template "${templateName}"? It will no longer be available for new cards.`;
+                break;
+            case 'set_default':
+                confirmMessage = `Set "${templateName}" as the default template? This will replace the current default.`;
+                break;
+            case 'duplicate':
+                confirmMessage = `Create a copy of template "${templateName}"?`;
+                break;
+            case 'delete':
+                confirmMessage = `Permanently delete template "${templateName}"? This action cannot be undone.`;
+                break;
+            default:
+                showToast('Unknown action requested', 'error');
+                return;
+        }
+        
+        if (confirm(confirmMessage)) {
+            // In a real implementation, this would make a POST request to the action endpoint
+            showToast(`${action.charAt(0).toUpperCase() + action.slice(1)} action would be performed on "${templateName}"`, 'info');
+            
+            // Close dropdown
+            document.querySelectorAll('[id^="template-actions-"]').forEach(dropdown => {
+                dropdown.classList.add('hidden');
+            });
+        }
+    }
+    
+    /**
+     * Preview template functionality
+     */
+    function previewTemplate(templateId) {
+        // In a real implementation, this would open a modal or new window
+        // showing how cards look with this template
+        showToast(`Preview for template ${templateId} would be shown here`, 'info');
+        
+        // Could open modal with sample card using this template
+        // openTemplatePreviewModal(templateId);
+    }
+    
+    /**
+     * Create new template (quick action)
+     */
+    function createTemplate() {
+        window.location.href = '{% url "affiliationcard:template_create" %}';
+    }
+    
+    
+</script>
+{% endblock %}

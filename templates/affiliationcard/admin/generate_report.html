@@ -1,0 +1,708 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% comment %}
+ACRP Affiliation Card Report Generation Template
+===============================================
+
+This template provides a comprehensive interface for generating custom reports
+about affiliation cards. It supports various report types, date ranges, filtering
+options, and export formats.
+
+Template Features:
+- Multiple report type selection with descriptions
+- Advanced filtering options (date ranges, councils, statuses)
+- Export format selection (PDF, CSV, Excel)
+- Real-time preview of report parameters
+- Responsive form layout with progressive disclosure
+- Accessibility-first design with proper ARIA labels
+
+Form Integration:
+- Uses CardReportForm from forms.py
+- Supports CSRF protection
+- Client-side validation with immediate feedback
+- Progressive enhancement for better UX
+
+Design Philosophy:
+- Step-by-step wizard-style interface
+- Clear visual hierarchy with sections
+- Helpful descriptions and examples
+- Non-intimidating form design for non-technical users
+{% endcomment %}
+
+{% block title %}Generate Report - Card Administration - ACRP{% endblock %}
+
+{% block meta_description %}Generate detailed reports on ACRP digital affiliation cards with customizable filters, date ranges, and export formats.{% endblock %}
+
+{% block page_title %}Generate Custom Report{% endblock %}
+
+{% block page_description %}Create detailed reports on card statistics, verification activity, and council performance{% endblock %}
+
+{% block page_header %}
+<div class="mb-8">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 flex items-center">
+                <i class="bi bi-file-earmark-bar-graph text-blue-600 mr-3"></i>
+                Generate Custom Report
+            </h1>
+            <p class="mt-2 text-sm text-gray-600">
+                Create detailed reports with custom filters and export options
+            </p>
+        </div>
+        <div class="mt-4 sm:mt-0">
+            <a href="{% url 'affiliationcard:dashboard' %}" 
+               class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200">
+                <i class="bi bi-arrow-left mr-2"></i>
+                Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    
+    <form method="post" id="report-form" class="space-y-8">
+        {% csrf_token %}
+        
+        {% comment %}
+        REPORT TYPE SELECTION
+        =====================
+        
+        This section allows users to choose from predefined report types.
+        Each option includes a description to help users understand what they'll get.
+        {% endcomment %}
+        
+        <!-- Report Type Selection -->
+        <div class="bg-white shadow-sm rounded-lg border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                    <span class="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-full text-sm font-bold mr-3">1</span>
+                    Select Report Type
+                </h3>
+                <p class="mt-1 text-sm text-gray-600">Choose the type of report you want to generate</p>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    
+                    <!-- Card Overview Report -->
+                    <label class="relative cursor-pointer">
+                        <input type="radio" name="report_type" value="card_overview" class="sr-only peer" checked>
+                        <div class="p-4 border-2 border-gray-200 rounded-lg peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:border-gray-300 transition-colors duration-200">
+                            <div class="flex items-start">
+                                <i class="bi bi-credit-card text-xl text-gray-600 mt-1 mr-3"></i>
+                                <div>
+                                    <h4 class="text-sm font-semibold text-gray-900">Card Overview</h4>
+                                    <p class="text-xs text-gray-600 mt-1">Summary of all cards by status, council, and type</p>
+                                </div>
+                            </div>
+                        </div>
+                    </label>
+                    
+                    <!-- Verification Activity Report -->
+                    <label class="relative cursor-pointer">
+                        <input type="radio" name="report_type" value="verification_activity" class="sr-only peer">
+                        <div class="p-4 border-2 border-gray-200 rounded-lg peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:border-gray-300 transition-colors duration-200">
+                            <div class="flex items-start">
+                                <i class="bi bi-activity text-xl text-gray-600 mt-1 mr-3"></i>
+                                <div>
+                                    <h4 class="text-sm font-semibold text-gray-900">Verification Activity</h4>
+                                    <p class="text-xs text-gray-600 mt-1">Detailed verification logs and usage patterns</p>
+                                </div>
+                            </div>
+                        </div>
+                    </label>
+                    
+                    <!-- Council Performance Report -->
+                    <label class="relative cursor-pointer">
+                        <input type="radio" name="report_type" value="council_performance" class="sr-only peer">
+                        <div class="p-4 border-2 border-gray-200 rounded-lg peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:border-gray-300 transition-colors duration-200">
+                            <div class="flex items-start">
+                                <i class="bi bi-pie-chart text-xl text-gray-600 mt-1 mr-3"></i>
+                                <div>
+                                    <h4 class="text-sm font-semibold text-gray-900">Council Performance</h4>
+                                    <p class="text-xs text-gray-600 mt-1">Card statistics broken down by council</p>
+                                </div>
+                            </div>
+                        </div>
+                    </label>
+                    
+                    <!-- Expiry Analysis Report -->
+                    <label class="relative cursor-pointer">
+                        <input type="radio" name="report_type" value="expiry_analysis" class="sr-only peer">
+                        <div class="p-4 border-2 border-gray-200 rounded-lg peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:border-gray-300 transition-colors duration-200">
+                            <div class="flex items-start">
+                                <i class="bi bi-calendar-x text-xl text-gray-600 mt-1 mr-3"></i>
+                                <div>
+                                    <h4 class="text-sm font-semibold text-gray-900">Expiry Analysis</h4>
+                                    <p class="text-xs text-gray-600 mt-1">Cards expiring soon and renewal patterns</p>
+                                </div>
+                            </div>
+                        </div>
+                    </label>
+                    
+                </div>
+            </div>
+        </div>
+        
+        {% comment %}
+        FILTER OPTIONS SECTION
+        ======================
+        
+        This section provides comprehensive filtering options for the report.
+        It uses progressive disclosure to show relevant filters based on report type.
+        {% endcomment %}
+        
+        <!-- Filter Options -->
+        <div class="bg-white shadow-sm rounded-lg border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                    <span class="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-full text-sm font-bold mr-3">2</span>
+                    Filter Options
+                </h3>
+                <p class="mt-1 text-sm text-gray-600">Customize your report with specific filters</p>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <!-- Date Range -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="bi bi-calendar-range mr-1"></i>
+                            Date Range
+                        </label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label for="start_date" class="block text-xs text-gray-600 mb-1">From Date</label>
+                                <input type="date" 
+                                       id="start_date" 
+                                       name="start_date" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                       value="">
+                            </div>
+                            <div>
+                                <label for="end_date" class="block text-xs text-gray-600 mb-1">To Date</label>
+                                <input type="date" 
+                                       id="end_date" 
+                                       name="end_date" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                       value="">
+                            </div>
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">Leave blank for all dates</p>
+                    </div>
+                    
+                    <!-- Card Status Filter -->
+                    <div>
+                        <label for="status_filter" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="bi bi-funnel mr-1"></i>
+                            Card Status
+                        </label>
+                        <select id="status_filter" 
+                                name="status_filter" 
+                                multiple
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
+                            <option value="">All Statuses</option>
+                            <option value="active">Active</option>
+                            <option value="pending_assignment">Pending Assignment</option>
+                            <option value="assigned">Assigned</option>
+                            <option value="expired">Expired</option>
+                            <option value="suspended">Suspended</option>
+                            <option value="revoked">Revoked</option>
+                        </select>
+                        <p class="mt-1 text-xs text-gray-500">Hold Ctrl/Cmd to select multiple</p>
+                    </div>
+                    
+                    <!-- Council Filter -->
+                    <div>
+                        <label for="council_filter" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="bi bi-building mr-1"></i>
+                            Council
+                        </label>
+                        <select id="council_filter" 
+                                name="council_filter" 
+                                multiple
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
+                            <option value="">All Councils</option>
+                            <!-- These would be populated from your Council model -->
+                            <option value="CGMP">CGMP</option>
+                            <option value="CEC">CEC</option>
+                            <option value="CLC">CLC</option>
+                            <option value="CTC">CTC</option>
+                        </select>
+                        <p class="mt-1 text-xs text-gray-500">Select specific councils or leave blank for all</p>
+                    </div>
+                    
+                    <!-- Affiliation Type Filter -->
+                    <div>
+                        <label for="affiliation_filter" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="bi bi-person-badge mr-1"></i>
+                            Affiliation Type
+                        </label>
+                        <select id="affiliation_filter" 
+                                name="affiliation_filter" 
+                                multiple
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm">
+                            <option value="">All Types</option>
+                            <option value="associated">Associated</option>
+                            <option value="designated">Designated</option>
+                            <option value="student">Student</option>
+                        </select>
+                        <p class="mt-1 text-xs text-gray-500">Filter by specific affiliation types</p>
+                    </div>
+                    
+                </div>
+                
+                <!-- Advanced Options Toggle -->
+                <div class="mt-6">
+                    <button type="button" 
+                            class="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center"
+                            onclick="toggleAdvancedOptions()">
+                        <i class="bi bi-chevron-right mr-1 transition-transform duration-200" id="advanced-toggle-icon"></i>
+                        Advanced Options
+                    </button>
+                    
+                    <div class="hidden mt-4 p-4 bg-gray-50 rounded-lg" id="advanced-options">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            
+                            <div>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="include_photos" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                    <span class="ml-2 text-sm text-gray-700">Include affiliate photos</span>
+                                </label>
+                            </div>
+                            
+                            <div>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="include_verification_details" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                    <span class="ml-2 text-sm text-gray-700">Include verification details</span>
+                                </label>
+                            </div>
+                            
+                            <div>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="group_by_council" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500" checked>
+                                    <span class="ml-2 text-sm text-gray-700">Group by council</span>
+                                </label>
+                            </div>
+                            
+                            <div>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="include_charts" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500" checked>
+                                    <span class="ml-2 text-sm text-gray-700">Include charts and graphs</span>
+                                </label>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {% comment %}
+        OUTPUT FORMAT SELECTION
+        =======================
+        
+        Users can choose how they want to receive their report.
+        Different formats are suitable for different use cases.
+        {% endcomment %}
+        
+        <!-- Output Format -->
+        <div class="bg-white shadow-sm rounded-lg border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                    <span class="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-full text-sm font-bold mr-3">3</span>
+                    Output Format
+                </h3>
+                <p class="mt-1 text-sm text-gray-600">Choose how you want to receive your report</p>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    
+                    <!-- PDF Format -->
+                    <label class="relative cursor-pointer">
+                        <input type="radio" name="output_format" value="pdf" class="sr-only peer" checked>
+                        <div class="p-4 border-2 border-gray-200 rounded-lg peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:border-gray-300 transition-colors duration-200">
+                            <div class="text-center">
+                                <i class="bi bi-file-pdf text-2xl text-red-600 mb-2"></i>
+                                <h4 class="text-sm font-semibold text-gray-900">PDF Report</h4>
+                                <p class="text-xs text-gray-600 mt-1">Professional formatted document</p>
+                            </div>
+                        </div>
+                    </label>
+                    
+                    <!-- CSV Format -->
+                    <label class="relative cursor-pointer">
+                        <input type="radio" name="output_format" value="csv" class="sr-only peer">
+                        <div class="p-4 border-2 border-gray-200 rounded-lg peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:border-gray-300 transition-colors duration-200">
+                            <div class="text-center">
+                                <i class="bi bi-filetype-csv text-2xl text-green-600 mb-2"></i>
+                                <h4 class="text-sm font-semibold text-gray-900">CSV Export</h4>
+                                <p class="text-xs text-gray-600 mt-1">Data for spreadsheet analysis</p>
+                            </div>
+                        </div>
+                    </label>
+                    
+                    <!-- Excel Format -->
+                    <label class="relative cursor-pointer">
+                        <input type="radio" name="output_format" value="excel" class="sr-only peer">
+                        <div class="p-4 border-2 border-gray-200 rounded-lg peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:border-gray-300 transition-colors duration-200">
+                            <div class="text-center">
+                                <i class="bi bi-file-earmark-excel text-2xl text-green-700 mb-2"></i>
+                                <h4 class="text-sm font-semibold text-gray-900">Excel Report</h4>
+                                <p class="text-xs text-gray-600 mt-1">Rich formatting with charts</p>
+                            </div>
+                        </div>
+                    </label>
+                    
+                </div>
+            </div>
+        </div>
+        
+        {% comment %}
+        REPORT PREVIEW SECTION
+        ======================
+        
+        This section shows a preview of what will be included in the report
+        based on current selections. It updates dynamically via JavaScript.
+        {% endcomment %}
+        
+        <!-- Report Preview -->
+        <div class="bg-white shadow-sm rounded-lg border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                    <span class="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-full text-sm font-bold mr-3">4</span>
+                    Report Preview
+                </h3>
+                <p class="mt-1 text-sm text-gray-600">Review your report parameters before generation</p>
+            </div>
+            <div class="p-6">
+                <div id="report-preview" class="bg-gray-50 rounded-lg p-4">
+                    <div class="flex items-center text-gray-600">
+                        <i class="bi bi-eye mr-2"></i>
+                        <span class="text-sm">Select options above to preview your report</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {% comment %}
+        ACTION BUTTONS
+        ==============
+        
+        Primary action to generate the report with secondary options.
+        Includes loading states and error handling.
+        {% endcomment %}
+        
+        <!-- Generate Button -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+            <div class="flex space-x-4">
+                <button type="submit" 
+                        id="generate-btn"
+                        class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                    <i class="bi bi-download mr-2"></i>
+                    <span id="generate-btn-text">Generate Report</span>
+                    <div class="hidden ml-2 loading-spinner">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </div>
+                </button>
+                
+                <button type="button" 
+                        class="inline-flex items-center px-4 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                        onclick="previewReport()">
+                    <i class="bi bi-eye mr-2"></i>
+                    Preview
+                </button>
+            </div>
+            
+            <div class="text-sm text-gray-500">
+                <i class="bi bi-info-circle mr-1"></i>
+                Reports may take a few minutes to generate for large datasets
+            </div>
+        </div>
+        
+    </form>
+    
+    {% comment %}
+    RECENT REPORTS SECTION
+    ======================
+    
+    Shows recently generated reports that users can download again.
+    This saves time for frequently requested reports.
+    {% endcomment %}
+    
+    <!-- Recent Reports -->
+    <div class="bg-white shadow-sm rounded-lg border border-gray-200 mt-8">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                <i class="bi bi-clock-history text-gray-500 mr-2"></i>
+                Recent Reports
+            </h3>
+            <p class="mt-1 text-sm text-gray-600">Download previously generated reports</p>
+        </div>
+        <div class="p-6">
+            <div class="text-center py-8">
+                <i class="bi bi-file-earmark-text text-gray-400 text-3xl mb-2"></i>
+                <p class="text-sm text-gray-500">No recent reports available</p>
+                <p class="text-xs text-gray-400 mt-1">Generated reports will appear here for quick access</p>
+            </div>
+        </div>
+    </div>
+    
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Custom radio button styling for report type selection */
+    input[type="radio"]:checked + div {
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    /* Form field focus enhancements */
+    .form-field:focus-within {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Loading animation */
+    .loading-spinner i {
+        animation: spin 1s linear infinite;
+    }
+    
+    /* Multi-select styling */
+    select[multiple] {
+        min-height: 80px;
+    }
+    
+    /* Preview panel animation */
+    #report-preview {
+        transition: all 0.3s ease-in-out;
+    }
+    
+    #report-preview.updating {
+        opacity: 0.5;
+        transform: scale(0.98);
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    /**
+     * Report Generation JavaScript
+     * ============================
+     * 
+     * This script handles the interactive elements of the report generation form,
+     * including dynamic preview updates, form validation, and submission handling.
+     */
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // Initialize form functionality
+        initializeReportForm();
+        
+        // Set default date range (last 30 days)
+        setDefaultDateRange();
+        
+        // Set up form validation
+        setupFormValidation();
+        
+    });
+    
+    /**
+     * Initialize report form with event listeners
+     */
+    function initializeReportForm() {
+        
+        // Listen for report type changes
+        document.querySelectorAll('input[name="report_type"]').forEach(function(radio) {
+            radio.addEventListener('change', updateReportPreview);
+        });
+        
+        // Listen for filter changes
+        document.querySelectorAll('select, input[type="date"], input[type="checkbox"]').forEach(function(input) {
+            input.addEventListener('change', updateReportPreview);
+        });
+        
+        // Handle form submission
+        document.getElementById('report-form').addEventListener('submit', function(event) {
+            handleFormSubmission(event);
+        });
+        
+        // Initial preview update
+        updateReportPreview();
+        
+    }
+    
+    /**
+     * Set default date range to last 30 days
+     */
+    function setDefaultDateRange() {
+        const today = new Date();
+        const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
+        
+        document.getElementById('end_date').value = today.toISOString().split('T')[0];
+        document.getElementById('start_date').value = thirtyDaysAgo.toISOString().split('T')[0];
+    }
+    
+    /**
+     * Update the report preview based on current form selections
+     */
+    function updateReportPreview() {
+        const preview = document.getElementById('report-preview');
+        preview.classList.add('updating');
+        
+        // Get current form values
+        const reportType = document.querySelector('input[name="report_type"]:checked')?.value;
+        const startDate = document.getElementById('start_date').value;
+        const endDate = document.getElementById('end_date').value;
+        const outputFormat = document.querySelector('input[name="output_format"]:checked')?.value;
+        
+        // Build preview content
+        let previewHTML = '<div class="space-y-2">';
+        
+        // Report type
+        if (reportType) {
+            const reportTypeLabels = {
+                'card_overview': 'Card Overview Report',
+                'verification_activity': 'Verification Activity Report',
+                'council_performance': 'Council Performance Report',
+                'expiry_analysis': 'Expiry Analysis Report'
+            };
+            previewHTML += `<div class="flex items-center text-sm"><i class="bi bi-file-text mr-2 text-blue-600"></i><strong>Type:</strong> <span class="ml-1">${reportTypeLabels[reportType]}</span></div>`;
+        }
+        
+        // Date range
+        if (startDate && endDate) {
+            previewHTML += `<div class="flex items-center text-sm"><i class="bi bi-calendar mr-2 text-green-600"></i><strong>Period:</strong> <span class="ml-1">${startDate} to ${endDate}</span></div>`;
+        }
+        
+        // Output format
+        if (outputFormat) {
+            const formatLabels = {
+                'pdf': 'PDF Document',
+                'csv': 'CSV Spreadsheet',
+                'excel': 'Excel Workbook'
+            };
+            previewHTML += `<div class="flex items-center text-sm"><i class="bi bi-download mr-2 text-purple-600"></i><strong>Format:</strong> <span class="ml-1">${formatLabels[outputFormat]}</span></div>`;
+        }
+        
+        previewHTML += '</div>';
+        
+        // Update preview with animation
+        setTimeout(function() {
+            preview.innerHTML = previewHTML;
+            preview.classList.remove('updating');
+        }, 200);
+    }
+    
+    /**
+     * Toggle advanced options panel
+     */
+    function toggleAdvancedOptions() {
+        const panel = document.getElementById('advanced-options');
+        const icon = document.getElementById('advanced-toggle-icon');
+        
+        panel.classList.toggle('hidden');
+        icon.classList.toggle('rotate-90');
+    }
+    
+    /**
+     * Setup form validation
+     */
+    function setupFormValidation() {
+        
+        // Validate date range
+        document.getElementById('start_date').addEventListener('change', function() {
+            const startDate = new Date(this.value);
+            const endDate = new Date(document.getElementById('end_date').value);
+            
+            if (startDate > endDate) {
+                showToast('Start date cannot be after end date', 'error');
+                this.value = '';
+            }
+        });
+        
+        document.getElementById('end_date').addEventListener('change', function() {
+            const startDate = new Date(document.getElementById('start_date').value);
+            const endDate = new Date(this.value);
+            
+            if (endDate < startDate) {
+                showToast('End date cannot be before start date', 'error');
+                this.value = '';
+            }
+        });
+        
+    }
+    
+    /**
+     * Handle form submission with loading states
+     */
+    function handleFormSubmission(event) {
+        const generateBtn = document.getElementById('generate-btn');
+        const generateBtnText = document.getElementById('generate-btn-text');
+        const spinner = generateBtn.querySelector('.loading-spinner');
+        
+        // Show loading state
+        generateBtnText.textContent = 'Generating...';
+        spinner.classList.remove('hidden');
+        generateBtn.disabled = true;
+        generateBtn.classList.add('opacity-75', 'cursor-not-allowed');
+        
+        // Show progress toast
+        showToast('Report generation started. Please wait...', 'info');
+        
+        // Note: In a real implementation, you might want to:
+        // 1. Submit form via AJAX for better UX
+        // 2. Show progress updates
+        // 3. Handle errors gracefully
+        // 4. Reset form state on completion
+    }
+    
+    /**
+     * Preview report without generating (placeholder functionality)
+     */
+    function previewReport() {
+        showToast('Report preview functionality coming soon!', 'info');
+        
+        // In a real implementation, this would:
+        // 1. Make AJAX call to preview endpoint
+        // 2. Show modal with report preview
+        // 3. Allow users to adjust parameters before final generation
+    }
+    
+    /**
+     * Quick preset date range functions
+     */
+    function setDateRange(range) {
+        const today = new Date();
+        let startDate;
+        
+        switch(range) {
+            case 'last_week':
+                startDate = new Date(today.getTime() - (7 * 24 * 60 * 60 * 1000));
+                break;
+            case 'last_month':
+                startDate = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
+                break;
+            case 'last_quarter':
+                startDate = new Date(today.getTime() - (90 * 24 * 60 * 60 * 1000));
+                break;
+            case 'last_year':
+                startDate = new Date(today.getTime() - (365 * 24 * 60 * 60 * 1000));
+                break;
+            default:
+                return;
+        }
+        
+        document.getElementById('start_date').value = startDate.toISOString().split('T')[0];
+        document.getElementById('end_date').value = today.toISOString().split('T')[0];
+        
+        updateReportPreview();
+    }
+    
+</script>
+{% endblock %}
