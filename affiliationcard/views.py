@@ -416,6 +416,11 @@ def send_card(request, pk):
         
         if form.is_valid():
             try:
+                logger.info(f"DEBUG: About to create delivery for card {card.card_number}")
+                logger.info(f"DEBUG: Delivery method: {form.cleaned_data['delivery_method']}")
+                logger.info(f"DEBUG: File format: {form.cleaned_data['file_format']}")
+                
+
                 # Extract form data
                 delivery_data = {
                     'delivery_method': form.cleaned_data['delivery_method'],
@@ -429,8 +434,22 @@ def send_card(request, pk):
                     'max_downloads': form.cleaned_data.get('max_downloads', 5)
                 }
                 
-                # Create and process delivery
-                delivery = create_card_delivery(card=card, **delivery_data)
+                # Right after extracting delivery_data, add:
+                logger.info(f"DEBUG: About to call create_card_delivery function")
+                logger.info(f"DEBUG: Function exists: {callable(create_card_delivery)}")
+
+                try:
+                    # Create and process delivery
+                    delivery = create_card_delivery(card=card, **delivery_data)
+                    logger.info(f"DEBUG: create_card_delivery returned successfully")
+                except Exception as e:
+                    logger.error(f"DEBUG: create_card_delivery failed with exception: {e}", exc_info=True)
+                    raise
+
+                logger.info(f"DEBUG: create_card_delivery returned: {delivery}")
+                logger.info(f"DEBUG: Delivery status: {delivery.status}")
+                logger.info(f"DEBUG: Delivery failure reason: {delivery.failure_reason}")
+                
                 
                 # Provide user feedback based on delivery method
                 if delivery.status == 'completed':
@@ -2871,48 +2890,747 @@ def create_card_delivery(card, delivery_method, recipient_email, recipient_name,
     return delivery
 
 
+
+from io import BytesIO
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
+import qrcode
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.units import inch, mm
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+
+
+
+
 def generate_card_pdf(card):
-    """Generate PDF version of the card."""
-    buffer = BytesIO()
-    
-    # Create PDF document
-    doc = SimpleDocTemplate(buffer, pagesize=A4)
-    story = []
-    
-    # Add card content (implementation depends on your design requirements)
-    styles = getSampleStyleSheet()
-    
-    # Title
-    title = Paragraph(f"ACRP Digital Affiliation Card", styles['Title'])
-    story.append(title)
-    story.append(Spacer(1, 12))
-    
-    # Card details
-    details = f"""
-    <b>Card Number:</b> {card.card_number}<br/>
-    <b>Name:</b> {card.get_display_name()}<br/>
-    <b>Council:</b> {card.council_name}<br/>
-    <b>Affiliation:</b> {card.affiliation_type.title()}<br/>
-    <b>Issued:</b> {card.date_issued.strftime('%Y-%m-%d') if card.date_issued else 'Not issued'}<br/>
-    <b>Expires:</b> {card.date_expires.strftime('%Y-%m-%d') if card.date_expires else 'No expiry'}<br/>
-    <b>Status:</b> {card.get_status_display()}
     """
+    Generate a professional business card-sized PDF with proper spacing and coordinates.
+    Creates a credit card-sized PDF (3.375" x 2.125") with carefully positioned elements.
     
-    content = Paragraph(details, styles['Normal'])
-    story.append(content)
+    Key improvements:
+    - Proper element spacing to prevent overlap
+    - Optimized font sizes for card dimensions
+    - Coordinated layout with clear visual hierarchy
+    - Functional QR code with verification URL
     
-    # Build PDF
-    doc.build(story)
+    Args:
+        card: AffiliationCard instance containing card data
+        
+    Returns:
+        tuple: (pdf_content, filename, content_type)
+        
+    Raises:
+        Exception: If PDF generation fails
+    """
+    try:
+        # Create buffer for PDF output
+        buffer = BytesIO()
+        
+        # Business card dimensions (3.375" x 2.125" - standard credit card size)
+        card_width = 3.375 * inch
+        card_height = 2.125 * inch
+        
+        # Create canvas with specified dimensions
+        c = canvas.Canvas(buffer, pagesize=(card_width, card_height))
+        
+        # Professional color palette optimized for business cards
+        primary_navy = colors.HexColor('#0f172a')       # Deep navy
+        primary_blue = colors.HexColor('#1e40af')       # Professional blue
+        accent_blue = colors.HexColor('#3b82f6')        # Bright blue
+        accent_emerald = colors.HexColor('#059669')     # Emerald green
+        accent_gold = colors.HexColor('#d97706')        # Warning gold
+        text_primary = colors.HexColor('#111827')       # Almost black
+        text_secondary = colors.HexColor('#4b5563')     # Medium gray
+        text_muted = colors.HexColor('#9ca3af')         # Light gray
+        
+        # Create white background
+        c.setFillColor(colors.white)
+        c.rect(0, 0, card_width, card_height, fill=1)
+        
+        # ============================================================================
+        # HEADER SECTION - Carefully measured and spaced
+        # ============================================================================
+        header_height = 0.75 * inch
+        
+        # Main header background (navy)
+        c.setFillColor(primary_navy)
+        c.rect(0, card_height - header_height, card_width, header_height, fill=1)
+        
+        # Accent stripe using path operations (ReportLab compatible)
+        c.setFillColor(accent_blue)
+        path = c.beginPath()
+        path.moveTo(0, card_height - header_height + 0.25 * inch)
+        path.lineTo(card_width * 0.4, card_height - header_height + 0.25 * inch)
+        path.lineTo(card_width * 0.45, card_height - header_height)
+        path.lineTo(0, card_height - header_height)
+        path.close()
+        c.drawPath(path, fill=1, stroke=0)
+        
+        # ACRP Logo - positioned to avoid crowding
+        c.setFillColor(colors.white)
+        c.setFont("Helvetica-Bold", 16)
+        c.drawString(0.2 * inch, card_height - 0.28 * inch, "ACRP")
+        
+        # Organization name - smaller and well-positioned
+        c.setFont("Helvetica", 6)
+        c.setFillColorRGB(1, 1, 1, alpha=0.9)
+        c.drawString(0.2 * inch, card_height - 0.42 * inch, "ASSOCIATION OF CHRISTIAN")
+        c.drawString(0.2 * inch, card_height - 0.5 * inch, "RELIGIOUS PRACTITIONERS")
+        
+        # Card type badge - compact and positioned
+        c.setFillColor(accent_emerald)
+        badge_x = 0.2 * inch
+        badge_y = card_height - 0.68 * inch
+        badge_width = 0.9 * inch
+        badge_height = 0.1 * inch
+        c.roundRect(badge_x, badge_y, badge_width, badge_height, 0.03 * inch, fill=1)
+        
+        c.setFillColor(colors.white)
+        c.setFont("Helvetica-Bold", 5)
+        c.drawString(badge_x + 0.03 * inch, badge_y + 0.025 * inch, "DIGITAL AFFILIATION CARD")
+        
+        # Card number - top right, properly spaced
+        c.setFillColor(colors.white)
+        c.setFont("Helvetica-Bold", 9)
+        card_num_text = f"#{card.card_number}"
+        text_width = c.stringWidth(card_num_text, "Helvetica-Bold", 9)
+        c.drawString(card_width - text_width - 0.2 * inch, card_height - 0.25 * inch, card_num_text)
+        
+        # Status badge - positioned below card number
+        status = card.get_status_display().upper()
+        c.setFont("Helvetica-Bold", 5)
+        
+        # Status color logic
+        if hasattr(card, 'status') and card.status == 'active':
+            status_color = accent_emerald
+        elif hasattr(card, 'status') and card.status == 'pending':
+            status_color = accent_gold
+        else:
+            status_color = colors.HexColor('#ef4444')  # Red for inactive
+        
+        # Status badge dimensions and positioning
+        status_width = c.stringWidth(status, "Helvetica-Bold", 5)
+        status_x = card_width - status_width - 0.3 * inch
+        status_y = card_height - 0.42 * inch
+        
+        c.setFillColor(status_color)
+        c.roundRect(status_x - 0.03 * inch, status_y - 0.01 * inch, 
+                   status_width + 0.06 * inch, 0.08 * inch, 0.02 * inch, fill=1)
+        
+        c.setFillColor(colors.white)
+        c.drawString(status_x, status_y + 0.005 * inch, status)
+        
+        # ============================================================================
+        # MAIN CONTENT AREA - Left side with proper vertical spacing
+        # ============================================================================
+        content_x = 0.2 * inch
+        content_start_y = card_height - header_height - 0.15 * inch
+        content_y = content_start_y
+        
+        # Available width for left content (leaving space for QR code)
+        content_width = 2.2 * inch
+        
+        # Affiliate name - main focal point
+        c.setFillColor(text_primary)
+        c.setFont("Helvetica-Bold", 11)
+        affiliate_name = card.get_display_name()
+        
+        # Smart name truncation to fit available width
+        if c.stringWidth(affiliate_name, "Helvetica-Bold", 11) > content_width:
+            while len(affiliate_name) > 8 and c.stringWidth(affiliate_name + "...", "Helvetica-Bold", 11) > content_width:
+                affiliate_name = affiliate_name[:-1]
+            if len(affiliate_name) <= 8:
+                affiliate_name = affiliate_name[:8]
+            affiliate_name += "..."
+        
+        c.drawString(content_x, content_y, affiliate_name)
+        content_y -= 0.18 * inch  # Proper spacing
+        
+        # Affiliation type
+        affiliation_text = getattr(card, 'affiliation_type', 'Member').title()
+        c.setFont("Helvetica-Bold", 8)
+        c.setFillColor(accent_blue)
+        c.drawString(content_x, content_y, affiliation_text)
+        content_y -= 0.15 * inch
+        
+        # Council name
+        council_text = getattr(card, 'council_name', '')
+        if council_text:
+            c.setFont("Helvetica", 7)
+            c.setFillColor(text_secondary)
+            
+            # Truncate council name if needed
+            if c.stringWidth(council_text, "Helvetica", 7) > content_width:
+                while len(council_text) > 8 and c.stringWidth(council_text + "...", "Helvetica", 7) > content_width:
+                    council_text = council_text[:-1]
+                council_text += "..."
+            
+            c.drawString(content_x, content_y, council_text)
+            content_y -= 0.12 * inch
+        
+        # Issue date
+        if hasattr(card, 'date_issued') and card.date_issued:
+            c.setFont("Helvetica", 6)
+            c.setFillColor(text_muted)
+            issued_text = f"Issued: {card.date_issued.strftime('%B %d, %Y')}"
+            c.drawString(content_x, content_y, issued_text)
+            content_y -= 0.1 * inch
+        
+        # Expiration date with color coding
+        if hasattr(card, 'date_expires') and card.date_expires:
+            c.setFont("Helvetica", 6)
+            
+            # Color code based on expiration status
+            from datetime import datetime, date
+            today = date.today()
+            if card.date_expires < today:
+                c.setFillColor(colors.HexColor('#ef4444'))  # Red for expired
+            elif (card.date_expires - today).days < 90:
+                c.setFillColor(accent_gold)  # Gold for expiring soon
+            else:
+                c.setFillColor(text_muted)  # Normal color
+                
+            expires_text = f"Valid Until: {card.date_expires.strftime('%B %Y')}"
+            c.drawString(content_x, content_y, expires_text)
+        
+        # ============================================================================
+        # QR CODE SECTION - Right side, properly positioned
+        # ============================================================================
+        
+        # Generate functional verification URL
+        verification_token = getattr(card, 'verification_token', None)
+        if not verification_token:
+            # Fallback token generation
+            import uuid
+            verification_token = str(uuid.uuid4()).replace('-', '')[:32]
+        
+        qr_verification_url = f"https://kreeck.com/card/verify/{verification_token}/"
+        
+        # QR code configuration
+        qr = qrcode.QRCode(
+            version=2,
+            box_size=4,
+            border=2,
+            error_correction=qrcode.constants.ERROR_CORRECT_M
+        )
+        qr.add_data(qr_verification_url)
+        qr.make(fit=True)
+        
+        # Generate QR code image
+        qr_img = qr.make_image(fill_color="black", back_color="white")
+        
+        # QR code positioning - right side, centered vertically
+        qr_size = 0.65 * inch
+        qr_x = card_width - qr_size - 0.2 * inch
+        qr_y = card_height - header_height - qr_size - 0.15 * inch  # Aligned with content
+        
+        # QR code background frame
+        frame_padding = 6
+        c.setFillColorRGB(0, 0, 0, alpha=0.1)  # Subtle shadow
+        c.roundRect(qr_x - frame_padding + 1, qr_y - frame_padding + 1, 
+                   qr_size + frame_padding * 2, qr_size + frame_padding * 2, 4, fill=1)
+        
+        # White frame
+        c.setFillColor(colors.white)
+        c.setStrokeColor(text_muted)
+        c.setLineWidth(0.5)
+        c.roundRect(qr_x - frame_padding, qr_y - frame_padding, 
+                   qr_size + frame_padding * 2, qr_size + frame_padding * 2, 4, fill=1, stroke=1)
+        
+        # Draw QR code image
+        c.drawInlineImage(qr_img, qr_x, qr_y, qr_size, qr_size)
+        
+        # QR code labels - positioned below QR code
+        label_y = qr_y - 0.12 * inch
+        
+        c.setFont("Helvetica-Bold", 5)
+        c.setFillColor(text_primary)
+        main_label = "SCAN TO VERIFY"
+        label_width = c.stringWidth(main_label, "Helvetica-Bold", 5)
+        c.drawString(qr_x + (qr_size - label_width) / 2, label_y, main_label)
+        
+        c.setFont("Helvetica", 4)
+        c.setFillColor(text_muted)
+        sub_label = "or visit kreeck.com"
+        sub_width = c.stringWidth(sub_label, "Helvetica", 4)
+        c.drawString(qr_x + (qr_size - sub_width) / 2, label_y - 0.08 * inch, sub_label)
+        
+        # ============================================================================
+        # FOOTER SECTION - Clean and minimal
+        # ============================================================================
+        footer_height = 0.15 * inch
+        
+        # Footer background
+        c.setFillColorRGB(0.97, 0.98, 0.99)
+        c.rect(0, 0, card_width, footer_height, fill=1)
+        
+        # Footer separator line
+        c.setStrokeColor(colors.HexColor('#e5e7eb'))
+        c.setLineWidth(0.5)
+        c.line(0.15 * inch, footer_height, card_width - 0.15 * inch, footer_height)
+        
+        # Organization information (left)
+        c.setFont("Helvetica-Bold", 5)
+        c.setFillColor(text_secondary)
+        c.drawString(0.15 * inch, 0.08 * inch, "ACRP South Africa")
+        
+        c.setFont("Helvetica", 4)
+        c.setFillColor(text_muted)
+        c.drawString(0.15 * inch, 0.04 * inch, "Professional Religious Practitioners")
+        
+        # Verification info (right)
+        c.setFont("Helvetica", 4)
+        verify_text = "verify: kreeck.com/affiliationcard/verify"
+        verify_width = c.stringWidth(verify_text, "Helvetica", 4)
+        c.drawString(card_width - verify_width - 0.15 * inch, 0.04 * inch, verify_text)
+        
+        # ============================================================================
+        # BORDER AND FINISHING TOUCHES
+        # ============================================================================
+        
+        # Outer border
+        c.setStrokeColor(text_muted)
+        c.setLineWidth(1)
+        c.roundRect(1, 1, card_width - 2, card_height - 2, 6, fill=0, stroke=1)
+        
+        # Inner accent border
+        c.setStrokeColorRGB(0.2, 0.4, 0.8, alpha=0.3)
+        c.setLineWidth(0.5)
+        c.roundRect(2, 2, card_width - 4, card_height - 4, 4, fill=0, stroke=1)
+        
+        # Finalize PDF
+        c.save()
+        
+        # Extract PDF content
+        pdf_content = buffer.getvalue()
+        buffer.close()
+        
+        # Generate filename and content type
+        filename = f"ACRP_Card_{card.card_number}.pdf"
+        content_type = 'application/pdf'
+        
+        logger.info(f"Generated properly spaced PDF card for {card.card_number} with verification URL: {qr_verification_url}")
+        return pdf_content, filename, content_type
+        
+    except Exception as e:
+        logger.error(f"Failed to generate PDF card for {card.card_number}: {e}")
+        raise
+
+
+
+
+
+
+def generate_card_image(card, fmt):
+    """
+    Generate premium affiliation card image matching the professional PDF design.
+    Modern navy/blue color scheme with sophisticated layout and typography.
+    """
+    # Choose resampling constant compatible across Pillow versions
+    try:
+        RESAMPLE = Image.Resampling.LANCZOS
+    except AttributeError:
+        RESAMPLE = getattr(Image, "LANCZOS", getattr(Image, "ANTIALIAS", Image.NEAREST))
+
+    # Enhanced layout constants - optimized for modern design
+    W, H = 1400, 880                        # High-resolution canvas
+    CARD_W, CARD_H = 1200, 760              # Card dimensions
+    CARD_X = (W - CARD_W) // 2
+    CARD_Y = (H - CARD_H) // 2
+    RADIUS = 28                             # Rounded corners
+    MARGIN = 50
+
+    # Professional color palette - matching PDF design
+    primary_navy = (15, 23, 42)      # Deep navy for sophistication
+    primary_blue = (30, 64, 175)     # Professional blue
+    accent_blue = (59, 130, 246)     # Bright blue for highlights
+    accent_emerald = (5, 150, 105)   # Emerald for active status
+    accent_gold = (217, 119, 6)      # Gold for premium feel
+    text_primary = (17, 24, 39)      # Almost black for readability
+    text_secondary = (75, 85, 99)    # Medium gray
+    text_muted = (156, 163, 175)     # Light gray
+    text_white = (255, 255, 255)     # Pure white
+    bg_light = (248, 250, 252)       # Premium light background
+    card_bg = (255, 255, 255)        # White card background
+
+    # Enhanced gradient helper
+    def create_gradient(size, colors_list, direction='vertical'):
+        """Create smooth multi-color gradient"""
+        w, h = size
+        if len(colors_list) < 2:
+            return Image.new('RGB', (w, h), colors_list[0])
+            
+        # Create smooth transition between colors
+        gradient = Image.new('RGB', (w, h))
+        pixels = []
+        
+        for y in range(h):
+            for x in range(w):
+                if direction == 'vertical':
+                    ratio = y / (h - 1) if h > 1 else 0
+                else:  # horizontal
+                    ratio = x / (w - 1) if w > 1 else 0
+                
+                # Interpolate between first and last color
+                c1, c2 = colors_list[0], colors_list[-1]
+                r = int(c1[0] + (c2[0] - c1[0]) * ratio)
+                g = int(c1[1] + (c2[1] - c1[1]) * ratio)
+                b = int(c1[2] + (c2[2] - c1[2]) * ratio)
+                pixels.append((r, g, b))
+        
+        gradient.putdata(pixels)
+        return gradient
+
+    # Canvas with premium background
+    canvas = Image.new('RGB', (W, H), bg_light)
+    
+    # Enhanced shadow with multiple layers for depth
+    shadow_layers = [
+        (CARD_W + 16, CARD_H + 16, 8, (0, 0, 0, 60)),   # Close shadow
+        (CARD_W + 32, CARD_H + 32, 16, (0, 0, 0, 30)),  # Medium shadow
+        (CARD_W + 48, CARD_H + 48, 24, (0, 0, 0, 15)),  # Far shadow
+    ]
+    
+    for shadow_w, shadow_h, blur, color in shadow_layers:
+        shadow = Image.new('RGBA', (shadow_w, shadow_h), color)
+        shadow_mask = Image.new('L', (shadow_w, shadow_h), 0)
+        sd = ImageDraw.Draw(shadow_mask)
+        sd.rounded_rectangle([0, 0, shadow_w, shadow_h], radius=RADIUS + 8, fill=255)
+        shadow.putalpha(shadow_mask)
+        shadow = shadow.filter(ImageFilter.GaussianBlur(blur))
+        
+        offset_x = CARD_X - (shadow_w - CARD_W) // 2
+        offset_y = CARD_Y - (shadow_h - CARD_H) // 2 + 6
+        canvas.paste(shadow, (offset_x, offset_y), shadow)
+
+    # Create sophisticated card background
+    card_img = Image.new('RGBA', (CARD_W, CARD_H), card_bg)
+    
+    # Header section with navy background
+    header_h = 200
+    header_bg = Image.new('RGB', (CARD_W, header_h), primary_navy)
+    
+    # Create diagonal accent stripe
+    stripe_img = Image.new('RGBA', (CARD_W, header_h), (0, 0, 0, 0))
+    stripe_draw = ImageDraw.Draw(stripe_img)
+    
+    # Diagonal stripe coordinates - matching PDF design
+    stripe_points = [
+        (0, header_h - 60),
+        (int(CARD_W * 0.4), header_h - 60),
+        (int(CARD_W * 0.45), header_h),
+        (0, header_h)
+    ]
+    stripe_draw.polygon(stripe_points, fill=accent_blue)
+    
+    # Combine header elements
+    header_bg.paste(stripe_img, (0, 0), stripe_img)
+    card_img.paste(header_bg, (0, 0))
+
+    # Card mask with rounded corners
+    mask = Image.new('L', (CARD_W, CARD_H), 0)
+    mdraw = ImageDraw.Draw(mask)
+    mdraw.rounded_rectangle([0, 0, CARD_W, CARD_H], radius=RADIUS, fill=255)
+
+    # Apply card to canvas
+    canvas.paste(card_img.convert('RGB'), (CARD_X, CARD_Y), mask)
+    draw = ImageDraw.Draw(canvas)
+
+    # Enhanced font loading
+    def load_font(name=None, size=36):
+        font_paths = [
+            '/System/Library/Fonts/Helvetica.ttc',
+            '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',
+            '/Windows/Fonts/arial.ttf',
+            'arial.ttf'
+        ]
+        
+        for path in font_paths:
+            try:
+                return ImageFont.truetype(path, size)
+            except:
+                continue
+        return ImageFont.load_default()
+
+    # Font sizes optimized for the design
+    font_logo = load_font(size=42)           # ACRP logo
+    font_org = load_font(size=16)            # Organization name
+    font_badge = load_font(size=12)          # Badge text
+    font_name = load_font(size=38)           # Affiliate name
+    font_title = load_font(size=24)          # Affiliation type
+    font_meta = load_font(size=18)           # Metadata
+    font_small = load_font(size=14)          # Small text
+    font_tiny = load_font(size=12)           # Footer text
+
+    # ============================================================================
+    # HEADER SECTION - Matching PDF layout
+    # ============================================================================
+    header_y_start = CARD_Y + 30
+    
+    # ACRP Logo - positioned like PDF
+    draw.text((CARD_X + MARGIN, header_y_start), "ACRP", font=font_logo, fill=text_white)
+    
+    # Organization name - smaller, positioned below
+    org_y = header_y_start + 50
+    draw.text((CARD_X + MARGIN, org_y), "ASSOCIATION OF CHRISTIAN", font=font_org, fill=text_white)
+    draw.text((CARD_X + MARGIN, org_y + 20), "RELIGIOUS PRACTITIONERS", font=font_org, fill=text_white)
+    
+    # Digital card badge - matching PDF style
+    badge_x = CARD_X + MARGIN
+    badge_y = header_y_start + 100
+    badge_width = 240
+    badge_height = 28
+    
+    draw.rounded_rectangle([
+        badge_x, badge_y,
+        badge_x + badge_width, badge_y + badge_height
+    ], radius=8, fill=accent_emerald)
+    
+    draw.text((badge_x + 8, badge_y + 6), "DIGITAL AFFILIATION CARD", 
+              font=font_badge, fill=text_white)
+    
+    # Card number - top right
+    card_num = f"#{card.card_number}"
+    try:
+        bbox = draw.textbbox((0, 0), card_num, font=font_meta)
+        card_num_width = bbox[2] - bbox[0]
+    except AttributeError:
+        card_num_width = len(card_num) * 12
+    
+    draw.text((CARD_X + CARD_W - MARGIN - card_num_width, header_y_start + 5), 
+              card_num, font=font_meta, fill=text_white)
+    
+    # Status badge - positioned below card number
+    status = card.get_status_display().upper()
+    
+    # Status color logic - matching PDF
+    if hasattr(card, 'status') and card.status == 'active':
+        status_color = accent_emerald
+    elif hasattr(card, 'status') and card.status == 'pending':
+        status_color = accent_gold
+    else:
+        status_color = (239, 68, 68)  # Red for inactive
+    
+    try:
+        status_bbox = draw.textbbox((0, 0), status, font=font_small)
+        status_width = status_bbox[2] - status_bbox[0]
+    except AttributeError:
+        status_width = len(status) * 8
+    
+    # Status badge positioning
+    status_badge_x = CARD_X + CARD_W - MARGIN - status_width - 20
+    status_badge_y = header_y_start + 35
+    
+    draw.rounded_rectangle([
+        status_badge_x, status_badge_y,
+        status_badge_x + status_width + 20, status_badge_y + 22
+    ], radius=6, fill=status_color)
+    
+    draw.text((status_badge_x + 10, status_badge_y + 4), status, 
+              font=font_small, fill=text_white)
+
+    # ============================================================================
+    # MAIN CONTENT AREA - Left side text, right side QR
+    # ============================================================================
+    content_y = CARD_Y + header_h + 40
+    content_x = CARD_X + MARGIN
+    content_max_width = CARD_W - (MARGIN * 2) - 200  # Leave space for QR code
+    
+    # Affiliate name - prominent display
+    name = card.get_display_name() if hasattr(card, 'get_display_name') else str(getattr(card, 'affiliate_full_name', ''))
+    
+    # Smart name truncation
+    if len(name) > 25:
+        name = name[:22] + "..."
+    
+    draw.text((content_x, content_y), name, font=font_name, fill=text_primary)
+    content_y += 55
+    
+    # Affiliation type with accent color
+    affiliation = getattr(card, 'affiliation_type', 'Member').title()
+    draw.text((content_x, content_y), affiliation, font=font_title, fill=accent_blue)
+    content_y += 35
+    
+    # Council information
+    council = getattr(card, 'council_name', '')
+    if council:
+        # Truncate if too long
+        if len(council) > 35:
+            council = council[:32] + "..."
+        draw.text((content_x, content_y), council, font=font_meta, fill=text_secondary)
+        content_y += 28
+    
+    # Date information
+    if hasattr(card, 'date_issued') and card.date_issued:
+        issued_text = f"Issued: {card.date_issued.strftime('%B %d, %Y')}"
+        draw.text((content_x, content_y), issued_text, font=font_small, fill=text_muted)
+        content_y += 22
+    
+    # Expiration with color coding
+    if hasattr(card, 'date_expires') and card.date_expires:
+        from datetime import datetime, date
+        today = date.today()
+        
+        if card.date_expires < today:
+            expire_color = (239, 68, 68)  # Red for expired
+        elif (card.date_expires - today).days < 90:
+            expire_color = accent_gold  # Gold for expiring soon
+        else:
+            expire_color = text_muted  # Normal color
+        
+        expires_text = f"Valid Until: {card.date_expires.strftime('%B %Y')}"
+        draw.text((content_x, content_y), expires_text, font=font_small, fill=expire_color)
+
+    # ============================================================================
+    # QR CODE SECTION - Right side, matching PDF design
+    # ============================================================================
+    
+    # Generate functional verification URL - CORRECTED URL FORMAT
+    verification_token = getattr(card, 'verification_token', None)
+    if not verification_token:
+        import uuid
+        verification_token = str(uuid.uuid4()).replace('-', '')[:32]
+    
+    # Use the correct verification URL format
+    qr_verification_url = f"https://kreeck.com/card/verify/{verification_token}/"
+    
+    logger.info(f"Generated QR code URL for image card {card.card_number}: {qr_verification_url}")
+    
+    # QR code configuration
+    qr = qrcode.QRCode(
+        version=2,
+        box_size=6,
+        border=3,
+        error_correction=qrcode.constants.ERROR_CORRECT_M
+    )
+    qr.add_data(qr_verification_url)
+    qr.make(fit=True)
+    
+    qr_img = qr.make_image(fill_color="black", back_color="white").convert('RGBA')
+    qr_size = 180
+    qr_img = qr_img.resize((qr_size, qr_size), RESAMPLE)
+
+    # QR positioning - right side, vertically centered
+    qr_x = CARD_X + CARD_W - qr_size - MARGIN - 20
+    qr_y = CARD_Y + header_h + 60
+
+    # QR background frame with shadow - matching PDF style
+    qr_padding = 12
+    
+    # Subtle shadow
+    shadow_offset = 2
+    draw.rounded_rectangle([
+        qr_x - qr_padding + shadow_offset, qr_y - qr_padding + shadow_offset,
+        qr_x + qr_size + qr_padding + shadow_offset, qr_y + qr_size + qr_padding + shadow_offset
+    ], radius=12, fill=(0, 0, 0, 25))
+    
+    # White frame
+    draw.rounded_rectangle([
+        qr_x - qr_padding, qr_y - qr_padding,
+        qr_x + qr_size + qr_padding, qr_y + qr_size + qr_padding
+    ], radius=12, fill=card_bg, outline=text_muted, width=1)
+    
+    # Paste QR code
+    canvas.paste(qr_img, (qr_x, qr_y), qr_img)
+
+    # QR labels - matching PDF style
+    qr_label_y = qr_y + qr_size + 15
+    
+    main_label = "SCAN TO VERIFY"
+    try:
+        label_bbox = draw.textbbox((0, 0), main_label, font=font_small)
+        label_width = label_bbox[2] - label_bbox[0]
+    except AttributeError:
+        label_width = len(main_label) * 8
+    
+    label_x = qr_x + (qr_size - label_width) // 2
+    draw.text((label_x, qr_label_y), main_label, font=font_small, fill=text_primary)
+    
+    # Secondary label
+    sub_label = "or visit kreeck.com"
+    try:
+        sub_bbox = draw.textbbox((0, 0), sub_label, font=font_tiny)
+        sub_width = sub_bbox[2] - sub_bbox[0]
+    except AttributeError:
+        sub_width = len(sub_label) * 6
+    
+    sub_x = qr_x + (qr_size - sub_width) // 2
+    draw.text((sub_x, qr_label_y + 20), sub_label, font=font_tiny, fill=text_muted)
+
+    # ============================================================================
+    # FOOTER SECTION - Clean and professional
+    # ============================================================================
+    footer_y = CARD_Y + CARD_H - 60
+    
+    # Footer background
+    footer_bg = Image.new('RGBA', (CARD_W, 50), (247, 248, 249, 255))
+    canvas.paste(footer_bg, (CARD_X, footer_y), footer_bg)
+    
+    # Footer separator line
+    draw.line([(CARD_X + 30, footer_y), (CARD_X + CARD_W - 30, footer_y)], 
+              fill=text_muted, width=1)
+    
+    # Organization info (left side)
+    draw.text((CARD_X + MARGIN, footer_y + 12), "ACRP South Africa", 
+              font=font_small, fill=text_secondary)
+    draw.text((CARD_X + MARGIN, footer_y + 28), "Professional Religious Practitioners", 
+              font=font_tiny, fill=text_muted)
+    
+    # Verification info (right side)
+    verify_text = "verify: kreeck.com/card/verify"
+    try:
+        verify_bbox = draw.textbbox((0, 0), verify_text, font=font_tiny)
+        verify_width = verify_bbox[2] - verify_bbox[0]
+    except AttributeError:
+        verify_width = len(verify_text) * 6
+    
+    draw.text((CARD_X + CARD_W - MARGIN - verify_width, footer_y + 28), 
+              verify_text, font=font_tiny, fill=text_muted)
+
+    # ============================================================================
+    # FINAL TOUCHES - Borders and finishing
+    # ============================================================================
+    
+    # Outer border
+    draw.rounded_rectangle([CARD_X + 1, CARD_Y + 1, CARD_X + CARD_W - 1, CARD_Y + CARD_H - 1], 
+                          radius=RADIUS, outline=text_muted, width=2)
+    
+    # Inner accent border
+    draw.rounded_rectangle([CARD_X + 3, CARD_Y + 3, CARD_X + CARD_W - 3, CARD_Y + CARD_H - 3], 
+                          radius=RADIUS - 2, outline=accent_blue + (100,), width=1)
+
+    # Final image preparation
+    out_img = canvas
+    if fmt.upper() == 'JPEG' and out_img.mode != 'RGB':
+        out_img = out_img.convert('RGB')
+
+    # Save with high quality
+    buffer = BytesIO()
+    quality = 95 if fmt.upper() == 'JPEG' else None
+    out_img.save(buffer, format=fmt, quality=quality, optimize=True)
     buffer.seek(0)
+    data = buffer.getvalue()
+    buffer.close()
+
+    ext = 'png' if fmt.upper() == 'PNG' else 'jpg'
+    filename = f"ACRP_Card_{card.card_number}.{ext}"
+    content_type = 'image/png' if ext == 'png' else 'image/jpeg'
     
-    filename = f"ACRP_Card_{card.card_number}.pdf"
-    content_type = 'application/pdf'
-    
-    return buffer.getvalue(), filename, content_type
+    logger.info(f"Generated premium {fmt} card image for {card.card_number} matching PDF design")
+    return data, filename, content_type
+
+
 
 
 def generate_card_file(card, file_format):
-    """Generate card file in specified format."""
+    """Generate card file in specified format with enhanced styling."""
     fmt = file_format.lower()
     if fmt == 'pdf':
         return generate_card_pdf(card)
@@ -2922,246 +3640,22 @@ def generate_card_file(card, file_format):
         return generate_card_image(card, 'JPEG')
     else:
         raise ValueError(f"Unsupported file format: {file_format}")
-
-
-from io import BytesIO
-from PIL import Image, ImageDraw, ImageFilter, ImageFont
-import qrcode
-
-def generate_card_image(card, fmt):
-    """
-    Generate an attractive affiliation / learner card image (PNG or JPEG),
-    with compatibility for multiple Pillow versions (handles Resampling enum).
-    Returns: (bytes, filename, content_type)
-    """
-    # ---------- Choose resampling constant compatible across Pillow versions ----------
-    try:
-        RESAMPLE = Image.Resampling.LANCZOS
-    except AttributeError:
-        # Pillow < 9.1 exposed LANCZOS/ANTIALIAS at module level
-        RESAMPLE = getattr(Image, "LANCZOS", getattr(Image, "ANTIALIAS", Image.NEAREST))
-
-    # ---------- Layout constants ----------
-    W, H = 1200, 760                        # canvas size
-    CARD_W, CARD_H = 1060, 640              # card plate size
-    CARD_X = (W - CARD_W) // 2
-    CARD_Y = (H - CARD_H) // 2
-    RADIUS = 28                             # rounded corner radius
-    SHADOW_BLUR = 30
-    MARGIN = 36
-
-    # Colours (tweak to taste)
-    primary_a = (20, 83, 160)    # deep blue
-    primary_b = (70, 130, 230)   # lighter blue
-    accent = (16, 185, 129)      # green accent
-    text_dark = (20, 20, 25)
-    white = (255, 255, 255)
-    subtle_gray = (245, 246, 250)
-
-    # ---------- Helper: gradient ----------
-    def linear_gradient(size, c1, c2):
-        """Vertical gradient image from c1 -> c2"""
-        w, h = size
-        base = Image.new('RGB', (w, h), c1)
-        top = Image.new('RGB', (w, h), c2)
-        mask = Image.new('L', (w, h))
-        mask_data = []
-        for y in range(h):
-            mask_data.extend([int(255 * (y / (h - 1)))] * w)
-        mask.putdata(mask_data)
-        return Image.composite(top, base, mask)
-
-    # ---------- Canvas & shadow ----------
-    canvas = Image.new('RGB', (W, H), subtle_gray)
-
-    # shadow layer (slightly larger rect, blurred)
-    shadow = Image.new('RGBA', (CARD_W, CARD_H), (0, 0, 0, 255))
-    shadow_mask = Image.new('L', (CARD_W, CARD_H), 0)
-    sd = ImageDraw.Draw(shadow_mask)
-    sd.rounded_rectangle([0, 0, CARD_W, CARD_H], radius=RADIUS, fill=255)
-    shadow.putalpha(shadow_mask)
-    shadow = shadow.filter(ImageFilter.GaussianBlur(SHADOW_BLUR))
-    canvas.paste(shadow, (CARD_X, CARD_Y + 10), shadow)
-
-    # ---------- Card background with subtle gradient ----------
-    card_bg = linear_gradient((CARD_W, CARD_H), primary_a, primary_b)
-    # overlay a semi-transparent white to soften
-    overlay = Image.new('RGBA', (CARD_W, CARD_H), (255, 255, 255, 14))
-    card_img = Image.new('RGBA', (CARD_W, CARD_H))
-    card_img.paste(card_bg, (0, 0))
-    card_img = Image.alpha_composite(card_img.convert('RGBA'), overlay)
-
-    # rounded mask for card plate
-    mask = Image.new('L', (CARD_W, CARD_H), 0)
-    mdraw = ImageDraw.Draw(mask)
-    mdraw.rounded_rectangle([0, 0, CARD_W, CARD_H], radius=RADIUS, fill=255)
-
-    # ---------- Compose base card on canvas ----------
-    canvas.paste(card_img.convert('RGB'), (CARD_X, CARD_Y), mask)
-
-    # draw content onto a draw object positioned relative to card
-    card_draw = ImageDraw.Draw(canvas)
-
-    # ---------- Fonts ----------
-    def load_font(name='DejaVuSans-Bold.ttf', size=36):
-        try:
-            return ImageFont.truetype(name, size)
-        except Exception:
-            return ImageFont.load_default()
-
-    font_name = load_font('DejaVuSans-Bold.ttf', 44)
-    font_role = load_font('DejaVuSans.ttf', 18)
-    font_meta = load_font('DejaVuSans.ttf', 20)
-    font_small = load_font('DejaVuSans.ttf', 14)
-    font_cardnum = load_font('DejaVuSansMono.ttf', 18)
-
-    # ---------- Logo ----------
-    logo_size = (120, 40)
-    logo_x = CARD_X + MARGIN
-    logo_y = CARD_Y + MARGIN
-    try:
-        # adjust path if your static path differs; this is a best-effort attempt
-        from django.conf import settings
-        import os
-        logo_path = os.path.join(settings.BASE_DIR, 'static', 'main_media', 'logo.png')
-        logo = Image.open(logo_path).convert('RGBA')
-        logo.thumbnail(logo_size, RESAMPLE)
-        canvas.paste(logo, (logo_x, logo_y), logo)
-    except Exception:
-        # draw fallback text logo
-        card_draw.text((logo_x, logo_y + 6), "ACRP", fill=white, font=font_name)
-
-    # ---------- Learner photo (left) ----------
-    photo_w, photo_h = 280, 360
-    photo_x = CARD_X + MARGIN
-    photo_y = CARD_Y + 110
-    photo_box = [photo_x, photo_y, photo_x + photo_w, photo_y + photo_h]
-
-    # circular / rounded photo mask
-    p_mask = Image.new('L', (photo_w, photo_h), 0)
-    pd = ImageDraw.Draw(p_mask)
-    pd.rounded_rectangle([0, 0, photo_w, photo_h], radius=20, fill=255)
-
-    try:
-        if getattr(card, 'affiliate_photo', None):
-            # If using local storage, .path is available
-            photo = Image.open(card.affiliate_photo.path).convert('RGBA')
-            photo.thumbnail((photo_w, photo_h), RESAMPLE)
-            # centre crop if necessary
-            tmp = Image.new('RGBA', (photo_w, photo_h), white)
-            tmp.paste(photo, ((photo_w - photo.width)//2, (photo_h - photo.height)//2))
-            canvas.paste(tmp, (photo_x, photo_y), p_mask)
-        else:
-            # placeholder: pale rectangle with user icon
-            placeholder = Image.new('RGBA', (photo_w, photo_h), (255,255,255,0))
-            ph_draw = ImageDraw.Draw(placeholder)
-            ph_draw.rounded_rectangle([0,0,photo_w,photo_h], radius=20, fill=(240,240,245))
-            cx, cy = photo_w//2, photo_h//2 - 10
-            ph_draw.ellipse([cx-48, cy-78, cx+48, cy-14], fill=(200,200,210))
-            ph_draw.rectangle([cx-60, cy-10, cx+60, cy+90], fill=(220,220,230))
-            canvas.paste(placeholder, (photo_x, photo_y), p_mask)
-    except Exception:
-        # if photo fails, still render placeholder
-        pass
-
-    # small border around photo
-    card_draw.rounded_rectangle(photo_box, radius=20, outline=(255,255,255,160), width=3)
-
-    # ---------- Text area (right) ----------
-    text_x = photo_x + photo_w + 36
-    text_y = photo_y - 10
-
-    # Learner (big)
-    name = card.get_display_name() if hasattr(card, 'get_display_name') else str(getattr(card, 'affiliate_full_name', ''))
-    card_draw.text((text_x, text_y + 6), name, font=font_name, fill=white)
-
-    # Role / affiliation below name
-    affiliation = getattr(card, 'affiliation_type', '') or getattr(card, 'council_name', '')
-    card_draw.text((text_x, text_y + 72), str(affiliation).title(), font=font_role, fill=(235, 245, 255))
-
-    # small meta rows
-    meta_x = text_x
-    meta_y = text_y + 120
-    card_draw.text((meta_x, meta_y + 0), f"Card #: {card.card_number}", font=font_meta, fill=white)
-    if getattr(card, 'date_expires', None):
-        try:
-            expires = card.date_expires.strftime('%b %Y')
-            card_draw.text((meta_x, meta_y + 32), f"Valid Until: {expires}", font=font_meta, fill=white)
-        except Exception:
-            pass
-
-    # ---------- QR code (bottom-right) ----------
-    qr_size = 220
-    qr = qrcode.QRCode(version=1, box_size=6, border=3)
-    qr.add_data(getattr(card, 'qr_code_data', card.card_number))
-    qr.make(fit=True)
-    qr_img = qr.make_image(fill_color="black", back_color="white").convert('RGBA')
-    # Use RESAMPLE when resizing
-    qr_img = qr_img.resize((qr_size, qr_size), RESAMPLE)
-
-    qr_x = CARD_X + CARD_W - qr_size - MARGIN - 12
-    qr_y = CARD_Y + CARD_H - qr_size - MARGIN - 12
-
-    # framed white box for QR
-    frame_padding = 12
-    frame_box = [qr_x - frame_padding, qr_y - frame_padding,
-                 qr_x + qr_size + frame_padding, qr_y + qr_size + frame_padding]
-    card_draw.rounded_rectangle(frame_box, radius=18, fill=white)
-    # paste QR (use as mask if has alpha)
-    canvas.paste(qr_img, (qr_x, qr_y), qr_img)
-
-    # QR label
-    lbl = "Scan to verify"
-    # compute text width/height in a Pillow-version-safe way
-    try:
-        # Pillow >= 8.0: use textbbox (gives (left, top, right, bottom))
-        bbox = card_draw.textbbox((0, 0), lbl, font=font_small)
-        lw = bbox[2] - bbox[0]
-        lh = bbox[3] - bbox[1]
-    except AttributeError:
-        try:
-            # older Pillow: font.getsize
-            lw, lh = font_small.getsize(lbl)
-        except Exception:
-            # last-resort fallback
-            lw, lh = (len(lbl) * 6, 12)
+    
 
 
 
 
-    card_draw.text((qr_x + (qr_size - lw)/2, qr_y + qr_size + 8), lbl, font=font_small, fill=text_dark)
 
-    # ---------- Footer strip (small strip at bottom) ----------
-    footer_h = 72
-    footer_y = CARD_Y + CARD_H - footer_h
-    footer_box = [CARD_X, footer_y, CARD_X + CARD_W, CARD_Y + CARD_H]
-    footer_overlay = Image.new('RGBA', (CARD_W, footer_h), (0,0,0,36))
-    canvas.paste(footer_overlay, (CARD_X, footer_y), footer_overlay)
 
-    # small text in footer
-    small_left = CARD_X + MARGIN
-    small_top = footer_y + 18
-    card_draw.text((small_left, small_top), "Association of Christian Religious Practitioners", font=font_small, fill=(235,235,235))
-    card_draw.text((small_left, small_top + 22), "Learner ID Card", font=font_cardnum, fill=accent)
 
-    # ---------- Finalise and save ----------
-    out_img = canvas
 
-    # Ensure correct mode for JPEG
-    if fmt.upper() == 'JPEG':
-        if out_img.mode != 'RGB':
-            out_img = out_img.convert('RGB')
 
-    buffer = BytesIO()
-    out_img.save(buffer, format=fmt, quality=92)
-    buffer.seek(0)
-    data = buffer.getvalue()
-    buffer.close()
 
-    ext = 'png' if fmt.upper() == 'PNG' else 'jpg'
-    filename = f"ACRP_LearnerCard_{card.card_number}.{ext}"
-    content_type = 'image/png' if ext == 'png' else 'image/jpeg'
-    return data, filename, content_type
+
+
+
+
+
 
 
 

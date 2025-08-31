@@ -1,4 +1,5 @@
 
+import logging
 import os
 import uuid
 import secrets
@@ -953,14 +954,24 @@ class CardDelivery(models.Model):
             models.Index(fields=['recipient_email']),
         ]
     
+    
+
+
+
+    # In your CardDelivery model, update the save method to include logging:
     def save(self, *args, **kwargs):
         """Generate download token if needed and set defaults."""
+        logger = logging.getLogger(__name__)
+        logger.info(f"DEBUG: CardDelivery.save() called for delivery to {self.recipient_email}, status: {self.status}")
+        
         # Generate download token for delivery types that need it
         if self.delivery_type in ['email_link', 'sms_link', 'direct_download'] and not self.download_token:
+            logger.info(f"DEBUG: Generating download token for {self.delivery_type}")
             self.download_token = secrets.token_urlsafe(32)
             
         # Set download expiry if token exists but no expiry set
         if self.download_token and not self.download_expires_at:
+            logger.info(f"DEBUG: Setting download expiry for {self.delivery_type}")
             # Set expiry to 30 days from now for email/sms links, 24 hours for direct download
             if self.delivery_type == 'direct_download':
                 self.download_expires_at = timezone.now() + timedelta(hours=24)
@@ -973,7 +984,12 @@ class CardDelivery(models.Model):
         elif self.file_size_bytes and not self.file_size:
             self.file_size = self.file_size_bytes
         
+        logger.info(f"DEBUG: About to call super().save(), status: {self.status}")
         super().save(*args, **kwargs)
+        logger.info(f"DEBUG: super().save() completed, final status: {self.status}")
+
+
+
     
     def is_download_valid(self):
         """Check if download is still valid."""
