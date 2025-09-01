@@ -151,6 +151,24 @@
             font-weight: bold;
             text-transform: uppercase;
         }
+        .council-info {
+            background-color: #e7f3ff;
+            border: 1px solid #b8daff;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .council-info h4 {
+            margin: 0 0 10px 0;
+            color: #004085;
+            font-size: 16px;
+        }
+        .council-info p {
+            margin: 0;
+            color: #004085;
+            font-weight: 500;
+        }
         @media (max-width: 600px) {
             .email-container {
                 margin: 10px;
@@ -183,7 +201,13 @@
         <div class="content">
             <p>Dear {{ applicant_name }},</p>
             
-            <p>Thank you for submitting your application to join the Association of Construction Resource Professionals. We have successfully received your application and are excited to begin the review process.</p>
+            <p>Thank you for submitting your application to join the Association of Christian Religious Practitioners (ACRP). We have successfully received your application and are excited to begin the review process.</p>
+
+            <!-- Council Information -->
+            <div class="council-info">
+                <h4>Your Selected Council</h4>
+                <p>{{ council_name }} ({{ council_code }})</p>
+            </div>
 
             <!-- Application Summary -->
             <div class="application-summary">
@@ -200,13 +224,25 @@
                     <span class="summary-label">Council:</span>
                     <span class="summary-value">{{ council_name }}</span>
                 </div>
+                {% if designation_category %}
+                <div class="summary-item">
+                    <span class="summary-label">Designation Category:</span>
+                    <span class="summary-value">{{ designation_category }}</span>
+                </div>
+                {% endif %}
+                {% if designation_subcategory %}
+                <div class="summary-item">
+                    <span class="summary-label">Designation Subcategory:</span>
+                    <span class="summary-value">{{ designation_subcategory }}</span>
+                </div>
+                {% endif %}
                 <div class="summary-item">
                     <span class="summary-label">Submitted Date:</span>
                     <span class="summary-value">{{ submission_date|date:"F d, Y" }}</span>
                 </div>
                 <div class="summary-item">
                     <span class="summary-label">Current Status:</span>
-                    <span class="summary-value"><span class="status-badge">Submitted</span></span>
+                    <span class="summary-value"><span class="status-badge">Under Review</span></span>
                 </div>
             </div>
 
@@ -214,9 +250,12 @@
             <div class="next-steps">
                 <h3>What Happens Next?</h3>
                 <ol class="steps-list">
-                    <li><strong>Application Review:</strong> Our team will carefully review your application and supporting documents</li>
-                    <li><strong>Document Verification:</strong> We will verify all submitted documents and credentials</li>
-                    <li><strong>Reference Check:</strong> If applicable, we will contact your provided references</li>
+                    <li><strong>Application Review:</strong> Our {{ council_name }} team will carefully review your application and supporting documents</li>
+                    <li><strong>Document Verification:</strong> We will verify all submitted documents and credentials against SAQA records where applicable</li>
+                    {% if affiliation_code == 'designated' %}
+                    <li><strong>Qualification Assessment:</strong> Your academic qualifications and practical experience will be evaluated</li>
+                    {% endif %}
+                    <li><strong>Reference Check:</strong> If applicable, we may contact your provided references</li>
                     <li><strong>Decision Notification:</strong> You will receive an email notification once a decision has been made</li>
                     <li><strong>Digital Card Issuance:</strong> Upon approval, your digital affiliation card will be sent via email</li>
                 </ol>
@@ -225,32 +264,32 @@
             <!-- Important Information -->
             <div class="important-info">
                 <h3>Important Information</h3>
-                <p><strong>Processing Time:</strong> Applications are typically reviewed within 5-10 business days. Complex applications may require additional time for thorough evaluation.</p>
+                <p><strong>Processing Time:</strong> {{ council_name }} applications are typically reviewed within 5-10 business days. Complex applications may require additional time for thorough evaluation.</p>
+                <br>
+                <p><strong>Reference Your Application:</strong> Use application number <strong>{{ application_number }}</strong> in any correspondence with us.</p>
             </div>
 
-            <p>During the review process, we may contact you if we need additional information or clarification regarding your application. Please ensure your contact information remains current.</p>
-
-            <p>You can reference your application using the application number <strong>{{ application_number }}</strong> in any correspondence with us.</p>
+            <p>During the review process, we may contact you if we need additional information or clarification regarding your application. Please ensure your contact information remains current and monitor your email regularly.</p>
 
             <!-- Contact Information -->
             <div class="contact-info">
                 <h3>Need Assistance?</h3>
                 <p>If you have any questions about your application or the review process, please don't hesitate to contact us:</p>
-                <p><strong>Email:</strong> ams@acrp.org.za</p>
+                <p><strong>Email:</strong> andrea.leipoldt@acrp.org.za</p>
                 <p><strong>Phone:</strong> (+27) 065 214 1536</p>
-                <p><strong>Business Hours:</strong> Monday - Friday, 9:00 AM - 5:00 PM EST</p>
+                <p><strong>Business Hours:</strong> Monday - Friday, 9:00 AM - 5:00 PM SAST</p>
             </div>
 
-            <p>Thank you for choosing ACRP. We look forward to welcoming you to our professional community.</p>
+            <p>Thank you for choosing ACRP and for your commitment to professional excellence in Christian ministry. We look forward to welcoming you to our professional community.</p>
             
-            <p>Best regards,<br>
+            <p>Blessings,<br>
             <strong>The ACRP Team</strong><br>
-            Association of Construction Resource Professionals</p>
+            Association of Christian Religious Practitioners</p>
         </div>
 
         <!-- Footer -->
         <div class="footer">
-            <p><strong>ACRP Portal</strong> - Association of Construction Resource Professionals</p>
+            <p><strong>ACRP Portal</strong> - Association of Christian Religious Practitioners</p>
             <p>&copy; {{ current_year }} ACRP. All rights reserved.</p>
             <p>This is an automated message. Please do not reply directly to this email.</p>
             <p>For support, please contact: <a href="mailto:ams@acrp.org.za">ams@acrp.org.za</a></p>

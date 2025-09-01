@@ -183,115 +183,92 @@ def get_all_applications_queryset():
 # ============================================================================
 # ONBOARDING FLOW VIEWS
 # ============================================================================
+# Utility function for cleaning up stale onboarding sessions
+def cleanup_stale_sessions(user=None, ip_address=None):
+    """
+    Clean up incomplete onboarding sessions to prevent conflicts.
+    
+    Args:
+        user: Django User object (for authenticated users)
+        ip_address: Client IP address string (for anonymous users)
+    
+    This function prevents MultipleObjectsReturned errors in get_or_create()
+    by removing stale sessions that might match the same criteria.
+    """
+    if user and user.is_authenticated:
+        # Clean up by authenticated user
+        deleted_count, _ = OnboardingSession.objects.filter(
+            user=user,
+            status__in=['selecting_council', 'selecting_affiliation', 'selecting_category', 'selecting_subcategory']
+        ).delete()
+        if deleted_count > 0:
+            logger.info(f"Cleaned up {deleted_count} stale sessions for user {user.id}")
+    elif ip_address:
+        # Clean up by IP address for anonymous users (less reliable but prevents accumulation)
+        deleted_count, _ = OnboardingSession.objects.filter(
+            user=None,
+            ip_address=ip_address,
+            status__in=['selecting_council', 'selecting_affiliation', 'selecting_category', 'selecting_subcategory'],
+            created_at__lt=timezone.now() - timezone.timedelta(hours=1)  # Only clean up sessions older than 1 hour
+        ).delete()
+        if deleted_count > 0:
+            logger.info(f"Cleaned up {deleted_count} stale anonymous sessions for IP {ip_address}")
+
+
 @csrf_protect
 def onboarding_start(request):
     """
-    Step 1: Start onboarding process - select affiliation type.
+    Step 1: Start onboarding process - select council first.
+    
+    CHANGES MADE:
+    - This now handles council selection instead of affiliation type
+    - Council selection is now the first step in the onboarding flow
+    - Session status starts with 'selecting_council' instead of 'selecting_affiliation'
+    - Redirects to affiliation type selection (step 2) after council is chosen
     """
     if request.method == 'POST':
-        # Get the string value from POST
-        affiliation_type_code = request.POST.get('affiliation_type')
-        
-        if affiliation_type_code in ['associated', 'designated', 'student']:
-            try:
-                # Get the actual AffiliationType object
-                affiliation_type = AffiliationType.objects.get(
-                    code=affiliation_type_code,
-                    is_active=True
-                )
-                
-                # Create or get onboarding session
-                session, created = OnboardingSession.objects.get_or_create(
-                    user=request.user if request.user.is_authenticated else None,
-                    status='selecting_affiliation',
-                    defaults={
-                        'selected_affiliation_type': affiliation_type,
-                        'ip_address': get_client_ip(request),
-                        'user_agent': request.META.get('HTTP_USER_AGENT', '')[:500]
-                    }
-                )
-                
-                if not created:
-                    session.selected_affiliation_type = affiliation_type
-                    session.status = 'selecting_council'
-                    session.save(update_fields=['selected_affiliation_type', 'status', 'updated_at'])
-                
-                # Store session ID in user session (with dashes)
-                request.session['onboarding_session_id'] = str(session.session_id)
-                
-                logger.info(f"Onboarding started: {affiliation_type.name} from IP {get_client_ip(request)}")
-                
-                # Redirect with full UUID format (with dashes)
-                return redirect('enrollments:onboarding_council', session_id=str(session.session_id))
-                
-            except AffiliationType.DoesNotExist:
-                messages.error(request, f"Invalid affiliation type: {affiliation_type_code}")
-        else:
-            messages.error(request, "Please select a valid affiliation type.")
-    
-    # For GET request or form errors
-    form = AffiliationTypeSelectionForm()
-    
-    context = {
-        'form': form,
-        'page_title': 'Select Affiliation Type',
-        'step': 1,
-        'total_steps': 4,
-    }
-    
-    return render(request, 'enrollments/onboarding/step1_affiliation_type.html', context)
-
-@csrf_protect
-def onboarding_council(request, session_id):
-    """
-    Step 2: Select council (CGMP, CPSC, CMTP).
-    All affiliation types need to select a council.
-    """
-    # Get and validate onboarding session
-    try:
-        session = OnboardingSession.objects.get(session_id=session_id)
-    except OnboardingSession.DoesNotExist:
-        messages.error(request, "Invalid onboarding session. Please start over.")
-        return redirect('enrollments:onboarding_start')
-    
-    # Check session timeout
-    if (timezone.now() - session.created_at).total_seconds() > ONBOARDING_SESSION_TIMEOUT:
-        messages.error(request, "Onboarding session expired. Please start over.")
-        return redirect('enrollments:onboarding_start')
-    
-    if request.method == 'POST':
-        # Get council ID from POST data
+        # Get council ID from POST data instead of affiliation type
         council_id = request.POST.get('council')
         logger.info(f"POST data received: {request.POST}")
         logger.info(f"Council ID: {council_id}")
         
         if council_id:
             try:
-                # Get the actual Council object
+                # Get the actual Council object and validate it's active
                 council = Council.objects.get(id=council_id, is_active=True)
                 
-                session.selected_council = council
-                session.status = 'selecting_category'
-                session.save(update_fields=['selected_council', 'status', 'updated_at'])
+                # Clean up any existing incomplete sessions to prevent conflicts
+                cleanup_stale_sessions(
+                    user=request.user if request.user.is_authenticated else None,
+                    ip_address=get_client_ip(request)
+                )
                 
-                logger.info(f"Council selected: {council.code} - {council.name}")
+                # Create fresh onboarding session
+                # NOTE: Always create new session to avoid MultipleObjectsReturned errors
+                session = OnboardingSession.objects.create(
+                    user=request.user if request.user.is_authenticated else None,
+                    status='selecting_affiliation',  # Next step: affiliation type selection
+                    selected_council=council,  # Council is selected first now
+                    ip_address=get_client_ip(request),
+                    user_agent=request.META.get('HTTP_USER_AGENT', '')[:500]
+                )
                 
-                # Determine next step based on affiliation type
-                if session.selected_affiliation_type.code == 'designated':
-                    return redirect('enrollments:onboarding_category', session_id=session_id)
-                else:
-                    # Associated or Student - go directly to application
-                    session.status = 'completed'
-                    session.completed_at = timezone.now()
-                    session.save(update_fields=['status', 'completed_at'])
-                    return redirect('enrollments:application_create', session_id=session_id)
-                    
+                # Store session ID in user session for tracking
+                request.session['onboarding_session_id'] = str(session.session_id)
+                
+                logger.info(f"Council selected first: {council.code} - {council.name} from IP {get_client_ip(request)}")
+                
+                # Redirect to affiliation type selection (step 2) - using onboarding_council view
+                # NOTE: We're reusing the same URL name but the view logic has changed
+                return redirect('enrollments:onboarding_council', session_id=str(session.session_id))
+                
             except Council.DoesNotExist:
                 logger.error(f"Council with ID {council_id} not found")
                 messages.error(request, f"Invalid council selected: {council_id}")
         else:
             messages.error(request, "Please select a valid council.")
     
+    # For GET request or form errors - show council selection
     # Get all councils for the template
     councils = Council.objects.filter(is_active=True).order_by('code')
     
@@ -303,18 +280,101 @@ def onboarding_council(request, session_id):
     # Debug: Log available councils
     logger.info(f"Available councils: {[(c.code, c.id) for c in councils]}")
     
-    form = CouncilSelectionForm()
+    form = CouncilSelectionForm()  # Changed from AffiliationTypeSelectionForm
+    
+    context = {
+        'form': form,
+        'councils': councils_dict,  # For template access like {{ councils.cgmp.id }}
+        'councils_list': councils,   # For iteration in template
+        'page_title': 'Select Council',  # Updated page title
+        'step': 1,  # This is now step 1
+        'total_steps': 4,
+    }
+    
+    # NOTE: Template name stays the same but will need minor updates to show councils
+    return render(request, 'enrollments/onboarding/step1_affiliation_type.html', context)
+
+
+@csrf_protect
+def onboarding_council(request, session_id):
+    """
+    Step 2: Select affiliation type (associated, designated, student).
+    
+    CHANGES MADE:
+    - This now handles affiliation type selection instead of council selection
+    - This is now the second step in the onboarding flow
+    - Council should already be selected from step 1
+    - Validates that council was already selected in the session
+    """
+    # Get and validate onboarding session
+    try:
+        session = OnboardingSession.objects.select_related('selected_council').get(session_id=session_id)
+    except OnboardingSession.DoesNotExist:
+        messages.error(request, "Invalid onboarding session. Please start over.")
+        return redirect('enrollments:onboarding_start')
+    
+    # Check session timeout
+    if (timezone.now() - session.created_at).total_seconds() > ONBOARDING_SESSION_TIMEOUT:
+        messages.error(request, "Onboarding session expired. Please start over.")
+        # Clean up expired session
+        session.delete()
+        return redirect('enrollments:onboarding_start')
+    
+    # Validate that council was already selected (since it's step 1 now)
+    if not session.selected_council:
+        messages.error(request, "Council must be selected first. Please start over.")
+        return redirect('enrollments:onboarding_start')
+    
+    if request.method == 'POST':
+        # Get affiliation type code from POST data instead of council
+        affiliation_type_code = request.POST.get('affiliation_type')
+        logger.info(f"POST data received: {request.POST}")
+        logger.info(f"Affiliation type: {affiliation_type_code}")
+        
+        if affiliation_type_code in ['associated', 'designated', 'student']:
+            try:
+                # Get the actual AffiliationType object
+                affiliation_type = AffiliationType.objects.get(
+                    code=affiliation_type_code,
+                    is_active=True
+                )
+                
+                # Update session with selected affiliation type
+                session.selected_affiliation_type = affiliation_type
+                session.status = 'selecting_category'  # Next step depends on affiliation type
+                session.save(update_fields=['selected_affiliation_type', 'status', 'updated_at'])
+                
+                logger.info(f"Affiliation type selected: {affiliation_type.name}")
+                
+                # Determine next step based on affiliation type (same logic as before)
+                if affiliation_type.code == 'designated':
+                    # Designated affiliations need to select category
+                    return redirect('enrollments:onboarding_category', session_id=session_id)
+                else:
+                    # Associated or Student - go directly to application (skip category/subcategory)
+                    session.status = 'completed'
+                    session.completed_at = timezone.now()
+                    session.save(update_fields=['status', 'completed_at'])
+                    return redirect('enrollments:application_create', session_id=session_id)
+                    
+            except AffiliationType.DoesNotExist:
+                messages.error(request, f"Invalid affiliation type: {affiliation_type_code}")
+        else:
+            messages.error(request, "Please select a valid affiliation type.")
+    
+    # For GET request or form errors - show affiliation type selection
+    form = AffiliationTypeSelectionForm()  # Changed from CouncilSelectionForm
     
     context = {
         'form': form,
         'session': session,
-        'councils': councils_dict,  # For template access like {{ councils.cgmp.id }}
-        'councils_list': councils,   # For iteration in template
-        'page_title': 'Select Council',
-        'step': 2,
+        'selected_council': session.selected_council,  # Show which council was selected
+        'page_title': 'Select Affiliation Type',  # Updated page title
+        'step': 2,  # This is now step 2
         'total_steps': 4,
     }
     
+    # NOTE: Template name stays the same but will need minor updates to show affiliation types
     return render(request, 'enrollments/onboarding/step2_council.html', context)
 
 
@@ -323,7 +383,10 @@ def onboarding_category(request, session_id):
     """
     Step 3: Select designation category (for designated affiliations only).
     
-    Shows the 4 levels of designation categories.
+    CHANGES MADE:
+    - Step number updated from 3 to 3 (stays the same)
+    - Added validation that both council and affiliation type are selected
+    - Updated comments to reflect new flow
     """
     try:
         session = OnboardingSession.objects.select_related(
@@ -333,13 +396,22 @@ def onboarding_category(request, session_id):
         messages.error(request, "Invalid onboarding session.")
         return redirect('enrollments:onboarding_start')
     
-    # Validate that this step is appropriate
+    # Validate that previous steps were completed
+    if not session.selected_council:
+        messages.error(request, "Council must be selected first. Please start over.")
+        return redirect('enrollments:onboarding_start')
+        
+    if not session.selected_affiliation_type:
+        messages.error(request, "Affiliation type must be selected. Please start over.")
+        return redirect('enrollments:onboarding_start')
+    
+    # Validate that this step is appropriate (only for designated affiliations)
     if session.selected_affiliation_type.code != 'designated':
         messages.error(request, "Category selection is only for designated affiliations.")
         return redirect('enrollments:onboarding_start')
     
     if request.method == 'POST':
-        # Get category ID from POST data (similar to council selection)
+        # Get category ID from POST data (logic remains the same)
         category_id = request.POST.get('designation_category')
         logger.info(f"Category POST data received: {request.POST}")
         logger.info(f"Category ID: {category_id}")
@@ -355,7 +427,7 @@ def onboarding_category(request, session_id):
                 
                 logger.info(f"Category selected: {category.name}")
                 
-                # Check if council has subcategories (CPSC)
+                # Check if council has subcategories (CPSC) - logic remains the same
                 if session.selected_council.has_subcategories:
                     return redirect('enrollments:onboarding_subcategory', session_id=session_id)
                 else:
@@ -371,10 +443,10 @@ def onboarding_category(request, session_id):
         else:
             messages.error(request, "Please select a valid designation category.")
     
-    # Get categories for the template - ENSURE they exist
+    # Get categories for the template (logic remains the same)
     categories = DesignationCategory.objects.filter(is_active=True).order_by('level')
     
-    # Create a dictionary for easy access in template (similar to councils)
+    # Create a dictionary for easy access in template
     categories_dict = {}
     for category in categories:
         categories_dict[f'level{category.level}'] = category
@@ -394,13 +466,14 @@ def onboarding_category(request, session_id):
         'session': session,
         'categories': categories_dict,  # For template access like {{ categories.level1.id }}
         'categories_list': categories,   # For iteration in template  
+        'selected_council': session.selected_council,  # Show which council was selected
+        'selected_affiliation_type': session.selected_affiliation_type,  # Show affiliation type
         'page_title': 'Select Designation Category',
-        'step': 3,
+        'step': 3,  # Still step 3, but now it's after council and affiliation type
         'total_steps': 4,
     }
     
     return render(request, 'enrollments/onboarding/step3_category.html', context)
-
 
 
 @csrf_protect
@@ -408,7 +481,10 @@ def onboarding_subcategory(request, session_id):
     """
     Step 4: Select designation subcategory (for CPSC designated affiliations only).
     
-    Shows CPSC-specific subcategories for the selected category.
+    CHANGES MADE:
+    - Added validation that both council and affiliation type are selected
+    - Updated comments to reflect new flow
+    - Step number remains 4 (final step)
     """
     try:
         session = OnboardingSession.objects.select_related(
@@ -418,14 +494,27 @@ def onboarding_subcategory(request, session_id):
         messages.error(request, "Invalid onboarding session.")
         return redirect('enrollments:onboarding_start')
     
-    # Validate that this step is appropriate
+    # Validate that all previous steps were completed
+    if not session.selected_council:
+        messages.error(request, "Council must be selected first. Please start over.")
+        return redirect('enrollments:onboarding_start')
+        
+    if not session.selected_affiliation_type:
+        messages.error(request, "Affiliation type must be selected. Please start over.")
+        return redirect('enrollments:onboarding_start')
+        
+    if not session.selected_designation_category:
+        messages.error(request, "Designation category must be selected. Please start over.")
+        return redirect('enrollments:onboarding_start')
+    
+    # Validate that this step is appropriate (only for CPSC designated affiliations)
     if not (session.selected_affiliation_type.code == 'designated' and 
             session.selected_council.has_subcategories):
         messages.error(request, "Subcategory selection is only for CPSC designated affiliations.")
         return redirect('enrollments:onboarding_start')
     
     if request.method == 'POST':
-        # Get subcategory ID from POST data (similar to council and category selection)
+        # Get subcategory ID from POST data (logic remains the same)
         subcategory_id = request.POST.get('designation_subcategory')
         logger.info(f"Subcategory POST data received: {request.POST}")
         logger.info(f"Subcategory ID: {subcategory_id}")
@@ -465,12 +554,16 @@ def onboarding_subcategory(request, session_id):
     context = {
         'form': form,
         'session': session,
+        'selected_council': session.selected_council,  # Show which council was selected
+        'selected_affiliation_type': session.selected_affiliation_type,  # Show affiliation type
+        'selected_category': session.selected_designation_category,  # Show category
         'page_title': 'Select Subcategory',
-        'step': 4,
+        'step': 4,  # Final step
         'total_steps': 4,
     }
     
     return render(request, 'enrollments/onboarding/step4_subcategory.html', context)
+
 
 
 
@@ -645,12 +738,26 @@ def application_create(request, session_id):
                 logger.info(f"Total documents in DB: {saved_documents.count()}")
                 
                 
-                # Send welcome email to the applicant
+                # Send both welcome email to applicant and notification to admin staff
                 try:
-                    send_welcome_email(application)
-                    logger.info(f"Welcome email sent for application {application.application_number}")
+                    email_results = send_application_emails(application)
+                    
+                    if email_results['welcome_email_sent'] and email_results['admin_notification_sent']:
+                        logger.info(f"All emails sent successfully for application {application.application_number}")
+                    elif email_results['welcome_email_sent']:
+                        logger.warning(f"Welcome email sent but admin notification failed for application {application.application_number}")
+                    elif email_results['admin_notification_sent']:
+                        logger.warning(f"Admin notification sent but welcome email failed for application {application.application_number}")
+                    else:
+                        logger.error(f"Both emails failed for application {application.application_number}")
+                    
+                    # Log any specific errors
+                    if email_results['errors']:
+                        for error in email_results['errors']:
+                            logger.warning(f"Email error for application {application.application_number}: {error}")
+                            
                 except Exception as e:
-                    logger.warning(f"Failed to send welcome email for application {application.application_number}: {str(e)}")
+                    logger.warning(f"Failed to send emails for application {application.application_number}: {str(e)}")
                     # Don't fail the application submission if email fails
                     pass
                 
@@ -1038,66 +1145,448 @@ def application_success(request):
     return render(request, 'enrollments/applications/success.html', context)
 
 
+# Admin email list - all staff who should receive application notifications
+ADMIN_EMAIL_LIST = [
+    #'anita.snyders@acrp.org.za',
+    #'ilse.grunewald@acrp.org.za', 
+    #'maria.jansen@acrp.org.za',
+    #'riana.andersen@acrp.org.za',
+    'ams@acrp.org.za',
+    'dave@kreeck.com'
+]
+
+# Email configuration
+FROM_EMAIL = 'dave@kreeck.com'
+REPLY_TO_EMAIL = 'ams@acrp.org.za'
+from django.template.loader import render_to_string
+from django.core.mail import send_mail, EmailMultiAlternatives
+
 
 
 def send_welcome_email(application):
     """
-    Send welcome email when application is successfully submitted.
+    Send welcome email to the applicant after successful application submission.
     
     Args:
-        application: The submitted application instance
+        application: The application instance (AssociatedApplication, DesignatedApplication, or StudentApplication)
+    
+    Returns:
+        bool: True if email was sent successfully, False otherwise
     """
     try:
-        from django.template.loader import render_to_string
-        from django.core.mail import EmailMultiAlternatives
-        from django.conf import settings
-        import logging
+        # Get the onboarding session and related data
+        session = application.onboarding_session
         
-        logger = logging.getLogger(__name__)
+        # Build applicant name using correct field names
+        applicant_name = f"{getattr(application, 'full_names', '')} {getattr(application, 'surname', '')}"
+        if hasattr(application, 'preferred_name') and application.preferred_name:
+            applicant_name = f"{application.preferred_name} {getattr(application, 'surname', '')}"
         
-        # Context for email template
+        # Prepare email context data with correct field names
         context = {
-            'application': application,
-            'applicant_name': application.get_display_name(),
+            'applicant_name': applicant_name.strip(),
+            'applicant_email': application.email,
             'application_number': application.application_number,
-            'affiliation_type': application.onboarding_session.selected_affiliation_type.name,
-            'council_name': application.onboarding_session.selected_council.name,
+            'affiliation_type': session.selected_affiliation_type.name,
+            'affiliation_code': session.selected_affiliation_type.code,
+            'council_name': session.selected_council.name,
+            'council_code': session.selected_council.code,
+            'designation_category': session.selected_designation_category.name if session.selected_designation_category else None,
+            'designation_subcategory': session.selected_designation_subcategory.name if session.selected_designation_subcategory else None,
             'submission_date': application.created_at,
             'current_year': timezone.now().year,
         }
         
+        # Log context for debugging
+        logger.info(f"Welcome email context for {application.application_number}: applicant_name='{context['applicant_name']}'")
+        
         # Render HTML email template
-        subject = f"Welcome to ACRP - Application {application.application_number} Received"
         html_content = render_to_string('email_templates/enrollment/welcome.html', context)
         
-        # Create email with HTML content only (as requested)
+        # Create plain text version (fallback)
+        plain_text = f"""Dear {context['applicant_name']},
+
+Thank you for submitting your application to join the Association of Christian Religious Practitioners (ACRP).
+
+Application Details:
+- Application Number: {context['application_number']}
+- Council: {context['council_name']} ({context['council_code']})
+- Affiliation Type: {context['affiliation_type']}
+- Submission Date: {context['submission_date'].strftime('%B %d, %Y')}
+
+Your application is now under review by our {context['council_name']} team. We will contact you within 5-10 business days with an update.
+
+For any questions, please contact us at ams@acrp.org.za or (+27) 065 214 1536.
+
+Best regards,
+The ACRP Team
+Association of Christian Religious Practitioners
+
+---
+This is an automated message. Please do not reply directly to this email."""
+        
+        # Create email message
         email = EmailMultiAlternatives(
-            subject=subject,
-            body='',  # Empty body since we're using HTML only
-            from_email=settings.DEFAULT_FROM_EMAIL,
+            subject=f'Welcome to ACRP - Application {application.application_number} Submitted',
+            body=plain_text,
+            from_email=FROM_EMAIL,
             to=[application.email],
-            reply_to=[settings.DEFAULT_FROM_EMAIL],  # Set reply-to address
+            reply_to=[REPLY_TO_EMAIL]
         )
         
-        # Attach HTML content
+        # Attach HTML version
         email.attach_alternative(html_content, "text/html")
         
-        # Send email
+        # Send the email
         email.send()
         
-        logger.info(f"Welcome email sent successfully for application {application.application_number} to {application.email}")
+        logger.info(f"Welcome email sent successfully to {application.email} for application {application.application_number}")
+        return True
         
     except Exception as e:
-        # Log error but don't raise exception to avoid breaking application submission
         logger.error(f"Failed to send welcome email for application {application.application_number}: {str(e)}")
-        # Don't re-raise the exception - we don't want email failures to break application submission
+        logger.error(f"Application fields available: {[field for field in dir(application) if not field.startswith('_')]}")
+        return False
+    
 
 
-# ============================================================================
-# APPLICATION Export VIEWS
-# ============================================================================
 
-@login_required
+
+
+def send_admin_notification(application):
+    """
+    Send notification email to admin staff when a new application is submitted.
+    
+    Args:
+        application: The application instance (AssociatedApplication, DesignatedApplication, or StudentApplication)
+    
+    Returns:
+        bool: True if email was sent successfully, False otherwise
+    """
+    try:
+        # Get the onboarding session and related data
+        session = application.onboarding_session
+        
+        # Build applicant name using correct field names
+        applicant_name = f"{getattr(application, 'full_names', '')} {getattr(application, 'surname', '')}"
+        if hasattr(application, 'preferred_name') and application.preferred_name:
+            applicant_name = f"{application.preferred_name} {getattr(application, 'surname', '')}"
+        
+        # Get phone number - try different possible field names
+        phone_number = (
+            getattr(application, 'cell_phone', None) or 
+            getattr(application, 'work_phone', None) or 
+            getattr(application, 'home_phone', None) or
+            getattr(application, 'phone_number', None) or
+            getattr(application, 'phone', None)
+        )
+        
+        # Get organization - try different possible field names
+        organization = (
+            getattr(application, 'current_occupation', None) or
+            getattr(application, 'current_organization', None) or
+            getattr(application, 'organization', None) or
+            getattr(application, 'work_description', None)
+        )
+        
+        # Prepare comprehensive email context data with correct field names
+        context = {
+            # Application identification
+            'application_number': application.application_number,
+            'submission_date': application.created_at,
+            'current_year': timezone.now().year,
+            
+            # Applicant information using correct field names
+            'applicant_name': applicant_name.strip(),
+            'applicant_email': application.email,
+            'applicant_phone': phone_number,
+            'applicant_organization': organization,
+            
+            # Council and affiliation information
+            'council_name': session.selected_council.name,
+            'council_code': session.selected_council.code,
+            'affiliation_type': session.selected_affiliation_type.name,
+            'affiliation_code': session.selected_affiliation_type.code,
+            
+            # Designation information (for designated applications)
+            'designation_category': session.selected_designation_category.name if session.selected_designation_category else None,
+            'designation_subcategory': session.selected_designation_subcategory.name if session.selected_designation_subcategory else None,
+            
+            # Admin action URLs (adjust these based on your URL patterns)
+            'application_url': f"{getattr(settings, 'SITE_URL', 'http://localhost:8000')}/admin/applications/view/{application.pk}/",
+            'admin_dashboard_url': f"{getattr(settings, 'SITE_URL', 'http://localhost:8000')}/admin/dashboard/",
+        }
+        
+        # Log context for debugging
+        logger.info(f"Admin email context for {application.application_number}: applicant_name='{context['applicant_name']}'")
+        
+        # Render HTML email template
+        html_content = render_to_string('email_templates/enrollment/admin_notification.html', context)
+        
+        # Build designation information for plain text
+        designation_info = ""
+        if context['designation_category']:
+            designation_info += f"- Designation Category: {context['designation_category']}\n"
+        if context['designation_subcategory']:
+            designation_info += f"- Designation Subcategory: {context['designation_subcategory']}\n"
+        
+        # Build applicant contact info
+        contact_info = f"{context['applicant_name']} ({context['applicant_email']})"
+        if context['applicant_phone']:
+            contact_info += f" - {context['applicant_phone']}"
+        if context['applicant_organization']:
+            contact_info += f" - {context['applicant_organization']}"
+        
+        # Create clean plain text version
+        plain_text = f"""NEW ACRP APPLICATION SUBMITTED
+
+Application Details:
+- Application Number: {context['application_number']}
+- Council: {context['council_name']} ({context['council_code']})
+- Affiliation Type: {context['affiliation_type']}
+- Applicant: {contact_info}
+- Submission Date: {context['submission_date'].strftime('%B %d, %Y at %I:%M %p')}
+{designation_info}
+Action Required:
+This application requires review and processing by the {context['council_name']} team.
+
+Please review this application within 5-10 business days to maintain our service commitments.
+
+Review Application: {context['application_url']}
+Admin Dashboard: {context['admin_dashboard_url']}
+
+---
+ACRP Admin Notification System
+This is an automated notification."""
+        
+        # Create email subject with council code for easy filtering
+        subject = f"New {context['council_code']} Application: {context['application_number']}"
+        
+        # Create email message with both HTML and plain text versions
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body=plain_text,
+            from_email=FROM_EMAIL,
+            to=ADMIN_EMAIL_LIST,
+            reply_to=[REPLY_TO_EMAIL]
+        )
+        
+        # Attach HTML version for rich formatting
+        email.attach_alternative(html_content, "text/html")
+        
+        # Send the email
+        email.send()
+        
+        # Log successful sending
+        logger.info(
+            f"Admin notification sent successfully for application {application.application_number} "
+            f"to {len(ADMIN_EMAIL_LIST)} recipients: {', '.join(ADMIN_EMAIL_LIST)}"
+        )
+        return True
+        
+    except Exception as e:
+        # Log error but don't raise to prevent application submission failure
+        logger.error(
+            f"Failed to send admin notification for application {application.application_number}: {str(e)}. "
+            f"Recipients: {', '.join(ADMIN_EMAIL_LIST)}"
+        )
+        logger.error(f"Application fields available: {[field for field in dir(application) if not field.startswith('_')]}")
+        return False
+
+
+def send_application_emails(application):
+    """
+    Send both welcome email to applicant and notification to admin staff.
+    
+    Args:
+        application: The application instance (AssociatedApplication, DesignatedApplication, or StudentApplication)
+    
+    Returns:
+        dict: Results of email sending attempts
+    """
+    # Initialize results tracking
+    results = {
+        'welcome_email_sent': False,
+        'admin_notification_sent': False,
+        'errors': []
+    }
+    
+    logger.info(f"Starting email sending process for application {application.application_number}")
+    
+    # Debug application fields
+    logger.info(f"Application type: {type(application).__name__}")
+    logger.info(f"Available fields: email={getattr(application, 'email', 'NOT_FOUND')}, "
+               f"surname={getattr(application, 'surname', 'NOT_FOUND')}, "
+               f"full_names={getattr(application, 'full_names', 'NOT_FOUND')}")
+    
+    # Send welcome email to applicant
+    try:
+        logger.info(f"Attempting to send welcome email to {application.email}")
+        results['welcome_email_sent'] = send_welcome_email(application)
+        
+        if not results['welcome_email_sent']:
+            error_msg = "Failed to send welcome email to applicant"
+            results['errors'].append(error_msg)
+            logger.warning(f"Welcome email failed for application {application.application_number}: {error_msg}")
+        else:
+            logger.info(f"Welcome email sent successfully for application {application.application_number}")
+            
+    except Exception as e:
+        error_msg = f"Welcome email error: {str(e)}"
+        results['errors'].append(error_msg)
+        logger.error(f"Welcome email exception for application {application.application_number}: {str(e)}")
+    
+    # Send notification to admin staff
+    try:
+        logger.info(f"Attempting to send admin notification to {len(ADMIN_EMAIL_LIST)} recipients")
+        results['admin_notification_sent'] = send_admin_notification(application)
+        
+        if not results['admin_notification_sent']:
+            error_msg = "Failed to send admin notification"
+            results['errors'].append(error_msg)
+            logger.warning(f"Admin notification failed for application {application.application_number}: {error_msg}")
+        else:
+            logger.info(f"Admin notification sent successfully for application {application.application_number}")
+            
+    except Exception as e:
+        error_msg = f"Admin notification error: {str(e)}"
+        results['errors'].append(error_msg)
+        logger.error(f"Admin notification exception for application {application.application_number}: {str(e)}")
+    
+    # Log comprehensive results
+    if results['welcome_email_sent'] and results['admin_notification_sent']:
+        logger.info(f"All emails sent successfully for application {application.application_number}")
+    elif results['welcome_email_sent'] or results['admin_notification_sent']:
+        logger.warning(
+            f"Partial email success for application {application.application_number}. "
+            f"Welcome: {results['welcome_email_sent']}, Admin: {results['admin_notification_sent']}"
+        )
+    else:
+        logger.error(f"All emails failed for application {application.application_number}. Errors: {results['errors']}")
+    
+    return results
+
+
+
+
+
+def send_application_emails(application):
+    """
+    Send both welcome email to applicant and notification to admin staff.
+    
+    This is the main email coordination function that handles sending both
+    the welcome email to the applicant and the notification to admin staff.
+    It provides comprehensive error handling and detailed logging.
+    
+    Args:
+        application: The application instance (AssociatedApplication, DesignatedApplication, or StudentApplication)
+    
+    Returns:
+        dict: Results of email sending attempts with the following structure:
+              {
+                  'welcome_email_sent': bool,
+                  'admin_notification_sent': bool,
+                  'errors': list[str]
+              }
+    """
+    # Initialize results tracking
+    results = {
+        'welcome_email_sent': False,
+        'admin_notification_sent': False,
+        'errors': []
+    }
+    
+    logger.info(f"Starting email sending process for application {application.application_number}")
+    
+    # Send welcome email to applicant
+    try:
+        logger.info(f"Attempting to send welcome email to {application.email}")
+        results['welcome_email_sent'] = send_welcome_email(application)
+        
+        if not results['welcome_email_sent']:
+            error_msg = "Failed to send welcome email to applicant"
+            results['errors'].append(error_msg)
+            logger.warning(f"Welcome email failed for application {application.application_number}: {error_msg}")
+        else:
+            logger.info(f"Welcome email sent successfully for application {application.application_number}")
+            
+    except Exception as e:
+        error_msg = f"Welcome email error: {str(e)}"
+        results['errors'].append(error_msg)
+        logger.error(f"Welcome email exception for application {application.application_number}: {str(e)}")
+    
+    # Send notification to admin staff
+    try:
+        logger.info(f"Attempting to send admin notification to {len(ADMIN_EMAIL_LIST)} recipients")
+        results['admin_notification_sent'] = send_admin_notification(application)
+        
+        if not results['admin_notification_sent']:
+            error_msg = "Failed to send admin notification"
+            results['errors'].append(error_msg)
+            logger.warning(f"Admin notification failed for application {application.application_number}: {error_msg}")
+        else:
+            logger.info(f"Admin notification sent successfully for application {application.application_number}")
+            
+    except Exception as e:
+        error_msg = f"Admin notification error: {str(e)}"
+        results['errors'].append(error_msg)
+        logger.error(f"Admin notification exception for application {application.application_number}: {str(e)}")
+    
+    # Log comprehensive results
+    if results['welcome_email_sent'] and results['admin_notification_sent']:
+        logger.info(f"All emails sent successfully for application {application.application_number}")
+    elif results['welcome_email_sent'] or results['admin_notification_sent']:
+        logger.warning(
+            f"Partial email success for application {application.application_number}. "
+            f"Welcome: {results['welcome_email_sent']}, Admin: {results['admin_notification_sent']}"
+        )
+    else:
+        logger.error(f"All emails failed for application {application.application_number}. Errors: {results['errors']}")
+    
+    return results
+
+
+
+
+
+def handle_application_email_sending(application):
+    """
+    Handle email sending for a newly created application.
+    
+    This function provides a clean interface for sending application emails
+    from the application creation view, with appropriate error handling that
+    doesn't interfere with the application submission process.
+    
+    Args:
+        application: The newly created application instance
+        
+    Returns:
+        bool: True if at least one email was sent successfully, False if all failed
+    """
+    try:
+        # Send both emails using the main email function
+        email_results = send_application_emails(application)
+        
+        # The detailed logging is already handled in send_application_emails,
+        # so we only need to handle any critical failures here
+        if email_results['success_count'] == 0:
+            logger.critical(f"CRITICAL: All emails failed for application {application.application_number}. "
+                          f"Manual intervention may be required. Errors: {'; '.join(email_results['errors'])}")
+        
+        # Return True if at least one email was sent successfully
+        return email_results['success_count'] > 0
+        
+    except Exception as e:
+        # This catch-all ensures that email failures never break application submission
+        logger.critical(f"CRITICAL: Email sending process crashed for application {application.application_number}: {str(e)}")
+        return False
+
+
+
+
+
+
+
 def export_applications(request):
     """
     Professional Excel export with multiple format options.

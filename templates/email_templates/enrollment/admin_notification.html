@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New ACRP Application Submitted</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+        .email-container {
+            background-color: #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 26px;
+            font-weight: 400;
+        }
+        .header p {
+            margin: 8px 0 0 0;
+            opacity: 0.95;
+            font-size: 16px;
+        }
+        .content {
+            padding: 30px 25px;
+        }
+        .priority-alert {
+            background-color: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .priority-alert h3 {
+            margin: 0 0 10px 0;
+            color: #856404;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .priority-alert p {
+            margin: 0;
+            color: #856404;
+            font-weight: 500;
+        }
+        .application-details {
+            background-color: #f8f9fa;
+            border-left: 4px solid #dc3545;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .application-details h3 {
+            margin: 0 0 20px 0;
+            color: #495057;
+            font-size: 20px;
+            font-weight: 600;
+        }
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .detail-item {
+            background-color: #ffffff;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: #6c757d;
+            font-size: 14px;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .detail-value {
+            color: #495057;
+            font-size: 16px;
+            font-weight: 500;
+        }
+        .council-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .council-cgmp {
+            background-color: #007bff;
+            color: white;
+        }
+        .council-cpsc {
+            background-color: #28a745;
+            color: white;
+        }
+        .council-cmtp {
+            background-color: #6f42c1;
+            color: white;
+        }
+        .affiliation-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .affiliation-associated {
+            background-color: #17a2b8;
+            color: white;
+        }
+        .affiliation-designated {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        .affiliation-student {
+            background-color: #6f42c1;
+            color: white;
+        }
+        .applicant-info {
+            background-color: #e7f3ff;
+            border: 1px solid #b8daff;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        .applicant-info h3 {
+            margin: 0 0 15px 0;
+            color: #004085;
+            font-size: 18px;
+        }
+        .contact-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .contact-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            color: #004085;
+        }
+        .action-buttons {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            margin: 0 10px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        .processing-info {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        .processing-info h3 {
+            margin: 0 0 15px 0;
+            color: #155724;
+            font-size: 18px;
+        }
+        .processing-info ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .processing-info li {
+            margin-bottom: 8px;
+            color: #155724;
+        }
+        .footer {
+            background-color: #343a40;
+            color: #adb5bd;
+            padding: 25px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .footer p {
+            margin: 5px 0;
+        }
+        .stats-summary {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .stats-summary p {
+            margin: 0;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        @media (max-width: 600px) {
+            .email-container {
+                margin: 10px;
+                border-radius: 5px;
+            }
+            .header, .content {
+                padding: 20px 15px;
+            }
+            .detail-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            .btn {
+                display: block;
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header Section -->
+        <div class="header">
+            <h1>New Application Submitted</h1>
+            <p>ACRP Application Management System</p>
+        </div>
+
+        <!-- Main Content -->
+        <div class="content">
+            <!-- Priority Alert -->
+            <div class="priority-alert">
+                <h3>Action Required</h3>
+                <p>A new application has been submitted and requires review</p>
+            </div>
+
+            <!-- Application Details -->
+            <div class="application-details">
+                <h3>Application Details</h3>
+                
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <div class="detail-label">Application Number</div>
+                        <div class="detail-value">{{ application_number }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Submission Date</div>
+                        <div class="detail-value">{{ submission_date|date:"F d, Y \a\t g:i A" }}</div>
+                    </div>
+                </div>
+
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <div class="detail-label">Council</div>
+                        <div class="detail-value">
+                            <span class="council-badge council-{{ council_code|lower }}">
+                                {{ council_name }} ({{ council_code }})
+                            </span>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Affiliation Type</div>
+                        <div class="detail-value">
+                            <span class="affiliation-badge affiliation-{{ affiliation_code }}">
+                                {{ affiliation_type }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                {% if designation_category %}
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <div class="detail-label">Designation Category</div>
+                        <div class="detail-value">{{ designation_category }}</div>
+                    </div>
+                    {% if designation_subcategory %}
+                    <div class="detail-item">
+                        <div class="detail-label">Designation Subcategory</div>
+                        <div class="detail-value">{{ designation_subcategory }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Applicant Information -->
+            <div class="applicant-info">
+                <h3>Applicant Information</h3>
+                <div class="contact-row">
+                    <span class="contact-icon"></span>
+                    <strong>{{ applicant_name }}</strong> - {{ applicant_email }}
+                </div>
+                {% if applicant_phone %}
+                <div class="contact-row">
+                    <span class="contact-icon"></span>
+                    {{ applicant_phone }}
+                </div>
+                {% endif %}
+                {% if applicant_organization %}
+                <div class="contact-row">
+                    <span class="contact-icon"></span>
+                    {{ applicant_organization }}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <a href="{{ application_url }}" class="btn btn-primary">
+                    Review Application
+                </a>
+                <a href="{{ admin_dashboard_url }}" class="btn btn-secondary">
+                    Admin Dashboard
+                </a>
+            </div>
+
+            <!-- Processing Information -->
+            <div class="processing-info">
+                <h3>Next Steps for Review Team</h3>
+                <ul>
+                    <li><strong>Document Review:</strong> Verify all submitted documents and credentials</li>
+                    <li><strong>Qualification Check:</strong> Validate educational and professional qualifications</li>
+                    <li><strong>Reference Verification:</strong> Contact provided references if applicable</li>
+                    <li><strong>Council-Specific Review:</strong> Apply {{ council_name }} specific criteria</li>
+                    <li><strong>Final Decision:</strong> Approve, reject, or request additional information</li>
+                </ul>
+            </div>
+
+            <!-- Statistics Summary -->
+            <div class="stats-summary">
+                <p><strong>Application Queue:</strong> This application is now in the review queue for {{ council_name }}</p>
+            </div>
+
+            <p><strong>Important:</strong> Please review this application within 5-10 business days to maintain our service level commitments to applicants.</p>
+            
+            <p>If you have any questions about this application or need technical assistance, please contact the development team.</p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>ACRP Admin Notification System</strong></p>
+            <p>&copy; {{ current_year }} ACRP. All rights reserved.</p>
+            <p>This is an automated notification. For system support, contact: <a href="mailto:ams@acrp.org.za" style="color: #667eea;">ams@acrp.org.za</a></p>
+        </div>
+    </div>
+</body>
+</html>

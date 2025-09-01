@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,11 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   
   <!-- Title -->
-  <title>Join ACRP - Select Council</title>
+  <title>Join ACRP - Select Affiliation Type</title>
   
   <!-- SEO Meta Tags -->
-  <meta name="description" content="Choose your ACRP council - CGMP, CPSC, or CMTP for your ministry professional development.">
-  <meta name="keywords" content="ACRP, CGMP, CPSC, CMTP, Ministry Councils">
+  <meta name="description" content="Choose your ACRP affiliation type - Associated, Designated, or Student membership for ministry professionals.">
+  <meta name="keywords" content="ACRP, Ministry Professionals, Affiliation, Associated, Designated, Student">
   <meta name="author" content="ACRP Africa Team">
 
   <!-- Fonts -->
@@ -24,48 +25,65 @@
     .slide-in { animation: slideIn 0.4s ease-out; }
     @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
     
-    .modal-backdrop { backdrop-filter: blur(4px); }
+    .affiliation-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+    .affiliation-card { transition: all 0.3s ease; }
     
-    .council-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
-    .council-card { transition: all 0.3s ease; }
+    .card-selected {
+      border-color: #3b82f6 !important;
+      background-color: #eff6ff !important;
+    }
     
-    /* Debug styles */
-    .debug-selected {
-      outline: 3px solid red !important;
+    .card-selected-blue {
+      border-color: #3b82f6 !important;
+      background-color: #eff6ff !important;
+    }
+    
+    .card-selected-green {
+      border-color: #10b981 !important;
+      background-color: #f0fdf4 !important;
+    }
+    
+    .card-selected-purple {
+      border-color: #8b5cf6 !important;
+      background-color: #faf5ff !important;
     }
     
     @media (max-width: 976px) {
       body { margin: 0; padding: 0; }
       .container { margin: 1rem; }
     }
+
+    /* Debug styles */
+    .debug-selected {
+      outline: 3px solid red !important;
+    }
   </style>
 </head>
 
 <body class="bg-gradient-to-br from-blue-50 via-white to-purple-50 min-h-screen">
   
-  <!-- Step 2: Council Selection -->
+  <!-- Step 1: Affiliation Type Selection -->
   <div class="min-h-screen flex items-center justify-center p-4">
-    <div class="w-full max-w-6xl mx-auto">
+    <div class="w-full max-w-4xl mx-auto">
       
-      <!-- Header with Back Button -->
-      <div class="text-center mb-8 fade-in">
+      <!-- Header -->
+      <div class="text-center mb-12 fade-in">
         <button onclick="window.history.back()" class="inline-flex items-center text-blue-600 hover:text-blue-800 mb-6 transition-colors">
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
           </svg>
-          Back to affiliation type
+          Back to Council Selection
         </button>
         
-        <h1 class="text-5xl font-bold text-gray-800 mb-4">Choose Your Council</h1>
+        <h1 class="text-5xl font-bold text-gray-800 mb-4">Choose Your Affiliation Type</h1>
         <p class="text-xl text-gray-600 max-w-3xl mx-auto">
-          Select the council that best matches your ministry focus and professional development needs for your 
+          Select the Affiliation Type that best matches your ministry focus and professional development needs for your 
           {% if session.selected_affiliation_type %}
           <span class="font-semibold text-blue-600">{{ session.selected_affiliation_type.name }}</span>
           {% else %}
           <span class="font-semibold text-blue-600">selected affiliation</span>
           {% endif %}
         </p>
-        
         <!-- Progress Indicator -->
         <div class="flex justify-center mt-8 mb-4">
           <div class="flex items-center space-x-2">
@@ -82,38 +100,41 @@
       </div>
       
       <!-- Form -->
-      <form method="post" id="councilForm">
+      <form method="post" class="max-w-5xl mx-auto" id="affiliationForm">
         {% csrf_token %}
         
         <div class="grid md:grid-cols-3 gap-8 mb-12">
-          <!-- CGMP Council -->
-          <div class="council-card cursor-pointer" data-council="cgmp" data-value="{{ councils.cgmp.id }}" id="card-cgmp">
-            <input type="radio" name="council" value="{{ councils.cgmp.id }}" class="sr-only peer radio-input" id="radio-cgmp" required>
-            <div class="card-inner bg-white rounded-xl shadow-lg p-6 border-2 border-gray-200 peer-checked:border-blue-500 peer-checked:bg-blue-50 transition-all duration-300 h-full slide-in" style="animation-delay: 0.1s">
+          
+          <!-- Associated Affiliation -->
+          <div class="affiliation-card cursor-pointer" data-value="associated" data-type="associated" id="card-associated">
+            <input type="radio" name="affiliation_type" value="associated" class="hidden radio-input" id="radio-associated" required>
+            <div class="card-inner bg-white rounded-2xl shadow-lg p-8 border-2 border-gray-200 transition-all duration-300 h-full slide-in" style="animation-delay: 0.1s">
               <div class="text-center mb-6">
                 <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                   </svg>
                 </div>
-                <h3 class="text-2xl font-bold text-gray-800 mb-2">CGMP</h3>
-                <p class="text-gray-600 mb-4">Council for General Ministry Professionals</p>
-                <button type="button" onclick="openModal('cgmp')" class="text-blue-600 hover:text-blue-800 font-medium transition-colors mb-4">
-                  Learn More →
-                </button>
+                <h3 class="text-2xl font-bold text-gray-800 mb-3">Associated Affiliation</h3>
+                <div class="w-12 h-1 bg-blue-600 mx-auto mb-4"></div>
               </div>
               
-              <div class="space-y-3">
-                <div class="bg-blue-50 p-3 rounded-lg">
-                  <h4 class="font-semibold text-blue-800 text-sm mb-1">Focus Areas:</h4>
-                  <ul class="text-blue-700 text-xs space-y-1">
-                    <li>• Pastoral leadership</li>
-                    <li>• Church administration</li>
-                    <li>• General ministry practice</li>
+              <div class="space-y-4 text-left">
+                <p class="text-gray-700 leading-relaxed">
+                  For persons who are informally or non-professionally involved in ministry, who want to be associated with the professional body.
+                </p>
+                
+                <div class="bg-blue-50 p-4 rounded-lg">
+                  <h4 class="font-semibold text-blue-800 mb-2">Who This Is For:</h4>
+                  <ul class="text-blue-700 text-sm space-y-1">
+                    <li>• Volunteer ministry workers</li>
+                    <li>• Church committee members</li>
+                    <li>• Ministry training institution administrators</li>
+                    <li>• Those exploring ministry</li>
                   </ul>
                 </div>
                 
-                <div class="flex items-center justify-center">
+                <div class="flex items-center justify-center mt-6">
                   <div class="check-indicator w-6 h-6 border-2 border-blue-600 rounded-full flex items-center justify-center">
                     <div class="check-dot w-3 h-3 bg-blue-600 rounded-full opacity-0 transition-opacity duration-300"></div>
                   </div>
@@ -122,34 +143,35 @@
             </div>
           </div>
 
-          <!-- CPSC Council -->
-          <div class="council-card cursor-pointer" data-council="cpsc" data-value="{{ councils.cpsc.id }}" id="card-cpsc">
-          <input type="radio" name="council" value="{{ councils.cpsc.id }}" class="sr-only peer radio-input" id="radio-cpsc" required>
-            <div class="card-inner bg-white rounded-xl shadow-lg p-6 border-2 border-gray-200 peer-checked:border-green-500 peer-checked:bg-green-50 transition-all duration-300 h-full slide-in" style="animation-delay: 0.2s">
+          <!-- Designated Affiliation -->
+          <div class="affiliation-card cursor-pointer" data-value="designated" data-type="designated" id="card-designated">
+            <input type="radio" name="affiliation_type" value="designated" class="hidden radio-input" id="radio-designated" required>
+            <div class="card-inner bg-white rounded-2xl shadow-lg p-8 border-2 border-gray-200 transition-all duration-300 h-full slide-in" style="animation-delay: 0.2s">
               <div class="text-center mb-6">
                 <div class="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
                   </svg>
                 </div>
-                <h3 class="text-2xl font-bold text-gray-800 mb-2">CPSC</h3>
-                <p class="text-gray-600 mb-4">Council for Pastoral & Spiritual Care</p>
-                <button type="button" onclick="openModal('cpsc')" class="text-green-600 hover:text-green-800 font-medium transition-colors mb-4">
-                  Learn More →
-                </button>
+                <h3 class="text-2xl font-bold text-gray-800 mb-3">Designated Affiliation</h3>
+                <div class="w-12 h-1 bg-green-600 mx-auto mb-4"></div>
               </div>
               
-              <div class="space-y-3">
-                <div class="bg-green-50 p-3 rounded-lg">
-                  <h4 class="font-semibold text-green-800 text-sm mb-1">Focus Areas:</h4>
-                  <ul class="text-green-700 text-xs space-y-1">
-                    <li>• Pastoral counselling</li>
-                    <li>• Spiritual care provision</li>
-                    <li>• Therapeutic ministry</li>
+              <div class="space-y-4 text-left">
+                <p class="text-gray-700 leading-relaxed">
+                  For applicants with required SAQA registered qualifications and necessary experience to apply for professional designation.
+                </p>
+                
+                <div class="bg-green-50 p-4 rounded-lg">
+                  <h4 class="font-semibold text-green-800 mb-2">Requirements:</h4>
+                  <ul class="text-green-700 text-sm space-y-1">
+                    <li>• SAQA registered qualifications & necessary experience</li>
+                    <li>• Professional ministry experience</li>
+                    <li>• Comprehensive application</li>
                   </ul>
                 </div>
                 
-                <div class="flex items-center justify-center">
+                <div class="flex items-center justify-center mt-6">
                   <div class="check-indicator w-6 h-6 border-2 border-green-600 rounded-full flex items-center justify-center">
                     <div class="check-dot w-3 h-3 bg-green-600 rounded-full opacity-0 transition-opacity duration-300"></div>
                   </div>
@@ -158,34 +180,42 @@
             </div>
           </div>
 
-          <!-- CMTP Council -->
-          <div class="council-card cursor-pointer" data-council="cmtp" data-value="{{ councils.cmtp.id }}" id="card-cmtp">
-            <input type="radio" name="council" value="{{ councils.cmtp.id }}" class="sr-only peer radio-input" id="radio-cmtp" required>
-            <div class="card-inner bg-white rounded-xl shadow-lg p-6 border-2 border-gray-200 peer-checked:border-purple-500 peer-checked:bg-purple-50 transition-all duration-300 h-full slide-in" style="animation-delay: 0.3s">
+          <!-- Student Affiliation -->
+          <div class="affiliation-card cursor-pointer" data-value="student" data-type="student" id="card-student">
+            <input type="radio" name="affiliation_type" value="student" class="hidden radio-input" id="radio-student" required>
+            <div class="card-inner bg-white rounded-2xl shadow-lg p-8 border-2 border-gray-200 transition-all duration-300 h-full slide-in" style="animation-delay: 0.3s">
               <div class="text-center mb-6">
                 <div class="w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                   </svg>
                 </div>
-                <h3 class="text-2xl font-bold text-gray-800 mb-2">CMTP</h3>
-                <p class="text-gray-600 mb-4">Council for Ministry Training Providers</p>
-                <button type="button" onclick="openModal('cmtp')" class="text-purple-600 hover:text-purple-800 font-medium transition-colors mb-4">
-                  Learn More →
-                </button>
+                <h3 class="text-2xl font-bold text-gray-800 mb-3">Student Affiliation</h3>
+                <div class="w-12 h-1 bg-purple-600 mx-auto mb-4"></div>
               </div>
               
-              <div class="space-y-3">
-                <div class="bg-purple-50 p-3 rounded-lg">
-                  <h4 class="font-semibold text-purple-800 text-sm mb-1">Focus Areas:</h4>
-                  <ul class="text-purple-700 text-xs space-y-1">
-                    <li>• Ministry education</li>
-                    <li>• Training program delivery</li>
-                    <li>• Educational accreditation</li>
+              <div class="space-y-4 text-left">
+                <p class="text-gray-700 leading-relaxed">
+                  For full-time or part-time ministry students who are not yet in formal ministry positions.
+                </p>
+                
+                <div class="bg-purple-50 p-4 rounded-lg">
+                  <h4 class="font-semibold text-purple-800 mb-2">Who This Is For:</h4>
+                  <ul class="text-purple-700 text-sm space-y-1">
+                    <li>• Seminary students</li>
+                    <li>• Bible college students</li>
+                    <li>• Ministry training participants</li>
+                    <li>• Pre-ministry candidates</li>
                   </ul>
                 </div>
                 
-                <div class="flex items-center justify-center">
+                <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                  <p class="text-yellow-800 text-sm">
+                    <strong>Note:</strong> Those already in formal ministry should apply as designated affiliates.
+                  </p>
+                </div>
+                
+                <div class="flex items-center justify-center mt-6">
                   <div class="check-indicator w-6 h-6 border-2 border-purple-600 rounded-full flex items-center justify-center">
                     <div class="check-dot w-3 h-3 bg-purple-600 rounded-full opacity-0 transition-opacity duration-300"></div>
                   </div>
@@ -199,11 +229,7 @@
         <div class="text-center">
           <button type="submit" 
                   class="px-12 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl font-semibold text-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg">
-            {% if session.selected_affiliation_type.code == 'designated' %}
-              Continue to Category Selection
-            {% else %}
-              Continue to Application
-            {% endif %}
+            Continue to Application
             <svg class="w-5 h-5 ml-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
             </svg>
@@ -218,11 +244,11 @@
             <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
             </svg>
-            Please select a council to continue.
+            Please select an affiliation type to continue.
           </div>
         </div>
       {% endif %}
-
+      
       {% if messages %}
         {% for message in messages %}
           <div class="max-w-md mx-auto mt-6 px-4 py-3 rounded-lg bg-red-100 text-red-800 fade-in">
@@ -236,70 +262,22 @@
         {% endfor %}
       {% endif %}
 
-      <!-- Debug info -->
-      <div class="bg-yellow-100 p-4 rounded">
-        <h4>Debug Info:</h4>
-        <p>Available councils:</p>
-        <ul>
-          {% for council in councils_list %}
-          <li>{{ council.code }} - ID: {{ council.id }}</li>
-          {% endfor %}
-        </ul>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal for Council Details -->
-  <div id="councilModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center p-4 hidden z-50">
-    <div class="bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-      <div class="p-8">
-        <div class="flex justify-between items-start mb-6">
-          <div id="modalHeader" class="flex items-center">
-            <div id="modalIcon" class="w-12 h-12 rounded-full flex items-center justify-center mr-4">
-              <!-- Icon will be populated by JavaScript -->
-            </div>
-            <div>
-              <h2 id="modalTitle" class="text-3xl font-bold text-gray-800"></h2>
-              <p id="modalSubtitle" class="text-gray-600 text-lg"></p>
-            </div>
-          </div>
-          <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-            </svg>
-          </button>
-        </div>
-        
-        <div id="modalContent" class="text-gray-700 leading-relaxed">
-          <!-- Content will be populated by JavaScript -->
-        </div>
-        
-        <div class="mt-8 flex gap-4">
-          <button onclick="closeModal()" 
-                  class="flex-1 py-3 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 transition-colors">
-            Close
-          </button>
-          <button id="modalSelectButton" onclick="selectFromModal()" 
-                  class="flex-1 py-3 text-white rounded-lg font-semibold transition-colors">
-            Select This Council
-          </button>
-        </div>
-      </div>
+      
     </div>
   </div>
 
   <script>
     // Global variables for debugging
-    let selectedCouncil = '';
+    let selectedType = null;
     let debugMode = true; // Set to false in production
 
     // Enhanced logging function
     function log(message, data = null) {
       if (debugMode) {
         if (data) {
-          console.log(`🏛️ [Council Debug] ${message}:`, data);
+          console.log(`🔍 [ACRP Debug] ${message}:`, data);
         } else {
-          console.log(`🏛️ [Council Debug] ${message}`);
+          console.log(`🔍 [ACRP Debug] ${message}`);
         }
       }
     }
@@ -312,19 +290,18 @@
       const debugInfo = document.getElementById('debug-info');
       
       if (debugDiv && debugInfo) {
-        const checkedRadio = document.querySelector('input[name="council"]:checked');
-        const allRadios = document.querySelectorAll('input[name="council"]');
+        const checkedRadio = document.querySelector('input[name="affiliation_type"]:checked');
+        const allRadios = document.querySelectorAll('input[name="affiliation_type"]');
         
         let debugHTML = `
-          <p><strong>Selected Council:</strong> ${selectedCouncil || 'None'}</p>
+          <p><strong>Selected Type:</strong> ${selectedType || 'None'}</p>
           <p><strong>Checked Radio:</strong> ${checkedRadio ? checkedRadio.value : 'None'}</p>
           <p><strong>All Radio States:</strong></p>
           <ul class="ml-4">
         `;
         
-        allRadios.forEach((radio, index) => {
-          const council = radio.closest('.council-card').dataset.council;
-          debugHTML += `<li>${council} (${radio.value}): ${radio.checked ? '✅' : '❌'}</li>`;
+        allRadios.forEach(radio => {
+          debugHTML += `<li>${radio.value}: ${radio.checked ? '✅' : '❌'}</li>`;
         });
         
         debugHTML += '</ul>';
@@ -333,17 +310,17 @@
       }
     }
 
-    // Enhanced card selection function
-    function selectCouncil(council) {
-      log(`selectCouncil called with: ${council}`);
+    // Enhanced card selection function with extensive logging
+    function selectCard(type) {
+      log(`selectCard called with type: ${type}`);
       
       try {
         // Clear all selections first
         clearAllSelections();
         
         // Find the specific card and radio button
-        const cardElement = document.getElementById(`card-${council}`);
-        const radioElement = document.getElementById(`radio-${council}`);
+        const cardElement = document.getElementById(`card-${type}`);
+        const radioElement = document.getElementById(`radio-${type}`);
         const cardInner = cardElement?.querySelector('.card-inner');
         const checkDot = cardElement?.querySelector('.check-dot');
         
@@ -361,20 +338,20 @@
         
         // Set the radio button as checked
         radioElement.checked = true;
-        selectedCouncil = council;
+        selectedType = type;
         
-        log(`✅ Radio button ${council} set to checked: ${radioElement.checked}`);
+        log(`✅ Radio button ${type} set to checked: ${radioElement.checked}`);
         
         // Apply visual styles
         cardInner.classList.remove('border-gray-200');
         
-        // Apply council-specific styling
-        if (council === 'cgmp') {
-          cardInner.classList.add('ring-2', 'ring-blue-500', 'border-blue-500', 'bg-blue-50');
-        } else if (council === 'cpsc') {
-          cardInner.classList.add('ring-2', 'ring-green-500', 'border-green-500', 'bg-green-50');
-        } else if (council === 'cmtp') {
-          cardInner.classList.add('ring-2', 'ring-purple-500', 'border-purple-500', 'bg-purple-50');
+        // Apply type-specific styling
+        if (type === 'associated') {
+          cardInner.classList.add('card-selected-blue', 'ring-2', 'ring-blue-500');
+        } else if (type === 'designated') {
+          cardInner.classList.add('card-selected-green', 'ring-2', 'ring-green-500');
+        } else if (type === 'student') {
+          cardInner.classList.add('card-selected-purple', 'ring-2', 'ring-purple-500');
         }
         
         // Show check indicator
@@ -383,7 +360,7 @@
           checkDot.classList.add('opacity-100');
         }
         
-        log(`✅ Applied styling for ${council}`);
+        log(`✅ Applied styling for ${type}`);
         
         // Trigger change event on radio button
         radioElement.dispatchEvent(new Event('change', { bubbles: true }));
@@ -392,23 +369,23 @@
         updateDebugDisplay();
         
         // Verify the selection worked
-        const isActuallyChecked = document.querySelector(`input[name="council"][value="${radioElement.value}"]`).checked;
-        log(`✅ Final verification - ${council} is checked: ${isActuallyChecked}`);
+        const isActuallyChecked = document.querySelector(`input[name="affiliation_type"][value="${type}"]`).checked;
+        log(`✅ Final verification - ${type} is checked: ${isActuallyChecked}`);
         
         return true;
         
       } catch (error) {
-        log('❌ Error in selectCouncil:', error);
+        log('❌ Error in selectCard:', error);
         return false;
       }
     }
 
     // Clear all selections
     function clearAllSelections() {
-      log('Clearing all council selections');
+      log('Clearing all selections');
       
-      const allCards = document.querySelectorAll('.council-card');
-      const allRadios = document.querySelectorAll('input[name="council"]');
+      const allCards = document.querySelectorAll('.affiliation-card');
+      const allRadios = document.querySelectorAll('input[name="affiliation_type"]');
       
       allCards.forEach(card => {
         const cardInner = card.querySelector('.card-inner');
@@ -417,9 +394,8 @@
         if (cardInner) {
           // Remove all selection classes
           cardInner.classList.remove(
-            'ring-2', 'ring-blue-500', 'ring-green-500', 'ring-purple-500',
-            'border-blue-500', 'border-green-500', 'border-purple-500',
-            'bg-blue-50', 'bg-green-50', 'bg-purple-50'
+            'card-selected-blue', 'card-selected-green', 'card-selected-purple',
+            'ring-2', 'ring-blue-500', 'ring-green-500', 'ring-purple-500'
           );
           cardInner.classList.add('border-gray-200');
         }
@@ -434,54 +410,26 @@
         radio.checked = false;
       });
       
-      selectedCouncil = '';
-      log('✅ All council selections cleared');
+      selectedType = null;
+      log('✅ All selections cleared');
     }
 
-    // Debug form state
-    function debugFormState() {
-      log('=== COUNCIL FORM STATE DEBUG ===');
-      
-      const form = document.getElementById('councilForm');
-      const allRadios = document.querySelectorAll('input[name="council"]');
-      const checkedRadio = document.querySelector('input[name="council"]:checked');
-      
-      log('Form element found:', !!form);
-      log('Total radio buttons:', allRadios.length);
-      log('Currently checked radio:', checkedRadio ? checkedRadio.value : 'None');
-      log('Selected council variable:', selectedCouncil);
-      
-      log('Individual radio states:');
-      allRadios.forEach((radio, index) => {
-        const council = radio.closest('.council-card').dataset.council;
-        log(`  Radio ${index + 1} (${council}):`, {
-          checked: radio.checked,
-          value: radio.value,
-          id: radio.id,
-          name: radio.name,
-          required: radio.required
-        });
-      });
-      
-      updateDebugDisplay();
-      log('=== END COUNCIL FORM STATE DEBUG ===');
-    }
-
+    
     // Enhanced form validation
     function validateForm() {
-      log('🔍 Starting council form validation');
+      log('🔍 Starting form validation');
       
-      const checkedRadio = document.querySelector('input[name="council"]:checked');
+      const checkedRadio = document.querySelector('input[name="affiliation_type"]:checked');
       
       log('Validation check:', {
         checkedRadio: !!checkedRadio,
         value: checkedRadio ? checkedRadio.value : null,
-        selectedCouncil: selectedCouncil
+        selectedType: selectedType
       });
       
       if (!checkedRadio) {
-        log('❌ Validation failed: No council radio button checked');
-        alert('Please select a council to continue.');
+        log('❌ Validation failed: No radio button checked');
+        alert('Please select an affiliation type to continue.');
         debugFormState();
         return false;
       }
@@ -490,196 +438,36 @@
       return true;
     }
 
-    // Council data for modals
-    const councilData = {
-      cgmp: {
-        title: 'CGMP',
-        subtitle: 'Council for General Ministry Professionals',
-        icon: `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>`,
-        iconBg: 'bg-gradient-to-r from-blue-500 to-blue-600',
-        buttonBg: 'bg-blue-600 hover:bg-blue-700',
-        content: `
-          <div class="space-y-6">
-            <p class="text-lg font-semibold">About CGMP</p>
-            <p>The Council for General Ministry Professionals (CGMP) facilitates registration and management processes for pastors and people in general ministry roles.</p>
-            
-            <div class="bg-blue-50 p-6 rounded-lg">
-              <h4 class="font-semibold text-blue-800 mb-3 text-lg">What CGMP Offers:</h4>
-              <ul class="list-disc list-inside text-blue-700 space-y-2">
-                <li>Professional registration for pastors and ministry leaders</li>
-                <li>Continuing Professional Development (CPD) tracking</li>
-                <li>Ministry credential management</li>
-                <li>Access to professional development resources</li>
-                <li>Networking opportunities with ministry professionals</li>
-                <li>Ethics and standards oversight</li>
-              </ul>
-            </div>
-            
-            <div class="bg-gray-50 p-6 rounded-lg">
-              <h4 class="font-semibold text-gray-800 mb-3 text-lg">Who Should Join CGMP:</h4>
-              <ul class="list-disc list-inside text-gray-700 space-y-2">
-                <li>Licensed or ordained pastors</li>
-                <li>Ministry leaders and coordinators</li>
-                <li>Church administrators</li>
-                <li>General ministry professionals seeking accreditation</li>
-                <li>Youth and children's ministry specialists</li>
-                <li>Worship leaders and music ministers</li>
-              </ul>
-            </div>
-            
-            <p class="text-sm text-gray-600 italic bg-gray-100 p-4 rounded-lg">CGMP provides the foundational framework for professional ministry practice and ongoing development in the field of general ministry.</p>
-          </div>
-        `
-      },
-      cpsc: {
-        title: 'CPSC',
-        subtitle: 'Council for Pastoral & Spiritual Care',
-        icon: `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>`,
-        iconBg: 'bg-gradient-to-r from-green-500 to-green-600',
-        buttonBg: 'bg-green-600 hover:bg-green-700',
-        content: `
-          <div class="space-y-6">
-            <p class="text-lg font-semibold">About CPSC</p>
-            <p>The Council for Pastoral & Spiritual Care (CPSC) facilitates registration and designation of pastoral counsellors and spiritual care professionals.</p>
-            
-            <div class="bg-green-50 p-6 rounded-lg">
-              <h4 class="font-semibold text-green-800 mb-3 text-lg">What CPSC Offers:</h4>
-              <ul class="list-disc list-inside text-green-700 space-y-2">
-                <li>Professional designation for pastoral counsellors</li>
-                <li>Spiritual care practitioner registration</li>
-                <li>Specialized training program accreditation</li>
-                <li>Ethics and standards oversight</li>
-                <li>Continuing education requirements management</li>
-                <li>Professional supervision frameworks</li>
-                <li>Multiple designation levels with subcategories</li>
-              </ul>
-            </div>
-            
-            <div class="bg-gray-50 p-6 rounded-lg">
-              <h4 class="font-semibold text-gray-800 mb-3 text-lg">Who Should Join CPSC:</h4>
-              <ul class="list-disc list-inside text-gray-700 space-y-2">
-                <li>Pastoral counsellors and therapists</li>
-                <li>Chaplains and spiritual care providers</li>
-                <li>Mental health professionals in ministry contexts</li>
-                <li>Grief and trauma specialists in religious settings</li>
-                <li>Clinical pastoral education supervisors</li>
-                <li>Marriage and family counsellors</li>
-              </ul>
-            </div>
-            
-            <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-              <p class="text-yellow-800 text-sm">
-                <strong>Special Note:</strong> CPSC offers unique subcategory designations for specialized pastoral counselling areas.
-              </p>
-            </div>
-            
-            <p class="text-sm text-gray-600 italic bg-gray-100 p-4 rounded-lg">CPSC ensures the highest standards of care and professional competency in pastoral counselling and spiritual care ministries.</p>
-          </div>
-        `
-      },
-      cmtp: {
-        title: 'CMTP',
-        subtitle: 'Council for Ministry Training Providers',
-        icon: `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>`,
-        iconBg: 'bg-gradient-to-r from-purple-500 to-purple-600',
-        buttonBg: 'bg-purple-600 hover:bg-purple-700',
-        content: `
-          <div class="space-y-6">
-            <p class="text-lg font-semibold">About CMTP</p>
-            <p>The Council for Ministry Training Providers (CMTP) facilitates registration of people and institutions offering ministry training and educational programs.</p>
-            
-            <div class="bg-purple-50 p-6 rounded-lg">
-              <h4 class="font-semibold text-purple-800 mb-3 text-lg">What CMTP Offers:</h4>
-              <ul class="list-disc list-inside text-purple-700 space-y-2">
-                <li>Institutional accreditation for training providers</li>
-                <li>Course and curriculum approval processes</li>
-                <li>Quality assurance and standards compliance</li>
-                <li>Trainer and educator certification</li>
-                <li>Learning outcome assessment frameworks</li>
-                <li>Resource sharing and collaboration platforms</li>
-                <li>Continuing professional development for educators</li>
-              </ul>
-            </div>
-            
-            <div class="bg-gray-50 p-6 rounded-lg">
-              <h4 class="font-semibold text-gray-800 mb-3 text-lg">Who Should Join CMTP:</h4>
-              <ul class="list-disc list-inside text-gray-700 space-y-2">
-                <li>Bible colleges and theological seminaries</li>
-                <li>Ministry training institutes</li>
-                <li>Independent ministry educators and trainers</li>
-                <li>Churches offering formal training programs</li>
-                <li>Online ministry education platforms</li>
-                <li>Curriculum developers and instructional designers</li>
-              </ul>
-            </div>
-            
-            <p class="text-sm text-gray-600 italic bg-gray-100 p-4 rounded-lg">CMTP ensures excellence in ministry education and training delivery across diverse learning environments and methodologies.</p>
-          </div>
-        `
-      }
-    };
-
-    function openModal(council) {
-      log(`Opening modal for: ${council}`);
-      const modal = document.getElementById('councilModal');
-      const data = councilData[council];
-      
-      document.getElementById('modalTitle').textContent = data.title;
-      document.getElementById('modalSubtitle').textContent = data.subtitle;
-      document.getElementById('modalIcon').innerHTML = data.icon;
-      document.getElementById('modalIcon').className = `w-12 h-12 rounded-full flex items-center justify-center mr-4 ${data.iconBg}`;
-      document.getElementById('modalContent').innerHTML = data.content;
-      document.getElementById('modalSelectButton').className = `flex-1 py-3 text-white rounded-lg font-semibold transition-colors ${data.buttonBg}`;
-      
-      selectedCouncil = council;
-      modal.classList.remove('hidden');
-      log(`Modal opened for ${council}`);
-    }
-
-    function closeModal() {
-      log('Closing modal');
-      document.getElementById('councilModal').classList.add('hidden');
-    }
-
-    function selectFromModal() {
-      log(`Selecting ${selectedCouncil} from modal`);
-      selectCouncil(selectedCouncil);
-      closeModal();
-    }
-
     // Event Listeners
     document.addEventListener('DOMContentLoaded', function() {
-      log('🚀 Council page loaded, initializing...');
+      log('🚀 Page loaded, initializing...');
       
       // Add click event listeners to all cards
-      const cards = document.querySelectorAll('.council-card');
-      log(`Found ${cards.length} council cards`);
+      const cards = document.querySelectorAll('.affiliation-card');
+      log(`Found ${cards.length} affiliation cards`);
       
       cards.forEach((card, index) => {
-        const council = card.dataset.council;
-        log(`Setting up card ${index + 1}: ${council}`);
+        const type = card.dataset.type;
+        log(`Setting up card ${index + 1}: ${type}`);
         
-        // Add click listener to card
+        // Remove any existing onclick attributes
+        card.removeAttribute('onclick');
+        
+        // Add new click listener
         card.addEventListener('click', function(e) {
-          // Don't trigger if clicking on the "Learn More" button
-          if (e.target.closest('button[onclick*="openModal"]')) {
-            log(`Learn More button clicked for ${council}, not selecting`);
-            return;
-          }
-          
           e.preventDefault();
           e.stopPropagation();
-          log(`🎯 Council card clicked: ${council}`);
-          selectCouncil(council);
+          log(`🎯 Card clicked: ${type}`);
+          selectCard(type);
         });
         
-        // Also add change listener to the radio button
+        // Also add click listener to the radio button itself
         const radio = card.querySelector('input[type="radio"]');
         if (radio) {
           radio.addEventListener('change', function() {
             log(`📻 Radio change event: ${this.value}, checked: ${this.checked}`);
             if (this.checked) {
-              selectedCouncil = council;
+              selectedType = this.value;
               updateDebugDisplay();
             }
           });
@@ -687,57 +475,44 @@
       });
       
       // Form submission handler
-      const form = document.getElementById('councilForm');
+      const form = document.getElementById('affiliationForm');
       if (form) {
         form.addEventListener('submit', function(e) {
-          log('📝 Council form submission attempted');
+          log('📝 Form submission attempted');
           
           if (!validateForm()) {
             e.preventDefault();
-            log('❌ Council form submission prevented due to validation failure');
+            log('❌ Form submission prevented due to validation failure');
             return false;
           }
           
-          log('✅ Council form validation passed, submitting...');
+          log('✅ Form validation passed, submitting...');
           return true;
         });
       }
-      
-      // Modal event listeners
-      document.getElementById('councilModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-          closeModal();
-        }
-      });
-
-      document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-          closeModal();
-        }
-      });
       
       // Initial debug
       setTimeout(() => {
         debugFormState();
       }, 500);
       
-      log('✅ Council page initialization complete');
+      log('✅ Initialization complete');
     });
 
     // Global functions for manual testing
-    window.testSelectCouncil = function(council) {
-      log(`🧪 Manual test: selecting ${council}`);
-      selectCouncil(council);
+    window.testSelectCard = function(type) {
+      log(`🧪 Manual test: selecting ${type}`);
+      selectCard(type);
     };
 
-    window.testCouncilFormState = function() {
+    window.testFormState = function() {
       debugFormState();
     };
 
-    window.testCouncilSubmit = function() {
-      const form = document.getElementById('councilForm');
+    window.testSubmit = function() {
+      const form = document.getElementById('affiliationForm');
       if (form) {
-        log('🧪 Manual test: submitting council form');
+        log('🧪 Manual test: submitting form');
         form.dispatchEvent(new Event('submit'));
       }
     };
@@ -746,12 +521,12 @@
     setTimeout(() => {
       if (debugMode) {
         console.log(`
-🔧 Council Debug Console Commands:
-• testSelectCouncil('cgmp') - Test selecting CGMP
-• testSelectCouncil('cpsc') - Test selecting CPSC  
-• testSelectCouncil('cmtp') - Test selecting CMTP
-• testCouncilFormState() - Check current form state
-• testCouncilSubmit() - Test form submission
+🔧 ACRP Debug Console Commands:
+• testSelectCard('associated') - Test selecting associated card
+• testSelectCard('designated') - Test selecting designated card  
+• testSelectCard('student') - Test selecting student card
+• testFormState() - Check current form state
+• testSubmit() - Test form submission
         `);
       }
     }, 1000);
