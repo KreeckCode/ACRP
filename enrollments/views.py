@@ -1147,12 +1147,12 @@ def application_success(request):
 
 # Admin email list - all staff who should receive application notifications
 ADMIN_EMAIL_LIST = [
-    #'anita.snyders@acrp.org.za',
-    #'ilse.grunewald@acrp.org.za', 
-    #'maria.jansen@acrp.org.za',
-    #'riana.andersen@acrp.org.za',
+    'anita.snyders@acrp.org.za',
+    'ilse.grunewald@acrp.org.za', 
+    'maria.jansen@acrp.org.za',
+    'riana.andersen@acrp.org.za',
     'ams@acrp.org.za',
-    'dave@kreeck.com'
+    'andrea.leipoldt@acrp.org.za'
 ]
 
 # Email configuration

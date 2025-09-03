@@ -1,8 +1,3 @@
-# ============================================================================
-# FIXED CARD DELIVERY SYSTEM
-# PUT THIS IN: affiliationcard/card_delivery.py (REPLACE EXISTING CONTENT)
-# ============================================================================
-
 import base64
 import secrets
 from datetime import timedelta
