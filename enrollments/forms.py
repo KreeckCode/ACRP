@@ -479,7 +479,7 @@ class BaseApplicationForm(forms.ModelForm):
         fields = [
             # Personal Information
             'title', 'gender', 'surname', 'initials', 'full_names', 'preferred_name',
-            'id_number', 'passport_number', 'date_of_birth', 'race', 'disability',
+            'id_number', 'passport_number', 'date_of_birth', 'race', 'disability', 'residency', 'nationality',
             
             # Contact Information
             'email', 'cell_phone', 'work_phone', 'home_phone', 'fax',
@@ -517,7 +517,6 @@ class BaseApplicationForm(forms.ModelForm):
             'passport_number': TEXT_INPUT_WIDGET,
             'date_of_birth': DATE_WIDGET,
             'race': SELECT_WIDGET,
-            'disability': TEXT_INPUT_WIDGET,
             'email': EMAIL_WIDGET,
             'cell_phone': TEXT_INPUT_WIDGET,
             'work_phone': TEXT_INPUT_WIDGET,

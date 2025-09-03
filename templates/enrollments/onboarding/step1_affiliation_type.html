@@ -129,7 +129,7 @@
                   <img src="{% static 'main_media/CPSC.svg' %}" alt="ACRP Logo" class="w-20 h-20">
                 </div>
                 <h3 class="text-2xl font-bold text-gray-800 mb-2">CPSC</h3>
-                <p class="text-gray-600 mb-4">Council for Pastoral & Spiritual Care</p>
+                <p class="text-gray-600 mb-4">Council for Pastoral & Spiritual counsellors</p>
                 <button type="button" onclick="openModal('cpsc')" class="text-green-600 hover:text-green-800 font-medium transition-colors mb-4">
                   Learn More →
                 </button>
@@ -281,9 +281,9 @@
     function log(message, data = null) {
       if (debugMode) {
         if (data) {
-          console.log(`🏛️ [Council Debug] ${message}:`, data);
+          console.log(`[Council Debug] ${message}:`, data);
         } else {
-          console.log(`🏛️ [Council Debug] ${message}`);
+          console.log(`[Council Debug] ${message}`);
         }
       }
     }
@@ -339,7 +339,7 @@
         });
         
         if (!cardElement || !radioElement || !cardInner) {
-          log('❌ Missing required elements!');
+          log('Missing required elements!');
           return false;
         }
         
@@ -347,7 +347,7 @@
         radioElement.checked = true;
         selectedCouncil = council;
         
-        log(`✅ Radio button ${council} set to checked: ${radioElement.checked}`);
+        log(`Radio button ${council} set to checked: ${radioElement.checked}`);
         
         // Apply visual styles
         cardInner.classList.remove('border-gray-200');
@@ -367,7 +367,7 @@
           checkDot.classList.add('opacity-100');
         }
         
-        log(`✅ Applied styling for ${council}`);
+        log(`Applied styling for ${council}`);
         
         // Trigger change event on radio button
         radioElement.dispatchEvent(new Event('change', { bubbles: true }));
@@ -377,12 +377,12 @@
         
         // Verify the selection worked
         const isActuallyChecked = document.querySelector(`input[name="council"][value="${radioElement.value}"]`).checked;
-        log(`✅ Final verification - ${council} is checked: ${isActuallyChecked}`);
+        log(`Final verification - ${council} is checked: ${isActuallyChecked}`);
         
         return true;
         
       } catch (error) {
-        log('❌ Error in selectCouncil:', error);
+        log('Error in selectCouncil:', error);
         return false;
       }
     }
@@ -419,7 +419,7 @@
       });
       
       selectedCouncil = '';
-      log('✅ All council selections cleared');
+      log('All council selections cleared');
     }
 
     // Debug form state
@@ -453,7 +453,7 @@
 
     // Enhanced form validation
     function validateForm() {
-      log('🔍 Starting council form validation');
+      log('Starting council form validation');
       
       const checkedRadio = document.querySelector('input[name="council"]:checked');
       
@@ -464,13 +464,13 @@
       });
       
       if (!checkedRadio) {
-        log('❌ Validation failed: No council radio button checked');
+        log('Validation failed: No council radio button checked');
         alert('Please select a council to continue.');
         debugFormState();
         return false;
       }
       
-      log(`✅ Validation passed: ${checkedRadio.value} selected`);
+      log(`Validation passed: ${checkedRadio.value} selected`);
       return true;
     }
 
@@ -526,7 +526,7 @@
         content: `
           <div class="space-y-6">
             <p class="text-lg font-semibold">About CPSC</p>
-            <p>The Council for Pastoral & Spiritual Care (CPSC) facilitates registration and designation of pastoral counsellors and spiritual care professionals.</p>
+            <p>The Council for Pastoral & Spiritual counsellors (CPSC) facilitates registration and designation of pastoral counsellors and spiritual care professionals.</p>
             
             <div class="bg-green-50 p-6 rounded-lg">
               <h4 class="font-semibold text-green-800 mb-3 text-lg">What CPSC Offers:</h4>
@@ -634,7 +634,7 @@
 
     // Event Listeners
     document.addEventListener('DOMContentLoaded', function() {
-      log('🚀 Council page loaded, initializing...');
+      log('Council page loaded, initializing...');
       
       // Add click event listeners to all cards
       const cards = document.querySelectorAll('.council-card');
@@ -654,7 +654,7 @@
           
           e.preventDefault();
           e.stopPropagation();
-          log(`🎯 Council card clicked: ${council}`);
+          log(`Council card clicked: ${council}`);
           selectCouncil(council);
         });
         
@@ -675,15 +675,15 @@
       const form = document.getElementById('councilForm');
       if (form) {
         form.addEventListener('submit', function(e) {
-          log('📝 Council form submission attempted');
+          log('Council form submission attempted');
           
           if (!validateForm()) {
             e.preventDefault();
-            log('❌ Council form submission prevented due to validation failure');
+            log('Council form submission prevented due to validation failure');
             return false;
           }
           
-          log('✅ Council form validation passed, submitting...');
+          log('Council form validation passed, submitting...');
           return true;
         });
       }
@@ -706,12 +706,12 @@
         debugFormState();
       }, 500);
       
-      log('✅ Council page initialization complete');
+      log('Council page initialization complete');
     });
 
     // Global functions for manual testing
     window.testSelectCouncil = function(council) {
-      log(`🧪 Manual test: selecting ${council}`);
+      log(`Manual test: selecting ${council}`);
       selectCouncil(council);
     };
 
@@ -722,7 +722,7 @@
     window.testCouncilSubmit = function() {
       const form = document.getElementById('councilForm');
       if (form) {
-        log('🧪 Manual test: submitting council form');
+        log('Manual test: submitting council form');
         form.dispatchEvent(new Event('submit'));
       }
     };
@@ -731,12 +731,12 @@
     setTimeout(() => {
       if (debugMode) {
         console.log(`
-🔧 Council Debug Console Commands:
-• testSelectCouncil('cgmp') - Test selecting CGMP
-• testSelectCouncil('cpsc') - Test selecting CPSC  
-• testSelectCouncil('cmtp') - Test selecting CMTP
-• testCouncilFormState() - Check current form state
-• testCouncilSubmit() - Test form submission
+         Council Debug Console Commands:
+        • testSelectCouncil('cgmp') - Test selecting CGMP
+        • testSelectCouncil('cpsc') - Test selecting CPSC  
+        • testSelectCouncil('cmtp') - Test selecting CMTP
+        • testCouncilFormState() - Check current form state
+        • testCouncilSubmit() - Test form submission
         `);
       }
     }, 1000);

@@ -102,7 +102,7 @@
           console.log('  Category {{ forloop.counter }}: ID={{ category.id }}, Name={{ category.name }}, Level={{ category.level }}');
           {% endfor %}
           {% else %}
-          console.log('❌ No categories_list found in template');
+          console.log('No categories_list found in template');
           {% endif %}
           
           console.log('=== END TEMPLATE DEBUG ===');
@@ -353,13 +353,13 @@
         });
         
         if (!cardElement || !radioElement || !cardInner) {
-          console.log('❌ Missing required elements!');
+          console.log('Missing required elements!');
           return false;
         }
         
         radioElement.checked = true;
         selectedCategory = category;
-        console.log(`✅ Radio button ${category} set to checked: ${radioElement.checked}, value: ${radioElement.value}`);
+        console.log(`Radio button ${category} set to checked: ${radioElement.checked}, value: ${radioElement.value}`);
         
         // Apply visual styles
         cardInner.classList.remove('border-gray-200');
@@ -381,7 +381,7 @@
           checkDot.classList.add('opacity-100');
         }
         
-        console.log(`✅ Applied styling for ${category}`);
+        console.log(`Applied styling for ${category}`);
         
         // Trigger change event
         radioElement.dispatchEvent(new Event('change', { bubbles: true }));
@@ -389,7 +389,7 @@
         return true;
         
       } catch (error) {
-        console.log('❌ Error in selectCategory:', error);
+        console.log('Error in selectCategory:', error);
         return false;
       }
     }
@@ -449,17 +449,17 @@
       });
       
       if (!checkedRadio) {
-        console.log('❌ Validation failed: No radio button checked');
+        console.log('Validation failed: No radio button checked');
         alert('Please select a designation category to continue.');
         return false;
       }
       
-      console.log(`✅ Validation passed: ${checkedRadio.value} selected`);
+      console.log(`Validation passed: ${checkedRadio.value} selected`);
       return true;
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-      console.log('🚀 Category page loaded, initializing...');
+      console.log('Category page loaded, initializing...');
       
       // Debug: Check if categories are available in template
       const allRadios = document.querySelectorAll('input[name="designation_category"]');
@@ -489,14 +489,14 @@
         card.addEventListener('click', function(e) {
           e.preventDefault();
           e.stopPropagation();
-          console.log(`🎯 Category card clicked: ${category} (${value})`);
+          console.log(`Category card clicked: ${category} (${value})`);
           selectCategory(category);
         });
         
         const radio = card.querySelector('input[type="radio"]');
         if (radio) {
           radio.addEventListener('change', function() {
-            console.log(`📻 Radio change event: ${this.value}, checked: ${this.checked}`);
+            console.log(`Radio change event: ${this.value}, checked: ${this.checked}`);
             if (this.checked) {
               selectedCategory = category;
             }
@@ -507,9 +507,9 @@
       // Form submission handler
       const form = document.getElementById('categoryForm');
       if (form) {
-        console.log('✅ Form found, adding submit handler');
+        console.log('Form found, adding submit handler');
         form.addEventListener('submit', function(e) {
-          console.log('📝 Form submission attempted');
+          console.log('Form submission attempted');
           
           // Log form data before validation
           const formData = new FormData(form);
@@ -519,16 +519,16 @@
           }
           
           if (!validateForm()) {
-            console.log('❌ Form submission prevented due to validation failure');
+            console.log('Form submission prevented due to validation failure');
             e.preventDefault();
             return false;
           }
           
-          console.log('✅ Form validation passed, submitting...');
+          console.log('Form validation passed, submitting...');
           return true;
         });
       } else {
-        console.log('❌ Form not found!');
+        console.log('Form not found!');
       }
       
       // Debug: Log current page state

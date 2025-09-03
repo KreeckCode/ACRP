@@ -619,25 +619,61 @@
                             {% endif %}
                         </div>
 
+                        <div class="field-row three-cols">
                         {% if form.disability %}
-                        <div class="field-row">
-                            <div class="form-group field-full">
-                                <label for="{{ form.disability.id_for_label }}">
-                                    {{ form.disability.label }}
-                                    {% if form.disability.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.disability }}
-                                {% if form.disability.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.disability.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                                {% if form.disability.help_text %}
-                                    <div class="form-text">{{ form.disability.help_text }}</div>
-                                {% endif %}
-                            </div>
+                        <div class="form-group">
+                            <label for="{{ form.disability.id_for_label }}">
+                                {{ form.disability.label }}
+                                {% if form.disability.field.required %}<span class="required">*</span>{% endif %}
+                            </label>
+                            {{ form.disability }}
+                            {% if form.disability.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.disability.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            {% if form.disability.help_text %}
+                                <div class="form-text">{{ form.disability.help_text }}</div>
+                            {% endif %}
                         </div>
                         {% endif %}
+
+                        {% if form.nationality %}
+                        <div class="form-group">
+                            <label for="{{ form.nationality.id_for_label }}">
+                                {{ form.nationality.label }}
+                                {% if form.nationality.field.required %}<span class="required">*</span>{% endif %}
+                            </label>
+                            {{ form.nationality }}
+                            {% if form.nationality.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.nationality.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            {% if form.nationality.help_text %}
+                                <div class="form-text">{{ form.nationality.help_text }}</div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        {% if form.residency %}
+                        <div class="form-group">
+                            <label for="{{ form.residency.id_for_label }}">
+                                {{ form.residency.label }}
+                                {% if form.residency.field.required %}<span class="required">*</span>{% endif %}
+                            </label>
+                            {{ form.residency }}
+                            {% if form.residency.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.residency.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            {% if form.residency.help_text %}
+                                <div class="form-text">{{ form.residency.help_text }}</div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
                     </div>
                 </div>
 

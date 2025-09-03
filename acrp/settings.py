@@ -337,7 +337,7 @@ ANYMAIL = {
 # Password reset settings
 PASSWORD_RESET_TIMEOUT = 86400  # 24 hours
 
-# Email debugging - Add this logger
+# Email debugging - Add this logger 
 EMAIL_LOGGER = logging.getLogger('django.core.mail')
 EMAIL_LOGGER.setLevel(logging.DEBUG)
 

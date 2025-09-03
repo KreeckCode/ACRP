@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your ACRP Digital Card - {{ card_number }}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+        .email-container {
+            background-color: #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 300;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 16px;
+        }
+        .content {
+            padding: 30px 25px;
+        }
+        .card-summary {
+            background-color: #f8f9fa;
+            border-left: 4px solid #1e40af;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .card-summary h3 {
+            margin: 0 0 15px 0;
+            color: #495057;
+            font-size: 18px;
+        }
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .summary-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        .summary-label {
+            font-weight: 600;
+            color: #6c757d;
+        }
+        .summary-value {
+            color: #495057;
+            text-align: right;
+            max-width: 60%;
+        }
+        .attachment-notice {
+            background: linear-gradient(135deg, #e7f3ff 0%, #f0f9ff 100%);
+            border: 2px solid #3b82f6;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            margin: 30px 0;
+        }
+        .attachment-notice h3 {
+            margin: 0 0 15px 0;
+            color: #1e40af;
+            font-size: 20px;
+        }
+        .attachment-notice p {
+            margin: 10px 0;
+            color: #1e40af;
+            font-size: 16px;
+        }
+        .pdf-icon {
+            background-color: #dc2626;
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px auto;
+        }
+        .instructions {
+            background-color: #e8f5e8;
+            border: 1px solid #c3e6cb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        .instructions h3 {
+            margin: 0 0 15px 0;
+            color: #155724;
+            font-size: 18px;
+        }
+        .instructions ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .instructions li {
+            margin-bottom: 8px;
+            color: #155724;
+        }
+        .security-info {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        .security-info h3 {
+            margin: 0 0 15px 0;
+            color: #856404;
+            font-size: 18px;
+        }
+        .security-info ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .security-info li {
+            margin-bottom: 8px;
+            color: #856404;
+        }
+        .contact-info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        .contact-info h3 {
+            margin: 0 0 15px 0;
+            color: #0c5460;
+            font-size: 18px;
+        }
+        .contact-info p {
+            margin: 5px 0;
+            color: #0c5460;
+        }
+        .footer {
+            background-color: #343a40;
+            color: #adb5bd;
+            padding: 25px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .footer p {
+            margin: 5px 0;
+        }
+        .footer a {
+            color: #3b82f6;
+            text-decoration: none;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        .status-badge {
+            display: inline-block;
+            background-color: #28a745;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .council-info {
+            background-color: #e7f3ff;
+            border: 1px solid #b8daff;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .council-info h4 {
+            margin: 0 0 10px 0;
+            color: #004085;
+            font-size: 16px;
+        }
+        .council-info p {
+            margin: 0;
+            color: #004085;
+            font-weight: 500;
+        }
+        @media (max-width: 600px) {
+            .email-container {
+                margin: 10px;
+                border-radius: 5px;
+            }
+            .header, .content {
+                padding: 20px 15px;
+            }
+            .summary-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .summary-value {
+                text-align: left;
+                max-width: 100%;
+                margin-top: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header Section -->
+        <div class="header">
+            <h1>Your ACRP Digital Card</h1>
+            <p>Professional affiliation card attached</p>
+        </div>
+
+        <!-- Main Content -->
+        <div class="content">
+            <p>Dear {{ recipient_name }},</p>
+            
+            <p>Your ACRP digital affiliation card has been generated and is attached to this email as a PDF document. This card serves as official verification of your affiliation with the Association of Christian Religious Practitioners.</p>
+
+            <!-- Attachment Notice -->
+            <div class="attachment-notice">
+                <div class="pdf-icon">PDF</div>
+                <h3>Your Digital Card is Attached</h3>
+                <p>Professional digital affiliation card in PDF format</p>
+                <p style="font-size: 14px; color: #6366f1;">Look for the PDF attachment in this email</p>
+            </div>
+
+            <!-- Council Information -->
+            <div class="council-info">
+                <h4>Your Council Affiliation</h4>
+                <p>{{ council_name }}</p>
+            </div>
+
+            <!-- Card Summary -->
+            <div class="card-summary">
+                <h3>Card Information</h3>
+                <div class="summary-item">
+                    <span class="summary-label">Card Number:</span>
+                    <span class="summary-value"><strong>{{ card_number }}</strong></span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Council:</span>
+                    <span class="summary-value">{{ council_name }}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Affiliation Type:</span>
+                    <span class="summary-value">{{ affiliation_type }}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Card Status:</span>
+                    <span class="summary-value"><span class="status-badge">{{ card.get_status_display }}</span></span>
+                </div>
+                {% if card.date_issued %}
+                <div class="summary-item">
+                    <span class="summary-label">Date Issued:</span>
+                    <span class="summary-value">{{ card.date_issued|date:"F d, Y" }}</span>
+                </div>
+                {% endif %}
+                {% if card.date_expires %}
+                <div class="summary-item">
+                    <span class="summary-label">Expires:</span>
+                    <span class="summary-value">{{ card.date_expires|date:"F d, Y" }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Usage Instructions -->
+            <div class="instructions">
+                <h3>How to Use Your Digital Card</h3>
+                <ol>
+                    <li><strong>Save the Attachment:</strong> Download and save the PDF attachment from this email</li>
+                    <li><strong>Store Securely:</strong> Keep the PDF file in a secure location on your device</li>
+                    <li><strong>Present When Required:</strong> Show your digital card for verification when needed</li>
+                    <li><strong>QR Code Verification:</strong> Others can scan the QR code on your card to verify its authenticity</li>
+                    <li><strong>Digital or Print:</strong> You can use the card digitally or print it for physical presentation</li>
+                </ol>
+            </div>
+
+            <!-- Security Information -->
+            <div class="security-info">
+                <h3>Important Security Information</h3>
+                <ul>
+                    <li><strong>Official Document:</strong> This card is your official ACRP affiliation verification</li>
+                    <li><strong>Unique Identifiers:</strong> Your card contains unique QR codes and verification tokens</li>
+                    <li><strong>Keep Secure:</strong> Do not share or distribute copies of your card unnecessarily</li>
+                    <li><strong>Report Issues:</strong> Contact us immediately if you suspect unauthorized use</li>
+                    <li><strong>Replacement:</strong> If lost or compromised, request a new card through our system</li>
+                </ul>
+            </div>
+
+            <p><strong>Professional Standing:</strong> Your digital card confirms your professional standing with ACRP and can be presented to verify your affiliation, training, and professional commitment to excellence in Christian ministry.</p>
+
+            <p>Please keep this card accessible on your device and present it when requested for verification of your professional standing with the Association of Christian Religious Practitioners.</p>
+
+            <!-- Contact Information -->
+            <div class="contact-info">
+                <h3>Need Assistance?</h3>
+                <p>If you have any questions about your digital card or need technical assistance, please contact us:</p>
+                <p><strong>Email:</strong> ams@acrp.org.za</p>
+                <p><strong>Phone:</strong> (+27) 065 214 1536</p>
+                <p><strong>Business Hours:</strong> Monday - Friday, 9:00 AM - 5:00 PM SAST</p>
+            </div>
+
+            <p>Thank you for your continued commitment to professional excellence in Christian ministry. We are honored to have you as part of the ACRP community.</p>
+            
+            <p>Blessings,<br>
+            <strong>The ACRP Digital Cards Team</strong><br>
+            Association of Christian Religious Practitioners</p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>ACRP Digital Card System</strong> - Association of Christian Religious Practitioners</p>
+            <p>&copy; {{ current_year }} ACRP. All rights reserved.</p>
+            <p>This is an automated message. Please do not reply directly to this email.</p>
+            <p>For support, please contact: <a href="mailto:ams@acrp.org.za">ams@acrp.org.za</a></p>
+            <p style="font-size: 12px; color: #6c757d; margin-top: 15px;">
+                This email was sent to {{ delivery.recipient_email }} regarding card {{ card.card_number }}
+            </p>
+        </div>
+    </div>
+</body>
+</html>

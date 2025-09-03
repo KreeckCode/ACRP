@@ -1,3 +1,7 @@
+# ============================================================================
+# FIXED CARD DELIVERY SYSTEM
+# PUT THIS IN: affiliationcard/card_delivery.py (REPLACE EXISTING CONTENT)
+# ============================================================================
 
 import base64
 import secrets
@@ -7,8 +11,7 @@ from django.conf import settings
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
-from django.core.mail import EmailMessage
-from mailjet_rest import Client
+from django.core.mail import EmailMessage, EmailMultiAlternatives
 import logging
 
 # Image processing imports
@@ -24,97 +27,80 @@ from reportlab.lib import colors
 logger = logging.getLogger(__name__)
 
 
-def get_mailjet_client():
-    """
-    Initialize and return Mailjet client.
-    
-    Requires MAILJET_API_KEY and MAILJET_SECRET_KEY in settings.
-    """
-    try:
-        api_key = getattr(settings, 'MAILJET_API_KEY', None)
-        secret_key = getattr(settings, 'MAILJET_SECRET_KEY', None)
-        
-        if not api_key or not secret_key:
-            raise Exception("Mailjet API credentials not configured in settings")
-        
-        return Client(auth=(api_key, secret_key), version='v3.1')
-    except Exception as e:
-        logger.error(f"Failed to initialize Mailjet client: {e}")
-        raise
-
-
 def create_card_delivery(card, delivery_method, recipient_email, recipient_name, **kwargs):
     """
-    Create and process card delivery with enhanced error handling.
+    Create and process card delivery with enhanced error handling and debugging.
+    
+    Args:
+        card: AffiliationCard instance
+        delivery_method: String - 'email_pdf', 'email_link', or 'direct_download'
+        recipient_email: String - recipient's email address
+        recipient_name: String - recipient's full name
+        **kwargs: Additional parameters
+    
+    Returns:
+        CardDelivery instance
     """
     delivery = None
     try:
         # Import here to avoid circular imports
         from .models import CardDelivery
         
-        logger.info(f"DEBUG: Creating delivery record for {card.card_number}")
-        logger.info(f"DEBUG: Delivery data - method: {delivery_method}, email: {recipient_email}, format: {kwargs.get('file_format', 'pdf')}")
+        logger.info(f"=== STARTING CARD DELIVERY CREATION ===")
+        logger.info(f"Card: {card.card_number}")
+        logger.info(f"Method: {delivery_method}")
+        logger.info(f"Recipient: {recipient_email}")
+        logger.info(f"Format: {kwargs.get('file_format', 'pdf')}")
         
-        # Create delivery record with initial status
-        try:
-            delivery = CardDelivery.objects.create(
-                card=card,
-                delivery_type=delivery_method,
-                recipient_email=recipient_email,
-                recipient_name=recipient_name,
-                initiated_by=kwargs.get('initiated_by'),
-                file_format=kwargs.get('file_format', 'pdf'),
-                status='processing',  # Make sure this is 'processing'
-                email_subject=kwargs.get('email_subject', ''),
-                email_message=kwargs.get('email_message', ''),
-                max_downloads=kwargs.get('max_downloads', 5),
-            )
-            logger.info(f"DEBUG: CardDelivery.objects.create() completed successfully")
-        except Exception as create_error:
-            logger.error(f"DEBUG: Failed to create CardDelivery object: {create_error}", exc_info=True)
-            raise
+        # Create delivery record
+        delivery = CardDelivery.objects.create(
+            card=card,
+            delivery_type=delivery_method,
+            recipient_email=recipient_email,
+            recipient_name=recipient_name,
+            initiated_by=kwargs.get('initiated_by'),
+            file_format=kwargs.get('file_format', 'pdf'),
+            status='processing',  # Start with processing
+            email_subject=kwargs.get('email_subject', ''),
+            email_message=kwargs.get('email_message', ''),
+            max_downloads=kwargs.get('max_downloads', 5),
+        )
         
-        logger.info(f"DEBUG: Created delivery record {delivery.id} with status: {delivery.status}")
+        logger.info(f"✓ Created delivery record {delivery.id} with status: {delivery.status}")
         
-        # Refresh from database to ensure we have the latest status
-        delivery.refresh_from_db()
-        logger.info(f"DEBUG: After refresh_from_db, delivery status: {delivery.status}")
-        
-        # Process delivery based on method
-        logger.info(f"DEBUG: About to process delivery method: {delivery_method}")
-        
+        # Process delivery immediately
         try:
             if delivery_method == 'email_pdf':
-                logger.info(f"DEBUG: Calling process_email_pdf_delivery")
+                logger.info("→ Processing email PDF delivery")
                 process_email_pdf_delivery(delivery, kwargs)
-                logger.info(f"DEBUG: process_email_pdf_delivery completed")
+                
             elif delivery_method == 'email_link':
-                logger.info(f"DEBUG: Calling process_email_link_delivery")
+                logger.info("→ Processing email link delivery")
                 process_email_link_delivery(delivery, kwargs)
-                logger.info(f"DEBUG: process_email_link_delivery completed")
+                
             elif delivery_method == 'direct_download':
-                logger.info(f"DEBUG: Calling process_direct_download_delivery")
-                result = process_direct_download_delivery(delivery, kwargs)
-                logger.info(f"DEBUG: process_direct_download_delivery completed")
-                return result
+                logger.info("→ Processing direct download")
+                return process_direct_download_delivery(delivery, kwargs)
+                
             else:
                 raise ValueError(f"Unsupported delivery method: {delivery_method}")
+                
         except Exception as processing_error:
-            logger.error(f"DEBUG: Processing failed with error: {processing_error}", exc_info=True)
+            logger.error(f"✗ Processing failed: {processing_error}")
             delivery.status = 'failed'
             delivery.failure_reason = str(processing_error)
             delivery.save()
-            logger.info(f"DEBUG: Set delivery status to failed: {delivery.status}")
             raise
         
-        # Refresh delivery from database to get updated status
+        # Refresh and return
         delivery.refresh_from_db()
-        logger.info(f"DEBUG: Final delivery status: {delivery.status}")
+        logger.info(f"=== DELIVERY CREATION COMPLETE ===")
+        logger.info(f"Final status: {delivery.status}")
         
         return delivery
         
     except Exception as e:
-        logger.error(f"DEBUG: create_card_delivery failed: {e}", exc_info=True)
+        logger.error(f"✗ DELIVERY CREATION FAILED: {e}")
         if delivery:
             delivery.status = 'failed'
             delivery.failure_reason = str(e)
@@ -122,273 +108,401 @@ def create_card_delivery(card, delivery_method, recipient_email, recipient_name,
         raise
 
 
-
-
-
-    
-
-
 def process_email_pdf_delivery(delivery, kwargs):
     """
-    Process email delivery with PDF attachment using Mailjet.
-    """
-    logger.info(f"DEBUG: process_email_pdf_delivery started for delivery {delivery.id}")
-    
-    try:
-        card = delivery.card
-        logger.info(f"DEBUG: Processing PDF email for card {card.card_number}")
-        
-        # Generate PDF file
-        logger.info(f"DEBUG: About to generate card file")
-        file_content, filename, content_type = generate_card_file(card, 'pdf')
-        logger.info(f"DEBUG: Generated card file: {filename}, size: {len(file_content)}")
-        
-        # Set email backend to console for testing
-        logger.info(f"DEBUG: Using console email backend for testing")
-        
-        # For now, let's just simulate successful email sending
-        # Comment out the actual email sending and just mark as completed
-        
-        delivery.status = 'completed'
-        delivery.completed_at = timezone.now()
-        delivery.delivery_notes = f"PDF attachment would be sent to {delivery.recipient_email} (console mode)"
-        delivery.save()
-        
-        logger.info(f"DEBUG: Set delivery status to completed")
-        
-        # Print the "email" to console
-        print(f"""
-        === EMAIL WOULD BE SENT ===
-        To: {delivery.recipient_email}
-        Subject: Your ACRP Digital Card - {card.card_number}
-        Attachment: {filename} ({len(file_content)} bytes)
-        ===========================
-        """)
-        
-    except Exception as e:
-        logger.error(f"DEBUG: process_email_pdf_delivery failed: {e}", exc_info=True)
-        delivery.status = 'failed'
-        delivery.failure_reason = str(e)
-        delivery.save()
-        raise
-
-
-
-
-
-
-def process_email_link_delivery(delivery, kwargs):
-    """
-    Process email delivery with secure download link.
-    
-    This function sends an email containing a secure download link
-    that allows the recipient to download their card.
-    
-    Args:
-        delivery: CardDelivery instance
-        kwargs: Additional parameters from delivery creation
+    Process email delivery with PDF attachment - USING STYLED PDF GENERATOR
     """
     try:
         card = delivery.card
-        request = kwargs.get('request')
+        logger.info(f"Starting PDF email delivery for {card.card_number}")
+        logger.info(f"Delivery ID: {delivery.id}, Status: {delivery.status}")
         
-        logger.info(f"Processing link email delivery for card {card.card_number}")
+        # Update status to processing
+        delivery.status = 'processing'
+        delivery.save()
+        logger.info("Updated status to processing")
         
-        # Generate secure download token (this is handled in model save method too, but ensure it's set)
-        if not delivery.download_token:
-            delivery.download_token = secrets.token_urlsafe(32)
-            delivery.download_expires_at = timezone.now() + timedelta(days=30)
-            delivery.max_downloads = kwargs.get('max_downloads', 5)
-            delivery.save()
+        # Generate STYLED PDF file using the views function
+        logger.info("Generating STYLED PDF using views.generate_card_pdf...")
+        try:
+            # Import and use the styled PDF generator from views
+            from .views import generate_card_pdf
+            file_content, filename, content_type = generate_card_pdf(card)
+            logger.info(f"STYLED PDF generated: {filename} ({len(file_content)} bytes)")
+        except Exception as pdf_error:
+            logger.warning(f"Styled PDF generation failed: {pdf_error}, falling back to simple PDF")
+            # Fallback to simple PDF if styled version fails
+            file_content, filename, content_type = generate_card_file_simple(card, 'pdf')
+            logger.info(f"Simple PDF fallback generated: {filename} ({len(file_content)} bytes)")
         
-        # Build download URL
-        download_path = reverse('affiliationcard:download_card', args=[delivery.download_token])
-        if request:
-            download_url = request.build_absolute_uri(download_path)
-        else:
-            # Fallback to settings-based URL construction
-            base_url = getattr(settings, 'BASE_URL', 'https://your-domain.com')
-            download_url = f"{base_url.rstrip('/')}{download_path}"
-        
-        # Prepare email context
+        # Prepare email context for template
+        logger.info("Preparing email context for professional template...")
         context = {
             'card': card,
             'delivery': delivery,
             'recipient_name': delivery.recipient_name,
             'card_number': card.card_number,
-            'download_url': download_url,
-            'expiry_date': delivery.download_expires_at,
-            'max_downloads': delivery.max_downloads,
             'council_name': getattr(card, 'council_name', 'N/A'),
             'affiliation_type': getattr(card, 'affiliation_type', 'N/A').title() if hasattr(card, 'affiliation_type') else 'N/A',
             'current_year': timezone.now().year,
             'system_name': 'ACRP AMS',
         }
         
-        # Try to use templates, fallback to simple message if templates don't exist
+        # Use professional email template (with fallback)
+        subject = kwargs.get('email_subject', f'Your ACRP Digital Card - {card.card_number}')
+        
         try:
-            html_content = render_to_string('email_templates/affiliationcard/card_link_delivery.html', context)
-            text_content = render_to_string('email_templates/affiliationcard/card_link_delivery.txt', context)
-        except:
-            # Fallback to simple email content
-            html_content = f"""
-            <h2>Download Your ACRP Digital Card - {card.card_number}</h2>
-            <p>Dear {delivery.recipient_name},</p>
-            <p>Your ACRP digital affiliation card is ready for download.</p>
-            <p><a href="{download_url}" style="background-color: #1e40af; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Download Your Card</a></p>
-            <p><strong>Important:</strong> This download link will expire on {delivery.download_expires_at.strftime('%B %d, %Y')} and can be used up to {delivery.max_downloads} times.</p>
-            <p><strong>Card Details:</strong></p>
-            <ul>
-                <li>Card Number: {card.card_number}</li>
-                <li>Council: {context['council_name']}</li>
-                <li>Affiliation Type: {context['affiliation_type']}</li>
-            </ul>
-            <p>If the button doesn't work, copy this link: {download_url}</p>
-            <p>Best regards,<br>ACRP Digital Cards Team</p>
-            """
+            # Try to use the professional email template
+            logger.info("Attempting to use card_pdf_delivery.html template...")
+            html_content = render_to_string('email_templates/affiliationcard/card_pdf_delivery.html', context)
+            logger.info("Successfully used professional email template")
             
-            text_content = f"""
-Download Your ACRP Digital Card - {card.card_number}
+            # Also try to get text version
+            try:
+                text_content = render_to_string('email_templates/affiliationcard/card_pdf_delivery.txt', context)
+                logger.info("Successfully used professional text template")
+            except:
+                # Fallback text content if text template doesn't exist
+                text_content = f"""Dear {delivery.recipient_name},
 
-Dear {delivery.recipient_name},
-
-Your ACRP digital affiliation card is ready for download.
-
-Download Link: {download_url}
-
-Important: This download link will expire on {delivery.download_expires_at.strftime('%B %d, %Y')} and can be used up to {delivery.max_downloads} times.
+Your ACRP digital affiliation card is attached to this email as a PDF document.
 
 Card Details:
 - Card Number: {card.card_number}
 - Council: {context['council_name']}
 - Affiliation Type: {context['affiliation_type']}
+- Status: {card.get_status_display()}
+
+Please save this card to your device and present it when required for verification of your professional standing.
+
+Thank you for your continued commitment to excellence in ministry.
 
 Best regards,
-ACRP Digital Cards Team
+ACRP Administration Team"""
+                logger.info("Used fallback text content")
+                
+        except Exception as template_error:
+            # Fallback to simple email content if template fails
+            logger.warning(f"Professional email template failed: {template_error}, using simple content")
+            html_content = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>Your ACRP Digital Card</title>
+            </head>
+            <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <h1 style="color: #1e40af;">Your ACRP Digital Card</h1>
+                    
+                    <p>Dear {delivery.recipient_name},</p>
+                    
+                    <p>Your ACRP digital affiliation card is attached to this email as a PDF document.</p>
+                    
+                    <div style="background-color: #f8f9fa; padding: 15px; border-left: 4px solid #1e40af; margin: 20px 0;">
+                        <h3 style="margin: 0 0 10px 0;">Card Details</h3>
+                        <p style="margin: 0;"><strong>Card Number:</strong> {card.card_number}</p>
+                        <p style="margin: 0;"><strong>Council:</strong> {context['council_name']}</p>
+                        <p style="margin: 0;"><strong>Affiliation Type:</strong> {context['affiliation_type']}</p>
+                        <p style="margin: 0;"><strong>Status:</strong> {card.get_status_display()}</p>
+                    </div>
+                    
+                    <p>Please save this card to your device and present it when required for verification.</p>
+                    
+                    <p>Best regards,<br>The ACRP Team</p>
+                </div>
+            </body>
+            </html>
             """
+            
+            text_content = f"""Dear {delivery.recipient_name},
+
+Your ACRP digital affiliation card is attached as a PDF.
+
+Card Number: {card.card_number}
+Status: {card.get_status_display()}
+
+Best regards,
+The ACRP Team"""
         
-        # Send email (try Mailjet first, fallback to Django email)
-        try:
-            # Try Mailjet first
-            mailjet_client = get_mailjet_client()
-            
-            email_data = {
-                'Messages': [{
-                    'From': {
-                        'Email': getattr(settings, 'DEFAULT_FROM_EMAIL', 'dave@kreeck.com'),
-                        'Name': 'ACRP Digital Cards'
-                    },
-                    'To': [{
-                        'Email': delivery.recipient_email,
-                        'Name': delivery.recipient_name
-                    }],
-                    'Subject': kwargs.get('email_subject', f'Download Your ACRP Digital Card - {card.card_number}'),
-                    'TextPart': text_content,
-                    'HTMLPart': html_content
-                }]
-            }
-            
-            result = mailjet_client.send.create(data=email_data)
-            
-            if result.status_code == 200:
-                delivery.status = 'completed'
-                delivery.completed_at = timezone.now()
-                delivery.delivery_notes = f"Download link sent successfully via Mailjet to {delivery.recipient_email}"
-                delivery.mailjet_message_id = result.json()['Messages'][0]['MessageID']
-                delivery.save()
-                
-                logger.info(f"Link email delivery completed via Mailjet for card {card.card_number}")
-            else:
-                raise Exception(f"Mailjet API error: {result.status_code}")
-                
-        except Exception as mailjet_error:
-            # Fallback to Django email
-            logger.warning(f"Mailjet delivery failed, falling back to Django email: {mailjet_error}")
-            
-            email = EmailMessage(
-                subject=kwargs.get('email_subject', f'Download Your ACRP Digital Card - {card.card_number}'),
-                body=text_content,
-                from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'dave@kreeck.com'),
-                to=[delivery.recipient_email]
-            )
-            
-            email.attach_alternative(html_content, "text/html")
-            email.send()
-            
-            delivery.status = 'completed'
-            delivery.completed_at = timezone.now()
-            delivery.delivery_notes = f"Download link sent successfully via Django email to {delivery.recipient_email}"
-            delivery.save()
-            
-            logger.info(f"Link email delivery completed via Django email for card {card.card_number}")
+        logger.info("Email content prepared")
         
-    except Exception as e:
-        delivery.status = 'failed'
-        delivery.failure_reason = str(e)
-        delivery.error_message = str(e)
+        # Create and send email using Django's EmailMultiAlternatives
+        logger.info("Creating email message...")
+        
+        from django.core.mail import EmailMultiAlternatives
+        
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body=text_content,
+            from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'dave@kreeck.com'),
+            to=[delivery.recipient_email],
+            reply_to=[getattr(settings, 'DEFAULT_FROM_EMAIL', 'ams@acrp.org.za')]
+        )
+        
+        # Add HTML version
+        email.attach_alternative(html_content, "text/html")
+        
+        # Attach the STYLED PDF
+        email.attach(filename, file_content, content_type)
+        
+        logger.info(f"Sending email to {delivery.recipient_email}...")
+        
+        # Send the email
+        email.send()
+        
+        logger.info("Email sent successfully!")
+        
+        # Update delivery status to completed
+        delivery.status = 'completed'
+        delivery.completed_at = timezone.now()
+        delivery.delivery_notes = f"Styled PDF sent successfully to {delivery.recipient_email}"
         delivery.save()
         
-        logger.error(f"Link email delivery failed for card {card.card_number}: {e}")
+        logger.info(f"DELIVERY COMPLETED: Status = {delivery.status}")
+        
+    except Exception as e:
+        logger.error(f"PDF email delivery failed: {e}")
+        delivery.status = 'failed'
+        delivery.failure_reason = str(e)
+        delivery.save()
+        raise
+
+
+
+def process_email_link_delivery(delivery, kwargs):
+    """
+    Process email delivery with secure download link - SIMPLIFIED VERSION
+    """
+    try:
+        card = delivery.card
+        request = kwargs.get('request')
+        
+        logger.info(f"🔗 Starting link email process for {card.card_number}")
+        
+        # Generate secure download token
+        if not delivery.download_token:
+            delivery.download_token = secrets.token_urlsafe(32)
+            delivery.download_expires_at = timezone.now() + timedelta(days=30)
+            delivery.max_downloads = kwargs.get('max_downloads', 5)
+            delivery.save()
+            
+        logger.info(f"🔑 Generated download token: {delivery.download_token[:10]}...")
+        
+        # Build download URL
+        download_path = reverse('affiliationcard:download_card', args=[delivery.download_token])
+        if request:
+            download_url = request.build_absolute_uri(download_path)
+        else:
+            download_url = f"http://localhost:8000{download_path}"
+            
+        logger.info(f"🔗 Download URL: {download_url}")
+        
+        # Simple email content
+        subject = kwargs.get('email_subject', f'Download Your ACRP Digital Card - {card.card_number}')
+        
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <body style="font-family: Arial, sans-serif;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h1>Download Your ACRP Digital Card</h1>
+                <p>Dear {delivery.recipient_name},</p>
+                <p>Your ACRP digital card is ready for download.</p>
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="{download_url}" style="background-color: #1e40af; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">Download Your Card</a>
+                </div>
+                <p><strong>Card Number:</strong> {card.card_number}</p>
+                <p><strong>Expires:</strong> {delivery.download_expires_at.strftime('%B %d, %Y')}</p>
+                <p><strong>Max Downloads:</strong> {delivery.max_downloads}</p>
+                <p>Best regards,<br>The ACRP Team</p>
+            </div>
+        </body>
+        </html>
+        """
+        
+        # Send email
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body=f"Download your card at: {download_url}",
+            from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'dave@kreeck.com'),
+            to=[delivery.recipient_email]
+        )
+        email.attach_alternative(html_content, "text/html")
+        email.send()
+        
+        logger.info("✓ Link email sent successfully!")
+        
+        # Update delivery status
+        delivery.status = 'completed'
+        delivery.completed_at = timezone.now()
+        delivery.delivery_notes = f"Download link sent to {delivery.recipient_email}"
+        delivery.save()
+        
+        logger.info(f"✓ Link email delivery completed for card {card.card_number}")
+        
+    except Exception as e:
+        logger.error(f"✗ Link email delivery failed: {e}")
+        delivery.status = 'failed'
+        delivery.failure_reason = str(e)
+        delivery.save()
         raise
 
 
 def process_direct_download_delivery(delivery, kwargs):
     """
-    Process direct download generation with proper error handling.
+    Process direct download generation - SIMPLIFIED VERSION
     """
     try:
         card = delivery.card
+        logger.info(f"⬇️ Processing direct download for {card.card_number}")
         
-        logger.info(f"Processing direct download for card {card.card_number}")
-        
-        # Generate download token for tracking
+        # Generate download token
         if not delivery.download_token:
             delivery.download_token = secrets.token_urlsafe(32)
             delivery.download_expires_at = timezone.now() + timedelta(hours=24)
             delivery.max_downloads = 1
             delivery.save()
         
-        # Update delivery status to ready
+        # Update status
         delivery.status = 'ready_for_download'
         delivery.completed_at = timezone.now()
         delivery.delivery_notes = f"Direct download prepared for {card.card_number}"
         delivery.save()
         
-        logger.info(f"Direct download delivery prepared for card {card.card_number}, token: {delivery.download_token}")
-        
+        logger.info(f"✓ Direct download prepared for card {card.card_number}")
         return delivery
         
     except Exception as e:
-        logger.error(f"Direct download delivery failed for card {card.card_number}: {e}", exc_info=True)
+        logger.error(f"✗ Direct download failed: {e}")
         delivery.status = 'failed'
         delivery.failure_reason = str(e)
         delivery.save()
         raise
 
 
-
-
-
-def generate_card_file(card, file_format):
-    """Generate card file in specified format with proper error handling."""
-    logger.info(f"DEBUG: generate_card_file called with format: {file_format}")
+def generate_card_file_simple(card, file_format):
+    """
+    Simple card file generation - SELF-CONTAINED VERSION
+    """
+    logger.info(f"🎨 Generating {file_format} file for card {card.card_number}")
     
     try:
         if file_format.lower() == 'pdf':
-            logger.info("DEBUG: Calling generate_card_pdf")
-            # Import the updated function from views
-            from .views import generate_card_pdf as views_generate_card_pdf
-            return views_generate_card_pdf(card)
-        elif file_format.lower() in ['png', 'PNG']:
-            logger.info("DEBUG: Calling generate_card_image for PNG")
-            from .views import generate_card_image as views_generate_card_image
-            return views_generate_card_image(card, 'PNG')
-        elif file_format.lower() in ['jpg', 'jpeg', 'JPG', 'JPEG']:
-            logger.info("DEBUG: Calling generate_card_image for JPEG")
-            from .views import generate_card_image as views_generate_card_image
-            return views_generate_card_image(card, 'JPEG')
+            return generate_simple_pdf(card)
+        elif file_format.lower() in ['png', 'jpg', 'jpeg']:
+            return generate_simple_image(card, file_format.upper())
         else:
-            raise ValueError(f"Unsupported file format: {file_format}")
+            raise ValueError(f"Unsupported format: {file_format}")
+            
     except Exception as e:
-        logger.error(f"ERROR in generate_card_file: {e}", exc_info=True)
-       
+        logger.error(f"✗ File generation failed: {e}")
+        raise
+
+
+def generate_simple_pdf(card):
+    """
+    Generate a simple PDF card - MINIMAL VERSION FOR TESTING
+    """
+    try:
+        from reportlab.pdfgen import canvas
+        from reportlab.lib.pagesizes import letter
+        from reportlab.lib.units import inch
+        from reportlab.lib import colors
+        
+        logger.info("🔨 Creating simple PDF...")
+        
+        # Create buffer
+        buffer = BytesIO()
+        
+        # Simple 8.5x11 page for testing
+        c = canvas.Canvas(buffer, pagesize=letter)
+        width, height = letter
+        
+        # Simple card design
+        c.setFont("Helvetica-Bold", 24)
+        c.drawString(100, height - 100, "ACRP Digital Card")
+        
+        c.setFont("Helvetica", 16)
+        c.drawString(100, height - 150, f"Card Number: {card.card_number}")
+        c.drawString(100, height - 180, f"Name: {card.get_display_name()}")
+        c.drawString(100, height - 210, f"Status: {card.get_status_display()}")
+        
+        # Add simple border
+        c.rect(50, height - 300, 400, 200, stroke=1, fill=0)
+        
+        # Save PDF
+        c.save()
+        
+        # Get content
+        pdf_content = buffer.getvalue()
+        buffer.close()
+        
+        filename = f"ACRP_Card_{card.card_number}.pdf"
+        content_type = 'application/pdf'
+        
+        logger.info(f"✓ Generated simple PDF: {filename} ({len(pdf_content)} bytes)")
+        return pdf_content, filename, content_type
+        
+    except Exception as e:
+        logger.error(f"✗ PDF generation failed: {e}")
+        raise
+
+
+def generate_simple_image(card, format_type):
+    """
+    Generate a simple image card - MINIMAL VERSION FOR TESTING
+    """
+    try:
+        from PIL import Image, ImageDraw, ImageFont
+        
+        logger.info(f"🖼️ Creating simple {format_type} image...")
+        
+        # Create simple image
+        width, height = 800, 500
+        img = Image.new('RGB', (width, height), color='white')
+        draw = ImageDraw.Draw(img)
+        
+        # Use default font
+        try:
+            font_large = ImageFont.truetype("arial.ttf", 36)
+            font_medium = ImageFont.truetype("arial.ttf", 24)
+            font_small = ImageFont.truetype("arial.ttf", 18)
+        except:
+            # Fallback to default
+            font_large = ImageFont.load_default()
+            font_medium = ImageFont.load_default()
+            font_small = ImageFont.load_default()
+        
+        # Simple design
+        draw.rectangle([(10, 10), (width-10, height-10)], outline='black', width=3)
+        draw.text((50, 50), "ACRP Digital Card", fill='black', font=font_large)
+        draw.text((50, 120), f"Card: {card.card_number}", fill='black', font=font_medium)
+        draw.text((50, 170), f"Name: {card.get_display_name()}", fill='black', font=font_medium)
+        draw.text((50, 220), f"Status: {card.get_status_display()}", fill='black', font=font_small)
+        
+        # Save to buffer
+        buffer = BytesIO()
+        img.save(buffer, format=format_type)
+        buffer.seek(0)
+        
+        # Prepare response
+        extension = format_type.lower()
+        if extension == 'jpeg':
+            extension = 'jpg'
+        
+        filename = f"ACRP_Card_{card.card_number}.{extension}"
+        content_type = f'image/{extension}'
+        
+        logger.info(f"✓ Generated simple {format_type}: {filename}")
+        return buffer.getvalue(), filename, content_type
+        
+    except Exception as e:
+        logger.error(f"✗ Image generation failed: {e}")
+        raise
+
+
+# For backward compatibility with views.py
+def generate_card_file(card, file_format):
+    """Wrapper function for backward compatibility"""
+    return generate_card_file_simple(card, file_format)

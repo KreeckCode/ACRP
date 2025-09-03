@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download Your ACRP Digital Card</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+        .email-container {
+            background-color: #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 300;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 16px;
+        }
+        .content {
+            padding: 30px 25px;
+        }
+        .card-summary {
+            background-color: #f8f9fa;
+            border-left: 4px solid #1e40af;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .card-summary h3 {
+            margin: 0 0 15px 0;
+            color: #495057;
+            font-size: 18px;
+        }
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .summary-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        .summary-label {
+            font-weight: 600;
+            color: #6c757d;
+        }
+        .summary-value {
+            color: #495057;
+            text-align: right;
+            max-width: 60%;
+        }
+        .download-section {
+            background: linear-gradient(135deg, #e7f3ff 0%, #f0f9ff 100%);
+            border: 2px solid #3b82f6;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            margin: 30px 0;
+        }
+        .download-button {
+            display: inline-block;
+            background: #3b82f6;
+            color: white;
+            text-decoration: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            margin: 20px 0;
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
+            transition: all 0.3s ease;
+        }
+        .download-button:hover {
+            background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(30, 64, 175, 0.4);
+        }
+        .security-info {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        .security-info h3 {
+            margin: 0 0 15px 0;
+            color: #856404;
+            font-size: 18px;
+        }
+        .security-info ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .security-info li {
+            margin-bottom: 8px;
+            color: #856404;
+        }
+        .instructions {
+            background-color: #e8f5e8;
+            border: 1px solid #c3e6cb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        .instructions h3 {
+            margin: 0 0 15px 0;
+            color: #155724;
+            font-size: 18px;
+        }
+        .instructions ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .instructions li {
+            margin-bottom: 8px;
+            color: #155724;
+        }
+        .contact-info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        .contact-info h3 {
+            margin: 0 0 15px 0;
+            color: #0c5460;
+            font-size: 18px;
+        }
+        .contact-info p {
+            margin: 5px 0;
+            color: #0c5460;
+        }
+        .footer {
+            background-color: #343a40;
+            color: #adb5bd;
+            padding: 25px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .footer p {
+            margin: 5px 0;
+        }
+        .footer a {
+            color: #3b82f6;
+            text-decoration: none;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        .alternative-link {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        .alternative-link h4 {
+            margin: 0 0 10px 0;
+            color: #495057;
+            font-size: 16px;
+        }
+        .alternative-link code {
+            background-color: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+            display: block;
+            margin-top: 8px;
+            padding: 8px;
+        }
+        @media (max-width: 600px) {
+            .email-container {
+                margin: 10px;
+                border-radius: 5px;
+            }
+            .header, .content {
+                padding: 20px 15px;
+            }
+            .summary-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .summary-value {
+                text-align: left;
+                max-width: 100%;
+                margin-top: 5px;
+            }
+            .download-button {
+                display: block;
+                margin: 20px 0;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header Section -->
+        <div class="header">
+            <h1>Your ACRP Digital Card is Ready!</h1>
+            <p>Secure download link for {{ recipient_name }}</p>
+        </div>
+
+        <!-- Main Content -->
+        <div class="content">
+            <p>Dear {{ recipient_name }},</p>
+            
+            <p>Your ACRP digital affiliation card has been generated and is ready for download. Click the secure download button below to access your card.</p>
+
+            <!-- Card Summary -->
+            <div class="card-summary">
+                <h3>Card Information</h3>
+                <div class="summary-item">
+                    <span class="summary-label">Card Number:</span>
+                    <span class="summary-value"><strong>{{ card_number }}</strong></span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Council:</span>
+                    <span class="summary-value">{{ council_name }}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Affiliation Type:</span>
+                    <span class="summary-value">{{ affiliation_type }}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Generated Date:</span>
+                    <span class="summary-value">{{ delivery.completed_at|date:"F d, Y" }}</span>
+                </div>
+            </div>
+
+            <!-- Download Section -->
+            <div class="download-section">
+                <h3 style="margin: 0 0 15px 0; color: #1e40af; font-size: 20px;">Download Your Card</h3>
+                <p style="margin: 0 0 20px 0; color: #1e40af;">Your secure digital affiliation card is ready for download</p>
+                
+                <a href="{{ download_url }}" class="download-button">
+                    Download Digital Card
+                </a>
+                
+                <p style="margin: 20px 0 0 0; color: #1e40af; font-size: 14px;">
+                    Click the button above to securely download your card
+                </p>
+            </div>
+
+            <!-- Security Information -->
+            <div class="security-info">
+                <h3>Important Security Information</h3>
+                <ul>
+                    <li><strong>Link Expires:</strong> {{ expiry_date|date:"F d, Y \a\t g:i A" }}</li>
+                    <li><strong>Download Limit:</strong> This link can be used up to {{ max_downloads }} times</li>
+                    <li><strong>Secure Access:</strong> This link is unique to you and should not be shared</li>
+                    <li><strong>Valid Card:</strong> Only download from official ACRP communications</li>
+                </ul>
+            </div>
+
+            <!-- Usage Instructions -->
+            <div class="instructions">
+                <h3>How to Use Your Digital Card</h3>
+                <ol>
+                    <li><strong>Download:</strong> Click the download button above to save your card</li>
+                    <li><strong>Save Securely:</strong> Store the card file in a secure location on your device</li>
+                    <li><strong>Present When Required:</strong> Show your digital card for verification when needed</li>
+                    <li><strong>QR Code:</strong> Others can scan the QR code on your card to verify its authenticity</li>
+                    <li><strong>Keep Updated:</strong> Replace with newer versions when issued</li>
+                </ol>
+            </div>
+
+            <!-- Alternative Link Access -->
+            <div class="alternative-link">
+                <h4>Alternative Download Method</h4>
+                <p>If the download button doesn't work, copy and paste this link into your browser:</p>
+                <code>{{ download_url }}</code>
+            </div>
+
+            <p><strong>Important:</strong> This download link is valid until <strong>{{ expiry_date|date:"F d, Y" }}</strong> and can be used up to <strong>{{ max_downloads }}</strong> times. After this period, you will need to request a new card if needed.</p>
+            
+            <p>Your digital card serves as official verification of your affiliation with the Association of Christian Religious Practitioners. Please keep it secure and present it when requested for verification purposes.</p>
+
+            <!-- Contact Information -->
+            <div class="contact-info">
+                <h3>Need Assistance?</h3>
+                <p>If you have any questions about downloading or using your digital card, please contact us:</p>
+                <p><strong>Email:</strong> ams@acrp.org.za</p>
+                <p><strong>Phone:</strong> (+27) 065 214 1536</p>
+                <p><strong>Business Hours:</strong> Monday - Friday, 9:00 AM - 5:00 PM SAST</p>
+            </div>
+
+            <p>Thank you for being a valued member of ACRP. We appreciate your commitment to professional excellence in Christian ministry.</p>
+            
+            <p>Blessings,<br>
+            <strong>The ACRP Digital Cards Team</strong><br>
+            Association of Christian Religious Practitioners</p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>ACRP Digital Card System</strong> - Association of Christian Religious Practitioners</p>
+            <p>&copy; {{ current_year }} ACRP. All rights reserved.</p>
+            <p>This is an automated message. Please do not reply directly to this email.</p>
+            <p>For support, please contact: <a href="mailto:ams@acrp.org.za">ams@acrp.org.za</a></p>
+            <p style="font-size: 12px; color: #6c757d; margin-top: 15px;">
+                This email was sent to {{ delivery.recipient_email }} regarding card {{ card.card_number }}
+            </p>
+        </div>
+    </div>
+</body>
+</html>

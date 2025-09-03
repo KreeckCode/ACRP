@@ -105,43 +105,7 @@
         
         <div class="grid md:grid-cols-3 gap-8 mb-12">
           
-          <!-- Associated Affiliation -->
-          <div class="affiliation-card cursor-pointer" data-value="associated" data-type="associated" id="card-associated">
-            <input type="radio" name="affiliation_type" value="associated" class="hidden radio-input" id="radio-associated" required>
-            <div class="card-inner bg-white rounded-2xl shadow-lg p-8 border-2 border-gray-200 transition-all duration-300 h-full slide-in" style="animation-delay: 0.1s">
-              <div class="text-center mb-6">
-                <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                  </svg>
-                </div>
-                <h3 class="text-2xl font-bold text-gray-800 mb-3">Associated Affiliation</h3>
-                <div class="w-12 h-1 bg-blue-600 mx-auto mb-4"></div>
-              </div>
-              
-              <div class="space-y-4 text-left">
-                <p class="text-gray-700 leading-relaxed">
-                  For persons who are informally or non-professionally involved in ministry, who want to be associated with the professional body.
-                </p>
-                
-                <div class="bg-blue-50 p-4 rounded-lg">
-                  <h4 class="font-semibold text-blue-800 mb-2">Who This Is For:</h4>
-                  <ul class="text-blue-700 text-sm space-y-1">
-                    <li>• Volunteer ministry workers</li>
-                    <li>• Church committee members</li>
-                    <li>• Ministry training institution administrators</li>
-                    <li>• Those exploring ministry</li>
-                  </ul>
-                </div>
-                
-                <div class="flex items-center justify-center mt-6">
-                  <div class="check-indicator w-6 h-6 border-2 border-blue-600 rounded-full flex items-center justify-center">
-                    <div class="check-dot w-3 h-3 bg-blue-600 rounded-full opacity-0 transition-opacity duration-300"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          
 
           <!-- Designated Affiliation -->
           <div class="affiliation-card cursor-pointer" data-value="designated" data-type="designated" id="card-designated">
@@ -223,6 +187,46 @@
               </div>
             </div>
           </div>
+
+          <!-- Associated Affiliation -->
+          <div class="affiliation-card cursor-pointer" data-value="associated" data-type="associated" id="card-associated">
+            <input type="radio" name="affiliation_type" value="associated" class="hidden radio-input" id="radio-associated" required>
+            <div class="card-inner bg-white rounded-2xl shadow-lg p-8 border-2 border-gray-200 transition-all duration-300 h-full slide-in" style="animation-delay: 0.1s">
+              <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                  </svg>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-3">Associated Affiliation</h3>
+                <div class="w-12 h-1 bg-blue-600 mx-auto mb-4"></div>
+              </div>
+              
+              <div class="space-y-4 text-left">
+                <p class="text-gray-700 leading-relaxed">
+                  For persons who are informally or non-professionally involved in ministry, who want to be associated with the professional body.
+                </p>
+                
+                <div class="bg-blue-50 p-4 rounded-lg">
+                  <h4 class="font-semibold text-blue-800 mb-2">Who This Is For:</h4>
+                  <ul class="text-blue-700 text-sm space-y-1">
+                    <li>• Volunteer ministry workers</li>
+                    <li>• Church committee members</li>
+                    <li>• Ministry training institution administrators</li>
+                    <li>• Those exploring ministry</li>
+                  </ul>
+                </div>
+                
+                <div class="flex items-center justify-center mt-6">
+                  <div class="check-indicator w-6 h-6 border-2 border-blue-600 rounded-full flex items-center justify-center">
+                    <div class="check-dot w-3 h-3 bg-blue-600 rounded-full opacity-0 transition-opacity duration-300"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
         </div>
         
         <!-- Continue Button -->
@@ -275,38 +279,10 @@
     function log(message, data = null) {
       if (debugMode) {
         if (data) {
-          console.log(`🔍 [ACRP Debug] ${message}:`, data);
+          console.log(`[ACRP Debug] ${message}:`, data);
         } else {
-          console.log(`🔍 [ACRP Debug] ${message}`);
+          console.log(`[ACRP Debug] ${message}`);
         }
-      }
-    }
-
-    // Update debug display
-    function updateDebugDisplay() {
-      if (!debugMode) return;
-      
-      const debugDiv = document.getElementById('debug-content');
-      const debugInfo = document.getElementById('debug-info');
-      
-      if (debugDiv && debugInfo) {
-        const checkedRadio = document.querySelector('input[name="affiliation_type"]:checked');
-        const allRadios = document.querySelectorAll('input[name="affiliation_type"]');
-        
-        let debugHTML = `
-          <p><strong>Selected Type:</strong> ${selectedType || 'None'}</p>
-          <p><strong>Checked Radio:</strong> ${checkedRadio ? checkedRadio.value : 'None'}</p>
-          <p><strong>All Radio States:</strong></p>
-          <ul class="ml-4">
-        `;
-        
-        allRadios.forEach(radio => {
-          debugHTML += `<li>${radio.value}: ${radio.checked ? '✅' : '❌'}</li>`;
-        });
-        
-        debugHTML += '</ul>';
-        debugDiv.innerHTML = debugHTML;
-        debugInfo.style.display = 'block';
       }
     }
 
@@ -332,7 +308,7 @@
         });
         
         if (!cardElement || !radioElement || !cardInner) {
-          log('❌ Missing required elements!');
+          log('Missing required elements!');
           return false;
         }
         
@@ -340,7 +316,7 @@
         radioElement.checked = true;
         selectedType = type;
         
-        log(`✅ Radio button ${type} set to checked: ${radioElement.checked}`);
+        log(`Radio button ${type} set to checked: ${radioElement.checked}`);
         
         // Apply visual styles
         cardInner.classList.remove('border-gray-200');
@@ -360,7 +336,7 @@
           checkDot.classList.add('opacity-100');
         }
         
-        log(`✅ Applied styling for ${type}`);
+        log(`Applied styling for ${type}`);
         
         // Trigger change event on radio button
         radioElement.dispatchEvent(new Event('change', { bubbles: true }));
@@ -370,12 +346,12 @@
         
         // Verify the selection worked
         const isActuallyChecked = document.querySelector(`input[name="affiliation_type"][value="${type}"]`).checked;
-        log(`✅ Final verification - ${type} is checked: ${isActuallyChecked}`);
+        log(`Final verification - ${type} is checked: ${isActuallyChecked}`);
         
         return true;
         
       } catch (error) {
-        log('❌ Error in selectCard:', error);
+        log('Error in selectCard:', error);
         return false;
       }
     }
@@ -411,13 +387,12 @@
       });
       
       selectedType = null;
-      log('✅ All selections cleared');
+      log('All selections cleared');
     }
 
-    
     // Enhanced form validation
     function validateForm() {
-      log('🔍 Starting form validation');
+      log('Starting form validation');
       
       const checkedRadio = document.querySelector('input[name="affiliation_type"]:checked');
       
@@ -428,19 +403,19 @@
       });
       
       if (!checkedRadio) {
-        log('❌ Validation failed: No radio button checked');
+        log('Validation failed: No radio button checked');
         alert('Please select an affiliation type to continue.');
         debugFormState();
         return false;
       }
       
-      log(`✅ Validation passed: ${checkedRadio.value} selected`);
+      log(`Validation passed: ${checkedRadio.value} selected`);
       return true;
     }
 
     // Event Listeners
     document.addEventListener('DOMContentLoaded', function() {
-      log('🚀 Page loaded, initializing...');
+      log('Page loaded, initializing...');
       
       // Add click event listeners to all cards
       const cards = document.querySelectorAll('.affiliation-card');
@@ -457,7 +432,7 @@
         card.addEventListener('click', function(e) {
           e.preventDefault();
           e.stopPropagation();
-          log(`🎯 Card clicked: ${type}`);
+          log(`Card clicked: ${type}`);
           selectCard(type);
         });
         
@@ -465,7 +440,7 @@
         const radio = card.querySelector('input[type="radio"]');
         if (radio) {
           radio.addEventListener('change', function() {
-            log(`📻 Radio change event: ${this.value}, checked: ${this.checked}`);
+            log(`Radio change event: ${this.value}, checked: ${this.checked}`);
             if (this.checked) {
               selectedType = this.value;
               updateDebugDisplay();
@@ -478,15 +453,15 @@
       const form = document.getElementById('affiliationForm');
       if (form) {
         form.addEventListener('submit', function(e) {
-          log('📝 Form submission attempted');
+          log('Form submission attempted');
           
           if (!validateForm()) {
             e.preventDefault();
-            log('❌ Form submission prevented due to validation failure');
+            log('Form submission prevented due to validation failure');
             return false;
           }
           
-          log('✅ Form validation passed, submitting...');
+          log('Form validation passed, submitting...');
           return true;
         });
       }
@@ -496,7 +471,7 @@
         debugFormState();
       }, 500);
       
-      log('✅ Initialization complete');
+      log('Initialization complete');
     });
 
     // Global functions for manual testing
@@ -521,12 +496,12 @@
     setTimeout(() => {
       if (debugMode) {
         console.log(`
-🔧 ACRP Debug Console Commands:
-• testSelectCard('associated') - Test selecting associated card
-• testSelectCard('designated') - Test selecting designated card  
-• testSelectCard('student') - Test selecting student card
-• testFormState() - Check current form state
-• testSubmit() - Test form submission
+        🔧 ACRP Debug Console Commands:
+        • testSelectCard('associated') - Test selecting associated card
+        • testSelectCard('designated') - Test selecting designated card  
+        • testSelectCard('student') - Test selecting student card
+        • testFormState() - Check current form state
+        • testSubmit() - Test form submission
         `);
       }
     }, 1000);

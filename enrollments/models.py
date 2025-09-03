@@ -332,6 +332,7 @@ class OnboardingSession(models.Model):
 # ============================================================================
 # APPLICATION MODELS - The actual application forms
 # ============================================================================
+# In your models.py - Replace the existing BaseApplication class with this:
 
 class BaseApplication(models.Model):
     """
@@ -424,6 +425,7 @@ class BaseApplication(models.Model):
         ('coloured', 'Coloured'), 
         ('indian', 'Indian'), 
         ('white', 'White'),
+        ('asian', 'Asian'),
         ('other', 'Other'),
         ('prefer_not_to_say', 'Prefer not to say')
     ]
@@ -453,10 +455,91 @@ class BaseApplication(models.Model):
     # Demographics
     date_of_birth = models.DateField()
     race = models.CharField(max_length=30, choices=RACE_CHOICES)
+    
+    # SAQA Disability codes - properly structured for compliance
+    DISABILITY_CHOICES = [
+        ('N', 'None'),
+        ('01', 'Sight (even with glasses)'),
+        ('02', 'Hearing (even with hearing aid)'),
+        ('03', 'Communication (talk/listen)'),
+        ('04', 'Physical (move/stand etc)'),
+        ('05', 'Intellectual (learn etc)'),
+        ('06', 'Emotional (behaviour/psych)'),
+        ('07', 'Multiple'),
+        ('09', 'Disabled but unspecified'),
+    ]
+    
     disability = models.CharField(
-        max_length=200, 
+        max_length=2,
+        choices=DISABILITY_CHOICES,
+        default='N',
         blank=True,
-        help_text="Please specify any disabilities or special needs"
+        help_text="SAQA requirement - Specify if you have any disabilities"
+    )
+    
+    # Country codes using 2-character ISO codes for database efficiency
+    RESIDENCY_CHOICES = [
+        ('SA', 'South Africa'),
+        ('AO', 'Angola'),
+        ('BW', 'Botswana'),
+        ('LS', 'Lesotho'),
+        ('MW', 'Malawi'),
+        ('MU', 'Mauritius'),
+        ('MZ', 'Mozambique'),
+        ('NA', 'Namibia'),
+        ('SC', 'Seychelles'),
+        ('SZ', 'Eswatini (Swaziland)'),
+        ('TZ', 'Tanzania'),
+        ('CD', 'Democratic Republic of Congo'),
+        ('ZM', 'Zambia'),
+        ('ZW', 'Zimbabwe'),
+        ('AS', 'Asian countries'),
+        ('AU', 'Australia & Oceania'),
+        ('EU', 'European countries'),
+        ('US', 'North American countries'),
+        ('BR', 'South & Central American countries'),
+        ('AF', 'Rest of Africa'),
+        ('OC', 'Other & Rest of Oceania'),
+        ('U', 'Unspecified'),
+    ]
+    
+    residency = models.CharField(
+        max_length=2,
+        choices=RESIDENCY_CHOICES,
+        default='SA',
+        help_text="Country of residence * SAQA Requirement"
+    )
+    
+    NATIONALITY_CHOICES = [
+        ('SA', 'South Africa'),
+        ('AO', 'Angola'),
+        ('BW', 'Botswana'),
+        ('LS', 'Lesotho'),
+        ('MW', 'Malawi'),
+        ('MU', 'Mauritius'),
+        ('MZ', 'Mozambique'),
+        ('NA', 'Namibia'),
+        ('SC', 'Seychelles'),
+        ('SZ', 'Eswatini (Swaziland)'),
+        ('TZ', 'Tanzania'),
+        ('CD', 'Democratic Republic of Congo'),
+        ('ZM', 'Zambia'),
+        ('ZW', 'Zimbabwe'),
+        ('AS', 'Asian countries'),
+        ('AU', 'Australia & Oceania'),
+        ('EU', 'European countries'),
+        ('US', 'North American countries'),
+        ('BR', 'South & Central American countries'),
+        ('AF', 'Rest of Africa'),
+        ('OC', 'Other & Rest of Oceania'),
+        ('U', 'Unspecified'),
+    ]
+    
+    nationality = models.CharField(
+        max_length=2,
+        choices=NATIONALITY_CHOICES,
+        default='SA', 
+        help_text="Country of citizenship * SAQA Requirement"
     )
     
     # ========================================================================
@@ -745,6 +828,8 @@ class BaseApplication(models.Model):
         self.save()
 
 
+
+        
 class AssociatedApplication(BaseApplication):
     """
     Associated Affiliation Application.
@@ -822,14 +907,6 @@ class StudentApplication(BaseApplication):
 
 
 class DesignatedApplication(BaseApplication):
-    """
-    Designated Affiliation Application.
-    
-    This is the most comprehensive application type with additional requirements
-    for professional-level membership. Includes designation categories and
-    subcategories (for CPSC).
-    """
-    
     # Designation level (from onboarding)
     designation_category = models.ForeignKey(
         DesignationCategory, 
