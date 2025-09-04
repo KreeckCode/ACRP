@@ -229,48 +229,25 @@ class OnboardingSessionForm(forms.ModelForm):
         fields = [
             'selected_affiliation_type',
             'selected_council', 
-            'selected_designation_category',
-            'selected_designation_subcategory'
         ]
         widgets = {
             'selected_affiliation_type': SELECT_WIDGET,
             'selected_council': SELECT_WIDGET,
-            'selected_designation_category': SELECT_WIDGET,
-            'selected_designation_subcategory': SELECT_WIDGET,
         }
     
     def clean(self):
-        """Validate onboarding session choices"""
+        """Validate onboarding session choices - SIMPLIFIED"""
         cleaned_data = super().clean()
+        
         
         affiliation_type = cleaned_data.get('selected_affiliation_type')
         council = cleaned_data.get('selected_council')
-        category = cleaned_data.get('selected_designation_category')
-        subcategory = cleaned_data.get('selected_designation_subcategory')
         
-        # If designated affiliation, must have category
-        if affiliation_type and affiliation_type.code == 'designated':
-            if not category:
-                raise ValidationError({
-                    'selected_designation_category': 'Designation category is required for designated affiliations'
-                })
-            
-            # If council has subcategories (CPSC), must have subcategory
-            if council and council.has_subcategories and not subcategory:
-                raise ValidationError({
-                    'selected_designation_subcategory': 'Subcategory is required for this council'
-                })
-        
-        # If subcategory selected, validate it matches category and council
-        if subcategory:
-            if not category or subcategory.category != category:
-                raise ValidationError({
-                    'selected_designation_subcategory': 'Subcategory must match selected category'
-                })
-            if not council or subcategory.council != council:
-                raise ValidationError({
-                    'selected_designation_subcategory': 'Subcategory must match selected council'
-                })
+        # Simple validation - just need affiliation type and council
+        if not affiliation_type:
+            raise ValidationError({'selected_affiliation_type': 'Affiliation type is required'})
+        if not council:
+            raise ValidationError({'selected_council': 'Council selection is required'})
         
         return cleaned_data
 

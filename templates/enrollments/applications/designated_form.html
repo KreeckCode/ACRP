@@ -386,10 +386,6 @@
                     <i class="bi bi-check-circle"></i>
                     <span>Council Selected</span>
                 </div>
-                <div class="step-item completed">
-                    <i class="bi bi-check-circle"></i>
-                    <span>Category Selected</span>
-                </div>
                 <div class="step-item active">
                     <i class="bi bi-file-earmark-text"></i>
                     <span>Application Form</span>
@@ -885,81 +881,6 @@
                     </div>
                 </div>
 
-                <!-- Designation Information Section -->
-                <div class="form-section" id="section-designation">
-                    <div class="section-header" onclick="toggleSection('designation')">
-                        <h3>
-                            <i class="bi bi-award"></i>
-                            Selected Designation
-                        </h3>
-                        <i class="bi bi-chevron-down toggle-icon"></i>
-                    </div>
-                    <div class="section-content" id="content-designation">
-                        <!-- Hidden form fields that will be automatically populated -->
-                        <input type="hidden" name="designation_category" value="{% if session.selected_designation_category %}{{ session.selected_designation_category.pk }}{% else %}{% endif %}">
-                        <input type="hidden" name="designation_subcategory" value="{% if session.selected_designation_subcategory %}{{ session.selected_designation_subcategory.pk }}{% else %}{% endif %}">
-                        
-                        <!-- Display selected designation information -->
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="card border-success">
-                                    <div class="card-body">
-                                        <h5 class="card-title text-success">
-                                            <i class="bi bi-award-fill me-2"></i>
-                                            Designation Level
-                                        </h5>
-                                        {% if session.selected_designation_category %}
-                                            <h6 class="card-subtitle mb-2 text-muted">Level {{ session.selected_designation_category.level }}</h6>
-                                            <p class="card-text">
-                                                <strong>{{ session.selected_designation_category.name }}</strong>
-                                            </p>
-                                            {% if session.selected_designation_category.description %}
-                                                <p class="card-text">
-                                                    <small class="text-muted">{{ session.selected_designation_category.description }}</small>
-                                                </p>
-                                            {% endif %}
-                                        {% else %}
-                                            <p class="card-text text-muted">Category will be set from your onboarding selection</p>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            {% if session.selected_council.has_subcategories %}
-                            <div class="col-md-6">
-                                <div class="card border-info">
-                                    <div class="card-body">
-                                        <h5 class="card-title text-info">
-                                            <i class="bi bi-tags-fill me-2"></i>
-                                            Specialization Area
-                                        </h5>
-                                        {% if session.selected_designation_subcategory %}
-                                            <h6 class="card-subtitle mb-2 text-muted">{{ session.selected_council.code }} Subcategory</h6>
-                                            <p class="card-text">
-                                                <strong>{{ session.selected_designation_subcategory.name }}</strong>
-                                            </p>
-                                            {% if session.selected_designation_subcategory.description %}
-                                                <p class="card-text">
-                                                    <small class="text-muted">{{ session.selected_designation_subcategory.description }}</small>
-                                                </p>
-                                            {% endif %}
-                                        {% else %}
-                                            <p class="card-text text-muted">Subcategory will be set from your onboarding selection</p>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                            {% endif %}
-                        </div>
-                        
-                        <!-- Information note -->
-                        <div class="alert alert-info mt-3" role="alert">
-                            <i class="bi bi-info-circle me-2"></i>
-                            <strong>Note:</strong> Your designation level and specialization were selected during the onboarding process. 
-                            If you need to change these selections, please contact support or restart the application process.
-                        </div>
-                    </div>
-                </div>
 
                 <!-- High School Information Section -->
                 <div class="form-section" id="section-highschool">

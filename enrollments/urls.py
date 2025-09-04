@@ -12,7 +12,6 @@ urlpatterns = [
     path('onboarding/council/<uuid:session_id>/', views.onboarding_council, name='onboarding_council'),
     
     path('onboarding/category/<uuid:session_id>/', views.onboarding_category, name='onboarding_category'),
-    
     path('onboarding/subcategory/<uuid:session_id>/', views.onboarding_subcategory, name='onboarding_subcategory'),
     
     # ============================================================================

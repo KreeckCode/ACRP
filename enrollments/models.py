@@ -219,21 +219,6 @@ class OnboardingSession(models.Model):
         null=True, 
         blank=True
     )
-    selected_designation_category = models.ForeignKey(
-        DesignationCategory, 
-        on_delete=models.CASCADE, 
-        null=True, 
-        blank=True,
-        help_text="Only applicable for designated affiliations",
-        related_name="ds"
-    )
-    selected_designation_subcategory = models.ForeignKey(
-        DesignationSubcategory, 
-        on_delete=models.CASCADE, 
-        null=True, 
-        blank=True,
-        help_text="Only applicable for CPSC designated affiliations"
-    )
     
     # Session metadata
     created_at = models.DateTimeField(auto_now_add=True)
@@ -296,19 +281,7 @@ class OnboardingSession(models.Model):
     
     def is_complete(self):
         """Check if onboarding session has all required selections"""
-        if not all([self.selected_affiliation_type, self.selected_council]):
-            return False
-        
-        # If designated affiliation, must have category
-        if self.selected_affiliation_type.code == 'designated':
-            if not self.selected_designation_category:
-                return False
-            
-            # If council has subcategories (CPSC), must select subcategory
-            if self.selected_council.has_subcategories and not self.selected_designation_subcategory:
-                return False
-        
-        return True
+        return bool(self.selected_affiliation_type and self.selected_council)
     
     def get_application_class(self):
         """Return the appropriate application class for this onboarding session"""
@@ -911,6 +884,8 @@ class DesignatedApplication(BaseApplication):
     designation_category = models.ForeignKey(
         DesignationCategory, 
         on_delete=models.PROTECT,
+        null=True, 
+        blank=True,
         help_text="Level of designation being applied for"
     )
     designation_subcategory = models.ForeignKey(
@@ -984,33 +959,18 @@ class DesignatedApplication(BaseApplication):
         verbose_name_plural = "Designated Affiliation Applications"
     
     def clean(self):
-        """Designated application specific validation"""
+        """Updated validation - categories are optional during application"""
         super().clean()
         errors = {}
         
-        # If council has subcategories (CPSC), subcategory is required
-        council = self.get_council()
-        if council.has_subcategories and not self.designation_subcategory:
-            errors['designation_subcategory'] = _(
-                "Subcategory selection is required for this council"
-            )
-        
-        # If subcategory is selected, it must match the category and council
-        if self.designation_subcategory:
+        if self.designation_subcategory and self.designation_category:
             if self.designation_subcategory.category != self.designation_category:
                 errors['designation_subcategory'] = _(
                     "Subcategory must belong to the selected category"
                 )
-            if self.designation_subcategory.council != council:
+            if self.designation_subcategory.council != self.get_council():
                 errors['designation_subcategory'] = _(
                     "Subcategory must belong to the selected council"
-                )
-        
-        # Validate supervision period
-        if self.supervision_period_start and self.supervision_period_end:
-            if self.supervision_period_end <= self.supervision_period_start:
-                errors['supervision_period_end'] = _(
-                    "End date must be after start date"
                 )
         
         if errors:
@@ -1018,11 +978,6 @@ class DesignatedApplication(BaseApplication):
     
     def save(self, *args, **kwargs):
         """Override save to set designation fields from onboarding session"""
-        if not self.designation_category and self.onboarding_session.selected_designation_category:
-            self.designation_category = self.onboarding_session.selected_designation_category
-        
-        if not self.designation_subcategory and self.onboarding_session.selected_designation_subcategory:
-            self.designation_subcategory = self.onboarding_session.selected_designation_subcategory
         
         super().save(*args, **kwargs)
     

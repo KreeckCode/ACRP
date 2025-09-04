@@ -326,14 +326,11 @@ def onboarding_council(request, session_id):
         return redirect('enrollments:onboarding_start')
     
     if request.method == 'POST':
-        # Get affiliation type code from POST data instead of council
         affiliation_type_code = request.POST.get('affiliation_type')
-        logger.info(f"POST data received: {request.POST}")
         logger.info(f"Affiliation type: {affiliation_type_code}")
         
         if affiliation_type_code in ['associated', 'designated', 'student']:
             try:
-                # Get the actual AffiliationType object
                 affiliation_type = AffiliationType.objects.get(
                     code=affiliation_type_code,
                     is_active=True
@@ -341,21 +338,14 @@ def onboarding_council(request, session_id):
                 
                 # Update session with selected affiliation type
                 session.selected_affiliation_type = affiliation_type
-                session.status = 'selecting_category'  # Next step depends on affiliation type
-                session.save(update_fields=['selected_affiliation_type', 'status', 'updated_at'])
+                session.status = 'completed'  # Complete onboarding immediately
+                session.completed_at = timezone.now()  # Mark as completed
+                session.save(update_fields=['selected_affiliation_type', 'status', 'completed_at'])
                 
                 logger.info(f"Affiliation type selected: {affiliation_type.name}")
                 
-                # Determine next step based on affiliation type (same logic as before)
-                if affiliation_type.code == 'designated':
-                    # Designated affiliations need to select category
-                    return redirect('enrollments:onboarding_category', session_id=session_id)
-                else:
-                    # Associated or Student - go directly to application (skip category/subcategory)
-                    session.status = 'completed'
-                    session.completed_at = timezone.now()
-                    session.save(update_fields=['status', 'completed_at'])
-                    return redirect('enrollments:application_create', session_id=session_id)
+                # ALL affiliation types go directly to application creation
+                return redirect('enrollments:application_create', session_id=session_id)
                     
             except AffiliationType.DoesNotExist:
                 messages.error(request, f"Invalid affiliation type: {affiliation_type_code}")
@@ -381,190 +371,19 @@ def onboarding_council(request, session_id):
 @csrf_protect
 def onboarding_category(request, session_id):
     """
-    Step 3: Select designation category (for designated affiliations only).
-    
-    CHANGES MADE:
-    - Step number updated from 3 to 3 (stays the same)
-    - Added validation that both council and affiliation type are selected
-    - Updated comments to reflect new flow
+    DISABLED: Category selection moved to admin assignment after application review.
     """
-    try:
-        session = OnboardingSession.objects.select_related(
-            'selected_affiliation_type', 'selected_council'
-        ).get(session_id=session_id)
-    except OnboardingSession.DoesNotExist:
-        messages.error(request, "Invalid onboarding session.")
-        return redirect('enrollments:onboarding_start')
-    
-    # Validate that previous steps were completed
-    if not session.selected_council:
-        messages.error(request, "Council must be selected first. Please start over.")
-        return redirect('enrollments:onboarding_start')
-        
-    if not session.selected_affiliation_type:
-        messages.error(request, "Affiliation type must be selected. Please start over.")
-        return redirect('enrollments:onboarding_start')
-    
-    # Validate that this step is appropriate (only for designated affiliations)
-    if session.selected_affiliation_type.code != 'designated':
-        messages.error(request, "Category selection is only for designated affiliations.")
-        return redirect('enrollments:onboarding_start')
-    
-    if request.method == 'POST':
-        # Get category ID from POST data (logic remains the same)
-        category_id = request.POST.get('designation_category')
-        logger.info(f"Category POST data received: {request.POST}")
-        logger.info(f"Category ID: {category_id}")
-        
-        if category_id:
-            try:
-                # Get the actual DesignationCategory object
-                category = DesignationCategory.objects.get(id=category_id, is_active=True)
-                
-                session.selected_designation_category = category
-                session.status = 'selecting_subcategory'
-                session.save(update_fields=['selected_designation_category', 'status', 'updated_at'])
-                
-                logger.info(f"Category selected: {category.name}")
-                
-                # Check if council has subcategories (CPSC) - logic remains the same
-                if session.selected_council.has_subcategories:
-                    return redirect('enrollments:onboarding_subcategory', session_id=session_id)
-                else:
-                    # No subcategories - complete onboarding
-                    session.status = 'completed'
-                    session.completed_at = timezone.now()
-                    session.save(update_fields=['status', 'completed_at'])
-                    return redirect('enrollments:application_create', session_id=session_id)
-                    
-            except DesignationCategory.DoesNotExist:
-                logger.error(f"Category with ID {category_id} not found")
-                messages.error(request, f"Invalid category selected: {category_id}")
-        else:
-            messages.error(request, "Please select a valid designation category.")
-    
-    # Get categories for the template (logic remains the same)
-    categories = DesignationCategory.objects.filter(is_active=True).order_by('level')
-    
-    # Create a dictionary for easy access in template
-    categories_dict = {}
-    for category in categories:
-        categories_dict[f'level{category.level}'] = category
-    
-    # Debug: Log available categories
-    logger.info(f"Available categories: {[(c.level, c.id, c.name) for c in categories]}")
-    
-    # Verify we have all 4 levels
-    if len(categories) < 4:
-        logger.error(f"Not enough categories found. Expected 4, got {len(categories)}")
-        messages.error(request, "Categories not properly configured. Please contact support.")
-    
-    form = DesignationCategorySelectionForm()
-    
-    context = {
-        'form': form,
-        'session': session,
-        'categories': categories_dict,  # For template access like {{ categories.level1.id }}
-        'categories_list': categories,   # For iteration in template  
-        'selected_council': session.selected_council,  # Show which council was selected
-        'selected_affiliation_type': session.selected_affiliation_type,  # Show affiliation type
-        'page_title': 'Select Designation Category',
-        'step': 3,  # Still step 3, but now it's after council and affiliation type
-        'total_steps': 4,
-    }
-    
-    return render(request, 'enrollments/onboarding/step3_category.html', context)
+    messages.info(request, "Designation categories are now assigned by administrators after application review.")
+    return redirect('enrollments:onboarding_start')
 
 
-@csrf_protect
+@csrf_protect  
 def onboarding_subcategory(request, session_id):
     """
-    Step 4: Select designation subcategory (for CPSC designated affiliations only).
-    
-    CHANGES MADE:
-    - Added validation that both council and affiliation type are selected
-    - Updated comments to reflect new flow
-    - Step number remains 4 (final step)
+    DISABLED: Subcategory selection moved to admin assignment after application review.
     """
-    try:
-        session = OnboardingSession.objects.select_related(
-            'selected_affiliation_type', 'selected_council', 'selected_designation_category'
-        ).get(session_id=session_id)
-    except OnboardingSession.DoesNotExist:
-        messages.error(request, "Invalid onboarding session.")
-        return redirect('enrollments:onboarding_start')
-    
-    # Validate that all previous steps were completed
-    if not session.selected_council:
-        messages.error(request, "Council must be selected first. Please start over.")
-        return redirect('enrollments:onboarding_start')
-        
-    if not session.selected_affiliation_type:
-        messages.error(request, "Affiliation type must be selected. Please start over.")
-        return redirect('enrollments:onboarding_start')
-        
-    if not session.selected_designation_category:
-        messages.error(request, "Designation category must be selected. Please start over.")
-        return redirect('enrollments:onboarding_start')
-    
-    # Validate that this step is appropriate (only for CPSC designated affiliations)
-    if not (session.selected_affiliation_type.code == 'designated' and 
-            session.selected_council.has_subcategories):
-        messages.error(request, "Subcategory selection is only for CPSC designated affiliations.")
-        return redirect('enrollments:onboarding_start')
-    
-    if request.method == 'POST':
-        # Get subcategory ID from POST data (logic remains the same)
-        subcategory_id = request.POST.get('designation_subcategory')
-        logger.info(f"Subcategory POST data received: {request.POST}")
-        logger.info(f"Subcategory ID: {subcategory_id}")
-        
-        if subcategory_id:
-            try:
-                # Get the actual DesignationSubcategory object
-                subcategory = DesignationSubcategory.objects.get(
-                    id=subcategory_id, 
-                    category=session.selected_designation_category,
-                    council=session.selected_council,
-                    is_active=True
-                )
-                
-                session.selected_designation_subcategory = subcategory
-                session.status = 'completed'
-                session.completed_at = timezone.now()
-                session.save(update_fields=[
-                    'selected_designation_subcategory', 'status', 'completed_at'
-                ])
-                
-                logger.info(f"Subcategory selected: {subcategory.name}")
-                
-                return redirect('enrollments:application_create', session_id=session_id)
-                
-            except DesignationSubcategory.DoesNotExist:
-                logger.error(f"Subcategory with ID {subcategory_id} not found")
-                messages.error(request, f"Invalid subcategory selected: {subcategory_id}")
-        else:
-            messages.error(request, "Please select a valid subcategory.")
-    
-    form = DesignationSubcategorySelectionForm(
-        category=session.selected_designation_category,
-        council=session.selected_council
-    )
-    
-    context = {
-        'form': form,
-        'session': session,
-        'selected_council': session.selected_council,  # Show which council was selected
-        'selected_affiliation_type': session.selected_affiliation_type,  # Show affiliation type
-        'selected_category': session.selected_designation_category,  # Show category
-        'page_title': 'Select Subcategory',
-        'step': 4,  # Final step
-        'total_steps': 4,
-    }
-    
-    return render(request, 'enrollments/onboarding/step4_subcategory.html', context)
-
-
+    messages.info(request, "Designation subcategories are now assigned by administrators after application review.")
+    return redirect('enrollments:onboarding_start')
 
 
 # ============================================================================
@@ -580,11 +399,21 @@ import traceback
 def application_create(request, session_id):
     """
     Create application with proper document handling for generic formsets.
+    
+    FIXED: Removed references to deleted OnboardingSession fields:
+    - selected_designation_category (removed in migration 0005)
+    - selected_designation_subcategory (removed in migration 0005)
+    
+    These fields are now managed differently in the application flow.
     """
     try:
+        # FIXED: Removed select_related for deleted fields
+        # Before: select_related('selected_designation_category', 'selected_designation_subcategory')
+        # After: Only select existing fields
         session = OnboardingSession.objects.select_related(
-            'selected_affiliation_type', 'selected_council',
-            'selected_designation_category', 'selected_designation_subcategory'
+            'selected_affiliation_type', 
+            'selected_council'
+            # Removed: 'selected_designation_category', 'selected_designation_subcategory'
         ).get(session_id=session_id)
     except OnboardingSession.DoesNotExist:
         messages.error(request, "Invalid onboarding session.")
@@ -628,25 +457,44 @@ def application_create(request, session_id):
         logger.info(f"POST data keys: {list(request.POST.keys())}")
         logger.info(f"FILES data keys: {list(request.FILES.keys())}")
         
-        # DEBUG: Check session data
-        logger.info(f"Session designation_category: {session.selected_designation_category}")
-        logger.info(f"Session designation_subcategory: {session.selected_designation_subcategory}")
-        logger.info(f"POST designation_category value: '{request.POST.get('designation_category')}'")
-        logger.info(f"POST designation_subcategory value: '{request.POST.get('designation_subcategory')}'")
+        # DEBUG: Check session data - UPDATED for new field structure
+        logger.info(f"Session has affiliation type: {session.selected_affiliation_type}")
+        logger.info(f"Session has council: {session.selected_council}")
+        
+        # FIXED: No longer try to access deleted fields
+        # These fields were removed in migration 0005:
+        # - session.selected_designation_category (DELETED)
+        # - session.selected_designation_subcategory (DELETED)
         
         # Create main form
         form = form_class(request.POST, request=request, onboarding_session=session)
         
-        # CRITICAL FIX: Set onboarding_session on form instance BEFORE validation
         # This prevents RelatedObjectDoesNotExist errors during model.clean()
         form.instance.onboarding_session = session
         
-        # For designated applications, also set the designation fields before validation
+        # FIXED: Handle designation category/subcategory differently
+        # Since these fields were removed from OnboardingSession,
+        # they should now be set directly on the application or handled elsewhere
         if session.selected_affiliation_type.code == 'designated':
-            form.instance.designation_category = session.selected_designation_category
-            form.instance.designation_subcategory = session.selected_designation_subcategory
+            # OPTION 1: Get from form data if the form handles these fields
+            designation_category_id = request.POST.get('designation_category')
+            designation_subcategory_id = request.POST.get('designation_subcategory')
+            
+            if designation_category_id:
+                try:
+                    from .models import DesignationCategory, DesignationSubcategory
+                    form.instance.designation_category_id = designation_category_id
+                    logger.info(f"Set designation_category_id: {designation_category_id}")
+                except Exception as e:
+                    logger.error(f"Error setting designation category: {e}")
+            
+            if designation_subcategory_id:
+                try:
+                    form.instance.designation_subcategory_id = designation_subcategory_id
+                    logger.info(f"Set designation_subcategory_id: {designation_subcategory_id}")
+                except Exception as e:
+                    logger.error(f"Error setting designation subcategory: {e}")
         
-        # For new applications, we need to handle documents differently
         # Extract document data manually instead of using generic formset
         document_data = extract_document_data_from_post(request)
         reference_data = extract_reference_data_from_post(request)
@@ -709,9 +557,12 @@ def application_create(request, session_id):
                 # onboarding_session is already set above, but we'll keep this for clarity
                 application.onboarding_session = session
                 
-                if session.selected_affiliation_type.code == 'designated':
-                    application.designation_category = session.selected_designation_category
-                    application.designation_subcategory = session.selected_designation_subcategory
+                # FIXED: No longer set designation fields from session
+                # These were removed from OnboardingSession in migration 0005
+                # The fields should now be set directly from form data (handled above)
+                # if session.selected_affiliation_type.code == 'designated':
+                #     application.designation_category = session.selected_designation_category  # DELETED FIELD
+                #     application.designation_subcategory = session.selected_designation_subcategory  # DELETED FIELD
                 
                 application.save()
                 logger.info(f"Application saved with ID: {application.pk}")
@@ -736,7 +587,6 @@ def application_create(request, session_id):
                 # Verify documents were saved
                 saved_documents = Document.objects.filter(content_type=content_type, object_id=application.pk)
                 logger.info(f"Total documents in DB: {saved_documents.count()}")
-                
                 
                 # Send both welcome email to applicant and notification to admin staff
                 try:
@@ -838,8 +688,6 @@ def application_create(request, session_id):
                                'enrollments/applications/base_form.html')
     
     return render(request, template, context)
-
-
 # ============================================================================
 # DOCUMENT MANAGEMENT VIEWS
 # ============================================================================
