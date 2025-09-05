@@ -1000,7 +1000,9 @@ ADMIN_EMAIL_LIST = [
     'maria.jansen@acrp.org.za',
     'riana.andersen@acrp.org.za',
     'ams@acrp.org.za',
-    'andrea.leipoldt@acrp.org.za'
+    'andrea.leipoldt@acrp.org.za',
+    'gerhard.botha@acrp.org.za',
+    'theto.maunatlala@acrp.org.za'
 ]
 
 # Email configuration
