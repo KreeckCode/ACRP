@@ -427,7 +427,7 @@ class BaseApplication(models.Model):
     
     # Demographics
     date_of_birth = models.DateField()
-    race = models.CharField(max_length=30, choices=RACE_CHOICES)
+    race = models.CharField(max_length=30, choices=RACE_CHOICES, help_text="Required by SAQA")
     
     # SAQA Disability codes - properly structured for compliance
     DISABILITY_CHOICES = [
@@ -526,21 +526,51 @@ class BaseApplication(models.Model):
     fax = models.CharField(max_length=20, blank=True)
     
     # Postal address
-    postal_address_line1 = models.CharField(max_length=100)
+    postal_address_line1 = models.CharField(max_length=100, blank=True)
     postal_address_line2 = models.CharField(max_length=100, blank=True)
-    postal_city = models.CharField(max_length=50)
-    postal_province = models.CharField(max_length=50)
-    postal_code = models.CharField(max_length=10)
-    postal_country = models.CharField(max_length=50, default='South Africa')
+    postal_city = models.CharField(max_length=50, blank=True)
+    PROVINCE_CHOICES = [
+        ('Eastern Cape', 'Eastern Cape'),
+        ('Free State', 'Free State'),
+        ('Gauteng', 'Gauteng'),
+        ('KwaZulu-Natal', 'KwaZulu-Natal'),
+        ('Limpopo', 'Limpopo'),
+        ('Mpumalanga', 'Mpumalanga'),
+        ('North West', 'North West'),
+        ('Northern Cape', 'Northern Cape'),
+        ('Western Cape', 'Western Cape'),
+    ]
+    postal_province = models.CharField(max_length=50, blank=True, choices=PROVINCE_CHOICES)
+    postal_code = models.CharField(max_length=10, blank=True)
+    postal_country = models.CharField(max_length=50, default='South Africa', blank=True)
     
     # Physical address (if different from postal)
     physical_same_as_postal = models.BooleanField(
         default=True,
-        help_text="Check if physical address is the same as postal address"
+        help_text="Check if physical address is the same as postal address", blank=True
     )
     physical_address_line1 = models.CharField(max_length=100, blank=True)
     physical_address_line2 = models.CharField(max_length=100, blank=True)
     physical_city = models.CharField(max_length=50, blank=True)
+    ministry_name = models.CharField(max_length=200, blank=True, help_text="* Compulsory")
+    denomination = models.CharField(max_length=200, blank=True, help_text="Church, Religious denomination or network")
+    MINISTRY_CHOICES = [
+        ('Local Church', 'Local Church'),
+        ('Teaching institution', 'Teaching institution'),
+        ('Counselling ministry', 'Counselling ministry'),
+        ('Youth Ministry', 'Youth Ministry'),
+        ('Not Applicable', 'Not Applicable'),
+        ('Other', 'Other'),
+    ]
+
+    ministry_type = models.CharField(max_length=100, choices=MINISTRY_CHOICES, blank=True)
+    ministry_type_other = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="Please specify if you selected 'Other' for ministry type"
+    )
+
+
     physical_province = models.CharField(max_length=50, blank=True)
     physical_code = models.CharField(max_length=10, blank=True)
     physical_country = models.CharField(max_length=50, blank=True)
@@ -554,9 +584,26 @@ class BaseApplication(models.Model):
         blank=True,
         help_text="Optional: Your religious denomination or affiliation"
     )
+
+    LANGUAGE_CHOICES = [
+        ('English', 'English'),
+        ('Afrikaans', 'Afrikaans'),
+        ('Zulu', 'Zulu'),
+        ('Xhosa', 'Xhosa'),
+        ('Sepedi', 'Sepedi'),
+        ('Setswana', 'Setswana'),
+        ('Sesotho', 'Sesotho'),
+        ('Xitsonga', 'Xitsonga'),
+        ('Tshivenda', 'Tshivenda'),
+        ('SiSwati', 'SiSwati'),
+        ('Ndebele', 'Ndebele'),
+        ('Unknown', 'Unknown'),
+    ]
+
     home_language = models.CharField(
         max_length=50,
-        help_text="Your first/primary language"
+        help_text="SAQA Requirement",
+        choices=LANGUAGE_CHOICES,
     )
     other_languages = models.CharField(
         max_length=200, 
@@ -594,7 +641,12 @@ class BaseApplication(models.Model):
     years_in_ministry = models.PositiveIntegerField(
         default=0,
         validators=[MinValueValidator(0), MaxValueValidator(70)],
-        help_text="Total years involved in ministry work"
+        help_text="Full time ministry work"
+    )
+    years_in_part_time_ministry = models.PositiveIntegerField(
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(70)],
+        help_text="Total years involved in Part time ministry work"
     )
     
     # ========================================================================
@@ -912,19 +964,19 @@ class DesignatedApplication(BaseApplication):
     
     supervisor_name = models.CharField(
         max_length=200,
-        help_text="Name and title of supervisor"
+        help_text="Name and title of supervisor", blank=True
     )
     supervisor_qualification = models.CharField(
         max_length=200,
-        help_text="Supervisor's relevant qualifications"
+        help_text="Supervisor's relevant qualifications", blank=True
     )
-    supervisor_email = models.EmailField()
-    supervisor_phone = models.CharField(max_length=20)
-    supervisor_address = models.TextField()
+    supervisor_email = models.EmailField(blank=True)
+    supervisor_phone = models.CharField(max_length=20,blank=True)
+    supervisor_address = models.TextField(blank=True)
     
     supervision_hours_received = models.PositiveIntegerField(
         default=0,
-        help_text="Total number of supervision hours received"
+        help_text="Total number of supervision hours received",blank=True
     )
     supervision_period_start = models.DateField(
         null=True, 
@@ -942,7 +994,7 @@ class DesignatedApplication(BaseApplication):
     # ========================================================================
     
     professional_development_plans = models.TextField(
-        help_text="What are your plans for further development of your professional knowledge and skills?"
+        help_text="What are your plans for further development of your professional knowledge and skills?", blank=True
     )
     
     # ========================================================================
@@ -1017,15 +1069,15 @@ class AcademicQualification(models.Model):
     
     qualification_type = models.CharField(
         max_length=20, 
-        choices=QUALIFICATION_TYPES
+        choices=QUALIFICATION_TYPES,blank=True
     )
     qualification_name = models.CharField(
         max_length=200,
         help_text="e.g., BSc Theology, Diploma in Pastoral Care"
     )
-    institution_name = models.CharField(max_length=200)
+    institution_name = models.CharField(max_length=200,blank=True)
     institution_address = models.TextField(blank=True)
-    date_awarded = models.DateField()
+    date_awarded = models.DateField(blank=True)
     
     # Additional details
     grade_or_class = models.CharField(
@@ -1054,17 +1106,22 @@ class Reference(models.Model):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveBigIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
-    
+
+    TITLE_CHOICES = [
+        ('Mr', 'Mr'), ('Mrs', 'Mrs'), ('Miss', 'Miss'), 
+        ('Dr', 'Dr'), ('Prof', 'Prof'), ('Rev', 'Rev'),
+        ('Pastor', 'Pastor'), ('Bishop', 'Bishop'), ('Apostle', 'Apostle'),
+        ('Elder', 'Elder'), ('Deacon', 'Deacon'), ('Minister', 'Minister')
+    ]
     # Reference details
     reference_title = models.CharField(
         max_length=20, 
-        choices=BaseApplication.TITLE_CHOICES
+        choices=TITLE_CHOICES
     )
     reference_surname = models.CharField(max_length=150)
     reference_names = models.CharField(max_length=300)
     reference_email = models.EmailField()
     reference_phone = models.CharField(max_length=20)
-    reference_address = models.TextField()
     
     nature_of_relationship = models.CharField(
         max_length=200,
@@ -1111,19 +1168,19 @@ class PracticalExperience(models.Model):
     )
     
     institution_name = models.CharField(
-        max_length=200,
+        max_length=200, blank=True,
         help_text="Name of organization/institution"
     )
-    contact_person_name = models.CharField(max_length=200)
-    contact_person_email = models.EmailField()
-    contact_person_phone = models.CharField(max_length=20)
+    contact_person_name = models.CharField(max_length=200,blank=True)
+    contact_person_email = models.EmailField(blank=True)
+    contact_person_phone = models.CharField(max_length=20,blank=True)
     
     basic_nature_of_work = models.TextField(
-        help_text="Describe the basic nature of work/ministry performed"
+        help_text="Describe the basic nature of work/ministry performed", blank=True
     )
     
     # Period of experience
-    start_date = models.DateField()
+    start_date = models.DateField(blank=True)
     end_date = models.DateField(
         null=True, 
         blank=True,

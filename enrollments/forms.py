@@ -470,9 +470,11 @@ class BaseApplicationForm(forms.ModelForm):
             
             # Educational Background
             'highest_qualification', 'qualification_institution', 'qualification_date',
+
+            'ministry_name', 'denomination', 'ministry_type', 'ministry_type_other', 
             
             # Professional Background
-            'current_occupation', 'work_description', 'years_in_ministry',
+            'current_occupation', 'work_description', 'years_in_ministry', 'years_in_part_time_ministry',
             
             # Background Checks
             'disciplinary_action', 'disciplinary_description',
@@ -502,18 +504,16 @@ class BaseApplicationForm(forms.ModelForm):
             'postal_address_line1': TEXT_INPUT_WIDGET,
             'postal_address_line2': TEXT_INPUT_WIDGET,
             'postal_city': TEXT_INPUT_WIDGET,
-            'postal_province': TEXT_INPUT_WIDGET,
+            'postal_province': SELECT_WIDGET,
             'postal_code': TEXT_INPUT_WIDGET,
             'postal_country': TEXT_INPUT_WIDGET,
             'physical_same_as_postal': CHECKBOX_WIDGET,
             'physical_address_line1': TEXT_INPUT_WIDGET,
             'physical_address_line2': TEXT_INPUT_WIDGET,
             'physical_city': TEXT_INPUT_WIDGET,
-            'physical_province': TEXT_INPUT_WIDGET,
             'physical_code': TEXT_INPUT_WIDGET,
             'physical_country': TEXT_INPUT_WIDGET,
             'religious_affiliation': TEXT_INPUT_WIDGET,
-            'home_language': TEXT_INPUT_WIDGET,
             'other_languages': TEXT_INPUT_WIDGET,
             'highest_qualification': TEXT_INPUT_WIDGET,
             'qualification_institution': TEXT_INPUT_WIDGET,
@@ -547,9 +547,106 @@ class AssociatedApplicationForm(BaseApplicationForm):
     This is the simplest application type.
     """
     
+    def __init__(self, *args, **kwargs):
+        # Extract onboarding_session before calling super()
+        self.onboarding_session = kwargs.pop('onboarding_session', None)
+        
+        super().__init__(*args, **kwargs)
+        
+        # CRITICAL FIX: Auto-populate designation fields from onboarding session
+        if self.onboarding_session:
+            if 'designation_category' in self.fields and self.onboarding_session.selected_designation_category:
+                self.fields['designation_category'].initial = self.onboarding_session.selected_designation_category
+                self.initial['designation_category'] = self.onboarding_session.selected_designation_category.pk
+                
+            if 'designation_subcategory' in self.fields and self.onboarding_session.selected_designation_subcategory:
+                self.fields['designation_subcategory'].initial = self.onboarding_session.selected_designation_subcategory
+                self.initial['designation_subcategory'] = self.onboarding_session.selected_designation_subcategory.pk
+        
+        # Set some fields as optional
+        self.fields['high_school_name'].required = False
+        self.fields['high_school_year_completed'].required = False
+        self.fields['supervision_period_end'].required = False
+        self.fields['other_professional_memberships'].required = False
+        
+        # CRITICAL: Make designation fields optional since they're set from onboarding session
+        if 'designation_category' in self.fields:
+            self.fields['designation_category'].required = False
+            self.fields['designation_category'].help_text = 'Set during onboarding process'
+            
+        if 'designation_subcategory' in self.fields:
+            self.fields['designation_subcategory'].required = False
+            self.fields['designation_subcategory'].help_text = 'Set during onboarding process'
+    
+    def clean(self):
+        """Designated application specific validation"""
+        cleaned_data = super().clean()
+        
+        # CRITICAL: Force designation fields from onboarding session
+        if self.onboarding_session:
+            if self.onboarding_session.selected_designation_category:
+                cleaned_data['designation_category'] = self.onboarding_session.selected_designation_category
+            if self.onboarding_session.selected_designation_subcategory:
+                cleaned_data['designation_subcategory'] = self.onboarding_session.selected_designation_subcategory
+        
+        # Validate supervision period
+        start_date = cleaned_data.get('supervision_period_start')
+        end_date = cleaned_data.get('supervision_period_end')
+        
+        if start_date and end_date and end_date <= start_date:
+            raise ValidationError({
+                'supervision_period_end': 'End date must be after start date.'
+            })
+        
+        # Validate high school year
+        high_school_year = cleaned_data.get('high_school_year_completed')
+        if high_school_year:
+            current_year = timezone.now().year
+            if high_school_year > current_year:
+                raise ValidationError({
+                    'high_school_year_completed': 'Year cannot be in the future.'
+                })
+            elif high_school_year < 1950:
+                raise ValidationError({
+                    'high_school_year_completed': 'Please verify the year.'
+                })
+        
+        return cleaned_data
+    
     class Meta(BaseApplicationForm.Meta):
-        model = AssociatedApplication
-        # Inherits all fields from BaseApplicationForm.Meta.fields
+        model = DesignatedApplication
+        fields = BaseApplicationForm.Meta.fields + [
+            'designation_category', 'designation_subcategory',
+            'high_school_name', 'high_school_year_completed',
+            'supervisor_name', 'supervisor_qualification', 'supervisor_email', 
+            'supervisor_phone', 'supervisor_address',
+            'supervision_hours_received', 'supervision_period_start', 'supervision_period_end',
+            'professional_development_plans', 'other_professional_memberships'
+        ]
+        widgets = {
+            **BaseApplicationForm.Meta.widgets,
+            'designation_category': SELECT_WIDGET,
+            'designation_subcategory': SELECT_WIDGET,
+            'high_school_name': TEXT_INPUT_WIDGET,
+            'high_school_year_completed': forms.NumberInput(attrs={
+                "class": "form-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors",
+                "min": "1950", "max": str(timezone.now().year)
+            }),
+            'supervisor_name': TEXT_INPUT_WIDGET,
+            'supervisor_qualification': TEXT_INPUT_WIDGET,
+            'supervisor_email': EMAIL_WIDGET,
+            'supervisor_phone': TEXT_INPUT_WIDGET,
+            'supervisor_address': TEXTAREA_WIDGET,
+            'supervision_hours_received': forms.NumberInput(attrs={
+                "class": "form-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors",
+                "min": "0"
+            }),
+            'supervision_period_start': DATE_WIDGET,
+            'supervision_period_end': DATE_WIDGET,
+            'professional_development_plans': TEXTAREA_WIDGET,
+            'other_professional_memberships': TEXTAREA_WIDGET,
+        }
+
 
 
 class StudentApplicationForm(BaseApplicationForm):
@@ -765,7 +862,7 @@ class ReferenceForm(forms.ModelForm):
         model = Reference
         fields = [
             'reference_title', 'reference_surname', 'reference_names',
-            'reference_email', 'reference_phone', 'reference_address',
+            'reference_email', 'reference_phone',
             'nature_of_relationship', 'letter_required'
         ]
         widgets = {
@@ -774,7 +871,6 @@ class ReferenceForm(forms.ModelForm):
             'reference_names': TEXT_INPUT_WIDGET,
             'reference_email': EMAIL_WIDGET,
             'reference_phone': TEXT_INPUT_WIDGET,
-            'reference_address': TEXTAREA_WIDGET,
             'nature_of_relationship': TEXT_INPUT_WIDGET,
             'letter_required': CHECKBOX_WIDGET,
         }
@@ -790,7 +886,7 @@ class ReferenceForm(forms.ModelForm):
         # Mark required fields
         required_fields = [
             'reference_title', 'reference_surname', 'reference_names',
-            'reference_email', 'reference_phone', 'reference_address',
+            'reference_email', 'reference_phone',
             'nature_of_relationship'
         ]
         for field_name in required_fields:
@@ -983,7 +1079,7 @@ ReferenceFormSet = generic_inlineformset_factory(
     form=ReferenceForm,
     ct_field='content_type',
     fk_field='object_id',
-    fields=['reference_title', 'reference_surname', 'reference_names', 'reference_email', 'reference_phone', 'reference_address', 'nature_of_relationship', 'letter_required'],
+    fields=['reference_title', 'reference_surname', 'reference_names', 'reference_email', 'reference_phone', 'nature_of_relationship', 'letter_required'],
     extra=2,
     can_delete=True,
     max_num=5,
