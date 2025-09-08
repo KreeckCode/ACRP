@@ -974,7 +974,7 @@
                             {% if form.years_in_ministry %}
                             <div class="form-group">
                                 <label for="{{ form.years_in_ministry.id_for_label }}">
-                                    {{ form.years_in_ministry.label }}
+                                    Years in Ministry / Counselling
                                     {% if form.years_in_ministry.field.required %}<span class="required">*</span>{% endif %}
                                 </label>
                                 {{ form.years_in_ministry }}
@@ -992,7 +992,7 @@
                             {% if form.years_in_part_time_ministry %}
                             <div class="form-group">
                                 <label for="{{ form.years_in_part_time_ministry.id_for_label }}">
-                                    {{ form.years_in_part_time_ministry.label }}
+                                    Years in Part Ministry
                                     {% if form.years_in_part_time_ministry.field.required %}<span class="required">*</span>{% endif %}
                                 </label>
                                 {{ form.years_in_part_time_ministry }}
@@ -1040,7 +1040,7 @@
 
 
 
-
+                        {% if session.selected_council.name == "CGMP" or session.selected_council.name == "CMTP"%}
                         <div class="field-row three-cols">
                             {% if form.ministry_name %}
                             <div class="form-group">
@@ -1087,17 +1087,7 @@
                             </div>
                             {% endif %}
                         </div>
-
-
-
-
-
-
-
-
-
-
-
+                        {% endif %}
 
 
 
@@ -1167,7 +1157,7 @@
                     <div class="section-header" onclick="toggleSection('supervision')">
                         <h3>
                             <i class="bi bi-person-badge"></i>
-                            Professional Supervision
+                            Professional Supervision (if Applicable)
                         </h3>
                         <i class="bi bi-chevron-down toggle-icon"></i>
                     </div>
@@ -1244,22 +1234,7 @@
                             {% endif %}
                         </div>
 
-                        <div class="field-row">
-                            {% if form.supervisor_address %}
-                            <div class="form-group field-full">
-                                <label for="{{ form.supervisor_address.id_for_label }}">
-                                    {{ form.supervisor_address.label }}
-                                    {% if form.supervisor_address.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.supervisor_address }}
-                                {% if form.supervisor_address.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.supervisor_address.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-                        </div>
+                        
 
                         <div class="field-row three-cols">
                             {% if form.supervision_hours_received %}
@@ -1280,41 +1255,6 @@
                             </div>
                             {% endif %}
 
-                            {% if form.supervision_period_start %}
-                            <div class="form-group">
-                                <label for="{{ form.supervision_period_start.id_for_label }}">
-                                    {{ form.supervision_period_start.label }}
-                                    {% if form.supervision_period_start.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.supervision_period_start }}
-                                {% if form.supervision_period_start.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.supervision_period_start.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                                {% if form.supervision_period_start.help_text %}
-                                    <div class="form-text">{{ form.supervision_period_start.help_text }}</div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-
-                            {% if form.supervision_period_end %}
-                            <div class="form-group">
-                                <label for="{{ form.supervision_period_end.id_for_label }}">
-                                    {{ form.supervision_period_end.label }}
-                                    {% if form.supervision_period_end.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.supervision_period_end }}
-                                {% if form.supervision_period_end.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.supervision_period_end.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                                {% if form.supervision_period_end.help_text %}
-                                    <div class="form-text">{{ form.supervision_period_end.help_text }}</div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -1330,28 +1270,7 @@
                         <i class="bi bi-chevron-down toggle-icon"></i>
                     </div>
                     <div class="section-content" id="content-development">
-                        {% if session.selected_council.name == "CPSC" %}
-                            {% if form.professional_development_plans %}
-                            <div class="field-row">
-                                <div class="form-group field-full">
-                                    <label for="{{ form.professional_development_plans.id_for_label }}">
-                                        {{ form.professional_development_plans.label }}
-                                        {% if form.professional_development_plans.field.required %}<span class="required">*</span>{% endif %}
-                                    </label>
-                                    {{ form.professional_development_plans }}
-                                    {% if form.professional_development_plans.errors %}
-                                        <div class="invalid-feedback">
-                                            {% for error in form.professional_development_plans.errors %}{{ error }}{% endfor %}
-                                        </div>
-                                    {% endif %}
-                                    {% if form.professional_development_plans.help_text %}
-                                        <div class="form-text">{{ form.professional_development_plans.help_text }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            {% endif %}
-                        {% endif %}
-
+                        
                         {% if form.other_professional_memberships %}
                         <div class="field-row">
                             <div class="form-group field-full">
@@ -1383,7 +1302,7 @@
                             Academic Qualifications
                         </h3>
                         <i class="bi bi-chevron-down toggle-icon"></i>
-                        <p class="form-text">Note: Please indicate your highest School education, Accredited Christian Pastoral Counselling /theological training and other ministry relevant training in this section. The certificates for these qualifications / training must be submitted with this application.</p>
+                        <p class="form-text">Note: Please indicate your highest School education, Accredited Christian Pastoral Counselling /theological training and other Counselling relevant training in this section. The certificates for these qualifications / training must be submitted with this application.</p>
                     </div>
                     <div class="section-content" id="content-qualifications">
                         
@@ -1407,38 +1326,40 @@
                 </div>
                 {% endif %}
 
-                <!-- Practical Experience Section -->
-                {% if show_practical_experiences %}
-                <div class="form-section" id="section-experience">
-                    <div class="section-header" onclick="toggleSection('experience')">
-                        <h3>
-                            <i class="bi bi-briefcase"></i>
-                            Practical Experience (Optional)
-                        </h3>
-                        <i class="bi bi-chevron-down toggle-icon"></i>
-                        <p class="form-text" >Please skip this section if you dont have practical experience</p>
-                    </div>
-                    <div class="section-content" id="content-experience">
-                        
-                        <div class="formset-container">
-                            <div class="formset-header">
-                                <h4 class="formset-title">Ministry & Professional Experience</h4>
-                                <button type="button" class="formset-add" onclick="addFormsetItem('practical_experiences')">
-                                    <i class="bi bi-plus-circle"></i>
-                                    Add Experience
-                                </button>
-                            </div>
+                
+                {% if session.selected_council.name == "CPSC" %}
+                    <!-- Practical Experience Section -->
+                    {% if show_practical_experiences %}
+                    <div class="form-section" id="section-experience">
+                        <div class="section-header" onclick="toggleSection('experience')">
+                            <h3>
+                                <i class="bi bi-briefcase"></i>
+                                Practical Experience (If Applicable)
+                            </h3>
+                            <i class="bi bi-chevron-down toggle-icon"></i>
+                        </div>
+                        <div class="section-content" id="content-experience">
                             
-                            <div id="practical_experiences-formset">
-                                <div class="formset-empty">
-                                    <i class="bi bi-briefcase text-muted" style="font-size: 3rem;"></i>
-                                    <p class="mb-0">No experiences added yet. Click "Add Experience" to get started.</p>
+                            <div class="formset-container">
+                                <div class="formset-header">
+                                    <h4 class="formset-title">Ministry & Professional Experience</h4>
+                                    <button type="button" class="formset-add" onclick="addFormsetItem('practical_experiences')">
+                                        <i class="bi bi-plus-circle"></i>
+                                        Add Experience
+                                    </button>
+                                </div>
+                                
+                                <div id="practical_experiences-formset">
+                                    <div class="formset-empty">
+                                        <i class="bi bi-briefcase text-muted" style="font-size: 3rem;"></i>
+                                        <p class="mb-0">No experiences added yet. Click "Add Experience" to get started.</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                {% endif %}
+                    {% endif %}
+                {% endif %} 
 
                 <!-- References Section -->
                 {% if show_references %}
@@ -1499,7 +1420,7 @@
                         <div class="section-header" onclick="toggleSection('documents')">
                             <h3>
                                 <i class="bi bi-file-earmark-arrow-up"></i>
-                                Supporting Documents
+                                Relevant Supporting Documents
                             </h3>
                             <i class="bi bi-chevron-down toggle-icon"></i>
                         </div>

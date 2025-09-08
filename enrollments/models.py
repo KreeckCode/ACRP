@@ -446,7 +446,6 @@ class BaseApplication(models.Model):
         max_length=2,
         choices=DISABILITY_CHOICES,
         default='N',
-        blank=True,
         help_text="SAQA requirement - Specify if you have any disabilities"
     )
     
