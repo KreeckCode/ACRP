@@ -1246,6 +1246,7 @@ class Document(models.Model):
         ('academic_transcript', 'Academic Transcript'),
         ('diploma', 'Diploma'),
         ('degree_certificate', 'Degree Certificate'),
+        ('professional_membership_reg', 'Professional Membership Reg'),
         
         # Professional documents
         ('ordination_certificate', 'Ordination Certificate'),

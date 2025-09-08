@@ -877,63 +877,15 @@
                 </div>
 
 
-                <!-- High School Information Section -->
-                <div class="form-section" id="section-highschool">
-                    <div class="section-header" onclick="toggleSection('highschool')">
-                        <h3>
-                            <i class="bi bi-building"></i>
-                            High School Information
-                        </h3>
-                        <i class="bi bi-chevron-down toggle-icon"></i>
-                    </div>
-                    <div class="section-content" id="content-highschool">
-                        <div class="field-row two-cols">
-                            {% if form.high_school_name %}
-                            <div class="form-group">
-                                <label for="{{ form.high_school_name.id_for_label }}">
-                                    {{ form.high_school_name.label }}
-                                    {% if form.high_school_name.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.high_school_name }}
-                                {% if form.high_school_name.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.high_school_name.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                                {% if form.high_school_name.help_text %}
-                                    <div class="form-text">{{ form.high_school_name.help_text }}</div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-
-                            {% if form.high_school_year_completed %}
-                            <div class="form-group">
-                                <label for="{{ form.high_school_year_completed.id_for_label }}">
-                                    {{ form.high_school_year_completed.label }}
-                                    {% if form.high_school_year_completed.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.high_school_year_completed }}
-                                {% if form.high_school_year_completed.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.high_school_year_completed.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                                {% if form.high_school_year_completed.help_text %}
-                                    <div class="form-text">{{ form.high_school_year_completed.help_text }}</div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-
-
                 <!-- Professional ministry involvement -->
                 <div class="form-section" id="section-background">
                     <div class="section-header" onclick="toggleSection('background')">
                         <h3>
                             <i class="bi bi-mortarboard"></i>
-                            Professional ministry involvement
+                            {% if session.selected_council.name == "CPSC" %}Professional Christian Pastoral Counselling involvement 
+                            {% elif session.selected_council.name == "CGMP" or session.selected_council.name == "CMTP" %}Professional Ministry involvement
+                            {% else %}Professional Ministry involvement {% endif %}
+                            
                         </h3>
                         <i class="bi bi-chevron-down toggle-icon"></i>
                     </div>
@@ -960,52 +912,6 @@
                         </div>
                         {% endif %}
 
-                        <div class="field-row three-cols">
-                            {% if form.highest_qualification %}
-                            <div class="form-group">
-                                <label for="{{ form.highest_qualification.id_for_label }}">
-                                    {{ form.highest_qualification.label }}
-                                    {% if form.highest_qualification.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.highest_qualification }}
-                                {% if form.highest_qualification.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.highest_qualification.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-                            
-                            {% if form.qualification_institution %}
-                            <div class="form-group">
-                                <label for="{{ form.qualification_institution.id_for_label }}">
-                                    {{ form.qualification_institution.label }}
-                                    {% if form.qualification_institution.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.qualification_institution }}
-                                {% if form.qualification_institution.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.qualification_institution.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-                            
-                            {% if form.qualification_date %}
-                            <div class="form-group">
-                                <label for="{{ form.qualification_date.id_for_label }}">
-                                    {{ form.qualification_date.label }}
-                                    {% if form.qualification_date.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.qualification_date }}
-                                {% if form.qualification_date.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.qualification_date.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-                        </div>
 
                         <div class="field-row three-cols">
                             {% if form.current_occupation %}
@@ -1026,7 +932,9 @@
                             {% if form.years_in_ministry %}
                             <div class="form-group">
                                 <label for="{{ form.years_in_ministry.id_for_label }}">
-                                    {{ form.years_in_ministry.label }}
+                                    {% if session.selected_council.name == "CPSC" %} Years in Part Ministry / Counselling 
+                                    {% elif session.selected_council.name == "CGMP" or session.selected_council.name == "CMTP" %} Years in Ministry
+                                    {% else %} Years in Ministry {% endif %}
                                     {% if form.years_in_ministry.field.required %}<span class="required">*</span>{% endif %}
                                 </label>
                                 {{ form.years_in_ministry }}
@@ -1044,7 +952,9 @@
                             {% if form.years_in_part_time_ministry %}
                             <div class="form-group">
                                 <label for="{{ form.years_in_part_time_ministry.id_for_label }}">
-                                    {{ form.years_in_part_time_ministry.label }}
+                                    {% if session.selected_council.name == "CPSC" %} Years in Part Ministry / Counselling 
+                                    {% elif session.selected_council.name == "CGMP" or session.selected_council.name == "CMTP" %} Years in Part Ministry
+                                    {% else %} Years in Part Ministry {% endif %}
                                     {% if form.years_in_part_time_ministry.field.required %}<span class="required">*</span>{% endif %}
                                 </label>
                                 {{ form.years_in_part_time_ministry }}
@@ -1092,7 +1002,7 @@
 
 
 
-
+                        {% if session.selected_council.name == "CGMP" or session.selected_council.name == "CMTP"%}
                         <div class="field-row three-cols">
                             {% if form.ministry_name %}
                             <div class="form-group">
@@ -1139,17 +1049,7 @@
                             </div>
                             {% endif %}
                         </div>
-
-
-
-
-
-
-
-
-
-
-
+                        {% endif %}
 
 
 
@@ -1214,164 +1114,7 @@
                 </div>
 
                 
-                {% if session.selected_council.name == "CPSC" %}
-                <!-- Professional Supervision Section -->
-                <div class="form-section" id="section-supervision">
-                    <div class="section-header" onclick="toggleSection('supervision')">
-                        <h3>
-                            <i class="bi bi-person-badge"></i>
-                            Professional Supervision
-                        </h3>
-                        <i class="bi bi-chevron-down toggle-icon"></i>
-                    </div>
-                    <div class="section-content" id="content-supervision">
-                        <div class="field-row">
-                            {% if form.supervisor_name %}
-                            <div class="form-group field-full">
-                                <label for="{{ form.supervisor_name.id_for_label }}">
-                                    {{ form.supervisor_name.label }}
-                                    {% if form.supervisor_name.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.supervisor_name }}
-                                {% if form.supervisor_name.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.supervisor_name.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                                {% if form.supervisor_name.help_text %}
-                                    <div class="form-text">{{ form.supervisor_name.help_text }}</div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-                        </div>
-
-                        <div class="field-row">
-                            {% if form.supervisor_qualification %}
-                            <div class="form-group field-full">
-                                <label for="{{ form.supervisor_qualification.id_for_label }}">
-                                    {{ form.supervisor_qualification.label }}
-                                    {% if form.supervisor_qualification.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.supervisor_qualification }}
-                                {% if form.supervisor_qualification.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.supervisor_qualification.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                                {% if form.supervisor_qualification.help_text %}
-                                    <div class="form-text">{{ form.supervisor_qualification.help_text }}</div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-                        </div>
-
-                        <div class="field-row two-cols">
-                            {% if form.supervisor_email %}
-                            <div class="form-group">
-                                <label for="{{ form.supervisor_email.id_for_label }}">
-                                    {{ form.supervisor_email.label }}
-                                    {% if form.supervisor_email.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.supervisor_email }}
-                                {% if form.supervisor_email.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.supervisor_email.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-
-                            {% if form.supervisor_phone %}
-                            <div class="form-group">
-                                <label for="{{ form.supervisor_phone.id_for_label }}">
-                                    {{ form.supervisor_phone.label }}
-                                    {% if form.supervisor_phone.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.supervisor_phone }}
-                                {% if form.supervisor_phone.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.supervisor_phone.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-                        </div>
-
-                        <div class="field-row">
-                            {% if form.supervisor_address %}
-                            <div class="form-group field-full">
-                                <label for="{{ form.supervisor_address.id_for_label }}">
-                                    {{ form.supervisor_address.label }}
-                                    {% if form.supervisor_address.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.supervisor_address }}
-                                {% if form.supervisor_address.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.supervisor_address.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-                        </div>
-
-                        <div class="field-row three-cols">
-                            {% if form.supervision_hours_received %}
-                            <div class="form-group">
-                                <label for="{{ form.supervision_hours_received.id_for_label }}">
-                                    {{ form.supervision_hours_received.label }}
-                                    {% if form.supervision_hours_received.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.supervision_hours_received }}
-                                {% if form.supervision_hours_received.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.supervision_hours_received.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                                {% if form.supervision_hours_received.help_text %}
-                                    <div class="form-text">{{ form.supervision_hours_received.help_text }}</div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-
-                            {% if form.supervision_period_start %}
-                            <div class="form-group">
-                                <label for="{{ form.supervision_period_start.id_for_label }}">
-                                    {{ form.supervision_period_start.label }}
-                                    {% if form.supervision_period_start.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.supervision_period_start }}
-                                {% if form.supervision_period_start.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.supervision_period_start.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                                {% if form.supervision_period_start.help_text %}
-                                    <div class="form-text">{{ form.supervision_period_start.help_text }}</div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-
-                            {% if form.supervision_period_end %}
-                            <div class="form-group">
-                                <label for="{{ form.supervision_period_end.id_for_label }}">
-                                    {{ form.supervision_period_end.label }}
-                                    {% if form.supervision_period_end.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.supervision_period_end }}
-                                {% if form.supervision_period_end.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.supervision_period_end.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                                {% if form.supervision_period_end.help_text %}
-                                    <div class="form-text">{{ form.supervision_period_end.help_text }}</div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
+                
 
                 <!-- Professional Development Section -->
                 <div class="form-section" id="section-development">
@@ -1383,27 +1126,7 @@
                         <i class="bi bi-chevron-down toggle-icon"></i>
                     </div>
                     <div class="section-content" id="content-development">
-                        {% if session.selected_council.name == "CPSC" %}
-                            {% if form.professional_development_plans %}
-                            <div class="field-row">
-                                <div class="form-group field-full">
-                                    <label for="{{ form.professional_development_plans.id_for_label }}">
-                                        {{ form.professional_development_plans.label }}
-                                        {% if form.professional_development_plans.field.required %}<span class="required">*</span>{% endif %}
-                                    </label>
-                                    {{ form.professional_development_plans }}
-                                    {% if form.professional_development_plans.errors %}
-                                        <div class="invalid-feedback">
-                                            {% for error in form.professional_development_plans.errors %}{{ error }}{% endfor %}
-                                        </div>
-                                    {% endif %}
-                                    {% if form.professional_development_plans.help_text %}
-                                        <div class="form-text">{{ form.professional_development_plans.help_text }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            {% endif %}
-                        {% endif %}
+                        
 
                         {% if form.other_professional_memberships %}
                         <div class="field-row">
