@@ -723,20 +723,7 @@
                             </div>
                             {% endif %}
                             
-                            {% if form.fax %}
-                            <div class="form-group">
-                                <label for="{{ form.fax.id_for_label }}">
-                                    {{ form.fax.label }}
-                                    {% if form.fax.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.fax }}
-                                {% if form.fax.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.fax.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
+                            
                         </div>
 
                         <div class="field-row three-cols">
@@ -744,7 +731,7 @@
                                 <div class="form-group">
                                     <label for="{{ form.postal_city.id_for_label }}">
                                         City
-                                        {% if form.postal_city.field.required %}<span class="required">*</span>{% endif %}
+                                        <span class="required">*</span>
                                     </label>
                                     {{ form.postal_city }}
                                     {% if form.postal_city.errors %}
@@ -759,7 +746,7 @@
                                 <div class="form-group">
                                     <label for="{{ form.postal_province.id_for_label }}">
                                         Province
-                                        {% if form.postal_province.field.required %}<span class="required">*</span>{% endif %}
+                                        <span class="required">*</span>
                                     </label>
                                     {{ form.postal_province }}
                                     {% if form.postal_province.errors %}
@@ -774,7 +761,7 @@
                                 <div class="form-group">
                                     <label for="{{ form.postal_code.id_for_label }}">
                                         {{ form.postal_code.label }}
-                                        {% if form.postal_code.field.required %}<span class="required"></span>{% endif %}
+                                        <span class="required">*</span>
                                     </label>
                                     {{ form.postal_code }}
                                     {% if form.postal_code.errors %}
@@ -788,95 +775,7 @@
 
 
                         
-                        {% if session.selected_council.name == "CPSC" %}
-                            <!-- Postal Address -->
-                            <h5 class="mt-4 mb-3">Postal Address</h5>
-                            <div class="field-row">
-                                {% if form.postal_address_line1 %}
-                                <div class="form-group field-full">
-                                    <label for="{{ form.postal_address_line1.id_for_label }}">
-                                        {{ form.postal_address_line1.label }}
-                                        {% if form.postal_address_line1.field.required %}<span class="required">*</span>{% endif %}
-                                    </label>
-                                    {{ form.postal_address_line1 }}
-                                    {% if form.postal_address_line1.errors %}
-                                        <div class="invalid-feedback">
-                                            {% for error in form.postal_address_line1.errors %}{{ error }}{% endfor %}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                {% endif %}
-                            </div>
-
-                            <div class="field-row">
-                                {% if form.postal_address_line2 %}
-                                <div class="form-group field-full">
-                                    <label for="{{ form.postal_address_line2.id_for_label }}">
-                                        {{ form.postal_address_line2.label }}
-                                        {% if form.postal_address_line2.field.required %}<span class="required">*</span>{% endif %}
-                                    </label>
-                                    {{ form.postal_address_line2 }}
-                                    {% if form.postal_address_line2.errors %}
-                                        <div class="invalid-feedback">
-                                            {% for error in form.postal_address_line2.errors %}{{ error }}{% endfor %}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                {% endif %}
-                            </div>
-
-                            
-
-                            <div class="field-row two-cols">
-                                {% if form.postal_code %}
-                                <div class="form-group">
-                                    <label for="{{ form.postal_code.id_for_label }}">
-                                        {{ form.postal_code.label }}
-                                        {% if form.postal_code.field.required %}<span class="required">*</span>{% endif %}
-                                    </label>
-                                    {{ form.postal_code }}
-                                    {% if form.postal_code.errors %}
-                                        <div class="invalid-feedback">
-                                            {% for error in form.postal_code.errors %}{{ error }}{% endfor %}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                {% endif %}
-                                
-                                {% if form.postal_country %}
-                                <div class="form-group">
-                                    <label for="{{ form.postal_country.id_for_label }}">
-                                        {{ form.postal_country.label }}
-                                        {% if form.postal_country.field.required %}<span class="required">*</span>{% endif %}
-                                    </label>
-                                    {{ form.postal_country }}
-                                    {% if form.postal_country.errors %}
-                                        <div class="invalid-feedback">
-                                            {% for error in form.postal_country.errors %}{{ error }}{% endfor %}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                {% endif %}
-                            </div>
-
-                            <!-- Physical Address Checkbox -->
-                            {% if form.physical_same_as_postal %}
-                            <div class="field-row">
-                                <div class="form-group">
-                                    <div class="form-check">
-                                        {{ form.physical_same_as_postal }}
-                                        <label class="form-check-label" for="{{ form.physical_same_as_postal.id_for_label }}">
-                                            {{ form.physical_same_as_postal.label }}
-                                        </label>
-                                    </div>
-                                    {% if form.physical_same_as_postal.help_text %}
-                                        <div class="form-text">{{ form.physical_same_as_postal.help_text }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        {% endif %}
-
-                        {% endif %}
+                        
                     </div>
                 </div>
 
@@ -952,6 +851,7 @@
                             </div>
                             {% endif %}
 
+                            
                             {% if form.expected_graduation %}
                             <div class="form-group">
                                 <label for="{{ form.expected_graduation.id_for_label }}">
@@ -1130,7 +1030,7 @@
                             Academic Qualifications
                         </h3>
                         <i class="bi bi-chevron-down toggle-icon"></i>
-                        <p class="form-text">Note: Please indicate your highest School education, ministry/theological training and other ministry relevant training in this section. The certificates for these qualifications / training must be submitted with this application.</p>
+                        <p class="form-text">Note: Note: Please indicate your highest School education, Accredited Christian Pastoral Counselling /theological training and other Counselling relevant training in this section. The certificates for these qualifications / training must be submitted with this application.</p>
                     </div>
                     <div class="section-content" id="content-qualifications">
                         
@@ -1237,7 +1137,7 @@
                     <div class="section-header" onclick="toggleSection('legal')">
                         <h3>
                             <i class="bi bi-shield-check"></i>
-                            Legal Agreements & Declaration
+                            Declaration & Popi Act Authorisation
                         </h3>
                         <i class="bi bi-chevron-down toggle-icon"></i>
                     </div>
@@ -1245,7 +1145,7 @@
                         <!-- Legal Documents Link -->
                         <div class="alert alert-info mb-4">
                             <h5 class="alert-heading"><i class="bi bi-file-earmark-text"></i> Important Documents</h5>
-                            <p>Please review the Declaration and Legal documents before proceeding:</p>
+                            <p>Please review the Declaration and Popi act documents before proceeding:</p>
                             <a href="https://uorivo.lon1.cdn.digitaloceanspaces.com/CGMP%20CMTP%20Declaration%20and%20POPI%20Act%20(002)%20(1).pdf" 
                                target="_blank" 
                                class="btn btn-primary mb-3">
