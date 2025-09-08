@@ -400,7 +400,7 @@ class BaseApplication(models.Model):
         ('white', 'White'),
         ('asian', 'Asian'),
         ('other', 'Other'),
-        ('prefer_not_to_say', 'Prefer not to say')
+        ('unknown', 'Unknown')
     ]
     
     title = models.CharField(max_length=20, choices=TITLE_CHOICES)

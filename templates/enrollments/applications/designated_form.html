@@ -920,55 +920,7 @@
                 </div>
 
 
-                <!-- High School Information Section -->
-                <div class="form-section" id="section-highschool">
-                    <div class="section-header" onclick="toggleSection('highschool')">
-                        <h3>
-                            <i class="bi bi-building"></i>
-                            High School Information
-                        </h3>
-                        <i class="bi bi-chevron-down toggle-icon"></i>
-                    </div>
-                    <div class="section-content" id="content-highschool">
-                        <div class="field-row two-cols">
-                            {% if form.high_school_name %}
-                            <div class="form-group">
-                                <label for="{{ form.high_school_name.id_for_label }}">
-                                    {{ form.high_school_name.label }}
-                                    {% if form.high_school_name.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.high_school_name }}
-                                {% if form.high_school_name.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.high_school_name.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                                {% if form.high_school_name.help_text %}
-                                    <div class="form-text">{{ form.high_school_name.help_text }}</div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-
-                            {% if form.high_school_year_completed %}
-                            <div class="form-group">
-                                <label for="{{ form.high_school_year_completed.id_for_label }}">
-                                    {{ form.high_school_year_completed.label }}
-                                    {% if form.high_school_year_completed.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.high_school_year_completed }}
-                                {% if form.high_school_year_completed.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.high_school_year_completed.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                                {% if form.high_school_year_completed.help_text %}
-                                    <div class="form-text">{{ form.high_school_year_completed.help_text }}</div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
+                
 
                 <!-- Professional ministry involvement -->
                 <div class="form-section" id="section-background">
@@ -1002,52 +954,6 @@
                         </div>
                         {% endif %}
 
-                        <div class="field-row three-cols">
-                            {% if form.highest_qualification %}
-                            <div class="form-group">
-                                <label for="{{ form.highest_qualification.id_for_label }}">
-                                    {{ form.highest_qualification.label }}
-                                    {% if form.highest_qualification.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.highest_qualification }}
-                                {% if form.highest_qualification.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.highest_qualification.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-                            
-                            {% if form.qualification_institution %}
-                            <div class="form-group">
-                                <label for="{{ form.qualification_institution.id_for_label }}">
-                                    {{ form.qualification_institution.label }}
-                                    {% if form.qualification_institution.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.qualification_institution }}
-                                {% if form.qualification_institution.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.qualification_institution.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-                            
-                            {% if form.qualification_date %}
-                            <div class="form-group">
-                                <label for="{{ form.qualification_date.id_for_label }}">
-                                    {{ form.qualification_date.label }}
-                                    {% if form.qualification_date.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.qualification_date }}
-                                {% if form.qualification_date.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.qualification_date.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-                        </div>
 
                         <div class="field-row three-cols">
                             {% if form.current_occupation %}
@@ -1477,7 +1383,7 @@
                             Academic Qualifications
                         </h3>
                         <i class="bi bi-chevron-down toggle-icon"></i>
-                        <p class="form-text">Note: Please indicate your highest School education, ministry/theological training and other ministry relevant training in this section. The certificates for these qualifications / training must be submitted with this application.</p>
+                        <p class="form-text">Note: Please indicate your highest School education, Accredited Christian Pastoral Counselling /theological training and other ministry relevant training in this section. The certificates for these qualifications / training must be submitted with this application.</p>
                     </div>
                     <div class="section-content" id="content-qualifications">
                         
