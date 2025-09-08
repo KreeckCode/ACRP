@@ -307,8 +307,8 @@ DEFAULT_DOWNLOAD_EXPIRY_DAYS = 30
 DEFAULT_MAX_DOWNLOADS = 5
 
 # Base URL for building absolute URLs (important for download links)
-BASE_URL = 'https://kreeck.com'  # Replace with your domain
-DEFAULT_FROM_EMAIL = 'dave@kreeck.com'
+BASE_URL = 'https://ams.acrp.org.za'  # Replace with your domain
+DEFAULT_FROM_EMAIL = 'ams@acrp.org.za'
 DEFAULT_REPLY_TO_EMAIL = 'ams@acrp.org.za'
 # File and card settings
 MAX_CARD_FILE_SIZE = 5 * 1024 * 1024  # 5MB
@@ -322,7 +322,7 @@ CARD_IMAGE_DPI = 300
 import logging
 
 # Email sender configuration
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='ACRP Portal <dave@kreeck.com>')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='ACRP Portal <ams@acrp.org.za>')
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 EMAIL_SUBJECT_PREFIX = config('EMAIL_SUBJECT_PREFIX', default='[ACRP] ')
 

@@ -103,8 +103,11 @@
       <form method="post" class="max-w-5xl mx-auto" id="affiliationForm">
         {% csrf_token %}
         
-        <div class="grid md:grid-cols-3 gap-8 mb-12">
-          
+        {% if session.selected_council.name == "CPSC" or session.selected_council.name == "CGMP" %}
+        <div class="grid md:grid-cols-3 gap-8 mb-12"> 
+        {% else %}
+        <div class="grid md:grid-cols-2 gap-8 mb-12">
+        {% endif %}
           
 
           <!-- Designated Affiliation -->
@@ -188,6 +191,7 @@
             </div>
           </div>
 
+          {% if session.selected_council.name == "CPSC" or session.selected_council.name == "CGMP" %}
           <!-- Associated Affiliation -->
           <div class="affiliation-card cursor-pointer" data-value="associated" data-type="associated" id="card-associated">
             <input type="radio" name="affiliation_type" value="associated" class="hidden radio-input" id="radio-associated" required>
@@ -225,7 +229,7 @@
               </div>
             </div>
           </div>
-
+          {% endif %}
 
         </div>
         

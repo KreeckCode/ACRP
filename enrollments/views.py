@@ -515,6 +515,15 @@ def application_create(request, session_id):
                     instance=None  # No instance for new application
                 ),
             }
+
+        elif session.selected_affiliation_type.code == 'student':
+            formsets = {
+                'academic_qualifications': AcademicQualificationFormSet(
+                    request.POST, 
+                    prefix='academic_qualifications',
+                    instance=None
+                ),
+            }
         
         # Validate main form (now onboarding_session is set, so model.clean() won't fail)
         form_valid = form.is_valid()
@@ -660,6 +669,13 @@ def application_create(request, session_id):
                     instance=None  # No instance for new application
                 ),
             }
+        elif session.selected_affiliation_type.code == 'student':
+            formsets = {
+                'academic_qualifications': AcademicQualificationFormSet(
+                    prefix='academic_qualifications',
+                    instance=None
+                ),
+            }
     
     # Create mock formsets for template
     formsets['references'] = create_mock_reference_formset()
@@ -669,7 +685,7 @@ def application_create(request, session_id):
         'form': form,
         'formsets': formsets,
         'session': session,
-        'show_academic_qualifications': session.selected_affiliation_type.code == 'designated',
+        'show_academic_qualifications': session.selected_affiliation_type.code in ['designated', 'student'],
         'show_practical_experiences': session.selected_affiliation_type.code == 'designated',
         'show_references': True,
         'show_documents': True,
@@ -688,6 +704,10 @@ def application_create(request, session_id):
                                'enrollments/applications/base_form.html')
     
     return render(request, template, context)
+
+
+
+
 # ============================================================================
 # DOCUMENT MANAGEMENT VIEWS
 # ============================================================================
@@ -995,18 +1015,18 @@ def application_success(request):
 
 # Admin email list - all staff who should receive application notifications
 ADMIN_EMAIL_LIST = [
-    'anita.snyders@acrp.org.za',
-    'ilse.grunewald@acrp.org.za', 
-    'maria.jansen@acrp.org.za',
-    'riana.andersen@acrp.org.za',
+    #'anita.snyders@acrp.org.za',
+    #'ilse.grunewald@acrp.org.za', 
+    #'maria.jansen@acrp.org.za',
+    #'riana.andersen@acrp.org.za',
     'ams@acrp.org.za',
-    'andrea.leipoldt@acrp.org.za',
-    'gerhard.botha@acrp.org.za',
-    'theto.maunatlala@acrp.org.za'
+    #'andrea.leipoldt@acrp.org.za',
+    #'gerhard.botha@acrp.org.za',
+    #'theto.maunatlala@acrp.org.za'
 ]
 
 # Email configuration
-FROM_EMAIL = 'dave@kreeck.com'
+FROM_EMAIL = 'ams@acrp.org.za'
 REPLY_TO_EMAIL = 'ams@acrp.org.za'
 from django.template.loader import render_to_string
 from django.core.mail import send_mail, EmailMultiAlternatives

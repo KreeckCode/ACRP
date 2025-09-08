@@ -617,14 +617,14 @@ class BaseApplication(models.Model):
     
     highest_qualification = models.CharField(
         max_length=200,
-        help_text="Your highest educational qualification"
+        help_text="Your highest educational qualification", blank=True
     )
     qualification_institution = models.CharField(
         max_length=200,
-        help_text="Institution where you obtained your highest qualification"
+        help_text="Institution where you obtained your highest qualification", blank=True
     )
     qualification_date = models.DateField(
-        help_text="Date when qualification was awarded"
+        help_text="Date when qualification was awarded", blank=True
     )
     
     # ========================================================================
@@ -892,7 +892,7 @@ class StudentApplication(BaseApplication):
         help_text="Current course or program of study"
     )
     expected_graduation = models.DateField(
-        help_text="Expected graduation/completion date"
+        help_text="Expected graduation/completion date", blank=True
     )
     
     # Academic details
@@ -902,14 +902,13 @@ class StudentApplication(BaseApplication):
         help_text="Student number at current institution"
     )
     year_of_study = models.PositiveIntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(10)],
-        help_text="Current year of study"
+        help_text="Current year of study", blank=True
     )
     
     # Supervision details
-    academic_supervisor_name = models.CharField(max_length=200)
-    academic_supervisor_email = models.EmailField()
-    academic_supervisor_phone = models.CharField(max_length=20)
+    academic_supervisor_name = models.CharField(max_length=200, blank=True)
+    academic_supervisor_email = models.EmailField(blank=True)
+    academic_supervisor_phone = models.CharField(max_length=20, blank=True)
     
     class Meta:
         verbose_name = "Student Affiliation Application"

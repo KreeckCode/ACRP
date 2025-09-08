@@ -658,6 +658,16 @@ class StudentApplicationForm(BaseApplicationForm):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # CRITICAL FIX: Auto-populate designation fields from onboarding session
+        if self.onboarding_session:
+            if 'designation_category' in self.fields and self.onboarding_session.selected_designation_category:
+                self.fields['designation_category'].initial = self.onboarding_session.selected_designation_category
+                self.initial['designation_category'] = self.onboarding_session.selected_designation_category.pk
+                
+            if 'designation_subcategory' in self.fields and self.onboarding_session.selected_designation_subcategory:
+                self.fields['designation_subcategory'].initial = self.onboarding_session.selected_designation_subcategory
+                self.initial['designation_subcategory'] = self.onboarding_session.selected_designation_subcategory.pk
         
         # Add student-specific help text
         self.fields['current_institution'].help_text = 'Name of the educational institution where you are currently studying'

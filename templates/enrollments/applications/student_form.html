@@ -390,6 +390,10 @@
             {% csrf_token %}
             
             <!-- Form Management Fields -->
+            <!-- Form Management Fields -->
+            {% if formsets.academic_qualifications %}
+                {{ formsets.academic_qualifications.management_form }}
+            {% endif %}
             {% if formsets.references %}
                 {{ formsets.references.management_form }}
             {% endif %}
@@ -498,6 +502,21 @@
                                 {% if form.initials.errors %}
                                     <div class="invalid-feedback">
                                         {% for error in form.initials.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+
+                            {% if form.home_language %}
+                            <div class="form-group">
+                                <label for="{{ form.home_language.id_for_label }}">
+                                    {{ form.home_language.label }}
+                                    {% if form.home_language.field.required %}<span class="required">*</span>{% endif %}
+                                </label>
+                                {{ form.home_language }}
+                                {% if form.home_language.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.home_language.errors %}{{ error }}{% endfor %}
                                     </div>
                                 {% endif %}
                             </div>
@@ -626,6 +645,8 @@
                             {% endif %}
                         </div>
                         {% endif %}
+                        
+                    </div>
                     </div>
                 </div>
 
@@ -718,124 +739,147 @@
                             {% endif %}
                         </div>
 
-                        <!-- Postal Address -->
-                        <h5 class="mt-4 mb-3">Postal Address</h5>
-                        <div class="field-row">
-                            {% if form.postal_address_line1 %}
-                            <div class="form-group field-full">
-                                <label for="{{ form.postal_address_line1.id_for_label }}">
-                                    {{ form.postal_address_line1.label }}
-                                    {% if form.postal_address_line1.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.postal_address_line1 }}
-                                {% if form.postal_address_line1.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.postal_address_line1.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-                        </div>
-
-                        <div class="field-row">
-                            {% if form.postal_address_line2 %}
-                            <div class="form-group field-full">
-                                <label for="{{ form.postal_address_line2.id_for_label }}">
-                                    {{ form.postal_address_line2.label }}
-                                    {% if form.postal_address_line2.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.postal_address_line2 }}
-                                {% if form.postal_address_line2.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.postal_address_line2.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-                        </div>
-
-                        <div class="field-row two-cols">
-                            {% if form.postal_city %}
-                            <div class="form-group">
-                                <label for="{{ form.postal_city.id_for_label }}">
-                                    {{ form.postal_city.label }}
-                                    {% if form.postal_city.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.postal_city }}
-                                {% if form.postal_city.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.postal_city.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-                            
-                            {% if form.postal_province %}
-                            <div class="form-group">
-                                <label for="{{ form.postal_province.id_for_label }}">
-                                    {{ form.postal_province.label }}
-                                    {% if form.postal_province.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.postal_province }}
-                                {% if form.postal_province.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.postal_province.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-                        </div>
-
-                        <div class="field-row two-cols">
-                            {% if form.postal_code %}
-                            <div class="form-group">
-                                <label for="{{ form.postal_code.id_for_label }}">
-                                    {{ form.postal_code.label }}
-                                    {% if form.postal_code.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.postal_code }}
-                                {% if form.postal_code.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.postal_code.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-                            
-                            {% if form.postal_country %}
-                            <div class="form-group">
-                                <label for="{{ form.postal_country.id_for_label }}">
-                                    {{ form.postal_country.label }}
-                                    {% if form.postal_country.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.postal_country }}
-                                {% if form.postal_country.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.postal_country.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-                        </div>
-
-                        <!-- Physical Address Checkbox -->
-                        {% if form.physical_same_as_postal %}
-                        <div class="field-row">
-                            <div class="form-group">
-                                <div class="form-check">
-                                    {{ form.physical_same_as_postal }}
-                                    <label class="form-check-label" for="{{ form.physical_same_as_postal.id_for_label }}">
-                                        {{ form.physical_same_as_postal.label }}
+                        <div class="field-row three-cols">
+                                {% if form.postal_city %}
+                                <div class="form-group">
+                                    <label for="{{ form.postal_city.id_for_label }}">
+                                        City
+                                        {% if form.postal_city.field.required %}<span class="required">*</span>{% endif %}
                                     </label>
+                                    {{ form.postal_city }}
+                                    {% if form.postal_city.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.postal_city.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
                                 </div>
-                                {% if form.physical_same_as_postal.help_text %}
-                                    <div class="form-text">{{ form.physical_same_as_postal.help_text }}</div>
+                                {% endif %}
+                                
+                                {% if form.postal_province %}
+                                <div class="form-group">
+                                    <label for="{{ form.postal_province.id_for_label }}">
+                                        Province
+                                        {% if form.postal_province.field.required %}<span class="required">*</span>{% endif %}
+                                    </label>
+                                    {{ form.postal_province }}
+                                    {% if form.postal_province.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.postal_province.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+
+                                {% if form.postal_code %}
+                                <div class="form-group">
+                                    <label for="{{ form.postal_code.id_for_label }}">
+                                        {{ form.postal_code.label }}
+                                        {% if form.postal_code.field.required %}<span class="required"></span>{% endif %}
+                                    </label>
+                                    {{ form.postal_code }}
+                                    {% if form.postal_code.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.postal_code.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
                                 {% endif %}
                             </div>
-                        </div>
+
+
+                        
+                        {% if session.selected_council.name == "CPSC" %}
+                            <!-- Postal Address -->
+                            <h5 class="mt-4 mb-3">Postal Address</h5>
+                            <div class="field-row">
+                                {% if form.postal_address_line1 %}
+                                <div class="form-group field-full">
+                                    <label for="{{ form.postal_address_line1.id_for_label }}">
+                                        {{ form.postal_address_line1.label }}
+                                        {% if form.postal_address_line1.field.required %}<span class="required">*</span>{% endif %}
+                                    </label>
+                                    {{ form.postal_address_line1 }}
+                                    {% if form.postal_address_line1.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.postal_address_line1.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="field-row">
+                                {% if form.postal_address_line2 %}
+                                <div class="form-group field-full">
+                                    <label for="{{ form.postal_address_line2.id_for_label }}">
+                                        {{ form.postal_address_line2.label }}
+                                        {% if form.postal_address_line2.field.required %}<span class="required">*</span>{% endif %}
+                                    </label>
+                                    {{ form.postal_address_line2 }}
+                                    {% if form.postal_address_line2.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.postal_address_line2.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            
+
+                            <div class="field-row two-cols">
+                                {% if form.postal_code %}
+                                <div class="form-group">
+                                    <label for="{{ form.postal_code.id_for_label }}">
+                                        {{ form.postal_code.label }}
+                                        {% if form.postal_code.field.required %}<span class="required">*</span>{% endif %}
+                                    </label>
+                                    {{ form.postal_code }}
+                                    {% if form.postal_code.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.postal_code.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                                
+                                {% if form.postal_country %}
+                                <div class="form-group">
+                                    <label for="{{ form.postal_country.id_for_label }}">
+                                        {{ form.postal_country.label }}
+                                        {% if form.postal_country.field.required %}<span class="required">*</span>{% endif %}
+                                    </label>
+                                    {{ form.postal_country }}
+                                    {% if form.postal_country.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.postal_country.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Physical Address Checkbox -->
+                            {% if form.physical_same_as_postal %}
+                            <div class="field-row">
+                                <div class="form-group">
+                                    <div class="form-check">
+                                        {{ form.physical_same_as_postal }}
+                                        <label class="form-check-label" for="{{ form.physical_same_as_postal.id_for_label }}">
+                                            {{ form.physical_same_as_postal.label }}
+                                        </label>
+                                    </div>
+                                    {% if form.physical_same_as_postal.help_text %}
+                                        <div class="form-text">{{ form.physical_same_as_postal.help_text }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endif %}
+
                         {% endif %}
                     </div>
                 </div>
+
 
                 <!-- Student Information Section -->
                 <div class="form-section" id="section-student">
@@ -871,7 +915,7 @@
                             {% if form.course_of_study %}
                             <div class="form-group field-full">
                                 <label for="{{ form.course_of_study.id_for_label }}">
-                                    {{ form.course_of_study.label }}
+                                    Qualification enrolled for
                                     {% if form.course_of_study.field.required %}<span class="required">*</span>{% endif %}
                                 </label>
                                 {{ form.course_of_study }}
@@ -888,23 +932,7 @@
                         </div>
 
                         <div class="field-row three-cols">
-                            {% if form.student_number %}
-                            <div class="form-group">
-                                <label for="{{ form.student_number.id_for_label }}">
-                                    {{ form.student_number.label }}
-                                    {% if form.student_number.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.student_number }}
-                                {% if form.student_number.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.student_number.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                                {% if form.student_number.help_text %}
-                                    <div class="form-text">{{ form.student_number.help_text }}</div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
+                            
 
                             {% if form.year_of_study %}
                             <div class="form-group">
@@ -943,59 +971,6 @@
                             {% endif %}
                         </div>
 
-                        <!-- Academic Supervisor Information -->
-                        <h5 class="mt-4 mb-3">Academic Supervisor</h5>
-                        <div class="field-row">
-                            {% if form.academic_supervisor_name %}
-                            <div class="form-group field-full">
-                                <label for="{{ form.academic_supervisor_name.id_for_label }}">
-                                    {{ form.academic_supervisor_name.label }}
-                                    {% if form.academic_supervisor_name.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.academic_supervisor_name }}
-                                {% if form.academic_supervisor_name.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.academic_supervisor_name.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                                {% if form.academic_supervisor_name.help_text %}
-                                    <div class="form-text">{{ form.academic_supervisor_name.help_text }}</div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-                        </div>
-
-                        <div class="field-row two-cols">
-                            {% if form.academic_supervisor_email %}
-                            <div class="form-group">
-                                <label for="{{ form.academic_supervisor_email.id_for_label }}">
-                                    {{ form.academic_supervisor_email.label }}
-                                    {% if form.academic_supervisor_email.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.academic_supervisor_email }}
-                                {% if form.academic_supervisor_email.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.academic_supervisor_email.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-
-                            {% if form.academic_supervisor_phone %}
-                            <div class="form-group">
-                                <label for="{{ form.academic_supervisor_phone.id_for_label }}">
-                                    {{ form.academic_supervisor_phone.label }}
-                                    {% if form.academic_supervisor_phone.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.academic_supervisor_phone }}
-                                {% if form.academic_supervisor_phone.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.academic_supervisor_phone.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-                        </div>
                     </div>
                 </div>
 
@@ -1004,112 +979,13 @@
                     <div class="section-header" onclick="toggleSection('background')">
                         <h3>
                             <i class="bi bi-mortarboard"></i>
-                            Educational & Professional Background
+                            Present Occupation/Position
                         </h3>
                         <i class="bi bi-chevron-down toggle-icon"></i>
                     </div>
                     <div class="section-content" id="content-background">
-                        <div class="field-row two-cols">
-                            {% if form.religious_affiliation %}
-                            <div class="form-group">
-                                <label for="{{ form.religious_affiliation.id_for_label }}">
-                                    {{ form.religious_affiliation.label }}
-                                    {% if form.religious_affiliation.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.religious_affiliation }}
-                                {% if form.religious_affiliation.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.religious_affiliation.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                                {% if form.religious_affiliation.help_text %}
-                                    <div class="form-text">{{ form.religious_affiliation.help_text }}</div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-                            
-                            {% if form.home_language %}
-                            <div class="form-group">
-                                <label for="{{ form.home_language.id_for_label }}">
-                                    {{ form.home_language.label }}
-                                    {% if form.home_language.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.home_language }}
-                                {% if form.home_language.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.home_language.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-                        </div>
+                       
 
-                        {% if form.other_languages %}
-                        <div class="field-row">
-                            <div class="form-group field-full">
-                                <label for="{{ form.other_languages.id_for_label }}">
-                                    {{ form.other_languages.label }}
-                                    {% if form.other_languages.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.other_languages }}
-                                {% if form.other_languages.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.other_languages.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                                {% if form.other_languages.help_text %}
-                                    <div class="form-text">{{ form.other_languages.help_text }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        {% endif %}
-
-                        <div class="field-row three-cols">
-                            {% if form.highest_qualification %}
-                            <div class="form-group">
-                                <label for="{{ form.highest_qualification.id_for_label }}">
-                                    {{ form.highest_qualification.label }}
-                                    {% if form.highest_qualification.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.highest_qualification }}
-                                {% if form.highest_qualification.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.highest_qualification.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-                            
-                            {% if form.qualification_institution %}
-                            <div class="form-group">
-                                <label for="{{ form.qualification_institution.id_for_label }}">
-                                    {{ form.qualification_institution.label }}
-                                    {% if form.qualification_institution.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.qualification_institution }}
-                                {% if form.qualification_institution.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.qualification_institution.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-                            
-                            {% if form.qualification_date %}
-                            <div class="form-group">
-                                <label for="{{ form.qualification_date.id_for_label }}">
-                                    {{ form.qualification_date.label }}
-                                    {% if form.qualification_date.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.qualification_date }}
-                                {% if form.qualification_date.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.qualification_date.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-                        </div>
 
                         <div class="field-row two-cols">
                             {% if form.current_occupation %}
@@ -1127,23 +1003,7 @@
                             </div>
                             {% endif %}
                             
-                            {% if form.years_in_ministry %}
-                            <div class="form-group">
-                                <label for="{{ form.years_in_ministry.id_for_label }}">
-                                    {{ form.years_in_ministry.label }}
-                                    {% if form.years_in_ministry.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.years_in_ministry }}
-                                {% if form.years_in_ministry.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.years_in_ministry.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                                {% if form.years_in_ministry.help_text %}
-                                    <div class="form-text">{{ form.years_in_ministry.help_text }}</div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
+                            
                         </div>
 
                         {% if form.work_description %}
@@ -1204,21 +1064,7 @@
                         </div>
                         {% endif %}
 
-                        {% if form.actively_involved_pastoral_counselling %}
-                        <div class="field-row">
-                            <div class="form-group">
-                                <div class="form-check">
-                                    {{ form.actively_involved_pastoral_counselling }}
-                                    <label class="form-check-label" for="{{ form.actively_involved_pastoral_counselling.id_for_label }}">
-                                        {{ form.actively_involved_pastoral_counselling.label }}
-                                    </label>
-                                </div>
-                                {% if form.actively_involved_pastoral_counselling.help_text %}
-                                    <div class="form-text">{{ form.actively_involved_pastoral_counselling.help_text }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        {% endif %}
+                        
                     </div>
                 </div>
 
@@ -1234,6 +1080,21 @@
                     </div>
                     <div class="section-content" id="content-references">
                         
+                        <!-- Reference Letter Requirements Note -->
+                        <div class="alert alert-info mb-4">
+                            <h5 class="alert-heading"><i class="bi bi-info-circle"></i> Reference Letter Requirements</h5>
+                            <p class="mb-0">A reference letter must be submitted with this application. A reference letter must:</p>
+                            <ul class="mb-0 mt-2">
+                                <li>Be currently dated (no older than 3 months)</li>
+                                <li>Be written by an official or responsible member of your ministry (i.e. not written by the applicant)</li>
+                                <li>Confirm that you are professionally involved in ministry</li>
+                                <li>Specify your current ministry position/function</li>
+                                <li>Contain the name & contact details of your church/ministry (preferably on a letterhead)</li>
+                                <li>Indicate the details (name, contact details, position) of the person signing the letter</li>
+                                <li>Be clearly legible</li>
+                            </ul>
+                        </div>
+
                         <!-- Management Form for References -->
                         <input type="hidden" name="references-TOTAL_FORMS" value="0" id="id_references-TOTAL_FORMS">
                         <input type="hidden" name="references-INITIAL_FORMS" value="0" id="id_references-INITIAL_FORMS">
@@ -1242,7 +1103,7 @@
                         
                         <div class="formset-container">
                             <div class="formset-header">
-                                <h4 class="formset-title">Academic & Professional References</h4>
+                                <h4 class="formset-title">Professional References</h4>
                                 <button type="button" class="formset-add" onclick="addFormsetItem('references')">
                                     <i class="bi bi-plus-circle"></i>
                                     Add Reference
@@ -1260,6 +1121,39 @@
                 </div>
                 {% endif %}
 
+                <!-- Academic Qualifications Section -->
+                {% if show_academic_qualifications %}
+                <div class="form-section" id="section-qualifications">
+                    <div class="section-header" onclick="toggleSection('qualifications')">
+                        <h3>
+                            <i class="bi bi-mortarboard-fill"></i>
+                            Academic Qualifications
+                        </h3>
+                        <i class="bi bi-chevron-down toggle-icon"></i>
+                        <p class="form-text">Note: Please indicate your highest School education, ministry/theological training and other ministry relevant training in this section. The certificates for these qualifications / training must be submitted with this application.</p>
+                    </div>
+                    <div class="section-content" id="content-qualifications">
+                        
+                        <div class="formset-container">
+                            <div class="formset-header">
+                                <h4 class="formset-title">Qualifications and Training</h4>
+                                <button type="button" class="formset-add" onclick="addFormsetItem('academic_qualifications')">
+                                    <i class="bi bi-plus-circle"></i>
+                                    Add Qualification
+                                </button>
+                            </div>
+                            
+                            <div id="academic_qualifications-formset">
+                                <div class="formset-empty">
+                                    <i class="bi bi-mortarboard-fill text-muted" style="font-size: 3rem;"></i>
+                                    <p class="mb-0">No qualifications added yet. Click "Add Qualification" to get started.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
                 <!-- Documents Section -->
                 {% if show_documents %}
                     <div class="form-section" id="section-documents">
@@ -1270,7 +1164,23 @@
                             </h3>
                             <i class="bi bi-chevron-down toggle-icon"></i>
                         </div>
+
+                        
                         <div class="section-content" id="content-documents">
+                            <!-- Reference Letter Requirements Note -->
+                        <div class="alert alert-info mb-4">
+                            <h5 class="alert-heading"><i class="bi bi-info-circle"></i> Required Supporting Documents</h5>
+                            <p class="mb-0">Please ensure you have the following documents ready to upload:</p>
+                            <ul class="mb-0 mt-2">
+                                <li>ID Document or Passport</li>
+                                <li>Highest School Certificate</li>
+                                <li>Qualification / Training Certificates</li>
+                                <li>Reference Letter</li>
+                                <li>Copy of Ordination Certificate (if available)</li>
+                                <li>Proof of Payment</li>
+                            </ul>
+                            <small class="text-muted mt-2 d-block">Note: All documents must be clearly legible and in PDF, DOC, DOCX, JPG, or PNG format</small>
+                        </div>
                             <!-- Show existing documents if updating -->
                             {% if is_update and existing_documents %}
                             <div class="mb-4">
@@ -1332,6 +1242,18 @@
                         <i class="bi bi-chevron-down toggle-icon"></i>
                     </div>
                     <div class="section-content" id="content-legal">
+                        <!-- Legal Documents Link -->
+                        <div class="alert alert-info mb-4">
+                            <h5 class="alert-heading"><i class="bi bi-file-earmark-text"></i> Important Documents</h5>
+                            <p>Please review the Declaration and Legal documents before proceeding:</p>
+                            <a href="https://uorivo.lon1.cdn.digitaloceanspaces.com/CGMP%20CMTP%20Declaration%20and%20POPI%20Act%20(002)%20(1).pdf" 
+                               target="_blank" 
+                               class="btn btn-primary mb-3">
+                                <i class="bi bi-file-pdf"></i>
+                                View Declaration and Legal Documents
+                            </a>
+                        </div>
+
                         <div class="field-row">
                             {% if form.popi_act_accepted %}
                             <div class="form-group">
@@ -1470,8 +1392,14 @@
         // Formset management
         function addFormsetItem(formsetName) {
             const formset = document.getElementById(`${formsetName}-formset`);
-            const totalForms = document.querySelector(`#id_${formsetName}-TOTAL_FORMS`);
-            const currentCount = parseInt(totalForms.value);
+            const totalFormsField = document.querySelector(`input[name="${formsetName}-TOTAL_FORMS"]`);
+            
+            if (!totalFormsField) {
+                console.error(`Cannot find total forms field for ${formsetName}`);
+                return;
+            }
+            
+            const currentCount = parseInt(totalFormsField.value);
             
             // Remove empty state if it exists
             const emptyState = formset.querySelector('.formset-empty');
@@ -1485,6 +1413,10 @@
                 newFormHtml = createReferenceFormHtml(currentCount);
             } else if (formsetName === 'documents') {
                 newFormHtml = createDocumentFormHtml(currentCount);
+            } else if (formsetName === 'academic_qualifications') {
+                newFormHtml = createAcademicQualificationFormHtml(currentCount);
+            } else if (formsetName === 'practical_experiences') {
+                newFormHtml = createPracticalExperienceFormHtml(currentCount);
             }
             
             // Add new form to DOM
@@ -1496,7 +1428,7 @@
             formset.appendChild(newFormElement);
             
             // Update total forms count
-            totalForms.value = currentCount + 1;
+            totalFormsField.value = currentCount + 1;
         }
 
         function removeFormsetItem(button, formsetName) {
@@ -1516,9 +1448,12 @@
             updateFormsetIndices(formsetName);
             
             // Update total forms count
-            const totalForms = document.querySelector(`#id_${formsetName}-TOTAL_FORMS`);
+            const totalFormsField = document.querySelector(`input[name="${formsetName}-TOTAL_FORMS"]`);
             const visibleForms = document.querySelectorAll(`#${formsetName}-formset .formset-item:not([style*="display: none"])`);
-            totalForms.value = visibleForms.length;
+            
+            if (totalFormsField) {
+                totalFormsField.value = visibleForms.length;
+            }
             
             // Show empty state if no forms left
             const formset = document.getElementById(`${formsetName}-formset`);
@@ -1526,6 +1461,114 @@
             if (remainingForms.length === 0) {
                 showEmptyState(formsetName);
             }
+        }
+
+        function createAcademicQualificationFormHtml(index) {
+            return `
+                <div class="formset-item-header">
+                    <h5 class="formset-item-title">Qualification ${index + 1}</h5>
+                    <button type="button" class="formset-remove" onclick="removeFormsetItem(this, 'academic_qualifications')">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+                
+                <div class="field-row">
+                    <div class="form-group">
+                        <label for="id_academic_qualifications-${index}-qualification_type">Type <span class="required">*</span></label>
+                        <select name="academic_qualifications-${index}-qualification_type" id="id_academic_qualifications-${index}-qualification_type" class="form-control" required>
+                            <option value="">---------</option>
+                            <option value="high_school">High School</option>
+                            <option value="college">College</option>
+                            <option value="seminary">Seminary</option>
+                            <option value="university">University</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_academic_qualifications-${index}-qualification_name">Qualification Name <span class="required">*</span></label>
+                        <input type="text" name="academic_qualifications-${index}-qualification_name" id="id_academic_qualifications-${index}-qualification_name" class="form-control" required placeholder="e.g., Bachelor of Theology, Diploma in Pastoral Care">
+                    </div>
+                    
+                    <div class="form-group field-full">
+                        <label for="id_academic_qualifications-${index}-institution_name">Institution <span class="required">*</span></label>
+                        <input type="text" name="academic_qualifications-${index}-institution_name" id="id_academic_qualifications-${index}-institution_name" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group field-full">
+                        <label for="id_academic_qualifications-${index}-institution_address">Institution Address</label>
+                        <textarea name="academic_qualifications-${index}-institution_address" id="id_academic_qualifications-${index}-institution_address" class="form-control" rows="2"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_academic_qualifications-${index}-date_awarded">Date Awarded <span class="required">*</span></label>
+                        <input type="date" name="academic_qualifications-${index}-date_awarded" id="id_academic_qualifications-${index}-date_awarded" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_academic_qualifications-${index}-grade_or_class">Grade/Class</label>
+                        <input type="text" name="academic_qualifications-${index}-grade_or_class" id="id_academic_qualifications-${index}-grade_or_class" class="form-control" placeholder="e.g., First Class, B+, 75%">
+                    </div>
+                </div>
+                
+                <input type="hidden" name="academic_qualifications-${index}-DELETE" id="id_academic_qualifications-${index}-DELETE">
+            `;
+        }
+
+        function createPracticalExperienceFormHtml(index) {
+            return `
+                <div class="formset-item-header">
+                    <h5 class="formset-item-title">Experience ${index + 1}</h5>
+                    <button type="button" class="formset-remove" onclick="removeFormsetItem(this, 'practical_experiences')">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+                
+                <div class="field-row">
+                    <div class="form-group field-full">
+                        <label for="id_practical_experiences-${index}-institution_name">Organization/Institution <span class="required">*</span></label>
+                        <input type="text" name="practical_experiences-${index}-institution_name" id="id_practical_experiences-${index}-institution_name" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_practical_experiences-${index}-contact_person_name">Contact Person <span class="required">*</span></label>
+                        <input type="text" name="practical_experiences-${index}-contact_person_name" id="id_practical_experiences-${index}-contact_person_name" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_practical_experiences-${index}-contact_person_email">Contact Email <span class="required">*</span></label>
+                        <input type="email" name="practical_experiences-${index}-contact_person_email" id="id_practical_experiences-${index}-contact_person_email" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_practical_experiences-${index}-contact_person_phone">Contact Phone <span class="required">*</span></label>
+                        <input type="text" name="practical_experiences-${index}-contact_person_phone" id="id_practical_experiences-${index}-contact_person_phone" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group field-full">
+                        <label for="id_practical_experiences-${index}-basic_nature_of_work">Nature of Work <span class="required">*</span></label>
+                        <textarea name="practical_experiences-${index}-basic_nature_of_work" id="id_practical_experiences-${index}-basic_nature_of_work" class="form-control" rows="3" required placeholder="Describe the basic nature of work/ministry performed"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_practical_experiences-${index}-start_date">Start Date <span class="required">*</span></label>
+                        <input type="date" name="practical_experiences-${index}-start_date" id="id_practical_experiences-${index}-start_date" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_practical_experiences-${index}-end_date">End Date</label>
+                        <input type="date" name="practical_experiences-${index}-end_date" id="id_practical_experiences-${index}-end_date" class="form-control">
+                        <div class="form-text">Leave blank if currently ongoing</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_practical_experiences-${index}-hours_per_week">Hours per Week</label>
+                        <input type="number" name="practical_experiences-${index}-hours_per_week" id="id_practical_experiences-${index}-hours_per_week" class="form-control" min="1" max="168">
+                    </div>
+                </div>
+                
+                <input type="hidden" name="practical_experiences-${index}-DELETE" id="id_practical_experiences-${index}-DELETE">
+            `;
         }
 
         function createReferenceFormHtml(index) {
@@ -1549,6 +1592,11 @@
                             <option value="Prof">Prof</option>
                             <option value="Rev">Rev</option>
                             <option value="Pastor">Pastor</option>
+                            <option value="Bishop">Bishop</option>
+                            <option value="Apostle">Apostle</option>
+                            <option value="Elder">Elder</option>
+                            <option value="Deacon">Deacon</option>
+                            <option value="Minister">Minister</option>
                         </select>
                     </div>
                     
@@ -1572,22 +1620,12 @@
                         <input type="text" name="references-${index}-reference_phone" id="id_references-${index}-reference_phone" class="form-control" required>
                     </div>
                     
-                    <div class="form-group field-full">
-                        <label for="id_references-${index}-reference_address">Address <span class="required">*</span></label>
-                        <textarea name="references-${index}-reference_address" id="id_references-${index}-reference_address" class="form-control" rows="3" required></textarea>
-                    </div>
                     
                     <div class="form-group field-full">
                         <label for="id_references-${index}-nature_of_relationship">Relationship <span class="required">*</span></label>
-                        <input type="text" name="references-${index}-nature_of_relationship" id="id_references-${index}-nature_of_relationship" class="form-control" required placeholder="e.g., Academic Supervisor, Course Lecturer, Ministry Leader">
+                        <input type="text" name="references-${index}-nature_of_relationship" id="id_references-${index}-nature_of_relationship" class="form-control" required placeholder="e.g., Senior Pastor, Course Lecturer, Ministry Leader">
                     </div>
                     
-                    <div class="form-group">
-                        <div class="form-check">
-                            <input type="checkbox" name="references-${index}-letter_required" id="id_references-${index}-letter_required" class="form-check-input">
-                            <label class="form-check-label" for="id_references-${index}-letter_required">Letter Required</label>
-                        </div>
-                    </div>
                 </div>
                 
                 <input type="hidden" name="references-${index}-DELETE" id="id_references-${index}-DELETE">
@@ -1653,6 +1691,7 @@
                 </div>
             `;
         }
+        
 
         function updateFormsetIndices(formsetName) {
             const formset = document.getElementById(`${formsetName}-formset`);
@@ -1691,7 +1730,13 @@
                 // Update title
                 const title = item.querySelector('.formset-item-title');
                 if (title) {
-                    const titleText = formsetName === 'documents' ? 'Document' : 'Reference';
+                    let titleText = 'Item';
+                    switch(formsetName) {
+                        case 'documents': titleText = 'Document'; break;
+                        case 'references': titleText = 'Reference'; break;
+                        case 'academic_qualifications': titleText = 'Qualification'; break;
+                        case 'practical_experiences': titleText = 'Experience'; break;
+                    }
                     title.textContent = `${titleText} ${index + 1}`;
                 }
             });
@@ -1699,14 +1744,38 @@
 
         function showEmptyState(formsetName) {
             const formset = document.getElementById(`${formsetName}-formset`);
-            const icon = formsetName === 'references' ? 'bi-people' : 'bi-file-earmark-arrow-up';
-            const text = formsetName === 'references' ? 'references' : 'documents';
+            let icon = 'bi-file-earmark-arrow-up';
+            let text = 'items';
+            let buttonText = 'Item';
+            
+            switch(formsetName) {
+                case 'references': 
+                    icon = 'bi-people';
+                    text = 'references';
+                    buttonText = 'Reference';
+                    break;
+                case 'documents':
+                    icon = 'bi-file-earmark-arrow-up';
+                    text = 'documents';
+                    buttonText = 'Document';
+                    break;
+                case 'academic_qualifications':
+                    icon = 'bi-mortarboard-fill';
+                    text = 'qualifications';
+                    buttonText = 'Qualification';
+                    break;
+                case 'practical_experiences':
+                    icon = 'bi-briefcase';
+                    text = 'experiences';
+                    buttonText = 'Experience';
+                    break;
+            }
             
             const emptyState = document.createElement('div');
             emptyState.className = 'formset-empty';
             emptyState.innerHTML = `
                 <i class="${icon} text-muted" style="font-size: 3rem;"></i>
-                <p class="mb-0">No ${text} added yet. Click "Add ${text.charAt(0).toUpperCase() + text.slice(1, -1)}" to get started.</p>
+                <p class="mb-0">No ${text} added yet. Click "Add ${buttonText}" to get started.</p>
             `;
             
             formset.appendChild(emptyState);
@@ -1722,23 +1791,26 @@
             const form = document.getElementById('applicationForm');
             if (form) {
                 form.addEventListener('submit', function(e) {
-                    console.log('Student form submitting...');
+                    console.log('Designated form submitting...');
                     
                     // Log form data
                     const formData = new FormData(form);
                     const entries = [];
                     for (let [key, value] of formData.entries()) {
-                        if (key.includes('document') || key.includes('reference') || key.includes('student') || key.includes('supervisor')) {
+                        if (key.includes('designation') || key.includes('supervisor') || key.includes('academic') || key.includes('practical') || key.includes('professional')) {
                             entries.push(`${key}: ${value instanceof File ? value.name : value}`);
                         }
                     }
-                    console.log('Student-specific form data:', entries);
+                    console.log('Designated-specific form data:', entries);
                     
-                    // Check total forms
-                    const totalDocForms = document.getElementById('id_documents-TOTAL_FORMS');
-                    const totalRefForms = document.getElementById('id_references-TOTAL_FORMS');
-                    if (totalDocForms) console.log('Total document forms:', totalDocForms.value);
-                    if (totalRefForms) console.log('Total reference forms:', totalRefForms.value);
+                    // Check total forms for all formsets
+                    const formsets = ['documents', 'references', 'academic_qualifications', 'practical_experiences'];
+                    formsets.forEach(formsetName => {
+                        const totalFormsField = document.getElementById(`id_${formsetName}-TOTAL_FORMS`);
+                        if (totalFormsField) {
+                            console.log(`Total ${formsetName} forms:`, totalFormsField.value);
+                        }
+                    });
                 });
             }
 

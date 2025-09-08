@@ -2187,9 +2187,9 @@ The ACRP Digital Cards Team"""
         email = EmailMultiAlternatives(
             subject=subject,
             body=text_content,
-            from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'dave@kreeck.com'),
+            from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'ams@acrp.org.za'),
             to=[delivery.recipient_email],
-            reply_to=[getattr(settings, 'DEFAULT_FROM_EMAIL', 'dave@kreeck.com')]
+            reply_to=[getattr(settings, 'DEFAULT_FROM_EMAIL', 'ams@acrp.org.za')]
         )
         
         # Add HTML version
@@ -3041,7 +3041,7 @@ def generate_card_pdf(card):
             import uuid
             verification_token = str(uuid.uuid4()).replace('-', '')[:32]
         
-        qr_verification_url = f"https://kreeck.com/card/verify/{verification_token}/"
+        qr_verification_url = f"https://ams.acrp.org.za/card/verify/{verification_token}/"
         
         # QR code configuration
         qr = qrcode.QRCode(
@@ -3088,7 +3088,7 @@ def generate_card_pdf(card):
         
         c.setFont("Helvetica", 4)
         c.setFillColor(text_muted)
-        sub_label = "or visit kreeck.com"
+        sub_label = "or visit ams.acrp.org.za"
         sub_width = c.stringWidth(sub_label, "Helvetica", 4)
         c.drawString(qr_x + (qr_size - sub_width) / 2, label_y - 0.08 * inch, sub_label)
         
@@ -3429,7 +3429,7 @@ def generate_card_image(card, fmt):
         verification_token = str(uuid.uuid4()).replace('-', '')[:32]
     
     # Use the correct verification URL format
-    qr_verification_url = f"https://kreeck.com/card/verify/{verification_token}/"
+    qr_verification_url = f"https://ams.acrp.org.za/card/verify/{verification_token}/"
     
     logger.info(f"Generated QR code URL for image card {card.card_number}: {qr_verification_url}")
     
@@ -3484,7 +3484,7 @@ def generate_card_image(card, fmt):
     draw.text((label_x, qr_label_y), main_label, font=font_small, fill=text_primary)
     
     # Secondary label
-    sub_label = "or visit kreeck.com"
+    sub_label = "or visit ams.acrp.org.za"
     try:
         sub_bbox = draw.textbbox((0, 0), sub_label, font=font_tiny)
         sub_width = sub_bbox[2] - sub_bbox[0]
