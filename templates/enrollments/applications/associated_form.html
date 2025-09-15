@@ -421,6 +421,10 @@
                                         {% for error in form.title.errors %}{{ error }}{% endfor %}
                                     </div>
                                 {% endif %}
+
+                                {% if form.title.help_text %}
+                                <div class="form-text">{{ form.title.help_text }}</div>
+                                {% endif %}
                             </div>
                             {% endif %}
                             
@@ -436,13 +440,17 @@
                                         {% for error in form.gender.errors %}{{ error }}{% endfor %}
                                     </div>
                                 {% endif %}
+
+                                {% if form.gender.help_text %}
+                                <div class="form-text">{{ form.gender.help_text }}</div>
+                                {% endif %}
                             </div>
                             {% endif %}
                             
                             {% if form.race %}
                             <div class="form-group">
                                 <label for="{{ form.race.id_for_label }}">
-                                    {{ form.race.label }}
+                                    Ethnicity
                                     {% if form.race.field.required %}<span class="required">*</span>{% endif %}
                                 </label>
                                 {{ form.race }}
@@ -451,6 +459,12 @@
                                         {% for error in form.race.errors %}{{ error }}{% endfor %}
                                     </div>
                                 {% endif %}
+
+                                {% if form.race.help_text %}
+                                <div class="form-text">{{ form.race.help_text }}</div>
+                                {% endif %}
+
+
                             </div>
                             {% endif %}
                         </div>
@@ -468,6 +482,11 @@
                                         {% for error in form.surname.errors %}{{ error }}{% endfor %}
                                     </div>
                                 {% endif %}
+
+
+                                {% if form.surname.help_text %}
+                                <div class="form-text">{{ form.surname.help_text }}</div>
+                                {% endif %}
                             </div>
                             {% endif %}
                             
@@ -482,6 +501,10 @@
                                     <div class="invalid-feedback">
                                         {% for error in form.full_names.errors %}{{ error }}{% endfor %}
                                     </div>
+                                {% endif %}
+
+                                {% if form.full_names.help_text %}
+                                <div class="form-text">{{ form.full_names.help_text }}</div>
                                 {% endif %}
                             </div>
                             {% endif %}
@@ -500,6 +523,10 @@
                                         {% for error in form.initials.errors %}{{ error }}{% endfor %}
                                     </div>
                                 {% endif %}
+
+                                {% if form.initials.help_text %}
+                                <div class="form-text">{{ form.initials.help_text }}</div>
+                                {% endif %}
                             </div>
                             {% endif %}
 
@@ -514,6 +541,31 @@
                                     <div class="invalid-feedback">
                                         {% for error in form.home_language.errors %}{{ error }}{% endfor %}
                                     </div>
+                                {% endif %}
+
+                                {% if form.home_language.help_text %}
+                                <div class="form-text">{{ form.home_language.help_text }}</div>
+                                {% endif %}
+
+
+                            </div>
+                            {% endif %}
+
+                            {% if form.other_languages %}
+                            <div class="form-group">
+                                <label for="{{ form.other_languages.id_for_label }}">
+                                    {{ form.other_languages.label }}
+                                    {% if form.other_languages.field.required %}<span class="required">*</span>{% endif %}
+                                </label>
+                                {{ form.other_languages }}
+                                {% if form.other_languages.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.other_languages.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+
+                                {% if form.other_languages.help_text %}
+                                <div class="form-text">{{ form.other_languages.help_text }}</div>
                                 {% endif %}
                             </div>
                             {% endif %}
@@ -669,6 +721,10 @@
                                         {% for error in form.email.errors %}{{ error }}{% endfor %}
                                     </div>
                                 {% endif %}
+
+                                {% if form.email.help_text %}
+                                <div class="form-text">{{ form.email.help_text }}</div>
+                                {% endif %}
                             </div>
                             {% endif %}
                             
@@ -683,6 +739,10 @@
                                     <div class="invalid-feedback">
                                         {% for error in form.cell_phone.errors %}{{ error }}{% endfor %}
                                     </div>
+                                {% endif %}
+
+                                {% if form.cell_phone.help_text %}
+                                <div class="form-text">{{ form.cell_phone.help_text }}</div>
                                 {% endif %}
                             </div>
                             {% endif %}
@@ -701,6 +761,10 @@
                                         {% for error in form.work_phone.errors %}{{ error }}{% endfor %}
                                     </div>
                                 {% endif %}
+
+                                {% if form.work_phone.help_text %}
+                                <div class="form-text">{{ form.work_phone.help_text }}</div>
+                                {% endif %}
                             </div>
                             {% endif %}
                             
@@ -716,23 +780,13 @@
                                         {% for error in form.home_phone.errors %}{{ error }}{% endfor %}
                                     </div>
                                 {% endif %}
-                            </div>
-                            {% endif %}
-                            
-                            {% if form.fax %}
-                            <div class="form-group">
-                                <label for="{{ form.fax.id_for_label }}">
-                                    {{ form.fax.label }}
-                                    {% if form.fax.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.fax }}
-                                {% if form.fax.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.fax.errors %}{{ error }}{% endfor %}
-                                    </div>
+
+                                {% if form.home_phone.help_text %}
+                                <div class="form-text">{{ form.home_phone.help_text }}</div>
                                 {% endif %}
                             </div>
                             {% endif %}
+                           
                         </div>
 
                         <div class="field-row three-cols">
@@ -748,6 +802,10 @@
                                             {% for error in form.postal_city.errors %}{{ error }}{% endfor %}
                                         </div>
                                     {% endif %}
+
+                                    {% if form.postal_city.help_text %}
+                                <div class="form-text">{{ form.postal_city.help_text }}</div>
+                                {% endif %}
                                 </div>
                                 {% endif %}
                                 
@@ -762,6 +820,10 @@
                                         <div class="invalid-feedback">
                                             {% for error in form.postal_province.errors %}{{ error }}{% endfor %}
                                         </div>
+                                    {% endif %}
+
+                                    {% if form.postal_province.help_text %}
+                                <div class="form-text">{{ form.postal_province.help_text }}</div>
                                     {% endif %}
                                 </div>
                                 {% endif %}
@@ -778,6 +840,10 @@
                                             {% for error in form.postal_code.errors %}{{ error }}{% endfor %}
                                         </div>
                                     {% endif %}
+                                    {% if form.postal_code %}
+                                        <div class="form-text">{{ form.postal_code.help_text }}</div>
+                                    {% endif %}
+                                
                                 </div>
                                 {% endif %}
                             </div>
@@ -799,6 +865,10 @@
                                         <div class="invalid-feedback">
                                             {% for error in form.postal_address_line1.errors %}{{ error }}{% endfor %}
                                         </div>
+                                    {% endif %}
+
+                                    {% if form.postal_address_line1.help_text %}
+                                        <div class="form-text">{{ form.postal_address.help_text }}</div>
                                     {% endif %}
                                 </div>
                                 {% endif %}
@@ -1016,6 +1086,10 @@
                                         {% for error in form.ministry_name.errors %}{{ error }}{% endfor %}
                                     </div>
                                 {% endif %}
+
+                                {% if form.ministry_name.help_text %}
+                                        <div class="form-text">{{ form.ministry_name.help_text }}</div>
+                                {% endif %}
                             </div>
                             {% endif %}
                             
@@ -1023,13 +1097,17 @@
                             <div class="form-group">
                                 <label for="{{ form.denomination.id_for_label }}">
                                     {{ form.denomination.label }}
-                                    {% if form.denomination.field.required %}<span class="required">*</span>{% endif %}
+                                    <span class="required">*</span>
                                 </label>
                                 {{ form.denomination }}
                                 {% if form.denomination.errors %}
                                     <div class="invalid-feedback">
                                         {% for error in form.denomination.errors %}{{ error }}{% endfor %}
                                     </div>
+                                {% endif %}
+
+                                {% if form.denomination.help_text %}
+                                        <div class="form-text">{{ form.denomination.help_text }}</div>
                                 {% endif %}
                             </div>
                             {% endif %}
@@ -1045,6 +1123,10 @@
                                     <div class="invalid-feedback">
                                         {% for error in form.ministry_type.errors %}{{ error }}{% endfor %}
                                     </div>
+                                {% endif %}
+
+                                {% if form.ministry_type.help_text %}
+                                        <div class="form-text">{{ form.ministry_type.help_text }}</div>
                                 {% endif %}
                             </div>
                             {% endif %}
@@ -1228,6 +1310,22 @@
                     </div>
                     <div class="section-content" id="content-references">
                         
+                        {% if session.selected_council.name == "CPSC" %}
+                        <!-- Reference Letter Requirements Note -->
+                        <div class="alert alert-info mb-4">
+                            <h5 class="alert-heading"><i class="bi bi-info-circle"></i> Reference Letters Requirements</h5>
+                            <p class="mb-0"><strong>TWO</strong> reference letters must be submitted with this application. A reference letter must:</p>
+                            <ul class="mb-0 mt-2">
+                                <li>It is important that the letters of reference or testimonials report on your work ethics, as well as your involvement in clerical activities.</li>
+                                <li>The letters of reference or testimonials from these two individuals must be hand-signed.</li>
+                                <li>The letters of reference or testimonials must be on formal letterheads.</li>
+                                <li>Family members, friends and/or clients may not write a testimonial for you. Your pastor/other religious leader, employer, supervisor, or chairperson of the church council at the congregation you belong to, are all good choices to act as references.</li>
+                                <li>At least one of these testimonials must be less than one year old.</li>
+                                <li>Indicate the details (name, contact details, position) of the person signing the letter</li>
+                                <li>Testimonials can be addressed to: CPSC Evaluation and Registration Committee</li>
+                            </ul>
+                        </div>
+                        {% else %}
                         <!-- Reference Letter Requirements Note -->
                         <div class="alert alert-info mb-4">
                             <h5 class="alert-heading"><i class="bi bi-info-circle"></i> Reference Letter Requirements</h5>
@@ -1242,6 +1340,8 @@
                                 <li>Be clearly legible</li>
                             </ul>
                         </div>
+                        {% endif %}
+                        
 
                         <!-- Management Form for References -->
                         <input type="hidden" name="references-TOTAL_FORMS" value="0" id="id_references-TOTAL_FORMS">
@@ -1361,7 +1461,7 @@
                         <div class="alert alert-info mb-4">
                             <h5 class="alert-heading"><i class="bi bi-file-earmark-text"></i> Important Documents</h5>
                             <p>Please review the Declaration and Popi act documents before proceeding:</p>
-                            <a href="https://uorivo.lon1.cdn.digitaloceanspaces.com/CGMP%20CMTP%20Declaration%20and%20POPI%20Act%20(002)%20(1).pdf" 
+                            <a href="https://uorivo.lon1.cdn.digitaloceanspaces.com/ACRP%20Declaration%20and%20POPI%20Act%20(004).pdf" 
                                target="_blank" 
                                class="btn btn-primary mb-3">
                                 <i class="bi bi-file-pdf"></i>

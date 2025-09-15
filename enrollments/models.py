@@ -497,6 +497,7 @@ class BaseApplication(models.Model):
         ('CD', 'Democratic Republic of Congo'),
         ('ZM', 'Zambia'),
         ('ZW', 'Zimbabwe'),
+        ('ZR','Zaire'),
         ('AS', 'Asian countries'),
         ('AU', 'Australia & Oceania'),
         ('EU', 'European countries'),
@@ -527,7 +528,7 @@ class BaseApplication(models.Model):
     # Postal address
     postal_address_line1 = models.CharField(max_length=100, blank=True)
     postal_address_line2 = models.CharField(max_length=100, blank=True)
-    postal_city = models.CharField(max_length=50, blank=True)
+    postal_city = models.CharField(max_length=50)
     PROVINCE_CHOICES = [
         ('Eastern Cape', 'Eastern Cape'),
         ('Free State', 'Free State'),
@@ -539,9 +540,9 @@ class BaseApplication(models.Model):
         ('Northern Cape', 'Northern Cape'),
         ('Western Cape', 'Western Cape'),
     ]
-    postal_province = models.CharField(max_length=50, blank=True, choices=PROVINCE_CHOICES)
-    postal_code = models.CharField(max_length=10, blank=True)
-    postal_country = models.CharField(max_length=50, default='South Africa', blank=True)
+    postal_province = models.CharField(max_length=50, choices=PROVINCE_CHOICES)
+    postal_code = models.CharField(max_length=10)
+    postal_country = models.CharField(max_length=50, default='South Africa')
     
     # Physical address (if different from postal)
     physical_same_as_postal = models.BooleanField(
@@ -654,11 +655,11 @@ class BaseApplication(models.Model):
     
     disciplinary_action = models.BooleanField(
         default=False,
-        help_text="Have you ever been subject to disciplinary action by any professional body?"
+        help_text="Have you ever been subject to disciplinary action by any professional body?, Are you aware of any current complaints that have been, or pending complaints that may be, laid against you?"
     )
     disciplinary_description = models.TextField(
         blank=True,
-        help_text="If yes, please provide details of the disciplinary action"
+        help_text="Provide details of any disciplinary action or complaints against you (whether pending or resolved)."
     )
     
     # ========================================================================

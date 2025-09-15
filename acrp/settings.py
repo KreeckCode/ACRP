@@ -556,7 +556,7 @@ MANAGERS = ADMINS
 
 
 # Application monitoring with Sentry (optional)
-MONITORING_ENABLED = config('MONITORING_ENABLED', default=False, cast=bool)
+MONITORING_ENABLED = config('MONITORING_ENABLED', default=True, cast=bool)
 
 if MONITORING_ENABLED and config('SENTRY_DSN', default=None):
     try:

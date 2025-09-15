@@ -464,6 +464,10 @@
                                         {% for error in form.title.errors %}{{ error }}{% endfor %}
                                     </div>
                                 {% endif %}
+
+                                {% if form.title.help_text %}
+                                <div class="form-text">{{ form.title.help_text }}</div>
+                                {% endif %}
                             </div>
                             {% endif %}
                             
@@ -479,13 +483,17 @@
                                         {% for error in form.gender.errors %}{{ error }}{% endfor %}
                                     </div>
                                 {% endif %}
+
+                                {% if form.gender.help_text %}
+                                <div class="form-text">{{ form.gender.help_text }}</div>
+                                {% endif %}
                             </div>
                             {% endif %}
                             
                             {% if form.race %}
                             <div class="form-group">
                                 <label for="{{ form.race.id_for_label }}">
-                                    {{ form.race.label }}
+                                    Ethnicity
                                     {% if form.race.field.required %}<span class="required">*</span>{% endif %}
                                 </label>
                                 {{ form.race }}
@@ -494,6 +502,12 @@
                                         {% for error in form.race.errors %}{{ error }}{% endfor %}
                                     </div>
                                 {% endif %}
+
+                                {% if form.race.help_text %}
+                                <div class="form-text">{{ form.race.help_text }}</div>
+                                {% endif %}
+
+
                             </div>
                             {% endif %}
                         </div>
@@ -511,6 +525,11 @@
                                         {% for error in form.surname.errors %}{{ error }}{% endfor %}
                                     </div>
                                 {% endif %}
+
+
+                                {% if form.surname.help_text %}
+                                <div class="form-text">{{ form.surname.help_text }}</div>
+                                {% endif %}
                             </div>
                             {% endif %}
                             
@@ -525,6 +544,10 @@
                                     <div class="invalid-feedback">
                                         {% for error in form.full_names.errors %}{{ error }}{% endfor %}
                                     </div>
+                                {% endif %}
+
+                                {% if form.full_names.help_text %}
+                                <div class="form-text">{{ form.full_names.help_text }}</div>
                                 {% endif %}
                             </div>
                             {% endif %}
@@ -543,6 +566,10 @@
                                         {% for error in form.initials.errors %}{{ error }}{% endfor %}
                                     </div>
                                 {% endif %}
+
+                                {% if form.initials.help_text %}
+                                <div class="form-text">{{ form.initials.help_text }}</div>
+                                {% endif %}
                             </div>
                             {% endif %}
 
@@ -557,6 +584,31 @@
                                     <div class="invalid-feedback">
                                         {% for error in form.home_language.errors %}{{ error }}{% endfor %}
                                     </div>
+                                {% endif %}
+
+                                {% if form.home_language.help_text %}
+                                <div class="form-text">{{ form.home_language.help_text }}</div>
+                                {% endif %}
+
+
+                            </div>
+                            {% endif %}
+
+                            {% if form.other_languages %}
+                            <div class="form-group">
+                                <label for="{{ form.other_languages.id_for_label }}">
+                                    {{ form.other_languages.label }}
+                                    {% if form.other_languages.field.required %}<span class="required">*</span>{% endif %}
+                                </label>
+                                {{ form.other_languages }}
+                                {% if form.other_languages.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.other_languages.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+
+                                {% if form.other_languages.help_text %}
+                                <div class="form-text">{{ form.other_languages.help_text }}</div>
                                 {% endif %}
                             </div>
                             {% endif %}
@@ -712,6 +764,10 @@
                                         {% for error in form.email.errors %}{{ error }}{% endfor %}
                                     </div>
                                 {% endif %}
+
+                                {% if form.email.help_text %}
+                                <div class="form-text">{{ form.email.help_text }}</div>
+                                {% endif %}
                             </div>
                             {% endif %}
                             
@@ -726,6 +782,10 @@
                                     <div class="invalid-feedback">
                                         {% for error in form.cell_phone.errors %}{{ error }}{% endfor %}
                                     </div>
+                                {% endif %}
+
+                                {% if form.cell_phone.help_text %}
+                                <div class="form-text">{{ form.cell_phone.help_text }}</div>
                                 {% endif %}
                             </div>
                             {% endif %}
@@ -744,6 +804,10 @@
                                         {% for error in form.work_phone.errors %}{{ error }}{% endfor %}
                                     </div>
                                 {% endif %}
+
+                                {% if form.work_phone.help_text %}
+                                <div class="form-text">{{ form.work_phone.help_text }}</div>
+                                {% endif %}
                             </div>
                             {% endif %}
                             
@@ -759,10 +823,13 @@
                                         {% for error in form.home_phone.errors %}{{ error }}{% endfor %}
                                     </div>
                                 {% endif %}
+
+                                {% if form.home_phone.help_text %}
+                                <div class="form-text">{{ form.home_phone.help_text }}</div>
+                                {% endif %}
                             </div>
                             {% endif %}
-                            
-                            
+                           
                         </div>
 
                         <div class="field-row three-cols">
@@ -770,7 +837,7 @@
                                 <div class="form-group">
                                     <label for="{{ form.postal_city.id_for_label }}">
                                         City
-                                        <span class="required">*</span>
+                                        {% if form.postal_city.field.required %}<span class="required">*</span>{% endif %}
                                     </label>
                                     {{ form.postal_city }}
                                     {% if form.postal_city.errors %}
@@ -778,6 +845,10 @@
                                             {% for error in form.postal_city.errors %}{{ error }}{% endfor %}
                                         </div>
                                     {% endif %}
+
+                                    {% if form.postal_city.help_text %}
+                                <div class="form-text">{{ form.postal_city.help_text }}</div>
+                                {% endif %}
                                 </div>
                                 {% endif %}
                                 
@@ -785,13 +856,17 @@
                                 <div class="form-group">
                                     <label for="{{ form.postal_province.id_for_label }}">
                                         Province
-                                        <span class="required">*</span>
+                                        {% if form.postal_province.field.required %}<span class="required">*</span>{% endif %}
                                     </label>
                                     {{ form.postal_province }}
                                     {% if form.postal_province.errors %}
                                         <div class="invalid-feedback">
                                             {% for error in form.postal_province.errors %}{{ error }}{% endfor %}
                                         </div>
+                                    {% endif %}
+
+                                    {% if form.postal_province.help_text %}
+                                <div class="form-text">{{ form.postal_province.help_text }}</div>
                                     {% endif %}
                                 </div>
                                 {% endif %}
@@ -800,7 +875,73 @@
                                 <div class="form-group">
                                     <label for="{{ form.postal_code.id_for_label }}">
                                         {{ form.postal_code.label }}
-                                        <span class="required">*</span>
+                                        {% if form.postal_code.field.required %}<span class="required"></span>{% endif %}
+                                    </label>
+                                    {{ form.postal_code }}
+                                    {% if form.postal_code.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.postal_code.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    {% if form.postal_code %}
+                                        <div class="form-text">{{ form.postal_code.help_text }}</div>
+                                    {% endif %}
+                                
+                                </div>
+                                {% endif %}
+                            </div>
+
+
+                        
+                        {% if session.selected_council.name == "CPSC" %}
+                            <!-- Postal Address -->
+                            <h5 class="mt-4 mb-3">Postal Address</h5>
+                            <div class="field-row">
+                                {% if form.postal_address_line1 %}
+                                <div class="form-group field-full">
+                                    <label for="{{ form.postal_address_line1.id_for_label }}">
+                                        {{ form.postal_address_line1.label }}
+                                        {% if form.postal_address_line1.field.required %}<span class="required">*</span>{% endif %}
+                                    </label>
+                                    {{ form.postal_address_line1 }}
+                                    {% if form.postal_address_line1.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.postal_address_line1.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+
+                                    {% if form.postal_address_line1.help_text %}
+                                        <div class="form-text">{{ form.postal_address.help_text }}</div>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="field-row">
+                                {% if form.postal_address_line2 %}
+                                <div class="form-group field-full">
+                                    <label for="{{ form.postal_address_line2.id_for_label }}">
+                                        {{ form.postal_address_line2.label }}
+                                        {% if form.postal_address_line2.field.required %}<span class="required">*</span>{% endif %}
+                                    </label>
+                                    {{ form.postal_address_line2 }}
+                                    {% if form.postal_address_line2.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.postal_address_line2.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            
+
+                            <div class="field-row two-cols">
+                                {% if form.postal_code %}
+                                <div class="form-group">
+                                    <label for="{{ form.postal_code.id_for_label }}">
+                                        {{ form.postal_code.label }}
+                                        {% if form.postal_code.field.required %}<span class="required">*</span>{% endif %}
                                     </label>
                                     {{ form.postal_code }}
                                     {% if form.postal_code.errors %}
@@ -810,14 +951,43 @@
                                     {% endif %}
                                 </div>
                                 {% endif %}
+                                
+                                {% if form.postal_country %}
+                                <div class="form-group">
+                                    <label for="{{ form.postal_country.id_for_label }}">
+                                        {{ form.postal_country.label }}
+                                        {% if form.postal_country.field.required %}<span class="required">*</span>{% endif %}
+                                    </label>
+                                    {{ form.postal_country }}
+                                    {% if form.postal_country.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.postal_country.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
                             </div>
 
+                            <!-- Physical Address Checkbox -->
+                            {% if form.physical_same_as_postal %}
+                            <div class="field-row">
+                                <div class="form-group">
+                                    <div class="form-check">
+                                        {{ form.physical_same_as_postal }}
+                                        <label class="form-check-label" for="{{ form.physical_same_as_postal.id_for_label }}">
+                                            {{ form.physical_same_as_postal.label }}
+                                        </label>
+                                    </div>
+                                    {% if form.physical_same_as_postal.help_text %}
+                                        <div class="form-text">{{ form.physical_same_as_postal.help_text }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endif %}
 
-                        
-                        
+                        {% endif %}
                     </div>
                 </div>
-
 
                 
 
@@ -826,7 +996,10 @@
                     <div class="section-header" onclick="toggleSection('background')">
                         <h3>
                             <i class="bi bi-mortarboard"></i>
-                            Professional ministry involvement
+                            {% if session.selected_council.name == "CPSC" %}Professional Christian Pastoral Counselling involvement 
+                            {% elif session.selected_council.name == "CGMP" or session.selected_council.name == "CMTP" %}Professional Ministry involvement
+                            {% else %}Professional Ministry involvement {% endif %}
+                            
                         </h3>
                         <i class="bi bi-chevron-down toggle-icon"></i>
                     </div>
@@ -873,7 +1046,9 @@
                             {% if form.years_in_ministry %}
                             <div class="form-group">
                                 <label for="{{ form.years_in_ministry.id_for_label }}">
-                                    Years in Ministry / Counselling
+                                    {% if session.selected_council.name == "CPSC" %} Years in Part Ministry / Counselling 
+                                    {% elif session.selected_council.name == "CGMP" or session.selected_council.name == "CMTP" %} Years in Ministry
+                                    {% else %} Years in Ministry {% endif %}
                                     {% if form.years_in_ministry.field.required %}<span class="required">*</span>{% endif %}
                                 </label>
                                 {{ form.years_in_ministry }}
@@ -955,6 +1130,10 @@
                                         {% for error in form.ministry_name.errors %}{{ error }}{% endfor %}
                                     </div>
                                 {% endif %}
+
+                                {% if form.ministry_name.help_text %}
+                                        <div class="form-text">{{ form.ministry_name.help_text }}</div>
+                                {% endif %}
                             </div>
                             {% endif %}
                             
@@ -962,13 +1141,17 @@
                             <div class="form-group">
                                 <label for="{{ form.denomination.id_for_label }}">
                                     {{ form.denomination.label }}
-                                    {% if form.denomination.field.required %}<span class="required">*</span>{% endif %}
+                                    <span class="required">*</span>
                                 </label>
                                 {{ form.denomination }}
                                 {% if form.denomination.errors %}
                                     <div class="invalid-feedback">
                                         {% for error in form.denomination.errors %}{{ error }}{% endfor %}
                                     </div>
+                                {% endif %}
+
+                                {% if form.denomination.help_text %}
+                                        <div class="form-text">{{ form.denomination.help_text }}</div>
                                 {% endif %}
                             </div>
                             {% endif %}
@@ -984,6 +1167,10 @@
                                     <div class="invalid-feedback">
                                         {% for error in form.ministry_type.errors %}{{ error }}{% endfor %}
                                     </div>
+                                {% endif %}
+
+                                {% if form.ministry_type.help_text %}
+                                        <div class="form-text">{{ form.ministry_type.help_text }}</div>
                                 {% endif %}
                             </div>
                             {% endif %}
@@ -1051,6 +1238,7 @@
                         {% endif %}
                     </div>
                 </div>
+
 
                 {% if session.selected_council.name == "CPSC" %}
                 <!-- Professional Supervision Section -->
