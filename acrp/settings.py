@@ -7,10 +7,6 @@ from decouple import config
 import os
 
 
-# Debug environment loading
-print(f"DEBUG value from env: {config('DEBUG', default='NOT_SET')}")
-print(f"EMAIL_HOST from env: {config('EMAIL_HOST', default='NOT_SET')}")
-
 # CORE DJANGO SETTINGS
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'

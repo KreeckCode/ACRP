@@ -1152,6 +1152,22 @@
                     </div>
                     <div class="section-content" id="content-references">
                         
+                        {% if session.selected_council.name == "CPSC" %}
+                        <!-- Reference Letter Requirements Note -->
+                        <div class="alert alert-info mb-4">
+                            <h5 class="alert-heading"><i class="bi bi-info-circle"></i> Reference Letters Requirements</h5>
+                            <p class="mb-0"><strong>TWO</strong> reference letters must be submitted with this application. A reference letter must:</p>
+                            <ul class="mb-0 mt-2">
+                                <li>It is important that the letters of reference or testimonials report on your work ethics, as well as your involvement in clerical activities.</li>
+                                <li>The letters of reference or testimonials from these two individuals must be hand-signed.</li>
+                                <li>The letters of reference or testimonials must be on formal letterheads.</li>
+                                <li>Family members, friends and/or clients may not write a testimonial for you. Your pastor/other religious leader, employer, supervisor, or chairperson of the church council at the congregation you belong to, are all good choices to act as references.</li>
+                                <li>At least one of these testimonials must be less than one year old.</li>
+                                <li>Indicate the details (name, contact details, position) of the person signing the letter</li>
+                                <li>Testimonials can be addressed to: CPSC Evaluation and Registration Committee</li>
+                            </ul>
+                        </div>
+                        {% else %}
                         <!-- Reference Letter Requirements Note -->
                         <div class="alert alert-info mb-4">
                             <h5 class="alert-heading"><i class="bi bi-info-circle"></i> Reference Letter Requirements</h5>
@@ -1166,6 +1182,8 @@
                                 <li>Be clearly legible</li>
                             </ul>
                         </div>
+                        {% endif %}
+                        
 
                         <!-- Management Form for References -->
                         <input type="hidden" name="references-TOTAL_FORMS" value="0" id="id_references-TOTAL_FORMS">
@@ -1192,6 +1210,9 @@
                     </div>
                 </div>
                 {% endif %}
+
+
+                
 
                 <!-- Academic Qualifications Section -->
                 {% if show_academic_qualifications %}
