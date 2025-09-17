@@ -150,7 +150,7 @@
                   <img src="{% static 'main_media/CPSC.svg' %}" alt="ACRP Logo" class="w-20 h-20">
                 </div>
                 <h3 class="text-2xl font-bold text-gray-800 mb-2">CPSC</h3>
-                <p class="text-gray-600 mb-4">Council for Pastoral & Spiritual counsellors</p>
+                <p class="text-gray-600 mb-4">Council for Pastoral & Spiritual Counsellors</p>
                 <button type="button" onclick="openModal('cpsc')" class="text-green-600 hover:text-green-800 font-medium transition-colors mb-4">
                   Learn More →
                 </button>
@@ -160,9 +160,9 @@
                 <div class="bg-green-50 p-3 rounded-lg">
                   <h4 class="font-semibold text-green-800 text-sm mb-1">Focus Areas:</h4>
                   <ul class="text-green-700 text-xs space-y-1">
-                    <li>• Pastoral counselling</li>
+                    <li>• Christian Pastoral counselling</li>
                     <li>• Spiritual care provision</li>
-                    <li>• Therapeutic ministry</li>
+                    <li>• Level-based counselling scope of practice</li>
                   </ul>
                 </div>
                 
@@ -334,7 +334,7 @@
               <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-6m-2-5v5m-2-5v5m-6-3v3"></path>
               </svg>
-              ACRP Banking Details
+              Banking Details
             </h3>
             
             <div class="grid md:grid-cols-2 gap-4 mb-4">
@@ -413,7 +413,7 @@
               <li>Allow 24-48 hours for payment verification</li>
               <!-- CHANGED: Added emphasis about saving proof of payment -->
               <li><strong>Save your proof of payment - it's required for application completion</strong></li>
-              <li>Contact support if payment issues arise: andrea.leipoldt@acrp.org.za</li>
+              <li> <a href="https://www.acrp.org.za/affiliation/affiliation-of-persons/fee-structure" class="color-blue"> Click here to View Full Fee Structure</a> </li>
             </ul>
           </div>
           
@@ -569,7 +569,7 @@ document.addEventListener('DOMContentLoaded', function() {
         accountType: 'Cheque',
         councilName: 'CGMP Council',
         referenceInstructions: 'Use your ID no. (or Passport no. if you are a non-SA citizen), followed by your initials and the first letter of your surname',
-        referenceExample: 'Example: "1234567890123 J S AppL" (ID + John Smith initials + Appl)'
+        referenceExample: 'Example: "1234567890123 J S Appl" (ID + John Smith initials + Appl)'
       },
       'cmtp': {
         accountName: 'ACRP',
@@ -1032,21 +1032,21 @@ document.addEventListener('DOMContentLoaded', function() {
       },
       cpsc: {
         title: 'CPSC',
-        subtitle: 'Council for Pastoral & Spiritual Care',
+        subtitle: 'Council for Pastoral & Spiritual Counsellors',
         icon: `<img src="{% static 'main_media/CPSC.svg' %}" alt="ACRP Logo" class="w-10 h-10">`,
         iconBg: 'bg-gradient-to-r from-gray-200 to-gray-200',
         buttonBg: 'bg-green-600 hover:bg-green-700',
         content: `
           <div class="space-y-6">
             <p class="text-lg font-semibold">About CPSC</p>
-            <p>The Council for Pastoral & Spiritual counsellors (CPSC) facilitates registration and designation of pastoral counsellors and spiritual care professionals.</p>
+            <p>The Council for Pastoral & Spiritual Counsellors (CPSC) facilitates registration and designation of pastoral counsellors and spiritual care professionals.</p>
             
             <div class="bg-green-50 p-6 rounded-lg">
               <h4 class="font-semibold text-green-800 mb-3 text-lg">What CPSC Offers:</h4>
               <ul class="list-disc list-inside text-green-700 space-y-2">
                 <li>Professional designation for pastoral counsellors</li>
                 <li>Spiritual care practitioner registration</li>
-                <li>Specialized training program accreditation</li>
+                <li>Evaluation of presented material for CPSC CPD points</li>
                 <li>Ethics and standards oversight</li>
                 <li>Continuing education requirements management</li>
                 <li>Professional supervision frameworks</li>
@@ -1090,7 +1090,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="bg-purple-50 p-6 rounded-lg">
               <h4 class="font-semibold text-purple-800 mb-3 text-lg">What CMTP Offers:</h4>
               <ul class="list-disc list-inside text-purple-700 space-y-2">
-                <li>Training providers</li>
+                <li>Professional registration of Training providers</li>
                 <li>Course and curriculum development collaboration</li>
                 <li>Professional amd Ethical standards</li>
                 <li>Designations reflecting level and skills</li>

@@ -97,6 +97,34 @@ ONBOARDING_SESSION_TIMEOUT = 3600  # 1 hour
 # ============================================================================
 # UTILITY FUNCTIONS
 # ============================================================================
+from django.utils import timezone
+from datetime import datetime
+
+def make_naive_datetime(dt):
+    """
+    Convert timezone-aware datetime to naive datetime for Excel compatibility.
+    
+    Args:
+        dt: DateTime object (can be timezone-aware or naive)
+    
+    Returns:
+        Naive datetime object or empty string if None
+    """
+    if not dt:
+        return ''
+    
+    if isinstance(dt, str):
+        return dt
+    
+    # If it's timezone-aware, convert to naive using the current timezone
+    if timezone.is_aware(dt):
+        # Convert to local timezone first, then make naive
+        local_dt = timezone.localtime(dt)
+        return timezone.make_naive(local_dt)
+    
+    # Already naive, return as-is
+    return dt
+
 
 def is_admin_or_manager(user):
     """Check if user has admin or manager privileges"""
@@ -1608,17 +1636,17 @@ def get_filtered_applications_for_export(search_query, council_filter, status_fi
                 'council_name': app.onboarding_session.selected_council.name,
                 'affiliation_type': app.onboarding_session.selected_affiliation_type.name if app.onboarding_session.selected_affiliation_type else '',
                 
-                # Application Status and Dates
+                # Application Status and Dates - FIXED: Convert to naive datetimes
                 'status': app.status,
-                'created_at': app.created_at,
-                'submitted_at': app.submitted_at,
-                'reviewed_at': getattr(app, 'reviewed_at', ''),
-                'approved_at': getattr(app, 'approved_at', ''),
+                'created_at': make_naive_datetime(app.created_at),
+                'submitted_at': make_naive_datetime(app.submitted_at),
+                'reviewed_at': make_naive_datetime(getattr(app, 'reviewed_at', None)),
+                'approved_at': make_naive_datetime(getattr(app, 'approved_at', None)),
                 
-                # Staff Information
-                'submitted_by': app.submitted_by.get_full_name() if app.submitted_by else '',
-                'reviewed_by': app.reviewed_by.get_full_name() if app.reviewed_by else '',
-                'approved_by': app.approved_by.get_full_name() if app.approved_by else '',
+                # Staff Information - FIXED: Handle string fields
+                'submitted_by': str(app.submitted_by) if app.submitted_by else '',
+                'reviewed_by': str(app.reviewed_by) if app.reviewed_by else '',
+                'approved_by': str(app.approved_by) if app.approved_by else '',
                 'reviewer_notes': getattr(app, 'reviewer_notes', ''),
                 
                 # Type-specific information
@@ -1650,6 +1678,9 @@ def get_filtered_applications_for_export(search_query, council_filter, status_fi
                 })
             
             applications_data.append(app_data)
+
+
+
     
     return applications_data
 

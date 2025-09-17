@@ -305,7 +305,6 @@ class OnboardingSession(models.Model):
 # ============================================================================
 # APPLICATION MODELS - The actual application forms
 # ============================================================================
-# In your models.py - Replace the existing BaseApplication class with this:
 
 class BaseApplication(models.Model):
     """
@@ -427,7 +426,7 @@ class BaseApplication(models.Model):
     
     # Demographics
     date_of_birth = models.DateField()
-    race = models.CharField(max_length=30, choices=RACE_CHOICES, help_text="Required by SAQA")
+    race = models.CharField(max_length=30, choices=RACE_CHOICES, help_text="SAQA Requirement")
     
     # SAQA Disability codes - properly structured for compliance
     DISABILITY_CHOICES = [
@@ -452,27 +451,10 @@ class BaseApplication(models.Model):
     # Country codes using 2-character ISO codes for database efficiency
     RESIDENCY_CHOICES = [
         ('SA', 'South Africa'),
-        ('AO', 'Angola'),
-        ('BW', 'Botswana'),
-        ('LS', 'Lesotho'),
-        ('MW', 'Malawi'),
-        ('MU', 'Mauritius'),
-        ('MZ', 'Mozambique'),
-        ('NA', 'Namibia'),
-        ('SC', 'Seychelles'),
-        ('SZ', 'Eswatini (Swaziland)'),
-        ('TZ', 'Tanzania'),
-        ('CD', 'Democratic Republic of Congo'),
-        ('ZM', 'Zambia'),
-        ('ZW', 'Zimbabwe'),
-        ('AS', 'Asian countries'),
-        ('AU', 'Australia & Oceania'),
-        ('EU', 'European countries'),
-        ('US', 'North American countries'),
-        ('BR', 'South & Central American countries'),
-        ('AF', 'Rest of Africa'),
-        ('OC', 'Other & Rest of Oceania'),
-        ('U', 'Unspecified'),
+        ('D', 'Dual (SA plus Other)'),
+        ('O', 'Other'),
+        ('U', 'Unknown'),
+        ('PR', 'Permanent Resident'),
     ]
     
     residency = models.CharField(
@@ -539,6 +521,7 @@ class BaseApplication(models.Model):
         ('North West', 'North West'),
         ('Northern Cape', 'Northern Cape'),
         ('Western Cape', 'Western Cape'),
+        ('X', 'Outside South Africa'),
     ]
     postal_province = models.CharField(max_length=50, choices=PROVINCE_CHOICES)
     postal_code = models.CharField(max_length=10)
@@ -655,7 +638,6 @@ class BaseApplication(models.Model):
     
     disciplinary_action = models.BooleanField(
         default=False,
-        help_text="Have you ever been subject to disciplinary action by any professional body?, Are you aware of any current complaints that have been, or pending complaints that may be, laid against you?"
     )
     disciplinary_description = models.TextField(
         blank=True,

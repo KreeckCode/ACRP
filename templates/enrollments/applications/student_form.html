@@ -473,7 +473,7 @@
                             {% endif %}
                         </div>
 
-                        <div class="field-row two-cols">
+                        <div class="field-row three-cols">
                             {% if form.surname %}
                             <div class="form-group">
                                 <label for="{{ form.surname.id_for_label }}">
@@ -512,9 +512,26 @@
                                 {% endif %}
                             </div>
                             {% endif %}
+
+                            {% if form.preferred_name %}
+                            <div class="form-group">
+                                <label for="{{ form.preferred_name.id_for_label }}">
+                                    {{ form.preferred_name.label }}
+                                    {% if form.preferred_name.field.required %}<span class="required">*</span>{% endif %}
+                                </label>
+                                {{ form.preferred_name }}
+                                {% if form.preferred_name.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.preferred_name.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
                         </div>
 
-                        <div class="field-row two-cols">
+                        
+
+                        <div class="field-row three-cols">
                             {% if form.initials %}
                             <div class="form-group">
                                 <label for="{{ form.initials.id_for_label }}">
@@ -574,20 +591,7 @@
                             </div>
                             {% endif %}
                             
-                            {% if form.preferred_name %}
-                            <div class="form-group">
-                                <label for="{{ form.preferred_name.id_for_label }}">
-                                    {{ form.preferred_name.label }}
-                                    {% if form.preferred_name.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.preferred_name }}
-                                {% if form.preferred_name.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.preferred_name.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
+                            
                         </div>
 
                         <div class="field-row three-cols">
@@ -750,47 +754,6 @@
                                 {% endif %}
                             </div>
                             {% endif %}
-                        </div>
-
-                        <div class="field-row three-cols">
-                            {% if form.work_phone %}
-                            <div class="form-group">
-                                <label for="{{ form.work_phone.id_for_label }}">
-                                    {{ form.work_phone.label }}
-                                    {% if form.work_phone.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.work_phone }}
-                                {% if form.work_phone.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.work_phone.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-
-                                {% if form.work_phone.help_text %}
-                                <div class="form-text">{{ form.work_phone.help_text }}</div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-                            
-                            {% if form.home_phone %}
-                            <div class="form-group">
-                                <label for="{{ form.home_phone.id_for_label }}">
-                                    {{ form.home_phone.label }}
-                                    {% if form.home_phone.field.required %}<span class="required">*</span>{% endif %}
-                                </label>
-                                {{ form.home_phone }}
-                                {% if form.home_phone.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.home_phone.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-
-                                {% if form.home_phone.help_text %}
-                                <div class="form-text">{{ form.home_phone.help_text }}</div>
-                                {% endif %}
-                            </div>
-                            {% endif %}
-                           
                         </div>
 
                         <div class="field-row three-cols">
@@ -1110,7 +1073,8 @@
                                     </label>
                                 </div>
                                 {% if form.disciplinary_action.help_text %}
-                                    <div class="form-text">{{ form.disciplinary_action.help_text }}</div>
+                                    <div class="form-text"> Have you ever been subject to disciplinary action by any professional body?</div>
+                                    <div class="form-text"> Are you aware of any current complaints that have been, or pending complaints that may be, laid against you?</div>
                                 {% endif %}
                             </div>
                         </div>
@@ -1136,27 +1100,44 @@
                         </div>
                         {% endif %}
 
-                        
+                        {% if session.selected_council.name == "CPSC" %}
+
+                            {% if form.actively_involved_pastoral_counselling %}
+                            <div class="field-row">
+                                <div class="form-group">
+                                    <div class="form-check">
+                                        {{ form.actively_involved_pastoral_counselling }}
+                                        <label class="form-check-label" for="{{ form.actively_involved_pastoral_counselling.id_for_label }}">
+                                            {{ form.actively_involved_pastoral_counselling.label }}
+                                        </label>
+                                    </div>
+                                    {% if form.actively_involved_pastoral_counselling.help_text %}
+                                        <div class="form-text">{{ form.actively_involved_pastoral_counselling.help_text }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        {% endif %}
                     </div>
                 </div>
 
+                {% if session.selected_council.name == "CPSC"%}
                 <!-- References Section -->
                 {% if show_references %}
                 <div class="form-section" id="section-references">
                     <div class="section-header" onclick="toggleSection('references')">
                         <h3>
                             <i class="bi bi-people"></i>
-                            References
+                            References  {% if session.selected_council.name == "CPSC" %}
                         </h3>
                         <i class="bi bi-chevron-down toggle-icon"></i>
                     </div>
                     <div class="section-content" id="content-references">
                         
-                        {% if session.selected_council.name == "CPSC" %}
                         <!-- Reference Letter Requirements Note -->
                         <div class="alert alert-info mb-4">
                             <h5 class="alert-heading"><i class="bi bi-info-circle"></i> Reference Letters Requirements</h5>
-                            <p class="mb-0"><strong>TWO</strong> reference letters must be submitted with this application. A reference letter must:</p>
+                            <p class="mb-0"><strong>TWO</strong> reference letters must be submitted with this application. </p>
                             <ul class="mb-0 mt-2">
                                 <li>It is important that the letters of reference or testimonials report on your work ethics, as well as your involvement in clerical activities.</li>
                                 <li>The letters of reference or testimonials from these two individuals must be hand-signed.</li>
@@ -1211,7 +1192,7 @@
                 </div>
                 {% endif %}
 
-
+                 {%endif%}
                 
 
                 <!-- Academic Qualifications Section -->
@@ -1267,10 +1248,10 @@
                             <ul class="mb-0 mt-2">
                                 <li>ID Document or Passport</li>
                                 <li>Highest School Certificate</li>
-                                <li>Qualification / Training Certificates</li>
-                                <li>Reference Letter</li>
-                                <li>Copy of Ordination Certificate (if available)</li>
+                                <li>Copy of student registration at the {% if session.selected_council.name == "CPSC"%} Accredited {%endif%} training institution currently enrolled at</li>
+                                <li>Copies of previous training/qualification certificates (if applicable)</li>
                                 <li>Proof of Payment</li>
+                                {% if session.selected_council.name == "CPSC"%}<li>2 Reference letters</li> {%endif%}
                             </ul>
                             <small class="text-muted mt-2 d-block">Note: All documents must be clearly legible and in PDF, DOC, DOCX, JPG, or PNG format</small>
                         </div>
@@ -1330,7 +1311,7 @@
                     <div class="section-header" onclick="toggleSection('legal')">
                         <h3>
                             <i class="bi bi-shield-check"></i>
-                            Declaration & Popi Act Authorisation
+                            Declaration & POPI Act Authorisation
                         </h3>
                         <i class="bi bi-chevron-down toggle-icon"></i>
                     </div>
@@ -1338,8 +1319,8 @@
                         <!-- Legal Documents Link -->
                         <div class="alert alert-info mb-4">
                             <h5 class="alert-heading"><i class="bi bi-file-earmark-text"></i> Important Documents</h5>
-                            <p>Please review the Declaration and Popi act documents before proceeding:</p>
-                            <a href="https://uorivo.lon1.cdn.digitaloceanspaces.com/CGMP%20CMTP%20Declaration%20and%20POPI%20Act%20(002)%20(1).pdf" 
+                            <p>Please review the Declaration and POPI Act documents before proceeding:</p>
+                            <a href="https://uorivo.lon1.cdn.digitaloceanspaces.com/ACRP%20Declaration%20and%20POPI%20Act%20(004).pdf" 
                                target="_blank" 
                                class="btn btn-primary mb-3">
                                 <i class="bi bi-file-pdf"></i>
@@ -1353,7 +1334,7 @@
                                 <div class="form-check">
                                     {{ form.popi_act_accepted }}
                                     <label class="form-check-label" for="{{ form.popi_act_accepted.id_for_label }}">
-                                        {{ form.popi_act_accepted.label }}
+                                        POPI Act Accepted
                                         {% if form.popi_act_accepted.field.required %}<span class="required">*</span>{% endif %}
                                     </label>
                                 </div>

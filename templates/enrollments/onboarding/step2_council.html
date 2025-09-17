@@ -133,7 +133,12 @@
                   <h4 class="font-semibold text-green-800 mb-2">Requirements:</h4>
                   <ul class="text-green-700 text-sm space-y-1">
                     <li>• SAQA registered qualifications & necessary experience</li>
+                    {% if session.selected_council.name == "CPSC" %} 
+                    <li>• Professional counselling experience</li>
+                    {% else %}
                     <li>• Professional ministry experience</li>
+                    {% endif %}
+                    
                     <li>• Comprehensive application</li>
                   </ul>
                 </div>
@@ -171,9 +176,7 @@
                     <h4 class="font-semibold text-purple-800 mb-2">Who This Is For:</h4>
                     <ul class="text-purple-700 text-sm space-y-1">
                       <li>• Registered Students in Pastoral / Christian Counselling accredited institutions</li>
-                      <li>• Bible college students</li>
-                      <li>• Ministry training participants</li>
-                      <li>• Pre-ministry candidates</li>
+                      
                     </ul>
                   </div>
                 {% else %}
@@ -233,10 +236,7 @@
                 <div class="bg-blue-50 p-4 rounded-lg">
                   <h4 class="font-semibold text-blue-800 mb-2">Who This Is For:</h4>
                   <ul class="text-blue-700 text-sm space-y-1">
-                    <li>• Volunteer ministry workers</li>
-                    <li>• Church committee members</li>
-                    <li>• Ministry training institution administrators</li>
-                    <li>• Those exploring ministry</li>
+                    <li>• People who belong to another professional body with a similar counselling scope of practice.</li>
                   </ul>
                 </div>
                 
