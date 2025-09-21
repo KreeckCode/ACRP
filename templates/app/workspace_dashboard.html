@@ -1,0 +1,787 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Workspace Dashboard - ACRP{% endblock %}
+
+{% block extra_css %}
+<style>
+    .metric-card {
+        transition: all 0.2s ease;
+    }
+    .metric-card:hover {
+        transform: translateY(-2px);
+    }
+    .priority-critical { border-left: 4px solid #dc2626; }
+    .priority-high { border-left: 4px solid #ea580c; }
+    .priority-medium { border-left: 4px solid #ca8a04; }
+    .priority-low { border-left: 4px solid #16a34a; }
+    
+    .progress-ring {
+        transition: stroke-dasharray 0.5s ease-in-out;
+    }
+    
+    .activity-item {
+        transition: background-color 0.2s ease;
+    }
+    .activity-item:hover {
+        background-color: #f9fafb;
+    }
+    
+    @keyframes pulse-soft {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.8; }
+    }
+    
+    .notification-pulse {
+        animation: pulse-soft 2s infinite;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 lg:p-8">
+    <!-- Welcome Header -->
+    <div class="mb-8">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <div>
+                <h1 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+                    Welcome back, {{ user.first_name }}!
+                </h1>
+                <p class="text-gray-600 text-lg">
+                    Here's what's happening in your workspace today
+                </p>
+            </div>
+            <div class="mt-4 lg:mt-0 flex flex-wrap gap-3">
+                <a href="{% url 'common:kanban_workspace' %}" 
+                   class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                    <i class="bi bi-kanban mr-2"></i>
+                    Kanban Board
+                </a>
+                <a href="{% url 'common:create_project' %}" 
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    <i class="bi bi-folder-plus mr-2"></i>
+                    New Project
+                </a>
+                <a href="{% url 'common:create_task' %}" 
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    <i class="bi bi-plus-circle mr-2"></i>
+                    Add Task
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Critical Alerts -->
+    {% if attention_projects or overdue_tasks %}
+    <div class="mb-8">
+        <div class="bg-red-50 border-l-4 border-red-400 p-4 rounded-lg">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="bi bi-exclamation-triangle text-red-400"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-red-800">Items Requiring Immediate Attention</h3>
+                    <div class="mt-2 text-sm text-red-700">
+                        <ul class="list-disc list-inside space-y-1">
+                            {% if overdue_tasks %}
+                            <li>You have {{ overdue_tasks.count }} overdue tasks</li>
+                            {% endif %}
+                            {% if attention_projects %}
+                            <li>{{ attention_projects.count }} project{{ attention_projects.count|pluralize }} need{{ attention_projects.count|pluralize:"s," }} attention</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    <div class="mt-4">
+                        <div class="flex space-x-3">
+                            {% if overdue_tasks %}
+                            <a href="{% url 'common:task_list' %}?filter=overdue" 
+                               class="bg-red-100 px-3 py-1 rounded-full text-sm font-medium text-red-800 hover:bg-red-200">
+                                Review Overdue Tasks
+                            </a>
+                            {% endif %}
+                            {% if attention_projects %}
+                            <a href="{% url 'common:project_list' %}?filter=attention" 
+                               class="bg-red-100 px-3 py-1 rounded-full text-sm font-medium text-red-800 hover:bg-red-200">
+                                Review Projects
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Key Metrics -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <!-- Active Tasks -->
+        <div class="metric-card bg-white rounded-xl shadow-lg p-6 hover:shadow-xl">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                        <i class="bi bi-list-task text-blue-600"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Active Tasks</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ analytics.active_tasks }}</p>
+                    {% if analytics.active_tasks > 10 %}
+                    <p class="text-xs text-orange-600">High workload</p>
+                    {% elif analytics.active_tasks > 5 %}
+                    <p class="text-xs text-yellow-600">Moderate workload</p>
+                    {% else %}
+                    <p class="text-xs text-green-600">Manageable workload</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Projects -->
+        <div class="metric-card bg-white rounded-xl shadow-lg p-6 hover:shadow-xl">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+                        <i class="bi bi-folder text-green-600"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Active Projects</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ analytics.active_projects }}</p>
+                    <p class="text-xs text-gray-600">{{ analytics.projects_managed }} managed</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Completed This Month -->
+        <div class="metric-card bg-white rounded-xl shadow-lg p-6 hover:shadow-xl">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
+                        <i class="bi bi-check-circle text-purple-600"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Completed</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ analytics.completed_this_month }}</p>
+                    <p class="text-xs text-gray-600">This month</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Time This Week -->
+        <div class="metric-card bg-white rounded-xl shadow-lg p-6 hover:shadow-xl">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center">
+                        <i class="bi bi-clock text-orange-600"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Hours Logged</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ analytics.time_this_week }}</p>
+                    <p class="text-xs text-gray-600">This week</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    {% if quick_actions %}
+    <div class="mb-8">
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Suggested Actions</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for action in quick_actions %}
+            <div class="bg-white rounded-xl shadow-lg p-4 hover:shadow-xl transition-shadow">
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0">
+                        <div class="h-8 w-8 rounded-full 
+                                    {% if action.priority == 'high' %}bg-red-100{% elif action.priority == 'medium' %}bg-yellow-100{% else %}bg-blue-100{% endif %} 
+                                    flex items-center justify-center">
+                            <i class="bi bi-{{ action.icon }} 
+                                      {% if action.priority == 'high' %}text-red-600{% elif action.priority == 'medium' %}text-yellow-600{% else %}text-blue-600{% endif %}"></i>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-sm font-medium text-gray-900">{{ action.title }}</h3>
+                        <p class="text-sm text-gray-600 mt-1">{{ action.description }}</p>
+                        <a href="{{ action.url }}" 
+                           class="mt-2 inline-flex items-center text-sm font-medium 
+                                  {% if action.priority == 'high' %}text-red-600 hover:text-red-700{% elif action.priority == 'medium' %}text-yellow-600 hover:text-yellow-700{% else %}text-blue-600 hover:text-blue-700{% endif %}">
+                            Take Action
+                            <i class="bi bi-arrow-right ml-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Main Content Area -->
+        <div class="lg:col-span-2 space-y-8">
+            
+            <!-- Upcoming Deadlines -->
+            {% if upcoming_deadlines %}
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="bi bi-calendar-event text-red-600 mr-2"></i>
+                            Upcoming Deadlines
+                        </h3>
+                        <a href="{% url 'common:my_tasks' %}?filter=upcoming" 
+                           class="text-sm text-blue-600 hover:text-blue-700">
+                            View All
+                        </a>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4">
+                        {% for task in upcoming_deadlines %}
+                        <div class="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                             onclick="openTaskDetail('{{ task.id }}')">
+                            <div class="flex-shrink-0">
+                                <div class="w-8 h-8 rounded-full 
+                                            {% if task.priority == 1 %}bg-red-100{% elif task.priority == 2 %}bg-orange-100{% elif task.priority == 3 %}bg-yellow-100{% else %}bg-green-100{% endif %} 
+                                            flex items-center justify-center">
+                                    <i class="bi bi-exclamation-triangle 
+                                              {% if task.priority == 1 %}text-red-600{% elif task.priority == 2 %}text-orange-600{% elif task.priority == 3 %}text-yellow-600{% else %}text-green-600{% endif %}"></i>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-medium text-gray-900">{{ task.title }}</h4>
+                                <p class="text-sm text-gray-600">{{ task.project.name }}</p>
+                                <div class="flex items-center space-x-4 mt-2 text-xs text-gray-500">
+                                    <span class="flex items-center">
+                                        <i class="bi bi-calendar mr-1"></i>
+                                        Due {{ task.due_date|date:"M d" }}
+                                        {% if task.is_overdue %}
+                                        <span class="ml-1 text-red-600 font-medium">(Overdue)</span>
+                                        {% elif task.due_date == today %}
+                                        <span class="ml-1 text-orange-600 font-medium">(Today)</span>
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="flex-shrink-0">
+                                <span class="px-3 py-1 text-xs font-medium rounded-full 
+                                            {% if task.status.is_final %}bg-green-100 text-green-800
+                                            {% elif task.status.name == 'In Progress' %}bg-blue-100 text-blue-800
+                                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ task.status.name }}
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Recent Activity -->
+            {% if recent_comments %}
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                    <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                        <i class="bi bi-chat-dots text-purple-600 mr-2"></i>
+                        Recent Collaboration
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4">
+                        {% for comment in recent_comments %}
+                        <div class="activity-item flex items-start space-x-3 p-3 rounded-lg">
+                            <div class="flex-shrink-0">
+                                <div class="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center text-white text-xs font-medium">
+                                    {{ comment.author.first_name|first }}{{ comment.author.last_name|first }}
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm text-gray-900">
+                                    <span class="font-medium">{{ comment.author.get_full_name }}</span>
+                                    commented on 
+                                    <span class="font-medium">{{ comment.content_object }}</span>
+                                </p>
+                                <p class="text-sm text-gray-600 mt-1">{{ comment.content|truncatechars:100 }}</p>
+                                <p class="text-xs text-gray-500 mt-2">{{ comment.created_at|timesince }} ago</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Projects Overview -->
+            {% if analytics.active_projects > 0 %}
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="bi bi-folder text-blue-600 mr-2"></i>
+                            Active Projects
+                        </h3>
+                        <a href="{% url 'common:project_list' %}" 
+                           class="text-sm text-blue-600 hover:text-blue-700">
+                            View All
+                        </a>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {% for project in attention_projects|slice:":4" %}
+                        <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer"
+                             onclick="window.location.href='{% url 'common:project_detail' pk=project.pk %}'">
+                            <div class="flex items-center justify-between mb-3">
+                                <h4 class="font-medium text-gray-900">{{ project.name }}</h4>
+                                <span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800">
+                                    {{ project.code }}
+                                </span>
+                            </div>
+                            
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Progress:</span>
+                                    <span class="font-medium">{{ project.completion_percentage|floatformat:0 }}%</span>
+                                </div>
+                                
+                                {% if project.overdue_tasks_count > 0 %}
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Overdue Tasks:</span>
+                                    <span class="font-medium text-red-600">{{ project.overdue_tasks_count }}</span>
+                                </div>
+                                {% endif %}
+                                
+                                {% if project.budget_utilization > 80 %}
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Budget Used:</span>
+                                    <span class="font-medium {% if project.budget_utilization > 90 %}text-red-600{% else %}text-orange-600{% endif %}">
+                                        {{ project.budget_utilization|floatformat:0 }}%
+                                    </span>
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mt-3">
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-blue-600 h-2 rounded-full" 
+                                         style="width: {{ project.completion_percentage }}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="lg:col-span-1 space-y-6">
+            
+            <!-- Notifications -->
+            {% if unread_notifications %}
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="bi bi-bell text-yellow-600 mr-2"></i>
+                            Notifications
+                            {% if unread_notifications.count > 0 %}
+                            <span class="ml-2 notification-pulse bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                                {{ unread_notifications.count }}
+                            </span>
+                            {% endif %}
+                        </h3>
+                        <a href="{% url 'common:notification_center' %}" 
+                           class="text-sm text-blue-600 hover:text-blue-700">
+                            View All
+                        </a>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-3">
+                        {% for notification in unread_notifications|slice:":5" %}
+                        <div class="flex items-start space-x-3 p-3 bg-blue-50 rounded-lg hover:bg-blue-100 cursor-pointer"
+                             onclick="markNotificationRead('{{ notification.id }}', '{{ notification.action_url }}')">
+                            <div class="flex-shrink-0">
+                                <div class="w-2 h-2 rounded-full bg-blue-600 mt-2"></div>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-sm font-medium text-gray-900">{{ notification.title }}</h4>
+                                <p class="text-sm text-gray-600 mt-1">{{ notification.message|truncatechars:80 }}</p>
+                                <p class="text-xs text-gray-500 mt-2">{{ notification.created_at|timesince }} ago</p>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p class="text-sm text-gray-500 text-center py-4">No new notifications</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Upcoming Events -->
+            {% if upcoming_events %}
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                    <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                        <i class="bi bi-calendar-event text-green-600 mr-2"></i>
+                        Upcoming Events
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-3">
+                        {% for event in upcoming_events %}
+                        <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                             onclick="window.location.href='{% url 'common:event_detail' pk=event.pk %}'">
+                            <div class="flex-shrink-0">
+                                <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                                    <i class="bi bi-calendar text-green-600"></i>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-sm font-medium text-gray-900">{{ event.title }}</h4>
+                                <p class="text-xs text-gray-600">
+                                    {{ event.start_time|date:"M d, g:i A" }}
+                                    {% if event.is_mandatory %}
+                                    <span class="ml-1 text-red-600 font-medium">(Required)</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Recent Announcements -->
+            {% if recent_announcements %}
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                    <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                        <i class="bi bi-megaphone text-indigo-600 mr-2"></i>
+                        Announcements
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-3">
+                        {% for announcement in recent_announcements %}
+                        <div class="flex items-start space-x-3 p-3 {% if announcement.is_urgent %}bg-red-50 border border-red-200{% else %}border border-gray-200{% endif %} rounded-lg hover:bg-gray-50 cursor-pointer"
+                             onclick="window.location.href='{% url 'common:announcement_detail' pk=announcement.pk %}'">
+                            <div class="flex-shrink-0">
+                                <div class="w-6 h-6 rounded-full {% if announcement.is_urgent %}bg-red-100{% else %}bg-indigo-100{% endif %} flex items-center justify-center">
+                                    <i class="bi bi-megaphone {% if announcement.is_urgent %}text-red-600{% else %}text-indigo-600{% endif %} text-xs"></i>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-sm font-medium text-gray-900">{{ announcement.title }}</h4>
+                                <p class="text-xs text-gray-600 mt-1">{{ announcement.summary|default:announcement.content|truncatechars:60 }}</p>
+                                <p class="text-xs text-gray-500 mt-2">
+                                    {{ announcement.published_at|timesince }} ago
+                                    {% if announcement.is_urgent %}
+                                    <span class="ml-1 text-red-600 font-medium">• Urgent</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Workspace Health -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                    <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                        <i class="bi bi-heart-pulse text-red-600 mr-2"></i>
+                        Workspace Health
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Task Completion</span>
+                            <div class="flex items-center">
+                                <div class="w-20 bg-gray-200 rounded-full h-2 mr-3">
+                                    <div class="bg-green-600 h-2 rounded-full" 
+                                         style="width: {{ workspace_health.completion_rate }}%"></div>
+                                </div>
+                                <span class="text-sm font-medium text-gray-900">
+                                    {{ workspace_health.completion_rate }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Projects On Track</span>
+                            <div class="flex items-center">
+                                <div class="w-20 bg-gray-200 rounded-full h-2 mr-3">
+                                    <div class="bg-blue-600 h-2 rounded-full" 
+                                         style="width: {{ workspace_health.projects_on_track }}%"></div>
+                                </div>
+                                <span class="text-sm font-medium text-gray-900">
+                                    {{ workspace_health.projects_on_track }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Team Utilization</span>
+                            <div class="flex items-center">
+                                <div class="w-20 bg-gray-200 rounded-full h-2 mr-3">
+                                    <div class="bg-purple-600 h-2 rounded-full" 
+                                         style="width: {{ workspace_health.team_utilization }}%"></div>
+                                </div>
+                                <span class="text-sm font-medium text-gray-900">
+                                    {{ workspace_health.team_utilization|floatformat:0 }}%
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                    <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                        <i class="bi bi-link text-gray-600 mr-2"></i>
+                        Quick Links
+                    </h3>
+                </div>
+                <div class="p-6 space-y-3">
+                    <a href="{% url 'common:time_tracking_dashboard' %}" 
+                       class="block text-sm text-blue-600 hover:text-blue-700">
+                        <i class="bi bi-clock mr-2"></i>
+                        Time Tracking
+                    </a>
+                    <a href="" 
+                       class="block text-sm text-blue-600 hover:text-blue-700">
+                        <i class="bi bi-people mr-2"></i>
+                        Team Overview
+                    </a>
+                    <a href="{% url 'common:resource_list' %}" 
+                       class="block text-sm text-blue-600 hover:text-blue-700">
+                        <i class="bi bi-collection mr-2"></i>
+                        Resources
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Task Detail Modal -->
+<div id="taskDetailModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 lg:w-3/4 xl:w-1/2 shadow-lg rounded-md bg-white">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-medium text-gray-900">Task Details</h3>
+            <button onclick="closeTaskDetailModal()" class="text-gray-400 hover:text-gray-600">
+                <i class="bi bi-x text-xl"></i>
+            </button>
+        </div>
+        <div id="taskDetailContent">
+            <!-- Task details will be loaded here -->
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Global variables
+    let currentTaskId = null;
+
+    // Initialize dashboard
+    document.addEventListener('DOMContentLoaded', function() {
+        setupEventListeners();
+        updateTimeDisplays();
+        
+        // Update time displays every minute
+        setInterval(updateTimeDisplays, 60000);
+    });
+
+    // Task detail modal
+    function openTaskDetail(taskId) {
+        fetch(`/app/ajax/tasks/${taskId}/details/`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('taskDetailContent').innerHTML = generateTaskDetailHTML(data);
+            document.getElementById('taskDetailModal').classList.remove('hidden');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Failed to load task details', 'error');
+        });
+    }
+
+    function closeTaskDetailModal() {
+        document.getElementById('taskDetailModal').classList.add('hidden');
+    }
+
+    function generateTaskDetailHTML(task) {
+        return `
+            <div class="space-y-4">
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-900">${task.title}</h4>
+                    <p class="text-sm text-gray-600">${task.project_name}</p>
+                </div>
+                
+                ${task.description ? `
+                <div>
+                    <h5 class="font-medium text-gray-900 mb-2">Description</h5>
+                    <p class="text-sm text-gray-700">${task.description}</p>
+                </div>
+                ` : ''}
+                
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <span class="font-medium text-gray-900">Status:</span>
+                        <span class="ml-2">${task.status}</span>
+                    </div>
+                    <div>
+                        <span class="font-medium text-gray-900">Priority:</span>
+                        <span class="ml-2">${task.priority_display}</span>
+                    </div>
+                    <div>
+                        <span class="font-medium text-gray-900">Due Date:</span>
+                        <span class="ml-2">${task.due_date}</span>
+                    </div>
+                    <div>
+                        <span class="font-medium text-gray-900">Assigned To:</span>
+                        <span class="ml-2">${task.assigned_to || 'Unassigned'}</span>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                    <a href="${task.url}" 
+                       class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                        View Full Details
+                    </a>
+                </div>
+            </div>
+        `;
+    }
+
+    // Notification handling
+    function markNotificationRead(notificationId, actionUrl) {
+        fetch(`/app/ajax/notifications/${notificationId}/mark-read/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCsrfToken()
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && actionUrl) {
+                window.location.href = actionUrl;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+
+    // Update time displays
+    function updateTimeDisplays() {
+        const timeElements = document.querySelectorAll('[data-time]');
+        timeElements.forEach(element => {
+            const timestamp = element.dataset.time;
+            const timeAgo = calculateTimeAgo(new Date(timestamp));
+            element.textContent = timeAgo;
+        });
+    }
+
+    function calculateTimeAgo(date) {
+        const now = new Date();
+        const diffInSeconds = Math.floor((now - date) / 1000);
+        
+        if (diffInSeconds < 60) return 'just now';
+        if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+        if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+        
+        return date.toLocaleDateString();
+    }
+
+    // Utility functions
+    function getCsrfToken() {
+        return document.querySelector('[name=csrfmiddlewaretoken]').value;
+    }
+
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+            type === 'success' ? 'bg-green-100 text-green-800 border-green-400' :
+            type === 'error' ? 'bg-red-100 text-red-800 border-red-400' :
+            type === 'warning' ? 'bg-yellow-100 text-yellow-800 border-yellow-400' :
+            'bg-blue-100 text-blue-800 border-blue-400'
+        } border-l-4`;
+        
+        toast.innerHTML = `
+            <div class="flex items-center">
+                <span>${message}</span>
+                <button onclick="this.parentElement.parentElement.remove()" 
+                        class="ml-4 text-gray-500 hover:text-gray-700">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.remove();
+        }, 5000);
+    }
+
+    // Setup event listeners
+    function setupEventListeners() {
+        // Click outside to close modals
+        document.addEventListener('click', function(e) {
+            const taskDetailModal = document.getElementById('taskDetailModal');
+            
+            if (e.target === taskDetailModal) {
+                closeTaskDetailModal();
+            }
+        });
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeTaskDetailModal();
+            }
+        });
+    }
+
+    // Auto-refresh dashboard data every 5 minutes
+    setInterval(function() {
+        // Refresh notification count and other dynamic content
+        fetch('/app/ajax/dashboard/refresh/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.notifications_count !== undefined) {
+                const notificationBadge = document.querySelector('.notification-pulse');
+                if (notificationBadge) {
+                    notificationBadge.textContent = data.notifications_count;
+                    if (data.notifications_count === 0) {
+                        notificationBadge.style.display = 'none';
+                    } else {
+                        notificationBadge.style.display = 'inline-block';
+                    }
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Dashboard refresh error:', error);
+        });
+    }, 300000); // 5 minutes
+</script>
+{% endblock %}

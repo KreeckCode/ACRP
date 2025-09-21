@@ -1,71 +1,747 @@
 {% extends 'base/base.html' %}
 {% load static %}
+
+{% block title %}My Tasks - ACRP{% endblock %}
+
+{% block extra_css %}
+<style>
+    .task-card {
+        transition: all 0.2s ease;
+    }
+    .task-card:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .priority-critical { border-left: 4px solid #dc2626; }
+    .priority-high { border-left: 4px solid #ea580c; }
+    .priority-medium { border-left: 4px solid #ca8a04; }
+    .priority-low { border-left: 4px solid #16a34a; }
+    
+    .filter-chip {
+        transition: all 0.2s ease;
+    }
+    .filter-chip.active {
+        background-color: #3b82f6;
+        color: white;
+    }
+    
+    .due-today { background-color: #fef3c7; }
+    .due-overdue { background-color: #fee2e2; }
+    .due-soon { background-color: #dbeafe; }
+    
+    .status-indicator {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container py-4">
-
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="mb-0">Tasks</h3>
-    <a href="{% url 'create_task' %}" class="btn btn-sm btn-primary">
-      <i class="bi bi-plus-circle"></i> Create Task
-    </a>
-  </div>
-
-  <div class="card shadow-sm">
-    <div class="card-body p-0">
-      <table class="table table-striped table-hover mb-0 align-middle">
-        <thead class="table-light">
-          <tr>
-            <th>Title</th>
-            <th>Project</th>
-            <th>Assigned To</th>
-            <th>Due Date</th>
-            <th>Completed?</th>
-            <th class="text-center">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for t in tasks %}
-            <tr>
-              <td>{{ t.title }}</td>
-              <td>
-                {% if t.project_task %}
-                  {{ t.project_task.name }}
-                {% else %}
-                  <span class="text-muted">—</span>
-                {% endif %}
-              </td>
-              <td>
-                {% if t.assigned_to %}
-                  {{ t.assigned_to.get_full_name }}
-                {% else %}
-                  <span class="text-muted">Unassigned</span>
-                {% endif %}
-              </td>
-              <td>{{ t.due_date }}</td>
-              <td>
-                {% if t.completed %}
-                  <span class="badge bg-success">Yes</span>
-                {% else %}
-                  <span class="badge bg-secondary">No</span>
-                {% endif %}
-              </td>
-              <td class="text-center">
-                <a href="{% url 'task_detail' t.id %}" class="btn btn-sm btn-outline-info">
-                  <i class="bi bi-eye"></i> View
+<div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 lg:p-8">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <div>
+                <h1 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+                    My Tasks
+                </h1>
+                <p class="text-gray-600 text-lg">
+                    Stay organized and track your task progress
+                </p>
+            </div>
+            <div class="mt-4 lg:mt-0 flex flex-wrap gap-3">
+                <a href="{% url 'app:task_create' %}" 
+                   class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                    <i class="bi bi-plus mr-2"></i>
+                    New Task
                 </a>
-              </td>
-            </tr>
-          {% empty %}
-            <tr>
-              <td colspan="6" class="text-center text-muted">
-                No tasks found.
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+                <a href="{% url 'app:my_tasks_calendar' %}" 
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    <i class="bi bi-calendar mr-2"></i>
+                    Calendar View
+                </a>
+                <button onclick="toggleFilters()" 
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    <i class="bi bi-funnel mr-2"></i>
+                    Filters
+                </button>
+            </div>
+        </div>
     </div>
-  </div>
 
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                        <i class="bi bi-list-task text-blue-600"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Active Tasks</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ task_stats.active }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center">
+                        <i class="bi bi-clock text-red-600"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Overdue</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ task_stats.overdue }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center">
+                        <i class="bi bi-calendar-day text-yellow-600"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Due Today</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ task_stats.due_today }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+                        <i class="bi bi-check-circle text-green-600"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Completed</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ task_stats.completed_this_week }}</p>
+                    <p class="text-xs text-gray-500">This week</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Filter Chips -->
+    <div class="mb-6">
+        <div class="flex flex-wrap gap-2">
+            <button onclick="applyQuickFilter('all')" 
+                    class="filter-chip px-4 py-2 rounded-full text-sm font-medium border {% if not current_filter or current_filter == 'all' %}bg-blue-600 text-white border-blue-600{% else %}bg-white text-gray-700 border-gray-300 hover:bg-gray-50{% endif %}">
+                All Tasks ({{ task_stats.total }})
+            </button>
+            <button onclick="applyQuickFilter('overdue')" 
+                    class="filter-chip px-4 py-2 rounded-full text-sm font-medium border {% if current_filter == 'overdue' %}bg-red-600 text-white border-red-600{% else %}bg-white text-gray-700 border-gray-300 hover:bg-gray-50{% endif %}">
+                <i class="bi bi-exclamation-triangle mr-1"></i>
+                Overdue ({{ task_stats.overdue }})
+            </button>
+            <button onclick="applyQuickFilter('today')" 
+                    class="filter-chip px-4 py-2 rounded-full text-sm font-medium border {% if current_filter == 'today' %}bg-yellow-600 text-white border-yellow-600{% else %}bg-white text-gray-700 border-gray-300 hover:bg-gray-50{% endif %}">
+                <i class="bi bi-calendar-day mr-1"></i>
+                Due Today ({{ task_stats.due_today }})
+            </button>
+            <button onclick="applyQuickFilter('week')" 
+                    class="filter-chip px-4 py-2 rounded-full text-sm font-medium border {% if current_filter == 'week' %}bg-blue-600 text-white border-blue-600{% else %}bg-white text-gray-700 border-gray-300 hover:bg-gray-50{% endif %}">
+                <i class="bi bi-calendar-week mr-1"></i>
+                This Week ({{ task_stats.due_this_week }})
+            </button>
+            <button onclick="applyQuickFilter('high_priority')" 
+                    class="filter-chip px-4 py-2 rounded-full text-sm font-medium border {% if current_filter == 'high_priority' %}bg-orange-600 text-white border-orange-600{% else %}bg-white text-gray-700 border-gray-300 hover:bg-gray-50{% endif %}">
+                <i class="bi bi-flag mr-1"></i>
+                High Priority ({{ task_stats.high_priority }})
+            </button>
+            <button onclick="applyQuickFilter('in_progress')" 
+                    class="filter-chip px-4 py-2 rounded-full text-sm font-medium border {% if current_filter == 'in_progress' %}bg-purple-600 text-white border-purple-600{% else %}bg-white text-gray-700 border-gray-300 hover:bg-gray-50{% endif %}">
+                <i class="bi bi-play-circle mr-1"></i>
+                In Progress ({{ task_stats.in_progress }})
+            </button>
+        </div>
+    </div>
+
+    <!-- Advanced Filters Panel -->
+    <div id="filtersPanel" class="hidden mb-6">
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <form method="GET" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                        <input type="text" name="search" value="{{ current_filters.search }}"
+                               placeholder="Search tasks..."
+                               class="w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Project</label>
+                        <select name="project" class="w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                            <option value="">All Projects</option>
+                            {% for project in user_projects %}
+                            <option value="{{ project.id }}" {% if current_filters.project == project.id|stringformat:"s" %}selected{% endif %}>
+                                {{ project.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                        <select name="status" class="w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                            <option value="">All Statuses</option>
+                            {% for status in available_statuses %}
+                            <option value="{{ status.id }}" {% if current_filters.status == status.id|stringformat:"s" %}selected{% endif %}>
+                                {{ status.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                        <select name="priority" class="w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                            <option value="">All Priorities</option>
+                            <option value="1" {% if current_filters.priority == '1' %}selected{% endif %}>Critical</option>
+                            <option value="2" {% if current_filters.priority == '2' %}selected{% endif %}>High</option>
+                            <option value="3" {% if current_filters.priority == '3' %}selected{% endif %}>Medium</option>
+                            <option value="4" {% if current_filters.priority == '4' %}selected{% endif %}>Low</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                    <button type="button" onclick="clearAllFilters()" 
+                            class="text-sm text-gray-600 hover:text-gray-800">
+                        Clear All
+                    </button>
+                    <button type="button" onclick="toggleFilters()" 
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                        Apply Filters
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Task List -->
+    <div class="space-y-4">
+        {% if tasks %}
+            <!-- Group by due date -->
+            {% regroup tasks by due_date as tasks_by_date %}
+            
+            {% for date_group in tasks_by_date %}
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <!-- Date Header -->
+                <div class="px-6 py-3 border-b border-gray-200 bg-gray-50">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-sm font-medium text-gray-900">
+                            {% if date_group.grouper == today %}
+                                <i class="bi bi-calendar-day text-yellow-600 mr-2"></i>
+                                Today - {{ date_group.grouper|date:"l, F d" }}
+                            {% elif date_group.grouper < today %}
+                                <i class="bi bi-exclamation-triangle text-red-600 mr-2"></i>
+                                Overdue - {{ date_group.grouper|date:"l, F d" }}
+                            {% elif date_group.grouper == tomorrow %}
+                                <i class="bi bi-calendar-plus text-blue-600 mr-2"></i>
+                                Tomorrow - {{ date_group.grouper|date:"l, F d" }}
+                            {% else %}
+                                <i class="bi bi-calendar text-gray-600 mr-2"></i>
+                                {{ date_group.grouper|date:"l, F d" }}
+                            {% endif %}
+                        </h3>
+                        <span class="text-xs text-gray-500">{{ date_group.list|length }} task{{ date_group.list|length|pluralize }}</span>
+                    </div>
+                </div>
+
+                <!-- Tasks for this date -->
+                <div class="divide-y divide-gray-200">
+                    {% for task in date_group.list %}
+                    <div class="task-card p-6 hover:bg-gray-50 cursor-pointer priority-{{ task.priority|yesno:'critical,high,medium,low' }}
+                                {% if task.due_date == today %}due-today{% elif task.due_date < today %}due-overdue{% elif task.due_date <= week_from_now %}due-soon{% endif %}"
+                         onclick="openTaskDetail('{{ task.id }}')">
+                        
+                        <div class="flex items-start space-x-4">
+                            <!-- Task Status Checkbox -->
+                            <div class="flex-shrink-0 pt-1">
+                                <button onclick="event.stopPropagation(); toggleTaskComplete('{{ task.id }}', {{ task.status.is_final|yesno:'true,false' }})"
+                                        class="w-5 h-5 rounded border-2 flex items-center justify-center
+                                               {% if task.status.is_final %}border-green-500 bg-green-500 text-white{% else %}border-gray-300 hover:border-gray-400{% endif %}">
+                                    {% if task.status.is_final %}
+                                    <i class="bi bi-check text-xs"></i>
+                                    {% endif %}
+                                </button>
+                            </div>
+
+                            <!-- Task Content -->
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1">
+                                        <!-- Task Title and Project -->
+                                        <h4 class="text-base font-medium text-gray-900 mb-1 {% if task.status.is_final %}line-through text-gray-500{% endif %}">
+                                            {{ task.title }}
+                                        </h4>
+                                        <div class="flex items-center space-x-3 mb-2">
+                                            <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                                                {{ task.project.code }}
+                                            </span>
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium 
+                                                         {% if task.status.name == 'Done' %}bg-green-100 text-green-800
+                                                         {% elif task.status.name == 'In Progress' %}bg-blue-100 text-blue-800
+                                                         {% elif task.status.name == 'Review' %}bg-yellow-100 text-yellow-800
+                                                         {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                                <span class="status-indicator mr-1" style="background-color: {{ task.status.color }};"></span>
+                                                {{ task.status.name }}
+                                            </span>
+                                            {% if task.priority <= 2 %}
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                <i class="bi bi-exclamation-triangle mr-1"></i>
+                                                {% if task.priority == 1 %}Critical{% else %}High{% endif %}
+                                            </span>
+                                            {% endif %}
+                                        </div>
+
+                                        <!-- Task Description -->
+                                        {% if task.description %}
+                                        <p class="text-sm text-gray-600 mb-3 line-clamp-2">
+                                            {{ task.description|truncatechars:150 }}
+                                        </p>
+                                        {% endif %}
+
+                                        <!-- Task Meta Information -->
+                                        <div class="flex items-center space-x-4 text-xs text-gray-500">
+                                            <span class="flex items-center">
+                                                <i class="bi bi-folder mr-1"></i>
+                                                {{ task.project.name }}
+                                            </span>
+                                            {% if task.estimated_hours %}
+                                            <span class="flex items-center">
+                                                <i class="bi bi-clock mr-1"></i>
+                                                {{ task.estimated_hours }}h estimated
+                                            </span>
+                                            {% endif %}
+                                            {% if task.tags.all %}
+                                            <span class="flex items-center">
+                                                <i class="bi bi-tags mr-1"></i>
+                                                {{ task.tags.all|join:", " }}
+                                            </span>
+                                            {% endif %}
+                                        </div>
+
+                                        <!-- Progress Bar (if in progress) -->
+                                        {% if task.progress_percentage > 0 and not task.status.is_final %}
+                                        <div class="mt-3">
+                                            <div class="flex items-center justify-between text-xs text-gray-600 mb-1">
+                                                <span>Progress</span>
+                                                <span>{{ task.progress_percentage|floatformat:0 }}%</span>
+                                            </div>
+                                            <div class="w-full bg-gray-200 rounded-full h-1.5">
+                                                <div class="bg-blue-600 h-1.5 rounded-full" 
+                                                     style="width: {{ task.progress_percentage }}%"></div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Task Actions -->
+                                    <div class="flex-shrink-0 flex items-center space-x-2">
+                                        {% if task.assigned_to %}
+                                        <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-medium">
+                                            {{ task.assigned_to.first_name|first }}{{ task.assigned_to.last_name|first }}
+                                        </div>
+                                        {% endif %}
+                                        
+                                        <button onclick="event.stopPropagation(); openTaskActions('{{ task.id }}', event)"
+                                                class="text-gray-400 hover:text-gray-600">
+                                            <i class="bi bi-three-dots-vertical"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+        <!-- Empty State -->
+        <div class="text-center py-12">
+            <i class="bi bi-list-task text-gray-400 text-6xl mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No tasks found</h3>
+            <p class="text-gray-600 mb-6">
+                {% if current_filter and current_filter != 'all' %}
+                No tasks match the current filter. Try selecting a different filter or create a new task.
+                {% else %}
+                You don't have any tasks yet. Create your first task to get started.
+                {% endif %}
+            </p>
+            <a href="{% url 'app:task_create' %}" 
+               class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                <i class="bi bi-plus mr-2"></i>
+                Create Task
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Load More Button (if pagination needed) -->
+    {% if has_more_tasks %}
+    <div class="text-center mt-8">
+        <button onclick="loadMoreTasks()" 
+                class="inline-flex items-center px-6 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+            <i class="bi bi-arrow-down mr-2"></i>
+            Load More Tasks
+        </button>
+    </div>
+    {% endif %}
 </div>
+
+<!-- Task Detail Modal -->
+<div id="taskDetailModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 lg:w-3/4 xl:w-1/2 shadow-lg rounded-md bg-white">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-medium text-gray-900">Task Details</h3>
+            <button onclick="closeTaskDetailModal()" class="text-gray-400 hover:text-gray-600">
+                <i class="bi bi-x text-xl"></i>
+            </button>
+        </div>
+        <div id="taskDetailContent">
+            <!-- Task details will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<!-- Task Actions Menu -->
+<div id="taskActionsMenu" class="fixed bg-white border border-gray-200 rounded-md shadow-lg py-1 z-50 hidden">
+    <button onclick="editTask()" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+        <i class="bi bi-pencil mr-2"></i>Edit Task
+    </button>
+    <button onclick="duplicateTask()" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+        <i class="bi bi-files mr-2"></i>Duplicate
+    </button>
+    <button onclick="startTimer()" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+        <i class="bi bi-play-circle mr-2"></i>Start Timer
+    </button>
+    <hr class="my-1">
+    <button onclick="markComplete()" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+        <i class="bi bi-check-circle mr-2"></i>Mark Complete
+    </button>
+    <button onclick="deleteTask()" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+        <i class="bi bi-trash mr-2"></i>Delete
+    </button>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Global variables
+    let currentTaskId = null;
+    let taskActionsMenuTaskId = null;
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', function() {
+        setupEventListeners();
+        updateTaskCounts();
+    });
+
+    // Quick filter functions
+    function applyQuickFilter(filter) {
+        const url = new URL(window.location);
+        url.searchParams.set('filter', filter);
+        url.searchParams.delete('search');
+        url.searchParams.delete('project');
+        url.searchParams.delete('status');
+        url.searchParams.delete('priority');
+        window.location = url;
+    }
+
+    function toggleFilters() {
+        const panel = document.getElementById('filtersPanel');
+        panel.classList.toggle('hidden');
+    }
+
+    function clearAllFilters() {
+        window.location = window.location.pathname;
+    }
+
+    // Task actions
+    function toggleTaskComplete(taskId, isCurrentlyComplete) {
+        const newStatus = isCurrentlyComplete ? 'incomplete' : 'complete';
+        
+        fetch(`/app/ajax/tasks/${taskId}/toggle-complete/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify({ complete: !isCurrentlyComplete })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload(); // Simple reload for now
+            } else {
+                showToast(data.error || 'Failed to update task', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('An error occurred', 'error');
+        });
+    }
+
+    function openTaskDetail(taskId) {
+        fetch(`/app/ajax/tasks/${taskId}/details/`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('taskDetailContent').innerHTML = generateTaskDetailHTML(data);
+            document.getElementById('taskDetailModal').classList.remove('hidden');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Failed to load task details', 'error');
+        });
+    }
+
+    function closeTaskDetailModal() {
+        document.getElementById('taskDetailModal').classList.add('hidden');
+    }
+
+    function generateTaskDetailHTML(task) {
+        return `
+            <div class="space-y-4">
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-900">${task.title}</h4>
+                    <p class="text-sm text-gray-600">${task.project_name}</p>
+                </div>
+                
+                ${task.description ? `
+                <div>
+                    <h5 class="font-medium text-gray-900 mb-2">Description</h5>
+                    <p class="text-sm text-gray-700">${task.description}</p>
+                </div>
+                ` : ''}
+                
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <span class="font-medium text-gray-900">Status:</span>
+                        <span class="ml-2">${task.status}</span>
+                    </div>
+                    <div>
+                        <span class="font-medium text-gray-900">Priority:</span>
+                        <span class="ml-2">${task.priority_display}</span>
+                    </div>
+                    <div>
+                        <span class="font-medium text-gray-900">Due Date:</span>
+                        <span class="ml-2">${task.due_date}</span>
+                    </div>
+                    <div>
+                        <span class="font-medium text-gray-900">Assigned To:</span>
+                        <span class="ml-2">${task.assigned_to || 'Unassigned'}</span>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                    <button onclick="startTaskTimer('${task.id}')" 
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                        <i class="bi bi-play mr-2"></i>Start Timer
+                    </button>
+                    <a href="${task.url}" 
+                       class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                        View Full Details
+                    </a>
+                </div>
+            </div>
+        `;
+    }
+
+    function openTaskActions(taskId, event) {
+        event.stopPropagation();
+        taskActionsMenuTaskId = taskId;
+        
+        const menu = document.getElementById('taskActionsMenu');
+        const rect = event.target.getBoundingClientRect();
+        
+        menu.style.left = (rect.left - 120) + 'px';
+        menu.style.top = (rect.bottom + 5) + 'px';
+        menu.classList.remove('hidden');
+    }
+
+    function closeTaskActionsMenu() {
+        document.getElementById('taskActionsMenu').classList.add('hidden');
+        taskActionsMenuTaskId = null;
+    }
+
+    // Task action functions
+    function editTask() {
+        if (taskActionsMenuTaskId) {
+            window.location.href = `/app/tasks/${taskActionsMenuTaskId}/edit/`;
+        }
+        closeTaskActionsMenu();
+    }
+
+    function duplicateTask() {
+        if (taskActionsMenuTaskId) {
+            // Implement duplicate functionality
+            console.log('Duplicate task:', taskActionsMenuTaskId);
+        }
+        closeTaskActionsMenu();
+    }
+
+    function startTimer() {
+        if (taskActionsMenuTaskId) {
+            startTaskTimer(taskActionsMenuTaskId);
+        }
+        closeTaskActionsMenu();
+    }
+
+    function markComplete() {
+        if (taskActionsMenuTaskId) {
+            toggleTaskComplete(taskActionsMenuTaskId, false);
+        }
+        closeTaskActionsMenu();
+    }
+
+    function deleteTask() {
+        if (taskActionsMenuTaskId && confirm('Are you sure you want to delete this task?')) {
+            fetch(`/app/ajax/tasks/${taskActionsMenuTaskId}/delete/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCsrfToken()
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    showToast(data.error || 'Failed to delete task', 'error');
+                }
+            });
+        }
+        closeTaskActionsMenu();
+    }
+
+    // Timer functions
+    function startTaskTimer(taskId) {
+        fetch(`/app/ajax/timer/start/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify({ task_id: taskId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Timer started!', 'success');
+                // Could show timer widget here
+            } else {
+                showToast(data.error || 'Failed to start timer', 'error');
+            }
+        });
+    }
+
+    // Utility functions
+    function getCsrfToken() {
+        return document.querySelector('[name=csrfmiddlewaretoken]').value;
+    }
+
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+            type === 'success' ? 'bg-green-100 text-green-800 border-green-400' :
+            type === 'error' ? 'bg-red-100 text-red-800 border-red-400' :
+            type === 'warning' ? 'bg-yellow-100 text-yellow-800 border-yellow-400' :
+            'bg-blue-100 text-blue-800 border-blue-400'
+        } border-l-4`;
+        
+        toast.innerHTML = `
+            <div class="flex items-center">
+                <span>${message}</span>
+                <button onclick="this.parentElement.parentElement.remove()" 
+                        class="ml-4 text-gray-500 hover:text-gray-700">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.remove();
+        }, 5000);
+    }
+
+    function updateTaskCounts() {
+        // Update task counts in the UI periodically
+        // This could be expanded to use WebSockets for real-time updates
+    }
+
+    // Event listeners
+    function setupEventListeners() {
+        // Click outside to close menus
+        document.addEventListener('click', function(e) {
+            const taskDetailModal = document.getElementById('taskDetailModal');
+            const taskActionsMenu = document.getElementById('taskActionsMenu');
+            const filtersPanel = document.getElementById('filtersPanel');
+            
+            if (e.target === taskDetailModal) {
+                closeTaskDetailModal();
+            }
+            
+            if (!taskActionsMenu.contains(e.target)) {
+                closeTaskActionsMenu();
+            }
+            
+            if (!filtersPanel.contains(e.target) && 
+                !e.target.closest('[onclick*="toggleFilters"]')) {
+                filtersPanel.classList.add('hidden');
+            }
+        });
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeTaskDetailModal();
+                closeTaskActionsMenu();
+                document.getElementById('filtersPanel').classList.add('hidden');
+            }
+            
+            // Quick filters with keyboard
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case '1':
+                        e.preventDefault();
+                        applyQuickFilter('overdue');
+                        break;
+                    case '2':
+                        e.preventDefault();
+                        applyQuickFilter('today');
+                        break;
+                    case '3':
+                        e.preventDefault();
+                        applyQuickFilter('week');
+                        break;
+                    case 'a':
+                        e.preventDefault();
+                        applyQuickFilter('all');
+                        break;
+                }
+            }
+        });
+    }
+</script>
 {% endblock %}

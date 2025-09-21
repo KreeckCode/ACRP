@@ -1,0 +1,1071 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Kanban Workspace - ACRP{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.css">
+<style>
+    .kanban-column {
+        min-height: 600px;
+    }
+    .task-card {
+        transition: all 0.2s ease;
+    }
+    .task-card:hover {
+        transform: translateY(-2px);
+    }
+    .sortable-ghost {
+        opacity: 0.5;
+        background: #e5e7eb;
+    }
+    .sortable-chosen {
+        transform: rotate(5deg);
+    }
+    .priority-critical { border-left: 4px solid #dc2626; }
+    .priority-high { border-left: 4px solid #ea580c; }
+    .priority-medium { border-left: 4px solid #ca8a04; }
+    .priority-low { border-left: 4px solid #16a34a; }
+    
+    .filter-chip {
+        transition: all 0.2s ease;
+    }
+    .filter-chip.active {
+        background-color: #3b82f6;
+        color: white;
+    }
+    
+    @media (max-width: 768px) {
+        .kanban-container {
+            overflow-x: auto;
+        }
+        .kanban-columns {
+            width: max-content;
+            min-width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 lg:p-8">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <div>
+                <h1 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+                    Kanban Workspace
+                </h1>
+                <p class="text-gray-600 text-lg">
+                    Manage projects and tasks visually across your workflow
+                </p>
+            </div>
+            <div class="mt-4 lg:mt-0 flex flex-wrap gap-3">
+                <button onclick="openTaskModal()" 
+                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                    <i class="bi bi-plus mr-2"></i>
+                    Add Task
+                </button>
+                <button onclick="openProjectModal()" 
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    <i class="bi bi-folder-plus mr-2"></i>
+                    New Project
+                </button>
+                <button onclick="toggleFilters()" 
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    <i class="bi bi-funnel mr-2"></i>
+                    Filters
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Messages Display -->
+    {% if messages %}
+    <div class="mb-6 space-y-3">
+        {% for message in messages %}
+        <div class="flex items-center p-4 rounded-lg border-l-4 {% if message.tags == 'success' %}bg-green-50 border-green-400 text-green-700{% elif message.tags == 'error' %}bg-red-50 border-red-400 text-red-700{% elif message.tags == 'warning' %}bg-yellow-50 border-yellow-400 text-yellow-700{% else %}bg-blue-50 border-blue-400 text-blue-700{% endif %}">
+            <div class="flex-shrink-0">
+                {% if message.tags == 'success' %}
+                <i class="bi bi-check-circle-fill"></i>
+                {% elif message.tags == 'error' %}
+                <i class="bi bi-x-circle-fill"></i>
+                {% elif message.tags == 'warning' %}
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                {% else %}
+                <i class="bi bi-info-circle-fill"></i>
+                {% endif %}
+            </div>
+            <div class="ml-3 text-sm font-medium">{{ message }}</div>
+            <button type="button" class="ml-auto -mx-1.5 -my-1.5 rounded-lg p-1.5 inline-flex h-8 w-8 hover:bg-gray-200" onclick="this.parentElement.remove()">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                        <i class="bi bi-list-task text-blue-600"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Total Tasks</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ quick_stats.total_tasks }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+                        <i class="bi bi-person-check text-green-600"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">My Tasks</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ quick_stats.my_tasks }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center">
+                        <i class="bi bi-clock text-red-600"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Overdue</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ quick_stats.overdue }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
+                        <i class="bi bi-check-circle text-purple-600"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Completed Today</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ quick_stats.completed_today }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters Panel -->
+    <div id="filtersPanel" class="hidden mb-6">
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:space-x-6 space-y-4 lg:space-y-0">
+                <!-- View Mode -->
+                <div class="flex items-center space-x-2">
+                    <label class="text-sm font-medium text-gray-700">View:</label>
+                    <select id="viewModeSelect" class="rounded-md border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="all" {% if current_filters.view_mode == 'all' %}selected{% endif %}>All Items</option>
+                        <option value="my_tasks" {% if current_filters.view_mode == 'my_tasks' %}selected{% endif %}>My Tasks</option>
+                        <option value="my_projects" {% if current_filters.view_mode == 'my_projects' %}selected{% endif %}>My Projects</option>
+                    </select>
+                </div>
+
+                <!-- Project Filter -->
+                <div class="flex items-center space-x-2">
+                    <label class="text-sm font-medium text-gray-700">Project:</label>
+                    <select id="projectFilter" class="rounded-md border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">All Projects</option>
+                        {% for project in filter_projects %}
+                        <option value="{{ project.id }}" {% if current_filters.project == project.id|stringformat:"s" %}selected{% endif %}>
+                            {{ project.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Assignee Filter -->
+                <div class="flex items-center space-x-2">
+                    <label class="text-sm font-medium text-gray-700">Assignee:</label>
+                    <select id="assigneeFilter" class="rounded-md border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">All Assignees</option>
+                        <option value="unassigned" {% if current_filters.assignee == 'unassigned' %}selected{% endif %}>Unassigned</option>
+                        {% for user in available_assignees %}
+                        <option value="{{ user.id }}" {% if current_filters.assignee == user.id|stringformat:"s" %}selected{% endif %}>
+                            {{ user.get_full_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Priority Filter -->
+                <div class="flex items-center space-x-2">
+                    <label class="text-sm font-medium text-gray-700">Priority:</label>
+                    <select id="priorityFilter" class="rounded-md border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">All Priorities</option>
+                        {% for value, label in priority_choices %}
+                        <option value="{{ value }}" {% if current_filters.priority == value|stringformat:"s" %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Quick Filters -->
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="toggleQuickFilter('overdue')" 
+                            class="filter-chip px-3 py-1 rounded-full text-xs font-medium border bg-white text-gray-700 hover:bg-gray-50">
+                        <i class="bi bi-clock mr-1"></i>
+                        Overdue
+                    </button>
+                    <button onclick="toggleQuickFilter('today')" 
+                            class="filter-chip px-3 py-1 rounded-full text-xs font-medium border bg-white text-gray-700 hover:bg-gray-50">
+                        <i class="bi bi-calendar-day mr-1"></i>
+                        Due Today
+                    </button>
+                    <button onclick="toggleQuickFilter('week')" 
+                            class="filter-chip px-3 py-1 rounded-full text-xs font-medium border bg-white text-gray-700 hover:bg-gray-50">
+                        <i class="bi bi-calendar-week mr-1"></i>
+                        This Week
+                    </button>
+                </div>
+
+                <!-- Apply Filters Button -->
+                <button onclick="applyFilters()" 
+                        class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700">
+                    Apply Filters
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Summary Cards -->
+    {% if project_summaries %}
+    <div class="mb-8">
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Active Projects</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {% for project in project_summaries %}
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+                <div class="p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="font-semibold text-gray-900 truncate">{{ project.name }}</h3>
+                        <span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800">
+                            {{ project.code }}
+                        </span>
+                    </div>
+                    
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Tasks:</span>
+                            <span class="font-medium">{{ project.completed_tasks }}/{{ project.total_tasks }}</span>
+                        </div>
+                        
+                        {% if project.overdue_tasks > 0 %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Overdue:</span>
+                            <span class="font-medium text-red-600">{{ project.overdue_tasks }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Team:</span>
+                            <span class="font-medium">{{ project.team_size }} members</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Progress Bar -->
+                    <div class="mt-3">
+                        <div class="flex justify-between text-xs text-gray-600 mb-1">
+                            <span>Progress</span>
+                            <span>{% widthratio project.completed_tasks project.total_tasks 100 %}%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-blue-600 h-2 rounded-full" 
+                                 style="width: {% widthratio project.completed_tasks project.total_tasks 100 %}%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3 flex justify-between">
+                        <a href="{% url 'app:project_detail' pk=project.id %}" 
+                           class="text-xs text-blue-600 hover:text-blue-700">
+                            View Details
+                        </a>
+                        <button onclick="filterByProject('{{ project.id }}')" 
+                                class="text-xs text-gray-600 hover:text-gray-700">
+                            Filter Tasks
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Kanban Board -->
+    <div class="kanban-container">
+        <div class="kanban-columns flex space-x-6 overflow-x-auto pb-6">
+            {% for column in kanban_columns %}
+            <div class="kanban-column flex-shrink-0 w-80">
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <!-- Column Header -->
+                    <div class="px-6 py-4 border-b border-gray-200" style="background-color: {{ column.status.color }}20;">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 rounded-full mr-3" style="background-color: {{ column.status.color }};"></div>
+                                <h3 class="text-lg font-semibold text-gray-900">{{ column.status.name }}</h3>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="bg-gray-100 text-gray-800 text-xs font-medium px-2 py-1 rounded-full">
+                                    {{ column.metrics.total }}
+                                </span>
+                                {% if column.metrics.overdue > 0 %}
+                                <span class="bg-red-100 text-red-800 text-xs font-medium px-2 py-1 rounded-full">
+                                    {{ column.metrics.overdue }} overdue
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        {% if column.metrics.high_priority > 0 %}
+                        <div class="mt-2">
+                            <span class="bg-orange-100 text-orange-800 text-xs font-medium px-2 py-1 rounded-full">
+                                {{ column.metrics.high_priority }} high priority
+                            </span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Tasks Container -->
+                    <div class="task-list p-4 space-y-4" 
+                         data-status-id="{{ column.status.id }}" 
+                         data-status-name="{{ column.status.name }}">
+                        {% for task in column.tasks %}
+                        <div class="task-card bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md cursor-grab 
+                                    priority-{% if task.priority == 1 %}critical{% elif task.priority == 2 %}high{% elif task.priority == 3 %}medium{% else %}low{% endif %}"
+                             data-task-id="{{ task.id }}"
+                             onclick="openTaskDetail('{{ task.id }}')">
+                            
+                            <!-- Task Header -->
+                            <div class="p-4">
+                                <div class="flex items-start justify-between mb-2">
+                                    <h4 class="font-medium text-gray-900 text-sm leading-5 line-clamp-2">
+                                        {{ task.title }}
+                                    </h4>
+                                    <button onclick="event.stopPropagation(); openTaskActions('{{ task.id }}')" 
+                                            class="text-gray-400 hover:text-gray-600 ml-2">
+                                        <i class="bi bi-three-dots"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Project Info -->
+                                <div class="flex items-center mb-3">
+                                    <span class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700">
+                                        {{ task.project.code }}
+                                    </span>
+                                    {% if task.priority <= 2 %}
+                                    <span class="ml-2 text-xs px-2 py-1 rounded bg-red-100 text-red-700">
+                                        <i class="bi bi-exclamation-triangle mr-1"></i>
+                                        {% if task.priority == 1 %}Critical{% else %}High{% endif %}
+                                    </span>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Task Details -->
+                                {% if task.description %}
+                                <p class="text-xs text-gray-600 mb-3 line-clamp-2">
+                                    {{ task.description|truncatechars:100 }}
+                                </p>
+                                {% endif %}
+
+                                <!-- Due Date -->
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="flex items-center text-xs text-gray-600">
+                                        <i class="bi bi-calendar mr-1"></i>
+                                        <span class="{% if task.is_overdue %}text-red-600 font-medium{% endif %}">
+                                            {{ task.due_date|date:"M d" }}
+                                        </span>
+                                    </div>
+                                    
+                                    {% if task.estimated_hours %}
+                                    <div class="flex items-center text-xs text-gray-600">
+                                        <i class="bi bi-clock mr-1"></i>
+                                        <span>{{ task.estimated_hours }}h</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Tags -->
+                                {% if task.tags.all %}
+                                <div class="flex flex-wrap gap-1 mb-3">
+                                    {% for tag in task.tags.all|slice:":3" %}
+                                    <span class="text-xs px-2 py-1 rounded-full bg-blue-50 text-blue-700">
+                                        {{ tag.name }}
+                                    </span>
+                                    {% endfor %}
+                                    {% if task.tags.count > 3 %}
+                                    <span class="text-xs px-2 py-1 rounded-full bg-gray-50 text-gray-600">
+                                        +{{ task.tags.count|add:"-3" }}
+                                    </span>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+
+                                <!-- Bottom Section -->
+                                <div class="flex items-center justify-between">
+                                    <!-- Assignee -->
+                                    <div class="flex items-center">
+                                        {% if task.assigned_to %}
+                                        <div class="flex items-center">
+                                            <div class="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-medium">
+                                                {{ task.assigned_to.first_name|first }}{{ task.assigned_to.last_name|first }}
+                                            </div>
+                                            <span class="ml-2 text-xs text-gray-600 hidden sm:inline">
+                                                {{ task.assigned_to.first_name }}
+                                            </span>
+                                        </div>
+                                        {% else %}
+                                        <span class="text-xs text-gray-400 italic">Unassigned</span>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Task Metadata -->
+                                    <div class="flex items-center space-x-2 text-xs text-gray-400">
+                                        {% if task.comment_count > 0 %}
+                                        <div class="flex items-center">
+                                            <i class="bi bi-chat mr-1"></i>
+                                            <span>{{ task.comment_count }}</span>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        {% if task.attachment_count > 0 %}
+                                        <div class="flex items-center">
+                                            <i class="bi bi-paperclip mr-1"></i>
+                                            <span>{{ task.attachment_count }}</span>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        {% if task.dependency_count > 0 %}
+                                        <div class="flex items-center">
+                                            <i class="bi bi-link mr-1"></i>
+                                            <span>{{ task.dependency_count }}</span>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-8 text-gray-400">
+                            <i class="bi bi-inbox text-2xl mb-2"></i>
+                            <p class="text-sm">No tasks in this column</p>
+                            {% if column.status.is_initial %}
+                            <button onclick="openTaskModal('{{ column.status.id }}')" 
+                                    class="mt-2 text-xs text-blue-600 hover:text-blue-700">
+                                Add a task
+                            </button>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    {% if recent_activity %}
+    <div class="mt-8">
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                    <i class="bi bi-activity text-purple-600 mr-2"></i>
+                    Recent Activity
+                </h3>
+            </div>
+            <div class="p-6">
+                <div class="flow-root">
+                    <ul role="list" class="-mb-8">
+                        {% for activity in recent_activity %}
+                        <li>
+                            <div class="relative pb-8">
+                                {% if not forloop.last %}
+                                <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200"></span>
+                                {% endif %}
+                                <div class="relative flex space-x-3">
+                                    <div>
+                                        <span class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center ring-8 ring-white">
+                                            <i class="bi bi-person text-white text-sm"></i>
+                                        </span>
+                                    </div>
+                                    <div class="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
+                                        <div>
+                                            <p class="text-sm text-gray-500">
+                                                <span class="font-medium text-gray-900">{{ activity.user.get_full_name }}</span>
+                                                {{ activity.description|lower }}
+                                            </p>
+                                        </div>
+                                        <div class="text-right text-sm whitespace-nowrap text-gray-500">
+                                            <time datetime="{{ activity.timestamp|date:"c" }}">
+                                                {{ activity.timestamp|timesince }} ago
+                                            </time>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Task Detail Modal -->
+<div id="taskDetailModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 lg:w-3/4 xl:w-1/2 shadow-lg rounded-md bg-white">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-medium text-gray-900">Task Details</h3>
+            <button onclick="closeTaskDetailModal()" class="text-gray-400 hover:text-gray-600">
+                <i class="bi bi-x text-xl"></i>
+            </button>
+        </div>
+        <div id="taskDetailContent">
+            <!-- Task details will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<!-- Task Creation/Edit Modal -->
+<div id="taskModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-10 mx-auto p-5 border w-11/12 lg:w-2/3 shadow-lg rounded-md bg-white">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-medium text-gray-900" id="taskModalTitle">Create New Task</h3>
+            <button onclick="closeTaskModal()" class="text-gray-400 hover:text-gray-600">
+                <i class="bi bi-x text-xl"></i>
+            </button>
+        </div>
+        
+        <form id="taskForm" class="space-y-4">
+            {% csrf_token %}
+            <input type="hidden" id="taskId" name="task_id">
+            <input type="hidden" id="taskStatus" name="status">
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div class="lg:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                    <input type="text" id="taskTitle" name="title" required
+                           class="w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                           placeholder="Enter task title">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Project *</label>
+                    <select id="taskProject" name="project_id" required
+                            class="w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">Select Project</option>
+                        {% for project in filter_projects %}
+                        <option value="{{ project.id }}">{{ project.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Assigned To</label>
+                    <select id="taskAssignee" name="assigned_to_id"
+                            class="w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">Unassigned</option>
+                        {% for user in available_assignees %}
+                        <option value="{{ user.id }}">{{ user.get_full_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Due Date *</label>
+                    <input type="date" id="taskDueDate" name="due_date" required
+                           class="w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                    <select id="taskPriority" name="priority"
+                            class="w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                        {% for value, label in priority_choices %}
+                        <option value="{{ value }}" {% if value == 3 %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Estimated Hours</label>
+                    <input type="number" id="taskEstimatedHours" name="estimated_hours" step="0.5" min="0.5"
+                           class="w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                           placeholder="0.5">
+                </div>
+                
+                <div class="lg:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea id="taskDescription" name="description" rows="3"
+                              class="w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                              placeholder="Describe the task..."></textarea>
+                </div>
+                
+                <div class="lg:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tags</label>
+                    <input type="text" id="taskTags" name="tags"
+                           class="w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                           placeholder="frontend, bug, urgent (comma-separated)">
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-3 pt-4">
+                <button type="button" onclick="closeTaskModal()"
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                    Cancel
+                </button>
+                <button type="submit"
+                        class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                    <span id="taskSubmitText">Create Task</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Task Actions Context Menu -->
+<div id="taskActionsMenu" class="fixed bg-white border border-gray-200 rounded-md shadow-lg py-1 z-50 hidden">
+    <button onclick="editTask()" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+        <i class="bi bi-pencil mr-2"></i>Edit Task
+    </button>
+    <button onclick="duplicateTask()" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+        <i class="bi bi-files mr-2"></i>Duplicate
+    </button>
+    <button onclick="assignTask()" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+        <i class="bi bi-person-plus mr-2"></i>Assign
+    </button>
+    <hr class="my-1">
+    <button onclick="deleteTask()" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+        <i class="bi bi-trash mr-2"></i>Delete
+    </button>
+</div>
+
+<!-- Loading Spinner -->
+<div id="loadingSpinner" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-lg p-6 shadow-lg">
+        <div class="flex items-center space-x-3">
+            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+            <span class="text-gray-700">Processing...</span>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script>
+    // Global variables
+    let currentTaskId = null;
+    let taskActionsMenuTaskId = null;
+    let sortableInstances = [];
+
+    // Initialize Kanban board
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeSortable();
+        setupEventListeners();
+        
+        // Set default due date to tomorrow
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        document.getElementById('taskDueDate').value = tomorrow.toISOString().split('T')[0];
+    });
+
+    // Initialize drag and drop functionality
+    function initializeSortable() {
+        const taskLists = document.querySelectorAll('.task-list');
+        
+        taskLists.forEach(function(el) {
+            const sortable = Sortable.create(el, {
+                group: 'kanban',
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                chosenClass: 'sortable-chosen',
+                dragClass: 'sortable-drag',
+                
+                onEnd: function(evt) {
+                    const taskId = evt.item.dataset.taskId;
+                    const newStatusId = evt.to.dataset.statusId;
+                    
+                    if (evt.from !== evt.to) {
+                        updateTaskStatus(taskId, newStatusId);
+                    }
+                }
+            });
+            
+            sortableInstances.push(sortable);
+        });
+    }
+
+    // Update task status via AJAX
+    function updateTaskStatus(taskId, statusId) {
+        showLoading();
+        
+        fetch(`/app/ajax/tasks/${taskId}/update-status/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify({
+                status_id: statusId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            hideLoading();
+            if (data.success) {
+                // Update UI if needed
+                updateQuickStats();
+                showToast('Task status updated successfully', 'success');
+            } else {
+                showToast(data.error || 'Failed to update task status', 'error');
+                // Revert the change by reloading
+                location.reload();
+            }
+        })
+        .catch(error => {
+            hideLoading();
+            console.error('Error:', error);
+            showToast('An error occurred while updating task status', 'error');
+            location.reload();
+        });
+    }
+
+    // Task Modal Functions
+    function openTaskModal(statusId = null) {
+        currentTaskId = null;
+        document.getElementById('taskModalTitle').textContent = 'Create New Task';
+        document.getElementById('taskSubmitText').textContent = 'Create Task';
+        document.getElementById('taskForm').reset();
+        
+        if (statusId) {
+            document.getElementById('taskStatus').value = statusId;
+        }
+        
+        // Set default due date
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        document.getElementById('taskDueDate').value = tomorrow.toISOString().split('T')[0];
+        
+        document.getElementById('taskModal').classList.remove('hidden');
+    }
+
+    function closeTaskModal() {
+        document.getElementById('taskModal').classList.add('hidden');
+        currentTaskId = null;
+    }
+
+    // Task form submission
+    document.getElementById('taskForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const data = Object.fromEntries(formData.entries());
+        
+        // Add status if creating in specific column
+        const statusValue = document.getElementById('taskStatus').value;
+        if (statusValue) {
+            data.status_id = statusValue;
+        }
+        
+        showLoading();
+        
+        const url = currentTaskId ? 
+            `/app/ajax/tasks/${currentTaskId}/edit/` : 
+            '/app/ajax/tasks/create/';
+        
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            hideLoading();
+            if (data.success) {
+                closeTaskModal();
+                showToast(currentTaskId ? 'Task updated successfully' : 'Task created successfully', 'success');
+                location.reload(); // Refresh to show new/updated task
+            } else {
+                showToast(data.error || 'Failed to save task', 'error');
+            }
+        })
+        .catch(error => {
+            hideLoading();
+            console.error('Error:', error);
+            showToast('An error occurred while saving the task', 'error');
+        });
+    });
+
+    // Task detail modal
+    function openTaskDetail(taskId) {
+        showLoading();
+        
+        fetch(`/app/ajax/tasks/${taskId}/details/`)
+        .then(response => response.json())
+        .then(data => {
+            hideLoading();
+            document.getElementById('taskDetailContent').innerHTML = generateTaskDetailHTML(data);
+            document.getElementById('taskDetailModal').classList.remove('hidden');
+        })
+        .catch(error => {
+            hideLoading();
+            console.error('Error:', error);
+            showToast('Failed to load task details', 'error');
+        });
+    }
+
+    function closeTaskDetailModal() {
+        document.getElementById('taskDetailModal').classList.add('hidden');
+    }
+
+    function generateTaskDetailHTML(task) {
+        return `
+            <div class="space-y-4">
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-900">${task.title}</h4>
+                    <p class="text-sm text-gray-600">${task.project_name}</p>
+                </div>
+                
+                ${task.description ? `
+                <div>
+                    <h5 class="font-medium text-gray-900 mb-2">Description</h5>
+                    <p class="text-sm text-gray-700">${task.description}</p>
+                </div>
+                ` : ''}
+                
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <span class="font-medium text-gray-900">Status:</span>
+                        <span class="ml-2">${task.status}</span>
+                    </div>
+                    <div>
+                        <span class="font-medium text-gray-900">Priority:</span>
+                        <span class="ml-2">${task.priority_display}</span>
+                    </div>
+                    <div>
+                        <span class="font-medium text-gray-900">Due Date:</span>
+                        <span class="ml-2">${task.due_date}</span>
+                    </div>
+                    <div>
+                        <span class="font-medium text-gray-900">Assigned To:</span>
+                        <span class="ml-2">${task.assigned_to || 'Unassigned'}</span>
+                    </div>
+                </div>
+                
+                ${task.tags && task.tags.length > 0 ? `
+                <div>
+                    <h5 class="font-medium text-gray-900 mb-2">Tags</h5>
+                    <div class="flex flex-wrap gap-1">
+                        ${task.tags.map(tag => `
+                            <span class="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">${tag}</span>
+                        `).join('')}
+                    </div>
+                </div>
+                ` : ''}
+                
+                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                    <button onclick="editTaskFromDetail('${task.id}')" 
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                        Edit Task
+                    </button>
+                    <a href="${task.url}" 
+                       class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                        View Full Details
+                    </a>
+                </div>
+            </div>
+        `;
+    }
+
+    // Task actions menu
+    function openTaskActions(taskId, event) {
+        if (event) {
+            event.stopPropagation();
+        }
+        
+        taskActionsMenuTaskId = taskId;
+        const menu = document.getElementById('taskActionsMenu');
+        
+        // Position menu near cursor
+        const rect = event.target.getBoundingClientRect();
+        menu.style.left = rect.left + 'px';
+        menu.style.top = (rect.bottom + 5) + 'px';
+        
+        menu.classList.remove('hidden');
+    }
+
+    function editTask() {
+        // Load task data and open edit modal
+        // Implementation would fetch task data and populate form
+        closeTaskActionsMenu();
+        // TODO: Implement edit functionality
+    }
+
+    function duplicateTask() {
+        // TODO: Implement duplicate functionality
+        closeTaskActionsMenu();
+    }
+
+    function assignTask() {
+        // TODO: Implement assign functionality
+        closeTaskActionsMenu();
+    }
+
+    function deleteTask() {
+        if (confirm('Are you sure you want to delete this task?')) {
+            // TODO: Implement delete functionality
+        }
+        closeTaskActionsMenu();
+    }
+
+    function closeTaskActionsMenu() {
+        document.getElementById('taskActionsMenu').classList.add('hidden');
+        taskActionsMenuTaskId = null;
+    }
+
+    // Filter functions
+    function toggleFilters() {
+        const panel = document.getElementById('filtersPanel');
+        panel.classList.toggle('hidden');
+    }
+
+    function toggleQuickFilter(filterType) {
+        const button = event.target;
+        button.classList.toggle('active');
+        
+        // Apply quick filter logic here
+        // TODO: Implement quick filter functionality
+    }
+
+    function applyFilters() {
+        const filters = {
+            view_mode: document.getElementById('viewModeSelect').value,
+            project: document.getElementById('projectFilter').value,
+            assignee: document.getElementById('assigneeFilter').value,
+            priority: document.getElementById('priorityFilter').value
+        };
+        
+        // Build URL with filters
+        const url = new URL(window.location);
+        Object.keys(filters).forEach(key => {
+            if (filters[key]) {
+                url.searchParams.set(key, filters[key]);
+            } else {
+                url.searchParams.delete(key);
+            }
+        });
+        
+        window.location = url;
+    }
+
+    function filterByProject(projectId) {
+        const url = new URL(window.location);
+        url.searchParams.set('project', projectId);
+        window.location = url;
+    }
+
+    // Utility functions
+    function getCsrfToken() {
+        return document.querySelector('[name=csrfmiddlewaretoken]').value;
+    }
+
+    function showLoading() {
+        document.getElementById('loadingSpinner').classList.remove('hidden');
+    }
+
+    function hideLoading() {
+        document.getElementById('loadingSpinner').classList.add('hidden');
+    }
+
+    function showToast(message, type = 'info') {
+        // Create toast notification
+        const toast = document.createElement('div');
+        toast.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+            type === 'success' ? 'bg-green-100 text-green-800 border-green-400' :
+            type === 'error' ? 'bg-red-100 text-red-800 border-red-400' :
+            type === 'warning' ? 'bg-yellow-100 text-yellow-800 border-yellow-400' :
+            'bg-blue-100 text-blue-800 border-blue-400'
+        } border-l-4`;
+        
+        toast.innerHTML = `
+            <div class="flex items-center">
+                <span>${message}</span>
+                <button onclick="this.parentElement.parentElement.remove()" 
+                        class="ml-4 text-gray-500 hover:text-gray-700">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            toast.remove();
+        }, 5000);
+    }
+
+    function updateQuickStats() {
+        // TODO: Update the quick stats counters
+        // This would make an AJAX call to get updated statistics
+    }
+
+    // Setup event listeners
+    function setupEventListeners() {
+        // Click outside to close modals and menus
+        document.addEventListener('click', function(e) {
+            const taskModal = document.getElementById('taskModal');
+            const taskDetailModal = document.getElementById('taskDetailModal');
+            const taskActionsMenu = document.getElementById('taskActionsMenu');
+            
+            if (e.target === taskModal) {
+                closeTaskModal();
+            }
+            if (e.target === taskDetailModal) {
+                closeTaskDetailModal();
+            }
+            if (!taskActionsMenu.contains(e.target)) {
+                closeTaskActionsMenu();
+            }
+        });
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeTaskModal();
+                closeTaskDetailModal();
+                closeTaskActionsMenu();
+            }
+            if (e.ctrlKey && e.key === 'n') {
+                e.preventDefault();
+                openTaskModal();
+            }
+        });
+    }
+</script>
+{% endblock %}

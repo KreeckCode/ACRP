@@ -351,7 +351,7 @@
                                     <a href="{% url 'common:create_project' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                         <i class="bi bi-folder-plus mr-2"></i>New Project
                                     </a>
-                                    <a href="{% url 'common:task_add' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <a href="{% url 'common:create_task' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                         <i class="bi bi-check-square mr-2"></i>New Task
                                     </a>
                                 </div>
@@ -392,22 +392,13 @@
                         <a href="{% url 'common:create_announcement' %}" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">Create Announcement</a>
                     </div>
                 </div>
+                <!-- Budget Requests -->
+                <a href="{% url "common:workspace_dashboard" %}" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                    <i class="bi bi-kanban mr-3 text-lg"></i>
+                    Workspace
+                </a>
                 
-                <!-- Projects with submenu -->
-                <div class="space-y-1">
-                    <button class="sidebar-link {% if 'project' in request.resolver_match.url_name %}text-white{% else %}text-gray-300 hover:text-white{% endif %} group w-full flex items-center px-3 py-2 text-sm font-medium rounded-md" onclick="toggleSubmenu('projects')">
-                        <i class="bi bi-kanban mr-3 text-lg"></i>
-                        Projects
-                        <span class="ml-auto mr-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">3</span>
-                        <i class="bi bi-chevron-down transition-transform duration-200" id="projects-icon"></i>
-                    </button>
-                    <div class="hidden ml-6 space-y-1" id="projects-submenu">
-                        <a href="{% url 'common:project_list' %}" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">All Projects</a>
-                        <a href="{% url 'common:create_project' %}" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">Create Project</a>
-                        <a href="{% url 'common:task_add' %}" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">Add Task</a>
-                    </div>
-                </div>
-                
+
                 <!-- Education Section -->
                 <div class="px-3 py-2 mt-6">
                     <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Education</h3>
@@ -445,11 +436,6 @@
                     <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Administration</h3>
                 </div>
                 
-                <!-- Budget Requests -->
-                <a href="javascript:void(0)" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
-                    <i class="bi bi-currency-dollar mr-3 text-lg"></i>
-                    Budget Requests
-                </a>
                 
                 <!-- Reports -->
                 <a href="javascript:void(0)" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
