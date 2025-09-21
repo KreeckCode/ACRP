@@ -271,7 +271,30 @@ def dashboard(request):
 @login_required
 def event_list(request):
     events = Event.objects.all()
+    
+    # Handle filters
+    query = request.GET.get('q', '')
+    status = request.GET.get('status', '')
+    mandatory = request.GET.get('mandatory', '')
+    
+    if query:
+        events = events.filter(title__icontains=query)
+    
+    if status == 'upcoming':
+        events = events.filter(start_time__gte=timezone.now())
+    elif status == 'past':
+        events = events.filter(start_time__lt=timezone.now())
+    elif status == 'today':
+        today = timezone.now().date()
+        events = events.filter(start_time__date=today)
+    
+    if mandatory == 'mandatory':
+        events = events.filter(is_mandatory=True)
+    elif mandatory == 'optional':
+        events = events.filter(is_mandatory=False)
+    
     return render(request, 'app/event_list.html', {'events': events})
+
 
 @login_required
 @permission_required('apps.manage_events', raise_exception=True)
@@ -284,7 +307,7 @@ def create_event(request):
             event.save()
             form.save_m2m()  # for participants
             messages.success(request, 'Event created successfully.')
-            return redirect('event_list')
+            return redirect('common:event_list')
     else:
         form = EventForm()
     return render(request, 'app/event_form.html', {'form': form})
@@ -303,7 +326,7 @@ def edit_event(request, event_id):
         if form.is_valid():
             form.save()
             messages.success(request, 'Event updated successfully.')
-            return redirect('event_detail', event_id=event.id)
+            return redirect('common:event_detail', event_id=event.id)
     else:
         form = EventForm(instance=event)
     return render(request, 'app/event_form.html', {'form': form, 'event': event})
@@ -315,7 +338,7 @@ def delete_event(request, event_id):
     if request.method == 'POST':
         event.delete()
         messages.success(request, 'Event deleted successfully.')
-        return redirect('event_list')
+        return redirect('common:event_list')
     return render(request, 'app/confirm_delete.html', {
         'object': event, 'type': 'Event',
         'cancel_url': 'event_detail', 'cancel_id': event.id
@@ -339,7 +362,7 @@ def create_announcement(request):
             ann.posted_by = request.user
             ann.save()
             messages.success(request, 'Announcement posted successfully.')
-            return redirect('announcement_list')
+            return redirect('common:announcement_list')
     else:
         form = AnnouncementForm()
     return render(request, 'app/announcement_form.html', {'form': form})
@@ -358,7 +381,7 @@ def edit_announcement(request, announcement_id):
         if form.is_valid():
             form.save()
             messages.success(request, 'Announcement updated successfully.')
-            return redirect('announcement_detail', announcement_id=announcement.id)
+            return redirect('common:announcement_detail', announcement_id=announcement.id)
     else:
         form = AnnouncementForm(instance=announcement)
     return render(request, 'app/announcement_form.html', {'form': form})
@@ -370,7 +393,7 @@ def delete_announcement(request, announcement_id):
     if request.method == 'POST':
         announcement.delete()
         messages.success(request, 'Announcement deleted successfully.')
-        return redirect('announcement_list')
+        return redirect('common:announcement_list')
     return render(request, 'app/confirm_delete.html', {
         'object': announcement, 'type': 'Announcement',
         'cancel_url': 'announcement_detail', 'cancel_id': announcement.id
@@ -428,7 +451,7 @@ def create_project(request):
             form.save()
             #notify_user(request.user, f'Project {proj.name} created.')
             messages.success(request, 'Project created successfully.')
-            return redirect('project_list')
+            return redirect('common:project_list')
     else:
         form = ProjectForm()
     return render(request, 'app/project_form.html', {'form': form})
@@ -447,7 +470,7 @@ def edit_project(request, project_id):
         proj=form.save()
         #notify_user(request.user, f'Project {proj.name} updated.')
         messages.success(request,'Project updated.')
-        return redirect('project_kanban', id=project_id)
+        return redirect('common:project_kanban', id=project_id)
     return render(request,'app/project_form.html',{'form':form,'project':proj})
 
 @login_required
@@ -458,7 +481,7 @@ def delete_project(request, project_id):
         project.delete()
         #notify_user(request.user, f'Project {proj.name} deleted.')
         messages.success(request, 'Project deleted successfully.')
-        return redirect('project_list')
+        return redirect('common:project_list')
     return render(request, 'app/confirm_delete.html', {
         'object': project, 'type': 'Project',
         'cancel_url': 'project_detail', 'cancel_id': project.id
@@ -568,7 +591,7 @@ def create_resource(request):
             res.created_by = request.user
             res.save()
             messages.success(request, 'Resource created successfully.')
-            return redirect('resource_list')
+            return redirect('common:resource_list')
     else:
         form = ResourceForm()
     return render(request, 'app/resource_form.html', {'form': form})
@@ -586,7 +609,7 @@ def edit_resource(request, resource_id):
         if form.is_valid():
             form.save()
             messages.success(request, 'Resource updated successfully.')
-            return redirect('resource_detail', resource_id=resource.id)
+            return redirect('common:resource_detail', resource_id=resource.id)
     else:
         form = ResourceForm(instance=resource)
     return render(request, 'app/resource_form.html', {'form': form})
@@ -597,7 +620,7 @@ def delete_resource(request, resource_id):
     if request.method == 'POST':
         resource.delete()
         messages.success(request, 'Resource deleted successfully.')
-        return redirect('resource_list')
+        return redirect('common:resource_list')
     return render(request, 'app/confirm_delete.html', {
         'object': resource, 'type': 'Resource',
         'cancel_url': 'resource_detail', 'cancel_id': resource.id

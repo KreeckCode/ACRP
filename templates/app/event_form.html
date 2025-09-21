@@ -1,126 +1,572 @@
-{% extends "base/base.html" %}
+{% extends 'base/base.html' %}
 {% load static %}
+
+{% block title %}
+    {% if event %}Edit Event{% else %}Create Event{% endif %} - ACRP
+{% endblock %}
+
 {% block content %}
-<div class="container py-4">
-  <h3 class="mb-3">
-    {% if event %}Edit{% else %}Create{% endif %} Event
-  </h3>
-
-  <!-- Display form errors / messages if needed -->
-  {% if messages %}
-    {% for message in messages %}
-      <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-    {% endfor %}
-  {% endif %}
-
-  <form method="POST">
-    {% csrf_token %}
-    <div class="row">
-      {% for field in form.visible_fields %}
-        {% with widget_type=field.field.widget.input_type %}
-          <div class="col-md-6 mb-3">
-            <!-- Label -->
-            <label for="{{ field.id_for_label }}" class="form-label">
-              {{ field.label }}
-            </label>
-
-            {# 1) If it's a BooleanField (checkbox), e.g. is_all_day, is_mandatory #}
-            {% if widget_type == "checkbox" %}
-              <div class="form-check">
-                <input
-                  type="checkbox"
-                  name="{{ field.name }}"
-                  id="{{ field.id_for_label }}"
-                  class="form-check-input"
-                  {% if field.value %}checked{% endif %}
-                >
-                <label class="form-check-label" for="{{ field.id_for_label }}">
-                  {{ field.label }}
-                </label>
-              </div>
-
-            {# 2) If it's the participants field (many-to-many) => multiple select #}
-            {% elif field.name == "participants" %}
-              <select
-                name="{{ field.name }}[]"
-                id="{{ field.id_for_label }}"
-                class="form-control"
-                multiple
-              >
-                {% for val, txt in field.field.choices %}
-                  <option
-                    value="{{ val }}"
-                    {% if field.value and val in field.value %}selected{% endif %}
-                  >
-                    {{ txt }}
-                  </option>
-                {% endfor %}
-              </select>
-
-            {# 3) If field is start_time or end_time => date/time widget #}
-            {% elif field.name == "start_time" or field.name == "end_time" %}
-              <input
-                type="datetime-local"
-                name="{{ field.name }}"
-                id="{{ field.id_for_label }}"
-                value="{{ field.value|default_if_none:''|safe }}"
-                class="form-control"
-              >
-
-            {# 4) If it's a textarea #}
-            {% elif widget_type == "textarea" %}
-              <textarea
-                name="{{ field.name }}"
-                id="{{ field.id_for_label }}"
-                rows="4"
-                class="form-control"
-              >{{ field.value }}</textarea>
-
-            {# 5) If it's a normal <select> (not multiple) #}
-            {% elif widget_type == "select" %}
-              <select
-                name="{{ field.name }}"
-                id="{{ field.id_for_label }}"
-                class="form-control"
-              >
-                {% for val, txt in field.field.choices %}
-                  <option
-                    value="{{ val }}"
-                    {% if field.value and val == field.value %}selected{% endif %}
-                  >
-                    {{ txt }}
-                  </option>
-                {% endfor %}
-              </select>
-
-            {# 6) Otherwise default => text input #}
-            {% else %}
-              <input
-                type="{{ widget_type|default_if_none:'text' }}"
-                name="{{ field.name }}"
-                id="{{ field.id_for_label }}"
-                value="{{ field.value|default_if_none:'' }}"
-                class="form-control"
-              >
-            {% endif %}
-
-            {# Help text #}
-            {% if field.help_text %}
-              <small class="text-muted d-block">{{ field.help_text }}</small>
-            {% endif %}
-            {# Field-specific errors #}
-            {% for error in field.errors %}
-              <div class="text-danger">{{ error }}</div>
-            {% endfor %}
-          </div>
-        {% endwith %}
-      {% endfor %}
+<div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 lg:p-8">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <div>
+                <h1 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+                    {% if event %}
+                        Edit Event
+                    {% else %}
+                        Create New Event
+                    {% endif %}
+                </h1>
+                <p class="text-gray-600 text-lg">
+                    {% if event %}
+                        Update event details, scheduling, and participant information.
+                    {% else %}
+                        Schedule a new organizational event, meeting, or calendar activity.
+                    {% endif %}
+                </p>
+            </div>
+            <div class="mt-4 lg:mt-0">
+                <a href="{% url 'common:event_list' %}" 
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    <i class="bi bi-arrow-left mr-2"></i>
+                    Back to Events
+                </a>
+            </div>
+        </div>
     </div>
 
-    <button type="submit" class="btn btn-primary">
-      {% if event %}Update{% else %}Create{% endif %}
-    </button>
-    <a href="{% url 'event_list' %}" class="btn btn-secondary ms-2">Cancel</a>
-  </form>
+    <!-- Messages Display -->
+    {% if messages %}
+    <div class="mb-6 space-y-3">
+        {% for message in messages %}
+        <div class="flex items-center p-4 rounded-lg border-l-4 {% if message.tags == 'success' %}bg-green-50 border-green-400 text-green-700{% elif message.tags == 'error' %}bg-red-50 border-red-400 text-red-700{% elif message.tags == 'warning' %}bg-yellow-50 border-yellow-400 text-yellow-700{% else %}bg-blue-50 border-blue-400 text-blue-700{% endif %}">
+            <div class="flex-shrink-0">
+                {% if message.tags == 'success' %}
+                <i class="bi bi-check-circle-fill"></i>
+                {% elif message.tags == 'error' %}
+                <i class="bi bi-x-circle-fill"></i>
+                {% elif message.tags == 'warning' %}
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                {% else %}
+                <i class="bi bi-info-circle-fill"></i>
+                {% endif %}
+            </div>
+            <div class="ml-3 text-sm font-medium">
+                {{ message }}
+            </div>
+            <button type="button" class="ml-auto -mx-1.5 -my-1.5 rounded-lg p-1.5 inline-flex h-8 w-8 hover:bg-gray-200 focus:ring-2 focus:ring-gray-300" onclick="this.parentElement.remove()">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Form Errors -->
+    {% if form.non_field_errors %}
+    <div class="mb-6">
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="bi bi-exclamation-triangle text-red-400"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-red-800">Please correct the following errors:</h3>
+                    <div class="mt-2 text-sm text-red-700">
+                        <ul class="list-disc space-y-1 pl-5">
+                            {% for error in form.non_field_errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Event Form -->
+    <form method="post" class="space-y-8" id="eventForm">
+        {% csrf_token %}
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Main Event Information Panel -->
+            <div class="lg:col-span-2 space-y-8">
+                
+                <!-- Basic Event Information -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="bi bi-info-circle text-blue-600 mr-2"></i>
+                            Event Information
+                        </h3>
+                        <p class="text-sm text-gray-600 mt-1">Basic details about your event</p>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-6">
+                            <!-- Event Title -->
+                            <div>
+                                <label for="{{ form.title.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Event Title <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" 
+                                       name="{{ form.title.name }}" 
+                                       id="{{ form.title.id_for_label }}"
+                                       value="{{ form.title.value|default_if_none:'' }}"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {% if form.title.errors %}border-red-300 focus:ring-red-500{% endif %}"
+                                       placeholder="Enter event title"
+                                       required>
+                                {% if form.title.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.title.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Event Description -->
+                            <div>
+                                <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Description
+                                </label>
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.description.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <p class="mt-1 text-xs text-gray-500">Provide detailed information about the event</p>
+                            </div>
+
+                            <!-- Location -->
+                            <div>
+                                <label for="{{ form.location.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Location
+                                </label>
+                                <input type="text" 
+                                       name="{{ form.location.name }}" 
+                                       id="{{ form.location.id_for_label }}"
+                                       value="{{ form.location.value|default_if_none:'' }}"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {% if form.location.errors %}border-red-300 focus:ring-red-500{% endif %}"
+                                       placeholder="Enter event location or virtual meeting link">
+                                {% if form.location.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.location.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Date and Time Information -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="bi bi-clock text-green-600 mr-2"></i>
+                            Date & Time
+                        </h3>
+                        <p class="text-sm text-gray-600 mt-1">Schedule your event timing</p>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-6">
+                            <!-- All Day Event Toggle -->
+                            <div class="flex items-center">
+                                <input type="checkbox" 
+                                       name="{{ form.is_all_day.name }}" 
+                                       id="{{ form.is_all_day.id_for_label }}"
+                                       {% if form.is_all_day.value %}checked{% endif %}
+                                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                       onchange="toggleAllDay()">
+                                <label for="{{ form.is_all_day.id_for_label }}" class="ml-2 block text-sm text-gray-900">
+                                    All-day event
+                                </label>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Start Date & Time -->
+                                <div>
+                                    <label for="{{ form.start_time.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Start Date & Time <span class="text-red-500">*</span>
+                                    </label>
+                                    {{ form.start_time }}
+                                    {% if form.start_time.errors %}
+                                    <div class="mt-1 text-sm text-red-600">
+                                        {% for error in form.start_time.errors %}
+                                        <p>{{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- End Date & Time -->
+                                <div id="endTimeContainer">
+                                    <label for="{{ form.end_time.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                        End Date & Time <span class="text-red-500">*</span>
+                                    </label>
+                                    {{ form.end_time }}
+                                    {% if form.end_time.errors %}
+                                    <div class="mt-1 text-sm text-red-600">
+                                        {% for error in form.end_time.errors %}
+                                        <p>{{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0 sm:space-x-4">
+                    <div class="flex space-x-3">
+                        <a href="{% url 'common:event_list' %}" 
+                           class="inline-flex items-center px-6 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                            <i class="bi bi-x-circle mr-2"></i>
+                            Cancel
+                        </a>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button type="button" 
+                                onclick="resetForm()"
+                                class="inline-flex items-center px-6 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                            <i class="bi bi-arrow-clockwise mr-2"></i>
+                            Reset
+                        </button>
+                        <button type="submit" 
+                                class="inline-flex items-center px-6 py-3 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <i class="bi bi-{% if event %}pencil{% else %}plus-circle{% endif %} mr-2"></i>
+                            {% if event %}Update Event{% else %}Create Event{% endif %}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Event Settings Panel -->
+            <div class="lg:col-span-1">
+                <!-- Event Settings -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="bi bi-gear text-purple-600 mr-2"></i>
+                            Event Settings
+                        </h3>
+                        <p class="text-sm text-gray-600 mt-1">Configure event options</p>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-6">
+                            <!-- Mandatory Event -->
+                            <div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" 
+                                           name="{{ form.is_mandatory.name }}" 
+                                           id="{{ form.is_mandatory.id_for_label }}"
+                                           {% if form.is_mandatory.value %}checked{% endif %}
+                                           class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded">
+                                    <label for="{{ form.is_mandatory.id_for_label }}" class="ml-2 block text-sm text-gray-900">
+                                        Mandatory attendance
+                                    </label>
+                                </div>
+                                <p class="mt-1 text-xs text-gray-500">Mark this event as mandatory for all participants</p>
+                                {% if form.is_mandatory.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.is_mandatory.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Event Type Indicator -->
+                            <div class="p-4 bg-gray-50 rounded-lg">
+                                <h5 class="text-sm font-medium text-gray-900 mb-2">Event Type</h5>
+                                <div id="eventTypeIndicator" class="flex items-center">
+                                    <div class="h-3 w-3 rounded-full bg-green-400 mr-2"></div>
+                                    <span class="text-sm text-gray-600">Optional Event</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Participants Section -->
+                <div class="mt-6 bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="bi bi-people text-indigo-600 mr-2"></i>
+                            Participants
+                        </h3>
+                        <p class="text-sm text-gray-600 mt-1">Select event attendees</p>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-4">
+                            <!-- Participants Field -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Select Participants
+                                </label>
+                                <div class="max-h-60 overflow-y-auto border border-gray-300 rounded-md p-3">
+                                    {{ form.participants }}
+                                </div>
+                                {% if form.participants.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.participants.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <p class="mt-1 text-xs text-gray-500">Hold Ctrl/Cmd to select multiple participants</p>
+                            </div>
+
+                            <!-- Participant Actions -->
+                            <div class="flex space-x-2">
+                                <button type="button" onclick="selectAllParticipants()" 
+                                        class="flex-1 px-3 py-2 text-xs font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200">
+                                    Select All
+                                </button>
+                                <button type="button" onclick="clearAllParticipants()" 
+                                        class="flex-1 px-3 py-2 text-xs font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200">
+                                    Clear All
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Event Preview -->
+                {% if event %}
+                <div class="mt-6 bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="bi bi-eye text-gray-600 mr-2"></i>
+                            Event Details
+                        </h3>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div class="text-sm text-gray-600">
+                            <p><strong>Created by:</strong> {{ event.created_by.get_full_name|default:event.created_by.username }}</p>
+                            <p><strong>Current participants:</strong> {{ event.participants.count }}</p>
+                            {% if event.location %}
+                            <p><strong>Location:</strong> {{ event.location }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="pt-3 border-t border-gray-200">
+                            <a href="{% url 'common:event_detail' event_id=event.id %}" 
+                               class="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                                View Full Event Details →
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </form>
 </div>
+
+<script>
+/**
+ * Toggle all-day event functionality
+ */
+function toggleAllDay() {
+    const isAllDay = document.getElementById('{{ form.is_all_day.id_for_label }}').checked;
+    const endTimeContainer = document.getElementById('endTimeContainer');
+    const startTimeInput = document.getElementById('{{ form.start_time.id_for_label }}');
+    const endTimeInput = document.getElementById('{{ form.end_time.id_for_label }}');
+    
+    if (isAllDay) {
+        // For all-day events, set time to start of day and hide time inputs
+        const startDate = startTimeInput.value.split('T')[0];
+        if (startDate) {
+            startTimeInput.value = startDate + 'T00:00';
+            endTimeInput.value = startDate + 'T23:59';
+        }
+        endTimeContainer.style.opacity = '0.5';
+        endTimeInput.disabled = true;
+    } else {
+        endTimeContainer.style.opacity = '1';
+        endTimeInput.disabled = false;
+    }
+    
+    updateEventTypeIndicator();
+}
+
+/**
+ * Update event type indicator based on mandatory setting
+ */
+function updateEventTypeIndicator() {
+    const isMandatory = document.getElementById('{{ form.is_mandatory.id_for_label }}').checked;
+    const indicator = document.getElementById('eventTypeIndicator');
+    
+    if (isMandatory) {
+        indicator.innerHTML = `
+            <div class="h-3 w-3 rounded-full bg-red-400 mr-2"></div>
+            <span class="text-sm text-gray-600">Mandatory Event</span>
+        `;
+    } else {
+        indicator.innerHTML = `
+            <div class="h-3 w-3 rounded-full bg-green-400 mr-2"></div>
+            <span class="text-sm text-gray-600">Optional Event</span>
+        `;
+    }
+}
+
+/**
+ * Select all participants
+ */
+function selectAllParticipants() {
+    const participantsSelect = document.querySelector('[name="{{ form.participants.name }}"]');
+    if (participantsSelect) {
+        Array.from(participantsSelect.options).forEach(option => {
+            option.selected = true;
+        });
+    }
+}
+
+/**
+ * Clear all participant selections
+ */
+function clearAllParticipants() {
+    const participantsSelect = document.querySelector('[name="{{ form.participants.name }}"]');
+    if (participantsSelect) {
+        Array.from(participantsSelect.options).forEach(option => {
+            option.selected = false;
+        });
+    }
+}
+
+/**
+ * Reset form to initial state
+ */
+function resetForm() {
+    if (confirm('Are you sure you want to reset the form? All unsaved changes will be lost.')) {
+        document.getElementById('eventForm').reset();
+        updateEventTypeIndicator();
+        toggleAllDay();
+    }
+}
+
+/**
+ * Form validation
+ */
+function validateForm() {
+    const startTime = document.getElementById('{{ form.start_time.id_for_label }}').value;
+    const endTime = document.getElementById('{{ form.end_time.id_for_label }}').value;
+    const isAllDay = document.getElementById('{{ form.is_all_day.id_for_label }}').checked;
+    
+    if (!isAllDay && startTime && endTime) {
+        const start = new Date(startTime);
+        const end = new Date(endTime);
+        
+        if (end <= start) {
+            alert('End time must be after start time.');
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize event type indicator
+    updateEventTypeIndicator();
+    
+    // Add event listeners
+    document.getElementById('{{ form.is_mandatory.id_for_label }}').addEventListener('change', updateEventTypeIndicator);
+    
+    // Form submission validation
+    document.getElementById('eventForm').addEventListener('submit', function(e) {
+        if (!validateForm()) {
+            e.preventDefault();
+        }
+    });
+    
+    // Initialize all-day toggle state
+    toggleAllDay();
+    
+    // Auto-fill end time when start time changes (if not all-day)
+    document.getElementById('{{ form.start_time.id_for_label }}').addEventListener('change', function() {
+        const isAllDay = document.getElementById('{{ form.is_all_day.id_for_label }}').checked;
+        const endTimeInput = document.getElementById('{{ form.end_time.id_for_label }}');
+        
+        if (!isAllDay && this.value && !endTimeInput.value) {
+            // Auto-set end time to 1 hour after start time
+            const startTime = new Date(this.value);
+            startTime.setHours(startTime.getHours() + 1);
+            
+            const year = startTime.getFullYear();
+            const month = String(startTime.getMonth() + 1).padStart(2, '0');
+            const day = String(startTime.getDate()).padStart(2, '0');
+            const hours = String(startTime.getHours()).padStart(2, '0');
+            const minutes = String(startTime.getMinutes()).padStart(2, '0');
+            
+            endTimeInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+    });
+});
+</script>
+
+<!-- Custom CSS for enhanced styling -->
+<style>
+/* Ensure form controls have consistent styling */
+input[type="text"],
+input[type="datetime-local"],
+textarea,
+select {
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+/* Enhanced focus states */
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Smooth transitions for all interactive elements */
+button,
+a {
+    transition: all 0.2s ease-in-out;
+}
+
+/* Participant select styling */
+select[multiple] {
+    background-color: #f9fafb;
+}
+
+select[multiple] option {
+    padding: 8px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+select[multiple] option:checked {
+    background-color: #3b82f6;
+    color: white;
+}
+
+/* Loading states */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Form section transitions */
+.space-y-8 > div {
+    transition: all 0.3s ease-in-out;
+}
+
+/* Enhanced hover effects for form sections */
+.bg-white:hover {
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+</style>
 {% endblock %}

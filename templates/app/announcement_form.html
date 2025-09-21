@@ -1,27 +1,613 @@
 {% extends 'base/base.html' %}
 {% load static %}
-{% load crispy_forms_tags %}
+
+{% block title %}
+    {% if announcement %}Edit Announcement{% else %}Create Announcement{% endif %} - ACRP
+{% endblock %}
+
 {% block content %}
+<div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 lg:p-8">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <div>
+                <h1 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+                    {% if announcement %}
+                        Edit Announcement
+                    {% else %}
+                        Create New Announcement
+                    {% endif %}
+                </h1>
+                <p class="text-gray-600 text-lg">
+                    {% if announcement %}
+                        Update announcement content, settings, and expiry information.
+                    {% else %}
+                        Share important news, updates, and information with your organization.
+                    {% endif %}
+                </p>
+            </div>
+            <div class="mt-4 lg:mt-0">
+                <a href="{% url 'common:announcement_list' %}" 
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    <i class="bi bi-arrow-left mr-2"></i>
+                    Back to Announcements
+                </a>
+            </div>
+        </div>
+    </div>
 
-<div class="container py-4">
-  <h3 class="mb-3">
-    {% if announcement %}Edit{% else %}Create{% endif %} Announcement
-  </h3>
+    <!-- Messages Display -->
+    {% if messages %}
+    <div class="mb-6 space-y-3">
+        {% for message in messages %}
+        <div class="flex items-center p-4 rounded-lg border-l-4 {% if message.tags == 'success' %}bg-green-50 border-green-400 text-green-700{% elif message.tags == 'error' %}bg-red-50 border-red-400 text-red-700{% elif message.tags == 'warning' %}bg-yellow-50 border-yellow-400 text-yellow-700{% else %}bg-blue-50 border-blue-400 text-blue-700{% endif %}">
+            <div class="flex-shrink-0">
+                {% if message.tags == 'success' %}
+                <i class="bi bi-check-circle-fill"></i>
+                {% elif message.tags == 'error' %}
+                <i class="bi bi-x-circle-fill"></i>
+                {% elif message.tags == 'warning' %}
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                {% else %}
+                <i class="bi bi-info-circle-fill"></i>
+                {% endif %}
+            </div>
+            <div class="ml-3 text-sm font-medium">
+                {{ message }}
+            </div>
+            <button type="button" class="ml-auto -mx-1.5 -my-1.5 rounded-lg p-1.5 inline-flex h-8 w-8 hover:bg-gray-200 focus:ring-2 focus:ring-gray-300" onclick="this.parentElement.remove()">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
 
-  {% if messages %}
-    {% for message in messages %}
-      <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-    {% endfor %}
-  {% endif %}
+    <!-- Form Errors -->
+    {% if form.non_field_errors %}
+    <div class="mb-6">
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="bi bi-exclamation-triangle text-red-400"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-red-800">Please correct the following errors:</h3>
+                    <div class="mt-2 text-sm text-red-700">
+                        <ul class="list-disc space-y-1 pl-5">
+                            {% for error in form.non_field_errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
-  <form method="POST">
-    {% csrf_token %}
-    {{ form|crispy }}
+    <!-- Announcement Form -->
+    <form method="post" class="space-y-8" id="announcementForm">
+        {% csrf_token %}
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Main Announcement Information Panel -->
+            <div class="lg:col-span-2 space-y-8">
+                
+                <!-- Basic Announcement Information -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="bi bi-megaphone text-blue-600 mr-2"></i>
+                            Announcement Information
+                        </h3>
+                        <p class="text-sm text-gray-600 mt-1">Basic details about your announcement</p>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-6">
+                            <!-- Announcement Title -->
+                            <div>
+                                <label for="{{ form.title.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Announcement Title <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" 
+                                       name="{{ form.title.name }}" 
+                                       id="{{ form.title.id_for_label }}"
+                                       value="{{ form.title.value|default_if_none:'' }}"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {% if form.title.errors %}border-red-300 focus:ring-red-500{% endif %}"
+                                       placeholder="Enter announcement title"
+                                       required>
+                                {% if form.title.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.title.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
 
-    <button type="submit" class="btn btn-primary">
-      {% if announcement %}Update{% else %}Create{% endif %}
-    </button>
-    <a href="{% url 'announcement_list' %}" class="btn btn-secondary">Cancel</a>
-  </form>
+                            <!-- Announcement Content -->
+                            <div>
+                                <label for="{{ form.content.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Content <span class="text-red-500">*</span>
+                                </label>
+                                {{ form.content }}
+                                {% if form.content.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.content.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <p class="mt-1 text-xs text-gray-500">Write detailed announcement content using the rich text editor above</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scheduling and Expiry -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="bi bi-clock text-green-600 mr-2"></i>
+                            Scheduling & Expiry
+                        </h3>
+                        <p class="text-sm text-gray-600 mt-1">Set announcement timing and expiration</p>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-6">
+                            <!-- Expiry Date -->
+                            <div>
+                                <label for="{{ form.expires_at.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Expiry Date & Time
+                                </label>
+                                {{ form.expires_at }}
+                                {% if form.expires_at.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.expires_at.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <p class="mt-1 text-xs text-gray-500">Leave empty for permanent announcement (no expiry)</p>
+                            </div>
+
+                            <!-- Never Expires Option -->
+                            <div class="flex items-center">
+                                <input type="checkbox" 
+                                       id="never_expires"
+                                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                       onchange="toggleExpiry()">
+                                <label for="never_expires" class="ml-2 block text-sm text-gray-900">
+                                    This announcement never expires
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0 sm:space-x-4">
+                    <div class="flex space-x-3">
+                        <a href="{% url 'common:announcement_list' %}" 
+                           class="inline-flex items-center px-6 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                            <i class="bi bi-x-circle mr-2"></i>
+                            Cancel
+                        </a>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button type="button" 
+                                onclick="resetForm()"
+                                class="inline-flex items-center px-6 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                            <i class="bi bi-arrow-clockwise mr-2"></i>
+                            Reset
+                        </button>
+                        <button type="submit" 
+                                class="inline-flex items-center px-6 py-3 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <i class="bi bi-{% if announcement %}pencil{% else %}megaphone{% endif %} mr-2"></i>
+                            {% if announcement %}Update Announcement{% else %}Post Announcement{% endif %}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Announcement Settings Panel -->
+            <div class="lg:col-span-1">
+                <!-- Announcement Settings -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="bi bi-gear text-purple-600 mr-2"></i>
+                            Announcement Settings
+                        </h3>
+                        <p class="text-sm text-gray-600 mt-1">Configure announcement options</p>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-6">
+                            <!-- Urgent Announcement -->
+                            <div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" 
+                                           name="{{ form.is_urgent.name }}" 
+                                           id="{{ form.is_urgent.id_for_label }}"
+                                           {% if form.is_urgent.value %}checked{% endif %}
+                                           class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded">
+                                    <label for="{{ form.is_urgent.id_for_label }}" class="ml-2 block text-sm text-gray-900">
+                                        Mark as urgent
+                                    </label>
+                                </div>
+                                <p class="mt-1 text-xs text-gray-500">Urgent announcements are highlighted and appear at the top</p>
+                                {% if form.is_urgent.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.is_urgent.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Priority Indicator -->
+                            <div class="p-4 bg-gray-50 rounded-lg">
+                                <h5 class="text-sm font-medium text-gray-900 mb-2">Priority Level</h5>
+                                <div id="priorityIndicator" class="flex items-center">
+                                    <div class="h-3 w-3 rounded-full bg-blue-400 mr-2"></div>
+                                    <span class="text-sm text-gray-600">Normal Priority</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content Guidelines -->
+                <div class="mt-6 bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="bi bi-lightbulb text-yellow-600 mr-2"></i>
+                            Content Guidelines
+                        </h3>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-4 text-sm text-gray-600">
+                            <div class="flex items-start space-x-2">
+                                <i class="bi bi-check-circle text-green-500 mt-0.5"></i>
+                                <p><strong>Clear Title:</strong> Use descriptive, concise titles that summarize the announcement.</p>
+                            </div>
+                            <div class="flex items-start space-x-2">
+                                <i class="bi bi-check-circle text-green-500 mt-0.5"></i>
+                                <p><strong>Structured Content:</strong> Use headings, bullet points, and formatting for readability.</p>
+                            </div>
+                            <div class="flex items-start space-x-2">
+                                <i class="bi bi-check-circle text-green-500 mt-0.5"></i>
+                                <p><strong>Action Items:</strong> Clearly state what readers need to do, if anything.</p>
+                            </div>
+                            <div class="flex items-start space-x-2">
+                                <i class="bi bi-exclamation-triangle text-yellow-500 mt-0.5"></i>
+                                <p><strong>Urgent Sparingly:</strong> Only mark truly urgent items as urgent to maintain impact.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preview Information -->
+                {% if announcement %}
+                <div class="mt-6 bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="bi bi-eye text-gray-600 mr-2"></i>
+                            Current Details
+                        </h3>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div class="text-sm text-gray-600">
+                            <p><strong>Posted by:</strong> {{ announcement.posted_by.get_full_name|default:announcement.posted_by.username }}</p>
+                            <p><strong>Date posted:</strong> {{ announcement.date_posted|date:"M d, Y g:i A" }}</p>
+                            {% if announcement.expires_at %}
+                            <p><strong>Expires:</strong> {{ announcement.expires_at|date:"M d, Y g:i A" }}</p>
+                            {% else %}
+                            <p><strong>Expires:</strong> Never</p>
+                            {% endif %}
+                            <p><strong>Status:</strong> 
+                                {% if announcement.has_expired %}
+                                    <span class="text-red-600">Expired</span>
+                                {% else %}
+                                    <span class="text-green-600">Active</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="pt-3 border-t border-gray-200">
+                            <a href="{% url 'common:announcement_detail' announcement_id=announcement.id %}" 
+                               class="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                                View Full Announcement →
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Quick Actions -->
+                <div class="mt-6 bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="bi bi-lightning text-orange-600 mr-2"></i>
+                            Quick Actions
+                        </h3>
+                    </div>
+                    <div class="p-6 space-y-3">
+                        <button type="button" onclick="previewAnnouncement()" 
+                                class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                            <i class="bi bi-eye mr-2"></i>
+                            Preview Content
+                        </button>
+                        <button type="button" onclick="saveDraft()" 
+                                class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                            <i class="bi bi-file-text mr-2"></i>
+                            Save as Draft
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
 </div>
+
+<!-- Preview Modal -->
+<div id="previewModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-10 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-2/3 shadow-lg rounded-md bg-white max-h-screen overflow-y-auto">
+        <div class="mt-3">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-medium text-gray-900">Announcement Preview</h3>
+                <button onclick="closePreviewModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div id="previewContent" class="prose max-w-none">
+                <!-- Preview content will be loaded here -->
+            </div>
+            <div class="flex justify-end space-x-3 pt-4 mt-6 border-t border-gray-200">
+                <button onclick="closePreviewModal()" 
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                    Close Preview
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+/**
+ * Toggle expiry date field
+ */
+function toggleExpiry() {
+    const neverExpires = document.getElementById('never_expires').checked;
+    const expiryField = document.getElementById('{{ form.expires_at.id_for_label }}');
+    
+    if (neverExpires) {
+        expiryField.value = '';
+        expiryField.disabled = true;
+        expiryField.style.opacity = '0.5';
+    } else {
+        expiryField.disabled = false;
+        expiryField.style.opacity = '1';
+    }
+}
+
+/**
+ * Update priority indicator based on urgent setting
+ */
+function updatePriorityIndicator() {
+    const isUrgent = document.getElementById('{{ form.is_urgent.id_for_label }}').checked;
+    const indicator = document.getElementById('priorityIndicator');
+    
+    if (isUrgent) {
+        indicator.innerHTML = `
+            <div class="h-3 w-3 rounded-full bg-red-400 mr-2"></div>
+            <span class="text-sm text-gray-600">Urgent Priority</span>
+        `;
+    } else {
+        indicator.innerHTML = `
+            <div class="h-3 w-3 rounded-full bg-blue-400 mr-2"></div>
+            <span class="text-sm text-gray-600">Normal Priority</span>
+        `;
+    }
+}
+
+/**
+ * Preview announcement content
+ */
+function previewAnnouncement() {
+    const title = document.getElementById('{{ form.title.id_for_label }}').value;
+    const content = document.getElementById('{{ form.content.id_for_label }}').value;
+    const isUrgent = document.getElementById('{{ form.is_urgent.id_for_label }}').checked;
+    const expiresAt = document.getElementById('{{ form.expires_at.id_for_label }}').value;
+    
+    if (!title.trim()) {
+        alert('Please enter a title before previewing.');
+        return;
+    }
+    
+    const previewContent = document.getElementById('previewContent');
+    const currentDate = new Date().toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric', 
+        hour: '2-digit', 
+        minute: '2-digit' 
+    });
+    
+    let expiryText = '';
+    if (expiresAt) {
+        const expiryDate = new Date(expiresAt).toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric', 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+        expiryText = `<p class="text-sm text-gray-500 mb-4"><strong>Expires:</strong> ${expiryDate}</p>`;
+    }
+    
+    previewContent.innerHTML = `
+        <div class="announcement-preview">
+            <div class="flex items-center space-x-2 mb-4">
+                <h1 class="text-2xl font-bold text-gray-900">${title}</h1>
+                ${isUrgent ? '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800"><i class="bi bi-exclamation-triangle mr-1"></i>Urgent</span>' : ''}
+            </div>
+            <p class="text-sm text-gray-500 mb-4"><strong>Posted:</strong> ${currentDate}</p>
+            ${expiryText}
+            <div class="content">
+                ${content || '<p class="text-gray-500 italic">No content provided</p>'}
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('previewModal').classList.remove('hidden');
+}
+
+/**
+ * Close preview modal
+ */
+function closePreviewModal() {
+    document.getElementById('previewModal').classList.add('hidden');
+}
+
+/**
+ * Save as draft functionality
+ */
+function saveDraft() {
+    alert('Draft functionality would be implemented here. For now, use the main save button to post the announcement.');
+}
+
+/**
+ * Reset form to initial state
+ */
+function resetForm() {
+    if (confirm('Are you sure you want to reset the form? All unsaved changes will be lost.')) {
+        document.getElementById('announcementForm').reset();
+        updatePriorityIndicator();
+        toggleExpiry();
+    }
+}
+
+/**
+ * Form validation
+ */
+function validateForm() {
+    const title = document.getElementById('{{ form.title.id_for_label }}').value;
+    const content = document.getElementById('{{ form.content.id_for_label }}').value;
+    
+    if (!title.trim()) {
+        alert('Please enter an announcement title.');
+        return false;
+    }
+    
+    if (!content.trim()) {
+        alert('Please enter announcement content.');
+        return false;
+    }
+    
+    const expiresAt = document.getElementById('{{ form.expires_at.id_for_label }}').value;
+    if (expiresAt) {
+        const expiryDate = new Date(expiresAt);
+        const now = new Date();
+        
+        if (expiryDate <= now) {
+            alert('Expiry date must be in the future.');
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize priority indicator
+    updatePriorityIndicator();
+    
+    // Add event listeners
+    document.getElementById('{{ form.is_urgent.id_for_label }}').addEventListener('change', updatePriorityIndicator);
+    
+    // Form submission validation
+    document.getElementById('announcementForm').addEventListener('submit', function(e) {
+        if (!validateForm()) {
+            e.preventDefault();
+        }
+    });
+    
+    // Close modal when clicking outside
+    document.getElementById('previewModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closePreviewModal();
+        }
+    });
+    
+    // Initialize expiry toggle if expires_at field is empty
+    const expiryField = document.getElementById('{{ form.expires_at.id_for_label }}');
+    if (!expiryField.value) {
+        document.getElementById('never_expires').checked = true;
+        toggleExpiry();
+    }
+});
+</script>
+
+<!-- Custom CSS for enhanced styling -->
+<style>
+/* Ensure form controls have consistent styling */
+input[type="text"],
+input[type="datetime-local"],
+textarea {
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+/* Enhanced focus states */
+input:focus,
+textarea:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Smooth transitions for all interactive elements */
+button,
+a {
+    transition: all 0.2s ease-in-out;
+}
+
+/* Loading states */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Preview modal content styling */
+.announcement-preview .content {
+    line-height: 1.6;
+}
+
+.announcement-preview .content h1,
+.announcement-preview .content h2,
+.announcement-preview .content h3 {
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+}
+
+.announcement-preview .content p {
+    margin-bottom: 1em;
+}
+
+.announcement-preview .content ul,
+.announcement-preview .content ol {
+    margin-bottom: 1em;
+    padding-left: 1.5em;
+}
+
+/* Form section transitions */
+.space-y-8 > div {
+    transition: all 0.3s ease-in-out;
+}
+
+/* Enhanced hover effects for form sections */
+.bg-white:hover {
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+</style>
 {% endblock %}

@@ -1,57 +1,467 @@
 {% extends 'base/base.html' %}
 {% load static %}
+
+{% block title %}{{ event.title }} - Event Details - ACRP{% endblock %}
+
 {% block content %}
-<div class="container py-4">
-
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="mb-0">{{ event.title }}</h3>
-    <div>
-      <a href="{% url 'edit_event' event.id %}" class="btn btn-warning btn-sm">
-        <i class="bi bi-pencil-square"></i> Edit
-      </a>
-      <form
-        method="POST"
-        action="{% url 'delete_event' event.id %}"
-        class="d-inline"
-      >
-        {% csrf_token %}
-        <button
-          type="submit"
-          class="btn btn-danger btn-sm"
-          onclick="return confirm('Are you sure you want to delete this event?');"
-        >
-          <i class="bi bi-trash"></i> Delete
-        </button>
-      </form>
+<div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 lg:p-8">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <div>
+                <h1 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+                    {{ event.title }}
+                </h1>
+                <p class="text-gray-600 text-lg">
+                    Event details and participant information
+                </p>
+            </div>
+            <div class="mt-4 lg:mt-0 flex space-x-3">
+                <a href="{% url 'common:event_list' %}" 
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    <i class="bi bi-arrow-left mr-2"></i>
+                    Back to Events
+                </a>
+                {% if perms.apps.manage_events %}
+                <a href="{% url 'common:edit_event' event_id=event.id %}" 
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    <i class="bi bi-pencil mr-2"></i>
+                    Edit Event
+                </a>
+                <button onclick="confirmDeleteEvent({{ event.id }}, '{{ event.title|escapejs }}')" 
+                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700">
+                    <i class="bi bi-trash mr-2"></i>
+                    Delete Event
+                </button>
+                {% endif %}
+            </div>
+        </div>
     </div>
-  </div>
 
-  <div class="card shadow-sm mb-4">
-    <div class="card-body">
-      <p class="mb-2"><strong>Description:</strong> {{ event.description }}</p>
-      <p class="mb-2"><strong>Location:</strong> {{ event.location }}</p>
-      <p class="mb-2">
-        <strong>Start:</strong> {{ event.start_time }}<br>
-        <strong>End:</strong> {{ event.end_time }}
-      </p>
-      <p class="mb-2">
-        <strong>Mandatory?</strong>
-        {% if event.is_mandatory %}
-          <span class="badge bg-danger">Yes</span>
-        {% else %}
-          <span class="badge bg-secondary">No</span>
-        {% endif %}
-      </p>
-      <p class="mb-0">
-        <strong>Participants:</strong>
-        {% for user in event.participants.all %}
-          {{ user.get_full_name }}{% if not forloop.last %}, {% endif %}
-        {% empty %}
-          None
+    <!-- Messages Display -->
+    {% if messages %}
+    <div class="mb-6 space-y-3">
+        {% for message in messages %}
+        <div class="flex items-center p-4 rounded-lg border-l-4 {% if message.tags == 'success' %}bg-green-50 border-green-400 text-green-700{% elif message.tags == 'error' %}bg-red-50 border-red-400 text-red-700{% elif message.tags == 'warning' %}bg-yellow-50 border-yellow-400 text-yellow-700{% else %}bg-blue-50 border-blue-400 text-blue-700{% endif %}">
+            <div class="flex-shrink-0">
+                {% if message.tags == 'success' %}
+                <i class="bi bi-check-circle-fill"></i>
+                {% elif message.tags == 'error' %}
+                <i class="bi bi-x-circle-fill"></i>
+                {% elif message.tags == 'warning' %}
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                {% else %}
+                <i class="bi bi-info-circle-fill"></i>
+                {% endif %}
+            </div>
+            <div class="ml-3 text-sm font-medium">
+                {{ message }}
+            </div>
+            <button type="button" class="ml-auto -mx-1.5 -my-1.5 rounded-lg p-1.5 inline-flex h-8 w-8 hover:bg-gray-200 focus:ring-2 focus:ring-gray-300" onclick="this.parentElement.remove()">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
         {% endfor %}
-      </p>
     </div>
-  </div>
+    {% endif %}
 
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Main Event Information -->
+        <div class="lg:col-span-2 space-y-8">
+            
+            <!-- Event Overview -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="bi bi-info-circle text-blue-600 mr-2"></i>
+                            Event Overview
+                        </h3>
+                        <div class="flex space-x-2">
+                            {% if event.is_mandatory %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                <i class="bi bi-exclamation-triangle mr-1"></i>
+                                Mandatory
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <i class="bi bi-check-circle mr-1"></i>
+                                Optional
+                            </span>
+                            {% endif %}
+                            
+                            {% if event.is_upcoming %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                <i class="bi bi-clock mr-1"></i>
+                                Upcoming
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                <i class="bi bi-check-circle mr-1"></i>
+                                Completed
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="p-6">
+                    {% if event.description %}
+                    <div class="prose max-w-none">
+                        {{ event.description|safe }}
+                    </div>
+                    {% else %}
+                    <p class="text-gray-500 italic">No description provided for this event.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Event Details Grid -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                    <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                        <i class="bi bi-calendar-event text-green-600 mr-2"></i>
+                        Event Details
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Date & Time -->
+                        <div class="flex items-start space-x-3">
+                            <div class="flex-shrink-0">
+                                <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                    <i class="bi bi-clock text-blue-600"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-900">Date & Time</h4>
+                                <p class="text-sm text-gray-600">
+                                    {{ event.start_time|date:"l, F d, Y" }}
+                                </p>
+                                {% if event.is_all_day %}
+                                <p class="text-sm text-gray-500">All day event</p>
+                                {% else %}
+                                <p class="text-sm text-gray-500">
+                                    {{ event.start_time|time:"g:i A" }} - {{ event.end_time|time:"g:i A" }}
+                                </p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Location -->
+                        <div class="flex items-start space-x-3">
+                            <div class="flex-shrink-0">
+                                <div class="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+                                    <i class="bi bi-geo-alt text-green-600"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-900">Location</h4>
+                                {% if event.location %}
+                                <p class="text-sm text-gray-600">{{ event.location }}</p>
+                                {% else %}
+                                <p class="text-sm text-gray-500 italic">No location specified</p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Created By -->
+                        <div class="flex items-start space-x-3">
+                            <div class="flex-shrink-0">
+                                <div class="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
+                                    <i class="bi bi-person text-purple-600"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-900">Created By</h4>
+                                <p class="text-sm text-gray-600">
+                                    {{ event.created_by.get_full_name|default:event.created_by.username }}
+                                </p>
+                                {% if event.created_by.role %}
+                                <p class="text-sm text-gray-500">{{ event.created_by.role.title }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Participants Count -->
+                        <div class="flex items-start space-x-3">
+                            <div class="flex-shrink-0">
+                                <div class="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                                    <i class="bi bi-people text-indigo-600"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-900">Participants</h4>
+                                <p class="text-sm text-gray-600">
+                                    {{ event.participants.count }} participant{{ event.participants.count|pluralize }}
+                                </p>
+                                <p class="text-sm text-gray-500">
+                                    {% if event.is_mandatory %}Attendance required{% else %}Voluntary participation{% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Participants List -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                    <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                        <i class="bi bi-people text-indigo-600 mr-2"></i>
+                        Event Participants ({{ event.participants.count }})
+                    </h3>
+                </div>
+                {% if event.participants.exists %}
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {% for participant in event.participants.all %}
+                        <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                            <div class="flex-shrink-0">
+                                {% if participant.picture %}
+                                <img class="h-10 w-10 rounded-full object-cover" 
+                                     src="{{ participant.get_picture }}" 
+                                     alt="{{ participant.get_full_name }}">
+                                {% else %}
+                                <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                                    <i class="bi bi-person text-gray-600"></i>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-medium text-gray-900 truncate">
+                                    {{ participant.get_full_name }}
+                                </p>
+                                <p class="text-sm text-gray-500 truncate">
+                                    {{ participant.role.title|default:"No role" }}
+                                </p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% else %}
+                <div class="p-6 text-center">
+                    <i class="bi bi-people text-gray-300 text-4xl mb-2"></i>
+                    <p class="text-gray-500">No participants added to this event yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Sidebar Information -->
+        <div class="lg:col-span-1 space-y-6">
+            
+            <!-- Quick Actions -->
+            {% if perms.apps.manage_events %}
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                    <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                        <i class="bi bi-lightning text-yellow-600 mr-2"></i>
+                        Quick Actions
+                    </h3>
+                </div>
+                <div class="p-6 space-y-3">
+                    <a href="{% url 'common:edit_event' event_id=event.id %}" 
+                       class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        <i class="bi bi-pencil mr-2"></i>
+                        Edit Event
+                    </a>
+                    <button onclick="confirmDeleteEvent({{ event.id }}, '{{ event.title|escapejs }}')" 
+                            class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700">
+                        <i class="bi bi-trash mr-2"></i>
+                        Delete Event
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Event Statistics -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                    <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                        <i class="bi bi-bar-chart text-blue-600 mr-2"></i>
+                        Event Statistics
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Total Participants</span>
+                            <span class="text-lg font-semibold text-gray-900">{{ event.participants.count }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Event Type</span>
+                            <span class="text-sm font-medium {% if event.is_mandatory %}text-red-600{% else %}text-green-600{% endif %}">
+                                {% if event.is_mandatory %}Mandatory{% else %}Optional{% endif %}
+                            </span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Status</span>
+                            <span class="text-sm font-medium {% if event.is_upcoming %}text-blue-600{% else %}text-gray-600{% endif %}">
+                                {% if event.is_upcoming %}Upcoming{% else %}Past Event{% endif %}
+                            </span>
+                        </div>
+                        {% if event.is_all_day %}
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Duration</span>
+                            <span class="text-sm font-medium text-gray-900">All Day</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Event Timeline -->
+            {% if event.is_upcoming %}
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                    <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                        <i class="bi bi-clock-history text-green-600 mr-2"></i>
+                        Countdown
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-blue-600" id="countdown">
+                            <!-- Countdown will be populated by JavaScript -->
+                        </div>
+                        <p class="text-sm text-gray-500 mt-1">until event starts</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Related Information -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                    <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                        <i class="bi bi-link text-purple-600 mr-2"></i>
+                        Related
+                    </h3>
+                </div>
+                <div class="p-6 space-y-3">
+                    <a href="{% url 'common:event_list' %}" 
+                       class="block text-sm text-blue-600 hover:text-blue-700">
+                        <i class="bi bi-calendar-event mr-2"></i>
+                        View All Events
+                    </a>
+                    <a href="{% url 'common:announcement_list' %}" 
+                       class="block text-sm text-blue-600 hover:text-blue-700">
+                        <i class="bi bi-megaphone mr-2"></i>
+                        View Announcements
+                    </a>
+                    {% if perms.apps.manage_events %}
+                    <a href="{% url 'common:create_event' %}" 
+                       class="block text-sm text-blue-600 hover:text-blue-700">
+                        <i class="bi bi-plus-circle mr-2"></i>
+                        Create New Event
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteConfirmModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3 text-center">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                <i class="bi bi-exclamation-triangle text-red-600 text-xl"></i>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">Delete Event</h3>
+            <p class="text-sm text-gray-500 mb-4">
+                Are you sure you want to delete "<span id="deleteEventName" class="font-medium"></span>"? 
+                This action cannot be undone and will remove all event data.
+            </p>
+            <div class="flex justify-center space-x-3">
+                <button onclick="closeDeleteModal()" 
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                    Cancel
+                </button>
+                <button onclick="deleteEvent()" 
+                        class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">
+                    Delete Event
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentDeleteEventId = null;
+
+function confirmDeleteEvent(eventId, eventTitle) {
+    currentDeleteEventId = eventId;
+    document.getElementById('deleteEventName').textContent = eventTitle;
+    document.getElementById('deleteConfirmModal').classList.remove('hidden');
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteConfirmModal').classList.add('hidden');
+    currentDeleteEventId = null;
+}
+
+function deleteEvent() {
+    if (!currentDeleteEventId) return;
+    
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `/events/${currentDeleteEventId}/delete/`;
+    
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (csrfToken) {
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = csrfToken.value;
+        form.appendChild(csrfInput);
+    }
+    
+    document.body.appendChild(form);
+    form.submit();
+}
+
+// Countdown functionality for upcoming events
+{% if event.is_upcoming %}
+function updateCountdown() {
+    const eventDate = new Date('{{ event.start_time|date:"c" }}');
+    const now = new Date();
+    const timeDiff = eventDate - now;
+    
+    if (timeDiff > 0) {
+        const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+        
+        let countdownText = '';
+        if (days > 0) {
+            countdownText = `${days}d ${hours}h ${minutes}m`;
+        } else if (hours > 0) {
+            countdownText = `${hours}h ${minutes}m`;
+        } else {
+            countdownText = `${minutes}m`;
+        }
+        
+        document.getElementById('countdown').textContent = countdownText;
+    } else {
+        document.getElementById('countdown').textContent = 'Event has started';
+    }
+}
+
+// Update countdown every minute
+updateCountdown();
+setInterval(updateCountdown, 60000);
+{% endif %}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('deleteConfirmModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeDeleteModal();
+        }
+    });
+});
+</script>
 {% endblock %}
