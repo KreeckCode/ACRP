@@ -1,0 +1,652 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}User Management - ACRP{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 lg:p-8">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <div>
+                <h1 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+                    User Management
+                </h1>
+                <p class="text-gray-600 text-lg">
+                    Manage user accounts, roles, and permissions across the ACRP system.
+                </p>
+            </div>
+            <div class="mt-4 lg:mt-0 flex space-x-3">
+                <a href="{% url 'accounts:manage_roles' %}" 
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    <i class="bi bi-person-badge mr-2"></i>
+                    Manage Roles
+                </a>
+                <a href="{% url 'accounts:manage_departments' %}" 
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    <i class="bi bi-building mr-2"></i>
+                    Manage Departments
+                </a>
+                <a href="{% url 'accounts:register_user' %}"
+                   class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                    <i class="bi bi-person-plus mr-2"></i>
+                    Add New User
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="mb-6 space-y-3">
+        {% for message in messages %}
+        <div class="flex items-center p-4 rounded-lg border-l-4 {% if message.tags == 'success' %}bg-green-50 border-green-400 text-green-700{% elif message.tags == 'error' %}bg-red-50 border-red-400 text-red-700{% elif message.tags == 'warning' %}bg-yellow-50 border-yellow-400 text-yellow-700{% else %}bg-blue-50 border-blue-400 text-blue-700{% endif %}">
+            <div class="flex-shrink-0">
+                {% if message.tags == 'success' %}
+                <i class="bi bi-check-circle-fill"></i>
+                {% elif message.tags == 'error' %}
+                <i class="bi bi-x-circle-fill"></i>
+                {% elif message.tags == 'warning' %}
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                {% else %}
+                <i class="bi bi-info-circle-fill"></i>
+                {% endif %}
+            </div>
+            <div class="ml-3 text-sm font-medium">
+                {{ message }}
+            </div>
+            <button type="button" class="ml-auto -mx-1.5 -my-1.5 rounded-lg p-1.5 inline-flex h-8 w-8 hover:bg-gray-200 focus:ring-2 focus:ring-gray-300" onclick="this.parentElement.remove()">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Search and Filter Section -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <i class="bi bi-funnel text-blue-600 mr-2"></i>
+            Search & Filter Users
+        </h3>
+        
+        <form method="GET" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <!-- Search Query -->
+                <div>
+                    <label for="q" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                    <div class="relative">
+                        <input type="text" 
+                               id="q" 
+                               name="q" 
+                               value="{{ query }}"
+                               placeholder="Search by username..."
+                               class="w-full px-3 py-2 pl-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="bi bi-search text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Role Filter -->
+                <div>
+                    <label for="role" class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                    <select id="role" 
+                            name="role" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Roles</option>
+                        {% for role in roles %}
+                        <option value="{{ role.title }}" {% if role_filter == role.title %}selected{% endif %}>
+                            {{ role.title }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Department Filter -->
+                <div>
+                    <label for="department" class="block text-sm font-medium text-gray-700 mb-1">Department</label>
+                    <select id="department" 
+                            name="department" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Departments</option>
+                        {% for dept in departments %}
+                        <option value="{{ dept.name }}" {% if department_filter == dept.name %}selected{% endif %}>
+                            {{ dept.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Filter Actions -->
+                <div class="flex items-end space-x-2">
+                    <button type="submit" 
+                            class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center">
+                        <i class="bi bi-search mr-2"></i>
+                        Filter
+                    </button>
+                    <a href="{% url 'accounts:user_list' %}" 
+                       class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 flex items-center justify-center">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Users Count & Summary -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-semibold text-gray-900">Users Overview</h3>
+                <p class="text-gray-600">
+                    Showing {{ users|length }} user{{ users|length|pluralize }} 
+                    {% if query or role_filter or department_filter %}
+                        (filtered results)
+                    {% else %}
+                        in the system
+                    {% endif %}
+                </p>
+            </div>
+            <div class="flex space-x-4">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-blue-600">{{ users|length }}</div>
+                    <div class="text-sm text-gray-500">Total Users</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-green-600">-</div>
+                    <div class="text-sm text-gray-500">Active</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-purple-600">-</div>
+                    <div class="text-sm text-gray-500">Staff</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users List -->
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                <i class="bi bi-people text-blue-600 mr-2"></i>
+                User Directory
+            </h3>
+        </div>
+        
+        {% if users %}
+        <!-- Desktop Table View -->
+        <div class="hidden lg:block overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            User
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Contact
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Role & Department
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            ACRP Role
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for user in users %}
+                    <tr class="hover:bg-gray-50 transition-colors duration-200">
+                        <!-- User Info -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-12 w-12">
+                                    {% if user.picture %}
+                                    <img class="h-12 w-12 rounded-full object-cover border-2 border-gray-200" 
+                                         src="{{ user.get_picture }}" 
+                                         alt="{{ user.get_full_name }}">
+                                    {% else %}
+                                    <div class="h-12 w-12 rounded-full bg-gray-300 flex items-center justify-center">
+                                        <i class="bi bi-person text-gray-600 text-xl"></i>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">
+                                        {{ user.get_full_name }}
+                                    </div>
+                                    <div class="text-sm text-gray-500">
+                                        @{{ user.username }}
+                                        {% if user.employee_code %}
+                                        • {{ user.employee_code }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+
+                        <!-- Contact Info -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ user.email }}</div>
+                            {% if user.phone %}
+                            <div class="text-sm text-gray-500">{{ user.phone }}</div>
+                            {% endif %}
+                        </td>
+
+                        <!-- Role & Department -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">
+                                {% if user.role %}
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mb-1">
+                                        {{ user.role.title }}
+                                    </span>
+                                {% endif %}
+                            </div>
+                            <div class="text-sm text-gray-500">
+                                {% if user.department %}
+                                    {{ user.department.name }}
+                                {% else %}
+                                    No department
+                                {% endif %}
+                            </div>
+                        </td>
+
+                        <!-- ACRP Role -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium 
+                                {% if user.acrp_role == 'GLOBAL_SDP' %}bg-purple-100 text-purple-800
+                                {% elif user.acrp_role == 'PROVIDER_ADMIN' %}bg-indigo-100 text-indigo-800
+                                {% elif user.acrp_role == 'INTERNAL_FACILITATOR' %}bg-green-100 text-green-800
+                                {% elif user.acrp_role == 'ASSESSOR' %}bg-yellow-100 text-yellow-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ user.get_acrp_role_display }}
+                            </span>
+                        </td>
+
+                        <!-- Status -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex flex-col space-y-1">
+                                {% if user.is_active %}
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <i class="bi bi-check-circle mr-1"></i>
+                                    Active
+                                </span>
+                                {% else %}
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                    <i class="bi bi-x-circle mr-1"></i>
+                                    Inactive
+                                </span>
+                                {% endif %}
+                                
+                                {% if user.is_staff %}
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                    <i class="bi bi-shield-check mr-1"></i>
+                                    Staff
+                                </span>
+                                {% endif %}
+                                
+                                {% if user.is_superuser %}
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                    <i class="bi bi-star mr-1"></i>
+                                    Admin
+                                </span>
+                                {% endif %}
+                            </div>
+                        </td>
+
+                        <!-- Actions -->
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="flex space-x-2">
+                                <a href="{% url 'accounts:update_user' user_id=user.id %}" 
+                                   class="text-blue-600 hover:text-blue-900 flex items-center">
+                                    <i class="bi bi-pencil mr-1"></i>
+                                    Edit
+                                </a>
+                                <span class="text-gray-300">|</span>
+                                <button onclick="viewUserDetails({{ user.id }})" 
+                                        class="text-green-600 hover:text-green-900 flex items-center">
+                                    <i class="bi bi-eye mr-1"></i>
+                                    View
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Mobile Card View -->
+        <div class="lg:hidden">
+            <div class="space-y-4 p-4">
+                {% for user in users %}
+                <div class="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors duration-200">
+                    <div class="flex items-center space-x-3 mb-3">
+                        <div class="flex-shrink-0">
+                            {% if user.picture %}
+                            <img class="h-12 w-12 rounded-full object-cover border-2 border-gray-200" 
+                                 src="{{ user.get_picture }}" 
+                                 alt="{{ user.get_full_name }}">
+                            {% else %}
+                            <div class="h-12 w-12 rounded-full bg-gray-300 flex items-center justify-center">
+                                <i class="bi bi-person text-gray-600 text-xl"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="text-sm font-medium text-gray-900">{{ user.get_full_name }}</div>
+                            <div class="text-sm text-gray-500">@{{ user.username }}</div>
+                        </div>
+                        <div class="flex space-x-2">
+                            {% if user.is_active %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                Active
+                            </span>
+                            {% endif %}
+                            {% if user.is_staff %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                Staff
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-3 text-sm mb-3">
+                        <div>
+                            <span class="text-gray-500">Email:</span>
+                            <div class="font-medium">{{ user.email }}</div>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Department:</span>
+                            <div class="font-medium">{{ user.department.name|default:"None" }}</div>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Role:</span>
+                            <div class="font-medium">{{ user.role.title|default:"None" }}</div>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">ACRP Role:</span>
+                            <div class="font-medium">{{ user.get_acrp_role_display }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex space-x-3">
+                        <a href="{% url 'accounts:update_user' user_id=user.id %}" 
+                           class="flex-1 text-center bg-blue-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700">
+                            <i class="bi bi-pencil mr-1"></i>
+                            Edit
+                        </a>
+                        <button onclick="viewUserDetails({{ user.id }})" 
+                                class="flex-1 text-center bg-gray-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700">
+                            <i class="bi bi-eye mr-1"></i>
+                            View Details
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        {% else %}
+        <!-- Empty State -->
+        <div class="text-center py-12">
+            <i class="bi bi-people text-gray-300 text-6xl mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No users found</h3>
+            <p class="text-gray-500 mb-6">
+                {% if query or role_filter or department_filter %}
+                    No users match your current search criteria. Try adjusting your filters.
+                {% else %}
+                    Get started by adding your first user to the system.
+                {% endif %}
+            </p>
+            {% if not query and not role_filter and not department_filter %}
+            <a href="{% url 'accounts:register_user' %}" 
+               class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                <i class="bi bi-person-plus mr-2"></i>
+                Add First User
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- User Details Modal (hidden by default) -->
+<div id="userDetailsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-medium text-gray-900">User Details</h3>
+                <button onclick="closeUserModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div id="userDetailsContent">
+                <!-- User details will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// User details modal functionality
+function viewUserDetails(userId) {
+    const modal = document.getElementById('userDetailsModal');
+    const content = document.getElementById('userDetailsContent');
+    
+    // Show modal with loading state
+    modal.classList.remove('hidden');
+    content.innerHTML = '<div class="text-center py-4"><i class="bi bi-arrow-repeat animate-spin text-2xl text-gray-400"></i><p class="text-gray-500 mt-2">Loading user details...</p></div>';
+    
+    // Get CSRF token
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    // Fetch real user data
+    fetch(`/auth/users/details/${userId}/`, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const user = data.user;
+            
+            // Build subordinates list
+            let subordinatesHtml = '';
+            if (user.subordinates.length > 0) {
+                subordinatesHtml = user.subordinates.map(sub => `
+                    <div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
+                        <div>
+                            <div class="font-medium text-sm">${sub.name}</div>
+                            <div class="text-xs text-gray-500">${sub.username} • ${sub.role}</div>
+                        </div>
+                        <div class="text-xs text-gray-500">${sub.department}</div>
+                    </div>
+                `).join('');
+            } else {
+                subordinatesHtml = '<p class="text-sm text-gray-500 italic">No subordinates</p>';
+            }
+            
+            content.innerHTML = `
+                <div class="space-y-6">
+                    <!-- User Profile Header -->
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <div class="flex items-center space-x-4">
+                            <div class="flex-shrink-0">
+                                <img class="h-16 w-16 rounded-full object-cover border-2 border-gray-200" 
+                                     src="${user.picture_url}" 
+                                     alt="${user.full_name}">
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-lg font-medium text-gray-900">${user.full_name}</h4>
+                                <p class="text-sm text-gray-600">@${user.username}</p>
+                                <div class="flex space-x-2 mt-2">
+                                    ${user.is_active ? '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Active</span>' : '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">Inactive</span>'}
+                                    ${user.is_staff ? '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">Staff</span>' : ''}
+                                    ${user.is_superuser ? '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">Admin</span>' : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Information -->
+                    <div>
+                        <h5 class="font-medium text-gray-900 mb-3 flex items-center">
+                            <i class="bi bi-person-card text-blue-600 mr-2"></i>
+                            Contact Information
+                        </h5>
+                        <div class="bg-white border rounded-lg p-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <span class="text-gray-500">Email:</span>
+                                    <div class="font-medium">${user.email}</div>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500">Phone:</span>
+                                    <div class="font-medium">${user.phone || 'Not provided'}</div>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500">Employee Code:</span>
+                                    <div class="font-medium">${user.employee_code || 'Not assigned'}</div>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500">Date Joined:</span>
+                                    <div class="font-medium">${user.date_joined}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Organizational Information -->
+                    <div>
+                        <h5 class="font-medium text-gray-900 mb-3 flex items-center">
+                            <i class="bi bi-building text-green-600 mr-2"></i>
+                            Organization
+                        </h5>
+                        <div class="bg-white border rounded-lg p-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <span class="text-gray-500">Department:</span>
+                                    <div class="font-medium">${user.department}</div>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500">Role:</span>
+                                    <div class="font-medium">${user.role}</div>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500">ACRP Role:</span>
+                                    <div class="font-medium">${user.acrp_role}</div>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500">Manager:</span>
+                                    <div class="font-medium">${user.manager}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Subordinates -->
+                    <div>
+                        <h5 class="font-medium text-gray-900 mb-3 flex items-center">
+                            <i class="bi bi-people text-purple-600 mr-2"></i>
+                            Direct Reports (${user.subordinates_count})
+                        </h5>
+                        <div class="bg-white border rounded-lg p-4 max-h-60 overflow-y-auto">
+                            ${subordinatesHtml}
+                        </div>
+                    </div>
+
+                    <!-- Account Information -->
+                    <div>
+                        <h5 class="font-medium text-gray-900 mb-3 flex items-center">
+                            <i class="bi bi-shield-check text-orange-600 mr-2"></i>
+                            Account Information
+                        </h5>
+                        <div class="bg-white border rounded-lg p-4">
+                            <div class="text-sm">
+                                <p><strong>Last Login:</strong> ${user.last_login}</p>
+                                <p><strong>Account Status:</strong> ${user.is_active ? 'Active' : 'Inactive'}</p>
+                                <p><strong>Access Level:</strong> ${user.is_superuser ? 'Administrator' : user.is_staff ? 'Staff' : 'Regular User'}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                        <button onclick="closeUserModal()" 
+                                class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                            Close
+                        </button>
+                        <a href="/auth/update/${user.id}/" 
+                           class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                            Edit User
+                        </a>
+                    </div>
+                </div>
+            `;
+        } else {
+            content.innerHTML = `
+                <div class="text-center py-8">
+                    <i class="bi bi-exclamation-triangle text-red-500 text-3xl mb-3"></i>
+                    <h4 class="font-medium text-gray-900 mb-2">Error Loading User</h4>
+                    <p class="text-sm text-gray-600 mb-4">${data.message}</p>
+                    <button onclick="closeUserModal()" 
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                        Close
+                    </button>
+                </div>
+            `;
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching user details:', error);
+        content.innerHTML = `
+            <div class="text-center py-8">
+                <i class="bi bi-exclamation-triangle text-red-500 text-3xl mb-3"></i>
+                <h4 class="font-medium text-gray-900 mb-2">Connection Error</h4>
+                <p class="text-sm text-gray-600 mb-4">Unable to load user details. Please try again.</p>
+                <button onclick="closeUserModal()" 
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                    Close
+                </button>
+            </div>
+        `;
+    });
+}
+
+function closeUserModal() {
+    document.getElementById('userDetailsModal').classList.add('hidden');
+}
+
+// Close modal when clicking outside
+document.getElementById('userDetailsModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeUserModal();
+    }
+});
+
+// Auto-submit form on filter change (optional)
+document.addEventListener('DOMContentLoaded', function() {
+    const roleSelect = document.getElementById('role');
+    const deptSelect = document.getElementById('department');
+    
+    // comment these lines if you dont want auto-filtering
+    roleSelect.addEventListener('change', function() {
+         this.form.submit();
+     });
+     
+     deptSelect.addEventListener('change', function() {
+         this.form.submit();
+     });
+});
+</script>
+{% endblock %}

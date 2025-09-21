@@ -45,7 +45,7 @@ def update_user(request, user_id):
         if form.is_valid():
             form.save()
             messages.success(request, 'User updated successfully.')
-            return redirect('user_list')
+            return redirect('accounts:user_list')
     else:
         form = UserUpdateForm(instance=user)
     return render(request, 'accounts/update_user.html', {'form': form})
@@ -118,14 +118,65 @@ def user_list(request):
         'department_filter': department_filter,
     })
 
+@login_required
+@permission_required('accounts.view_user', raise_exception=True)
+def get_user_details(request, user_id):
+    """AJAX endpoint to get detailed user information."""
+    if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'success': False, 'message': 'Invalid request'}, status=400)
+    
+    try:
+        user = get_object_or_404(User, id=user_id)
+        
+        # Get user's subordinates (people they manage)
+        subordinates = user.subordinates.all()
+        subordinates_data = [
+            {
+                'id': sub.id,
+                'name': sub.get_full_name,
+                'username': sub.username,
+                'role': sub.role.title if sub.role else 'No Role',
+                'department': sub.department.name if sub.department else 'No Department'
+            }
+            for sub in subordinates
+        ]
+        
+        return JsonResponse({
+            'success': True,
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'full_name': user.get_full_name,
+                'email': user.email,
+                'phone': user.phone,
+                'employee_code': user.employee_code,
+                'picture_url': user.get_picture(),
+                'role': user.role.title if user.role else 'No Role',
+                'department': user.department.name if user.department else 'No Department',
+                'manager': user.manager.get_full_name if user.manager else 'No Manager',
+                'acrp_role': user.get_acrp_role_display(),
+                'date_joined': user.date_of_joining.strftime('%B %d, %Y'),
+                'last_login': user.last_login.strftime('%B %d, %Y at %I:%M %p') if user.last_login else 'Never',
+                'is_active': user.is_active,
+                'is_staff': user.is_staff,
+                'is_superuser': user.is_superuser,
+                'subordinates_count': subordinates.count(),
+                'subordinates': subordinates_data
+            }
+        })
+        
+    except User.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'User not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+    
+    
+
 from .forms import RoleForm, DepartmentForm
 
 @login_required
 @permission_required('accounts.add_role', raise_exception=True)
 def manage_roles(request):
-    """
-    View to create and edit roles.
-    """
     if request.method == 'POST':
         form = RoleForm(request.POST)
         if form.is_valid():
@@ -134,9 +185,12 @@ def manage_roles(request):
             return redirect('accounts:manage_roles')
     else:
         form = RoleForm()
-
+    
     roles = Role.objects.all()
-    return render(request, 'accounts/manage_roles.html', {'form': form, 'roles': roles})
+    return render(request, 'accounts/manage_roles.html', {
+        'form': form, 
+        'roles': roles
+    })
 
 
 @login_required
@@ -193,4 +247,194 @@ class DebugPasswordResetView(auth_views.PasswordResetView):
             messages.error(self.request, f"Email sending failed: {str(e)}")
             return self.form_invalid(form)
     
+    
+
+import json
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+from django.contrib.auth.decorators import login_required, permission_required
+from django.views.decorators.csrf import csrf_protect
+from django.shortcuts import get_object_or_404
+from django.db import transaction
+from .models import Role
+
+
+@login_required
+@permission_required('accounts.delete_role', raise_exception=True)
+@require_http_methods(["POST"])
+@csrf_protect
+def delete_role(request, role_id):
+    if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=400)
+    
+    try:
+        role = get_object_or_404(Role, id=role_id)
+        
+        # Quick safety check
+        if role.users.count() > 0:
+            return JsonResponse({
+                'success': False,
+                'message': f'Cannot delete role "{role.title}". It is assigned to users.'
+            })
+        
+        role_title = role.title
+        role.delete()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Role "{role_title}" deleted successfully.'
+        })
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+    
+
+
+@login_required
+@permission_required('accounts.view_role', raise_exception=True)
+def check_role_dependencies(request, role_id):
+    """
+    Check what dependencies a role has before deletion.
+    This can be called to show warnings before attempting deletion.
+    
+    Args:
+        request: HTTP request object
+        role_id: ID of the role to check
+        
+    Returns:
+        JsonResponse with dependency information
+    """
+    try:
+        role = get_object_or_404(Role, id=role_id)
+        
+        users_count = role.users.count()
+        child_roles_count = role.child_roles.count()
+        
+        # Get specific users and child roles for detailed info
+        users = list(role.users.values('id', 'username', 'first_name', 'last_name')[:10])  # Limit to 10 for performance
+        child_roles = list(role.child_roles.values('id', 'title')[:10])  # Limit to 10 for performance
+        
+        can_delete = users_count == 0 and child_roles_count == 0
+        
+        return JsonResponse({
+            'success': True,
+            'can_delete': can_delete,
+            'dependencies': {
+                'users_count': users_count,
+                'child_roles_count': child_roles_count,
+                'users': users,
+                'child_roles': child_roles,
+                'has_more_users': users_count > 10,
+                'has_more_child_roles': child_roles_count > 10
+            },
+            'warnings': [] if can_delete else [
+                f'Role is assigned to {users_count} user(s)' if users_count > 0 else None,
+                f'Role has {child_roles_count} subordinate role(s)' if child_roles_count > 0 else None
+            ]
+        })
+        
+    except Role.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Role not found.'
+        }, status=404)
+    
+
+@login_required
+@permission_required('accounts.delete_department', raise_exception=True)
+@require_http_methods(["POST"])
+@csrf_protect
+def delete_department(request, department_id):
+    """AJAX endpoint for deleting departments."""
+    if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=400)
+    
+    try:
+        department = get_object_or_404(Department, id=department_id)
+        
+        # Safety checks
+        employees_count = department.employees.count()
+        roles_count = department.roles.count()
+        
+        if employees_count > 0:
+            return JsonResponse({
+                'success': False,
+                'message': f'Cannot delete department "{department.name}". It has {employees_count} employee(s). Please reassign them first.'
+            })
+        
+        if roles_count > 0:
+            return JsonResponse({
+                'success': False,
+                'message': f'Cannot delete department "{department.name}". It has {roles_count} role(s). Please reassign them first.'
+            })
+        
+        with transaction.atomic():
+            department_name = department.name
+            department.delete()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Department "{department_name}" has been successfully deleted.'
+        })
+        
+    except Department.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Department not found.'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': 'An unexpected error occurred.'}, status=500)
+    
+
+@login_required
+@permission_required('accounts.view_department', raise_exception=True)
+def get_department_details(request, department_id):
+    """AJAX endpoint to get detailed department information."""
+    if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'success': False, 'message': 'Invalid request'}, status=400)
+    
+    try:
+        department = get_object_or_404(Department, id=department_id)
+        
+        # Get employees in this department
+        employees = department.employees.select_related('role').all()
+        employees_data = [
+            {
+                'id': emp.id,
+                'name': emp.get_full_name,
+                'username': emp.username,
+                'email': emp.email,
+                'role': emp.role.title if emp.role else 'No Role',
+                'acrp_role': emp.get_acrp_role_display(),
+                'is_active': emp.is_active
+            }
+            for emp in employees
+        ]
+        
+        # Get roles in this department
+        roles = department.roles.all()
+        roles_data = [
+            {
+                'id': role.id,
+                'title': role.title,
+                'description': role.description,
+                'users_count': role.users.count()
+            }
+            for role in roles
+        ]
+        
+        return JsonResponse({
+            'success': True,
+            'department': {
+                'id': department.id,
+                'name': department.name,
+                'description': department.description,
+                'employees_count': employees.count(),
+                'roles_count': roles.count(),
+                'employees': employees_data,
+                'roles': roles_data
+            }
+        })
+        
+    except Department.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Department not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
     

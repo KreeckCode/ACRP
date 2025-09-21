@@ -22,9 +22,19 @@ urlpatterns = [
     path("update/<int:user_id>/", views.update_user, name="update_user"),
     path("list/", views.user_list, name="user_list"),
     path("change_password/", views.change_password, name="change_password"),
+    path("users/details/<int:user_id>/", views.get_user_details, name="get_user_details"),
     # Role and department management URLs
     path("manage_roles/", views.manage_roles, name="manage_roles"),
     path("manage_departments/", views.manage_departments, name="manage_departments"),
+    path("departments/details/<int:department_id>/", views.get_department_details, name="get_department_details"),
+    
+    path("departments/delete/<int:department_id>/", views.delete_department, name="delete_department"),
+
+    # AJAX endpoints for role management
+    path("roles/delete/<int:role_id>/", views.delete_role, name="delete_role"),
+    path("roles/check-dependencies/<int:role_id>/", views.check_role_dependencies, name="check_role_dependencies"),
+    
+
     
     path('password-reset/', DebugPasswordResetView.as_view(), name='password_reset'),
 

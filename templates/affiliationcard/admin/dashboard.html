@@ -1,598 +1,640 @@
 {% extends "base/base.html" %}
 {% load static %}
 
-{% comment %}
-ACRP Card Management Dashboard
-=============================
-
-Clean, corporate dashboard for card management with essential functionality only.
-Focused on working features and professional appearance.
-{% endcomment %}
-
 {% block title %}Card Management Dashboard - ACRP{% endblock %}
 
-{% block page_title %}Card Management{% endblock %}
-
-{% block page_description %}Digital affiliation card administration{% endblock %}
-
-{% block extra_css %}
-<style>
-    .dashboard-card {
-        background: white;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    }
-    
-    .dashboard-card:hover {
-        border-color: #d1d5db;
-        box-shadow: 0 4px 12px -4px rgba(0, 0, 0, 0.1);
-    }
-    
-    .stat-card {
-        background: white;
-        border-left: 4px solid;
-    }
-    
-    .stat-card.primary { border-left-color: #2563eb; }
-    .stat-card.success { border-left-color: #059669; }
-    .stat-card.warning { border-left-color: #d97706; }
-    .stat-card.danger { border-left-color: #dc2626; }
-    
-    .action-button {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.75rem 1.5rem;
-        background: white;
-        border: 1px solid #d1d5db;
-        border-radius: 6px;
-        color: #374151;
-        text-decoration: none;
-        font-weight: 500;
-        transition: all 0.2s ease;
-    }
-    
-    .action-button:hover {
-        background: #f9fafb;
-        border-color: #9ca3af;
-        text-decoration: none;
-        color: #111827;
-    }
-    
-    .action-button.primary {
-        background: #2563eb;
-        border-color: #2563eb;
-        color: white;
-    }
-    
-    .action-button.primary:hover {
-        background: #1d4ed8;
-        color: white;
-    }
-    
-    .section-header {
-        border-bottom: 1px solid #e5e7eb;
-        margin-bottom: 1.5rem;
-        padding-bottom: 0.75rem;
-    }
-    
-    .icon-circle {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 2.5rem;
-        height: 2.5rem;
-        border-radius: 50%;
-        background: #f3f4f6;
-        color: #6b7280;
-    }
-</style>
-{% endblock %}
-
-{% block page_header %}
-<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
-    <div>
-        <h1 class="text-2xl font-semibold text-gray-900">Card Management Dashboard</h1>
-        <p class="mt-1 text-sm text-gray-600">Manage digital affiliation cards and deliveries</p>
-    </div>
-    <div class="mt-4 sm:mt-0">
-        <a href="{% url 'affiliationcard:verify_lookup' %}" 
-           target="_blank"
-           class="action-button">
-            <i class="bi bi-box-arrow-up-right mr-2"></i>
-            Public Verification
-        </a>
-    </div>
-</div>
-{% endblock %}
-
 {% block content %}
-<div class="space-y-6">
-    
-    <!-- Key Statistics -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="stat-card primary p-4 rounded-lg">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">Total Cards</p>
-                    <p class="text-2xl font-semibold text-gray-900">{{ stats.total_cards|default:0 }}</p>
-                </div>
-                <div class="icon-circle">
-                    <i class="bi bi-credit-card"></i>
-                </div>
-            </div>
-        </div>
-        
-        <div class="stat-card success p-4 rounded-lg">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">Active Cards</p>
-                    <p class="text-2xl font-semibold text-gray-900">{{ stats.active_cards|default:0 }}</p>
-                </div>
-                <div class="icon-circle">
-                    <i class="bi bi-check-circle"></i>
-                </div>
-            </div>
-        </div>
-        
-        <div class="stat-card warning p-4 rounded-lg">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">Expiring Soon</p>
-                    <p class="text-2xl font-semibold text-gray-900">{{ stats.expiring_cards|default:0 }}</p>
-                </div>
-                <div class="icon-circle">
-                    <i class="bi bi-clock"></i>
-                </div>
-            </div>
-        </div>
-        
-        <div class="stat-card danger p-4 rounded-lg">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">Need Attention</p>
-                    <p class="text-2xl font-semibold text-gray-900">{{ stats.pending_cards|default:0 }}</p>
-                </div>
-                <div class="icon-circle">
-                    <i class="bi bi-exclamation-triangle"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Main Actions -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
-        <!-- Card Operations -->
-        <div class="dashboard-card">
-            <div class="p-6">
-                <div class="section-header">
-                    <h3 class="text-lg font-semibold text-gray-900 flex items-center">
-                        <i class="bi bi-credit-card text-gray-600 mr-2"></i>
-                        Card Operations
-                    </h3>
-                </div>
-                
-                <div class="space-y-3">
-                    <a href="{% url 'affiliationcard:card_list' %}" class="action-button w-full justify-center">
-                        <i class="bi bi-list-ul mr-2"></i>
-                        View All Cards
-                        {% if stats.total_cards %}
-                        <span class="ml-auto text-sm text-gray-500">({{ stats.total_cards }})</span>
-                        {% endif %}
-                    </a>
+    <!-- Main Content -->
+    <div class="">
+        <main class="flex-1 pt-2">
+            <div class="py-6">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     
-                    <a href="{% url 'affiliationcard:bulk_operations' %}" class="action-button w-full justify-center">
-                        <i class="bi bi-collection mr-2"></i>
-                        Bulk Operations
-                    </a>
-                    
-                    {% if stats.pending_cards %}
-                    <a href="{% url 'affiliationcard:card_list' %}?status=pending" 
-                       class="action-button w-full justify-center" 
-                       style="border-color: #fbbf24; background: #fef3c7;">
-                        <i class="bi bi-exclamation-triangle mr-2"></i>
-                        Review Pending Cards
-                        <span class="ml-auto text-sm font-medium">({{ stats.pending_cards }})</span>
-                    </a>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        
-        <!-- Verification & Analytics -->
-        <div class="dashboard-card">
-            <div class="p-6">
-                <div class="section-header">
-                    <h3 class="text-lg font-semibold text-gray-900 flex items-center">
-                        <i class="bi bi-shield-check text-gray-600 mr-2"></i>
-                        Verification & Reports
-                    </h3>
-                </div>
-                
-                <div class="space-y-3">
-                    <a href="{% url 'affiliationcard:verify_lookup' %}" 
-                       target="_blank" 
-                       class="action-button w-full justify-center">
-                        <i class="bi bi-search mr-2"></i>
-                        Public Verification Page
-                        <i class="bi bi-box-arrow-up-right ml-auto text-sm"></i>
-                    </a>
-                    
-                    <a href="{% url 'affiliationcard:analytics' %}" class="action-button w-full justify-center">
-                        <i class="bi bi-graph-up mr-2"></i>
-                        Analytics Dashboard
-                    </a>
-                    
-                    <a href="{% url 'affiliationcard:generate_report' %}" class="action-button w-full justify-center">
-                        <i class="bi bi-file-earmark-text mr-2"></i>
-                        Generate Reports
-                    </a>
-                </div>
-            </div>
-        </div>
-        
-    </div>
-    
-    <!-- Recent Activity -->
-    {% if recent_deliveries or recent_verifications %}
-    <div class="dashboard-card">
-        <div class="p-6">
-            <div class="section-header">
-                <h3 class="text-lg font-semibold text-gray-900">Recent Activity</h3>
-            </div>
-            
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                
-                <!-- Recent Deliveries -->
-                {% if recent_deliveries %}
-                <div>
-                    <h4 class="text-sm font-medium text-gray-700 mb-3">Recent Card Deliveries</h4>
-                    <div class="space-y-2">
-                        {% for delivery in recent_deliveries|slice:":5" %}
-                        <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-center space-x-2">
-                                    {% if delivery.delivery_type == 'email_pdf' %}
-                                    <i class="bi bi-file-pdf text-red-500"></i>
-                                    {% elif delivery.delivery_type == 'email_link' %}
-                                    <i class="bi bi-link text-blue-500"></i>
-                                    {% else %}
-                                    <i class="bi bi-download text-green-500"></i>
+                    <!-- Header Section -->
+                    <div class="mb-8">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <h1 class="text-2xl font-semibold text-gray-900">Card Management Dashboard</h1>
+                                <p class="mt-1 text-sm text-gray-600">Manage digital affiliation cards and deliveries</p>
+                            </div>
+                            <div class="mt-4 sm:mt-0 flex space-x-3">
+                                <a href="{% url 'affiliationcard:verify_lookup' %}" 
+                                   target="_blank"
+                                   class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                                    <i class="bi bi-box-arrow-up-right mr-2"></i>
+                                    Public Verification
+                                </a>
+                                <a href="{% url 'affiliationcard:bulk_operations' %}"
+                                   class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                                    <i class="bi bi-collection mr-2"></i>
+                                    Bulk Operations
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Stats -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div class="bg-white overflow-hidden shadow rounded-lg">
+                            <div class="p-6">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
+                                            <i class="bi bi-credit-card text-white"></i>
+                                        </div>
+                                    </div>
+                                    <div class="ml-4 w-0 flex-1">
+                                        <dl>
+                                            <dt class="text-sm font-medium text-gray-500 truncate">Total Cards</dt>
+                                            <dd class="text-2xl font-semibold text-gray-900">{{ stats.total_cards|default:0 }}</dd>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white overflow-hidden shadow rounded-lg">
+                            <div class="p-6">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+                                            <i class="bi bi-check-circle text-white"></i>
+                                        </div>
+                                    </div>
+                                    <div class="ml-4 w-0 flex-1">
+                                        <dl>
+                                            <dt class="text-sm font-medium text-gray-500 truncate">Active Cards</dt>
+                                            <dd class="text-2xl font-semibold text-gray-900">{{ stats.active_cards|default:0 }}</dd>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white overflow-hidden shadow rounded-lg">
+                            <div class="p-6">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
+                                            <i class="bi bi-clock text-white"></i>
+                                        </div>
+                                    </div>
+                                    <div class="ml-4 w-0 flex-1">
+                                        <dl>
+                                            <dt class="text-sm font-medium text-gray-500 truncate">Expiring Soon</dt>
+                                            <dd class="text-2xl font-semibold text-gray-900">{{ stats.expiring_cards|default:0 }}</dd>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white overflow-hidden shadow rounded-lg">
+                            <div class="p-6">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-8 h-8 bg-red-500 rounded-md flex items-center justify-center">
+                                            <i class="bi bi-exclamation-triangle text-white"></i>
+                                        </div>
+                                    </div>
+                                    <div class="ml-4 w-0 flex-1">
+                                        <dl>
+                                            <dt class="text-sm font-medium text-gray-500 truncate">Need Attention</dt>
+                                            <dd class="text-2xl font-semibold text-gray-900">{{ stats.pending_cards|default:0 }}</dd>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Council Card Statistics -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                        <!-- CGMP Cards -->
+                        <div class="bg-white shadow rounded-lg">
+                            <div class="px-6 py-4 border-b border-gray-200">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h3 class="text-lg font-medium text-gray-900">CGMP Cards</h3>
+                                        <p class="text-sm text-gray-500">Council for General Ministry Professionals</p>
+                                    </div>
+                                    <div class="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
+                                        <i class="bi bi-people-fill text-white text-xl"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="px-6 py-4">
+                                <div class="grid grid-cols-3 gap-4 mb-4">
+                                    <div class="text-center">
+                                        <div class="text-2xl font-bold text-gray-900">{{ stats.cgmp.total|default:0 }}</div>
+                                        <div class="text-sm text-gray-500">Total</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-2xl font-bold text-green-600">{{ stats.cgmp.active|default:0 }}</div>
+                                        <div class="text-sm text-gray-500">Active</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-2xl font-bold text-yellow-600">{{ stats.cgmp.expiring|default:0 }}</div>
+                                        <div class="text-sm text-gray-500">Expiring</div>
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <div class="flex justify-between text-sm text-gray-600 mb-1">
+                                        <span>Active Rate</span>
+                                        <span>{% if stats.cgmp.total %}{% widthratio stats.cgmp.active stats.cgmp.total 100 %}%{% else %}0%{% endif %}</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-blue-500 h-2 rounded-full" style="width: {% if stats.cgmp.total %}{% widthratio stats.cgmp.active stats.cgmp.total 100 %}%{% else %}0%{% endif %}"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CPSC Cards -->
+                        <div class="bg-white shadow rounded-lg">
+                            <div class="px-6 py-4 border-b border-gray-200">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h3 class="text-lg font-medium text-gray-900">CPSC Cards</h3>
+                                        <p class="text-sm text-gray-500">Council for Pastoral & Spiritual Care</p>
+                                    </div>
+                                    <div class="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
+                                        <i class="bi bi-heart-fill text-white text-xl"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="px-6 py-4">
+                                <div class="grid grid-cols-3 gap-4 mb-4">
+                                    <div class="text-center">
+                                        <div class="text-2xl font-bold text-gray-900">{{ stats.cpsc.total|default:0 }}</div>
+                                        <div class="text-sm text-gray-500">Total</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-2xl font-bold text-green-600">{{ stats.cpsc.active|default:0 }}</div>
+                                        <div class="text-sm text-gray-500">Active</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-2xl font-bold text-yellow-600">{{ stats.cpsc.expiring|default:0 }}</div>
+                                        <div class="text-sm text-gray-500">Expiring</div>
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <div class="flex justify-between text-sm text-gray-600 mb-1">
+                                        <span>Active Rate</span>
+                                        <span>{% if stats.cpsc.total %}{% widthratio stats.cpsc.active stats.cpsc.total 100 %}%{% else %}0%{% endif %}</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-green-500 h-2 rounded-full" style="width: {% if stats.cpsc.total %}{% widthratio stats.cpsc.active stats.cpsc.total 100 %}%{% else %}0%{% endif %}"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CMTP Cards -->
+                        <div class="bg-white shadow rounded-lg">
+                            <div class="px-6 py-4 border-b border-gray-200">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h3 class="text-lg font-medium text-gray-900">CMTP Cards</h3>
+                                        <p class="text-sm text-gray-500">Council for Ministry Training Providers</p>
+                                    </div>
+                                    <div class="w-12 h-12 bg-cyan-500 rounded-lg flex items-center justify-center">
+                                        <i class="bi bi-book-fill text-white text-xl"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="px-6 py-4">
+                                <div class="grid grid-cols-3 gap-4 mb-4">
+                                    <div class="text-center">
+                                        <div class="text-2xl font-bold text-gray-900">{{ stats.cmtp.total|default:0 }}</div>
+                                        <div class="text-sm text-gray-500">Total</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-2xl font-bold text-green-600">{{ stats.cmtp.active|default:0 }}</div>
+                                        <div class="text-sm text-gray-500">Active</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-2xl font-bold text-yellow-600">{{ stats.cmtp.expiring|default:0 }}</div>
+                                        <div class="text-sm text-gray-500">Expiring</div>
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <div class="flex justify-between text-sm text-gray-600 mb-1">
+                                        <span>Active Rate</span>
+                                        <span>{% if stats.cmtp.total %}{% widthratio stats.cmtp.active stats.cmtp.total 100 %}%{% else %}0%{% endif %}</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-cyan-500 h-2 rounded-full" style="width: {% if stats.cmtp.total %}{% widthratio stats.cmtp.active stats.cmtp.total 100 %}%{% else %}0%{% endif %}"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Card Activity -->
+                    <div class="bg-white shadow rounded-lg mb-8">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-lg font-medium text-gray-900">Recent Card Activity</h3>
+                                <div class="flex space-x-2">
+                                    <button class="px-3 py-1 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 active" onclick="filterCards('all')">All</button>
+                                    <button class="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300" onclick="filterCards('issued')">Issued</button>
+                                    <button class="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300" onclick="filterCards('delivered')">Delivered</button>
+                                    <button class="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300" onclick="filterCards('verified')">Verified</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="px-6 py-4">
+                            <div class="space-y-4" id="recentCards">
+                                {% for card in recent_cards %}
+                                <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 card-item" data-type="{{ card.activity_type }}">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex-1">
+                                            <div class="flex items-center space-x-3 mb-2">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if card.council == 'CGMP' %}bg-blue-100 text-blue-800{% elif card.council == 'CPSC' %}bg-green-100 text-green-800{% else %}bg-cyan-100 text-cyan-800{% endif %}">
+                                                    {{ card.council|default:"Unknown" }}
+                                                </span>
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {% if card.status == 'active' %}bg-green-100 text-green-800{% elif card.status == 'assigned' %}bg-blue-100 text-blue-800{% elif card.status == 'expired' %}bg-red-100 text-red-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                                                    {{ card.get_status_display|default:"Unknown" }}
+                                                </span>
+                                                <h4 class="text-sm font-medium text-gray-900">{{ card.card_number }}</h4>
+                                                <span class="text-sm text-gray-600">{{ card.get_display_name|default:"No name" }}</span>
+                                            </div>
+                                            <div class="flex items-center space-x-4 text-sm text-gray-500">
+                                                <span class="flex items-center">
+                                                    <i class="bi bi-calendar mr-1"></i>
+                                                    {% if card.date_issued %}
+                                                        Issued {{ card.date_issued|timesince }} ago
+                                                    {% else %}
+                                                        Created {{ card.created_at|timesince }} ago
+                                                    {% endif %}
+                                                </span>
+                                                {% if card.last_verification %}
+                                                <span class="flex items-center">
+                                                    <i class="bi bi-shield-check mr-1"></i>
+                                                    Last verified {{ card.last_verification|timesince }} ago
+                                                </span>
+                                                {% endif %}
+                                                {% if card.deliveries_count %}
+                                                <span class="flex items-center">
+                                                    <i class="bi bi-send mr-1"></i>
+                                                    {{ card.deliveries_count }} deliveries
+                                                </span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <a href="{% url 'affiliationcard:card_detail' pk=card.pk %}" class="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200">
+                                                <i class="bi bi-eye mr-1"></i>
+                                                View
+                                            </a>
+                                            <div class="relative">
+                                                <button class="inline-flex items-center px-2 py-1 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50" onclick="toggleDropdown(this)">
+                                                    <i class="bi bi-three-dots"></i>
+                                                </button>
+                                                <div class="hidden absolute right-0 z-10 mt-2 w-48 bg-white rounded-md shadow-lg">
+                                                    <div class="py-1">
+                                                        <a href="{% url 'affiliationcard:send_card' pk=card.pk %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                            <i class="bi bi-send mr-2"></i>Send Card
+                                                        </a>
+                                                        <a href="{% url 'affiliationcard:update_card_status' pk=card.pk %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                            <i class="bi bi-pencil mr-2"></i>Update Status
+                                                        </a>
+                                                        <div class="border-t border-gray-100"></div>
+                                                        <a href="{% url 'affiliationcard:verify_lookup' %}?card={{ card.card_number }}" target="_blank" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                            <i class="bi bi-shield-check mr-2"></i>Verify
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <div class="text-center py-8">
+                                    <i class="bi bi-credit-card text-gray-400 text-4xl mb-4"></i>
+                                    <h3 class="text-lg font-medium text-gray-900 mb-2">No Recent Card Activity</h3>
+                                    <p class="text-sm text-gray-500">New card activities will appear here when they occur.</p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                            {% if recent_cards %}
+                            <div class="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
+                                <p class="text-sm text-gray-500">Showing {{ recent_cards|length }} most recent activities</p>
+                                <a href="{% url 'affiliationcard:card_list' %}" class="text-sm font-medium text-blue-600 hover:text-blue-500">
+                                    View all cards
+                                    <i class="bi bi-arrow-right ml-1"></i>
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Cards Requiring Attention -->
+                    {% if approved_applications_without_cards or expiring_soon %}
+                    <div class="bg-yellow-50 border border-yellow-200 shadow rounded-lg mb-8">
+                        <div class="px-6 py-4 border-b border-yellow-200">
+                            <div class="flex items-center">
+                                <i class="bi bi-exclamation-triangle text-yellow-600 mr-2"></i>
+                                <h3 class="text-lg font-semibold text-yellow-800">Attention Required</h3>
+                            </div>
+                        </div>
+                        <div class="px-6 py-4">
+                            {% if approved_applications_without_cards %}
+                            <div class="mb-6">
+                                <h4 class="text-sm font-medium text-yellow-800 mb-3">
+                                    Applications Ready for Card Assignment ({{ approved_applications_without_cards|length }})
+                                </h4>
+                                <div class="space-y-2">
+                                    {% for app_data in approved_applications_without_cards|slice:":3" %}
+                                    <div class="flex items-center justify-between bg-white p-3 rounded border">
+                                        <div>
+                                            <div class="text-sm font-medium text-gray-900">
+                                                {{ app_data.application.get_display_name }}
+                                            </div>
+                                            <div class="text-xs text-gray-500">
+                                                {{ app_data.application.application_number }} • 
+                                                Approved {{ app_data.days_since_approval }} days ago
+                                            </div>
+                                        </div>
+                                        <a href="{% url 'enrollments:application_detail' pk=app_data.application.pk app_type=app_data.app_type %}" 
+                                           class="text-sm font-medium text-blue-600 hover:text-blue-700">
+                                            Assign Card
+                                        </a>
+                                    </div>
+                                    {% endfor %}
+                                    {% if approved_applications_without_cards|length > 3 %}
+                                    <div class="text-center pt-2">
+                                        <a href="{% url 'enrollments:application_list' %}?status=approved" 
+                                           class="text-sm text-blue-600 hover:text-blue-700">
+                                            View all {{ approved_applications_without_cards|length }} applications →
+                                        </a>
+                                    </div>
                                     {% endif %}
-                                    <span class="text-sm font-medium text-gray-900 truncate">
-                                        {{ delivery.card.card_number }}
-                                    </span>
-                                </div>
-                                <div class="text-xs text-gray-500 mt-1">
-                                    {{ delivery.recipient_email }} • {{ delivery.initiated_at|timesince }} ago
                                 </div>
                             </div>
-                            <div class="ml-3">
-                                {% if delivery.status == 'completed' %}
-                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    Sent
-                                </span>
-                                {% elif delivery.status == 'failed' %}
-                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                    Failed
-                                </span>
-                                {% else %}
-                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                    {{ delivery.get_status_display }}
-                                </span>
-                                {% endif %}
+                            {% endif %}
+                            
+                            {% if expiring_soon %}
+                            <div>
+                                <h4 class="text-sm font-medium text-yellow-800 mb-3">
+                                    Cards Expiring Soon ({{ expiring_soon|length }})
+                                </h4>
+                                <div class="space-y-2">
+                                    {% for card in expiring_soon|slice:":3" %}
+                                    <div class="flex items-center justify-between bg-white p-3 rounded border">
+                                        <div>
+                                            <div class="text-sm font-medium text-gray-900">
+                                                {{ card.card_number }} - {{ card.get_display_name }}
+                                            </div>
+                                            <div class="text-xs text-gray-500">
+                                                Expires {{ card.date_expires|date:"M d, Y" }}
+                                                ({{ card.days_until_expiry }} days)
+                                            </div>
+                                        </div>
+                                        <a href="{% url 'affiliationcard:card_detail' pk=card.pk %}" 
+                                           class="text-sm font-medium text-blue-600 hover:text-blue-700">
+                                            Manage
+                                        </a>
+                                    </div>
+                                    {% endfor %}
+                                    {% if expiring_soon|length > 3 %}
+                                    <div class="text-center pt-2">
+                                        <a href="{% url 'affiliationcard:card_list' %}?expiring=30" 
+                                           class="text-sm text-blue-600 hover:text-blue-700">
+                                            View all {{ expiring_soon|length }} cards →
+                                        </a>
+                                    </div>
+                                    {% endif %}
+                                </div>
                             </div>
+                            {% endif %}
                         </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% endif %}
-                
-                <!-- Recent Verifications -->
-                {% if recent_verifications %}
-                <div>
-                    <h4 class="text-sm font-medium text-gray-700 mb-3">Recent Verifications</h4>
-                    <div class="space-y-2">
-                        {% for verification in recent_verifications|slice:":5" %}
-                        <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-center space-x-2">
-                                    <i class="bi bi-qr-code-scan text-blue-500"></i>
-                                    <span class="text-sm font-medium text-gray-900">
-                                        {{ verification.card.card_number }}
-                                    </span>
-                                </div>
-                                <div class="text-xs text-gray-500 mt-1">
-                                    {{ verification.verification_type|title }} • {{ verification.verified_at|timesince }} ago
-                                </div>
-                            </div>
-                            <div class="ml-3">
-                                {% if verification.was_successful %}
-                                <i class="bi bi-check-circle text-green-500"></i>
-                                {% else %}
-                                <i class="bi bi-x-circle text-red-500"></i>
-                                {% endif %}
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% endif %}
-                
-            </div>
-        </div>
-    </div>
-    {% endif %}
-    
-    <!-- Cards Requiring Attention -->
-    {% if approved_applications_without_cards or expiring_soon %}
-    <div class="dashboard-card border-yellow-200 bg-yellow-50">
-        <div class="p-6">
-            <div class="flex items-center mb-4">
-                <i class="bi bi-exclamation-triangle text-yellow-600 mr-2"></i>
-                <h3 class="text-lg font-semibold text-yellow-800">Attention Required</h3>
-            </div>
-            
-            {% if approved_applications_without_cards %}
-            <div class="mb-4">
-                <h4 class="text-sm font-medium text-yellow-800 mb-2">
-                    Applications Ready for Card Assignment ({{ approved_applications_without_cards|length }})
-                </h4>
-                <div class="space-y-2">
-                    {% for app_data in approved_applications_without_cards|slice:":3" %}
-                    <div class="flex items-center justify-between bg-white p-3 rounded border">
-                        <div>
-                            <div class="text-sm font-medium text-gray-900">
-                                {{ app_data.application.get_display_name }}
-                            </div>
-                            <div class="text-xs text-gray-500">
-                                {{ app_data.application.application_number }} • 
-                                Approved {{ app_data.days_since_approval }} days ago
-                            </div>
-                        </div>
-                        <a href="{% url 'enrollments:application_detail' pk=app_data.application.pk app_type=app_data.app_type %}" 
-                           class="text-sm font-medium text-blue-600 hover:text-blue-700">
-                            Assign Card
-                        </a>
-                    </div>
-                    {% endfor %}
-                    {% if approved_applications_without_cards|length > 3 %}
-                    <div class="text-center pt-2">
-                        <a href="{% url 'enrollments:application_list' %}?status=approved" 
-                           class="text-sm text-blue-600 hover:text-blue-700">
-                            View all {{ approved_applications_without_cards|length }} applications →
-                        </a>
                     </div>
                     {% endif %}
-                </div>
-            </div>
-            {% endif %}
-            
-            {% if expiring_soon %}
-            <div>
-                <h4 class="text-sm font-medium text-yellow-800 mb-2">
-                    Cards Expiring Soon ({{ expiring_soon|length }})
-                </h4>
-                <div class="space-y-2">
-                    {% for card in expiring_soon|slice:":3" %}
-                    <div class="flex items-center justify-between bg-white p-3 rounded border">
-                        <div>
-                            <div class="text-sm font-medium text-gray-900">
-                                {{ card.card_number }} - {{ card.get_display_name }}
+
+                    <!-- Quick Actions and System Status -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <!-- Quick Actions -->
+                        <div class="bg-white shadow rounded-lg">
+                            <div class="px-6 py-4 border-b border-gray-200">
+                                <h3 class="text-lg font-medium text-gray-900">Quick Actions</h3>
                             </div>
-                            <div class="text-xs text-gray-500">
-                                Expires {{ card.date_expires|date:"M d, Y" }}
-                                ({{ card.days_until_expiry }} days)
+                            <div class="px-6 py-4">
+                                <div class="grid grid-cols-1 gap-3">
+                                    <a href="{% url 'affiliationcard:card_list' %}" class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                                        <i class="bi bi-list-ul mr-2"></i>
+                                        Browse All Cards
+                                    </a>
+                                    <a href="{% url 'affiliationcard:card_list' %}?status=active" class="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                        <i class="bi bi-check-circle mr-2"></i>
+                                        View Active Cards
+                                    </a>
+                                    <a href="{% url 'affiliationcard:analytics' %}" class="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                        <i class="bi bi-graph-up mr-2"></i>
+                                        View Analytics
+                                    </a>
+                                    <a href="{% url 'affiliationcard:generate_report' %}" class="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                        <i class="bi bi-file-earmark-text mr-2"></i>
+                                        Generate Report
+                                    </a>
+                                </div>
                             </div>
                         </div>
-                        <a href="{% url 'affiliationcard:card_detail' pk=card.pk %}" 
-                           class="text-sm font-medium text-blue-600 hover:text-blue-700">
-                            Manage
-                        </a>
+
+                        <!-- System Status -->
+                        <div class="bg-white shadow rounded-lg">
+                            <div class="px-6 py-4 border-b border-gray-200">
+                                <h3 class="text-lg font-medium text-gray-900">System Status</h3>
+                            </div>
+                            <div class="px-6 py-4">
+                                <div class="space-y-4">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <div class="w-2 h-2 bg-green-400 rounded-full mr-3"></div>
+                                            <span class="text-sm text-gray-600">Card Generation</span>
+                                        </div>
+                                        <span class="text-sm font-medium text-green-600">Operational</span>
+                                    </div>
+                                    
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <div class="w-2 h-2 bg-green-400 rounded-full mr-3"></div>
+                                            <span class="text-sm text-gray-600">Email Delivery</span>
+                                        </div>
+                                        <span class="text-sm font-medium text-green-600">Operational</span>
+                                    </div>
+                                    
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <div class="w-2 h-2 bg-green-400 rounded-full mr-3"></div>
+                                            <span class="text-sm text-gray-600">Verification Service</span>
+                                        </div>
+                                        <span class="text-sm font-medium text-green-600">Operational</span>
+                                    </div>
+                                    
+                                    <div class="pt-3 border-t border-gray-200">
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <div class="text-2xl font-bold text-gray-900">{{ stats.cards_this_month|default:0 }}</div>
+                                                <div class="text-xs text-gray-500">Cards This Month</div>
+                                            </div>
+                                            <div>
+                                                <div class="text-2xl font-bold text-gray-900">{{ stats.verifications_today|default:0 }}</div>
+                                                <div class="text-xs text-gray-500">Verifications Today</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    {% endfor %}
-                    {% if expiring_soon|length > 3 %}
-                    <div class="text-center pt-2">
-                        <a href="{% url 'affiliationcard:card_list' %}?expiring=30" 
-                           class="text-sm text-blue-600 hover:text-blue-700">
-                            View all {{ expiring_soon|length }} cards →
-                        </a>
+
+                    <!-- Additional Management Actions -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-md transition-shadow" onclick="window.location.href='{% url 'affiliationcard:bulk_operations' %}'">
+                            <div class="p-6">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                                            <i class="bi bi-collection text-white"></i>
+                                        </div>
+                                    </div>
+                                    <div class="ml-4">
+                                        <h3 class="text-lg font-medium text-gray-900">Bulk Operations</h3>
+                                        <p class="text-sm text-gray-500">Manage multiple cards at once</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-md transition-shadow" onclick="window.location.href='{% url 'affiliationcard:verify_lookup' %}'; window.open(this.href, '_blank'); return false;">
+                            <div class="p-6">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+                                            <i class="bi bi-shield-check text-white"></i>
+                                        </div>
+                                    </div>
+                                    <div class="ml-4">
+                                        <h3 class="text-lg font-medium text-gray-900">Test Verification</h3>
+                                        <p class="text-sm text-gray-500">Verify card authenticity</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-md transition-shadow" onclick="refreshDashboard()">
+                            <div class="p-6">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-10 h-10 bg-yellow-500 rounded-lg flex items-center justify-center">
+                                            <i class="bi bi-arrow-clockwise text-white"></i>
+                                        </div>
+                                    </div>
+                                    <div class="ml-4">
+                                        <h3 class="text-lg font-medium text-gray-900">Refresh Data</h3>
+                                        <p class="text-sm text-gray-500">Update dashboard information</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    {% endif %}
                 </div>
             </div>
-            {% endif %}
-        </div>
+        </main>
     </div>
-    {% endif %}
-    
-    <!-- Quick Actions -->
-    <div class="dashboard-card">
-        <div class="p-6">
-            <div class="section-header">
-                <h3 class="text-lg font-semibold text-gray-900">Quick Actions</h3>
-            </div>
+
+    <script>
+        // Toggle dropdown
+        function toggleDropdown(button) {
+            const dropdown = button.nextElementSibling;
             
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <a href="{% url 'affiliationcard:card_list' %}" class="action-button primary text-center">
-                    <i class="bi bi-list-ul mr-2"></i>
-                    Browse All Cards
-                </a>
-                
-                <a href="{% url 'affiliationcard:card_list' %}?status=active" class="action-button text-center">
-                    <i class="bi bi-check-circle mr-2"></i>
-                    Active Cards Only
-                </a>
-                
-                <a href="{% url 'affiliationcard:analytics' %}" class="action-button text-center">
-                    <i class="bi bi-graph-up mr-2"></i>
-                    View Analytics
-                </a>
-                
-                <a href="{% url 'affiliationcard:generate_report' %}" class="action-button text-center">
-                    <i class="bi bi-file-earmark-text mr-2"></i>
-                    Generate Report
-                </a>
-                
-                <a href="{% url 'affiliationcard:verify_lookup' %}" 
-                   target="_blank" 
-                   class="action-button text-center">
-                    <i class="bi bi-search mr-2"></i>
-                    Test Verification
-                </a>
-                
-                {% if perms.affiliationcard.add_carddelivery %}
-                <a href="{% url 'affiliationcard:bulk_operations' %}" class="action-button text-center">
-                    <i class="bi bi-send mr-2"></i>
-                    Bulk Delivery
-                </a>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-    
-    <!-- System Information -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
-        <!-- System Status -->
-        <div class="dashboard-card">
-            <div class="p-6">
-                <div class="section-header">
-                    <h3 class="text-lg font-semibold text-gray-900">System Status</h3>
-                </div>
-                
-                <div class="space-y-3">
-                    <div class="flex items-center justify-between py-2">
-                        <div class="flex items-center">
-                            <div class="w-2 h-2 bg-green-400 rounded-full mr-3"></div>
-                            <span class="text-sm text-gray-600">Card Generation</span>
-                        </div>
-                        <span class="text-sm font-medium text-green-600">Operational</span>
-                    </div>
-                    
-                    <div class="flex items-center justify-between py-2">
-                        <div class="flex items-center">
-                            <div class="w-2 h-2 bg-green-400 rounded-full mr-3"></div>
-                            <span class="text-sm text-gray-600">Email Delivery</span>
-                        </div>
-                        <span class="text-sm font-medium text-green-600">Operational</span>
-                    </div>
-                    
-                    <div class="flex items-center justify-between py-2">
-                        <div class="flex items-center">
-                            <div class="w-2 h-2 bg-green-400 rounded-full mr-3"></div>
-                            <span class="text-sm text-gray-600">Verification Service</span>
-                        </div>
-                        <span class="text-sm font-medium text-green-600">Operational</span>
-                    </div>
-                    
-                    <div class="pt-3 border-t border-gray-200">
-                        <div class="text-xs text-gray-500">
-                            Last system check: {{ "now"|date:"M d, Y H:i" }}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Quick Stats -->
-        <div class="dashboard-card">
-            <div class="p-6">
-                <div class="section-header">
-                    <h3 class="text-lg font-semibold text-gray-900">Usage Summary</h3>
-                </div>
-                
-                <div class="space-y-4">
-                    <div>
-                        <div class="flex justify-between text-sm mb-1">
-                            <span class="text-gray-600">Cards Issued This Month</span>
-                            <span class="font-medium text-gray-900">{{ stats.cards_this_month|default:0 }}</span>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="bg-blue-600 h-2 rounded-full" 
-                                 style="width: {% widthratio stats.cards_this_month 50 100 %}%"></div>
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <div class="flex justify-between text-sm mb-1">
-                            <span class="text-gray-600">Verifications This Week</span>
-                            <span class="font-medium text-gray-900">{{ stats.verifications_this_week|default:0 }}</span>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="bg-green-600 h-2 rounded-full" 
-                                 style="width: {% widthratio stats.verifications_this_week 100 100 %}%"></div>
-                        </div>
-                    </div>
-                    
-                    <div class="pt-3 border-t border-gray-200">
-                        <div class="flex justify-between text-sm">
-                            <span class="text-gray-600">Success Rate</span>
-                            <span class="font-medium text-gray-900">{{ stats.success_rate|default:95 }}%</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-    </div>
-    
-</div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-// Simple corporate dashboard JavaScript - minimal and functional
-
-document.addEventListener('DOMContentLoaded', function() {
-    // Auto-refresh statistics every 5 minutes
-    setInterval(function() {
-        console.log('Dashboard refresh check...');
-        // In production, this would update statistics via AJAX
-    }, 300000);
-    
-    // Initialize any tooltips or interactive elements
-    initializeDashboard();
-});
-
-function initializeDashboard() {
-    // Simple initialization - no complex animations
-    console.log('ACRP Card Management Dashboard initialized');
-    
-    // Add click tracking for analytics (if needed)
-    document.querySelectorAll('.action-button').forEach(button => {
-        button.addEventListener('click', function(e) {
-            const action = this.textContent.trim();
-            console.log('Dashboard action:', action);
-        });
-    });
-}
-
-// Simple utility functions
-function refreshStats() {
-    // Placeholder for stats refresh functionality
-    window.location.reload();
-}
-
-function exportData() {
-    alert('Export functionality will be available in reports section.');
-}
-
-// Keyboard shortcuts (corporate-friendly, minimal)
-document.addEventListener('keydown', function(event) {
-    if (event.ctrlKey || event.metaKey) {
-        switch(event.key) {
-            case '1':
-                window.location.href = "{% url 'affiliationcard:card_list' %}";
-                event.preventDefault();
-                break;
-            case '2':
-                window.location.href = "{% url 'affiliationcard:analytics' %}";
-                event.preventDefault();
-                break;
+            // Close all other dropdowns
+            document.querySelectorAll('.relative .absolute').forEach(d => {
+                if (d !== dropdown) d.classList.add('hidden');
+            });
+            
+            dropdown.classList.toggle('hidden');
         }
-    }
-});
-</script>
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.relative')) {
+                document.querySelectorAll('.relative .absolute').forEach(d => {
+                    d.classList.add('hidden');
+                });
+            }
+        });
+
+        // Filter cards
+        function filterCards(cardType) {
+            const cards = document.querySelectorAll('.card-item');
+            const buttons = document.querySelectorAll('button[onclick^="filterCards"]');
+            
+            // Update button states
+            buttons.forEach(btn => {
+                btn.classList.remove('bg-blue-500', 'text-white');
+                btn.classList.add('bg-gray-200', 'text-gray-700');
+                
+                if (btn.textContent.trim().toLowerCase() === cardType || 
+                    (cardType === 'all' && btn.textContent.trim() === 'All')) {
+                    btn.classList.remove('bg-gray-200', 'text-gray-700');
+                    btn.classList.add('bg-blue-500', 'text-white');
+                }
+            });
+
+            // Filter cards
+            cards.forEach(card => {
+                const cardActivityType = card.getAttribute('data-type');
+                
+                if (cardType === 'all' || cardActivityType === cardType) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        // Refresh dashboard
+        function refreshDashboard() {
+            showAlert('Refreshing dashboard...', 'info');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        }
+
+        // Show alert
+        function showAlert(message, type) {
+            const colors = {
+                success: 'bg-green-500',
+                info: 'bg-blue-500',
+                warning: 'bg-yellow-500',
+                error: 'bg-red-500'
+            };
+            
+            const alert = document.createElement('div');
+            alert.className = `fixed top-4 right-4 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-50`;
+            alert.textContent = message;
+            
+            document.body.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 3000);
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('ACRP Card Management Dashboard initialized');
+            
+            // Auto-refresh statistics every 10 minutes
+            setInterval(function() {
+                console.log('Dashboard auto-refresh check...');
+                // In production, this would update statistics via AJAX
+            }, 600000);
+        });
+    </script>
+
 {% endblock %}

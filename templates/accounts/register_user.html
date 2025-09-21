@@ -1,0 +1,827 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Register New User - ACRP{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 lg:p-8">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <div>
+                <h1 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+                    Register New User
+                </h1>
+                <p class="text-gray-600 text-lg">
+                    Create a new user account with roles, department assignments, and profile information.
+                </p>
+            </div>
+            <div class="mt-4 lg:mt-0">
+                <a href="{% url 'accounts:user_list' %}" 
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    <i class="bi bi-arrow-left mr-2"></i>
+                    Back to User List
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Messages Display -->
+    {% if messages %}
+    <div class="mb-6 space-y-3">
+        {% for message in messages %}
+        <div class="flex items-center p-4 rounded-lg border-l-4 {% if message.tags == 'success' %}bg-green-50 border-green-400 text-green-700{% elif message.tags == 'error' %}bg-red-50 border-red-400 text-red-700{% elif message.tags == 'warning' %}bg-yellow-50 border-yellow-400 text-yellow-700{% else %}bg-blue-50 border-blue-400 text-blue-700{% endif %}">
+            <div class="flex-shrink-0">
+                {% if message.tags == 'success' %}
+                <i class="bi bi-check-circle-fill"></i>
+                {% elif message.tags == 'error' %}
+                <i class="bi bi-x-circle-fill"></i>
+                {% elif message.tags == 'warning' %}
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                {% else %}
+                <i class="bi bi-info-circle-fill"></i>
+                {% endif %}
+            </div>
+            <div class="ml-3 text-sm font-medium">
+                {{ message }}
+            </div>
+            <button type="button" class="ml-auto -mx-1.5 -my-1.5 rounded-lg p-1.5 inline-flex h-8 w-8 hover:bg-gray-200 focus:ring-2 focus:ring-gray-300" onclick="this.parentElement.remove()">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Form Errors -->
+    {% if form.non_field_errors %}
+    <div class="mb-6">
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="bi bi-exclamation-triangle text-red-400"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-red-800">Please correct the following errors:</h3>
+                    <div class="mt-2 text-sm text-red-700">
+                        <ul class="list-disc space-y-1 pl-5">
+                            {% for error in form.non_field_errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Registration Form -->
+    <form method="post" enctype="multipart/form-data" class="space-y-8" id="registrationForm">
+        {% csrf_token %}
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Main Information Panel -->
+            <div class="lg:col-span-2 space-y-8">
+                
+                <!-- Personal Information -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="bi bi-person text-blue-600 mr-2"></i>
+                            Personal Information
+                        </h3>
+                        <p class="text-sm text-gray-600 mt-1">Basic user details and contact information</p>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- First Name -->
+                            <div>
+                                <label for="{{ form.first_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    First Name <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" 
+                                       name="{{ form.first_name.name }}" 
+                                       id="{{ form.first_name.id_for_label }}"
+                                       value="{{ form.first_name.value|default_if_none:'' }}"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {% if form.first_name.errors %}border-red-300 focus:ring-red-500{% endif %}"
+                                       placeholder="Enter first name"
+                                       required>
+                                {% if form.first_name.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.first_name.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Last Name -->
+                            <div>
+                                <label for="{{ form.last_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Last Name <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" 
+                                       name="{{ form.last_name.name }}" 
+                                       id="{{ form.last_name.id_for_label }}"
+                                       value="{{ form.last_name.value|default_if_none:'' }}"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {% if form.last_name.errors %}border-red-300 focus:ring-red-500{% endif %}"
+                                       placeholder="Enter last name"
+                                       required>
+                                {% if form.last_name.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.last_name.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Username -->
+                            <div>
+                                <label for="{{ form.username.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Username <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" 
+                                       name="{{ form.username.name }}" 
+                                       id="{{ form.username.id_for_label }}"
+                                       value="{{ form.username.value|default_if_none:'' }}"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {% if form.username.errors %}border-red-300 focus:ring-red-500{% endif %}"
+                                       placeholder="Choose a unique username"
+                                       required>
+                                {% if form.username.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.username.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <p class="mt-1 text-xs text-gray-500">This will be used for login</p>
+                            </div>
+
+                            <!-- Employee Code -->
+                            <div>
+                                <label for="{{ form.employee_code.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Employee Code
+                                </label>
+                                <input type="text" 
+                                       name="{{ form.employee_code.name }}" 
+                                       id="{{ form.employee_code.id_for_label }}"
+                                       value="{{ form.employee_code.value|default_if_none:'' }}"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {% if form.employee_code.errors %}border-red-300 focus:ring-red-500{% endif %}"
+                                       placeholder="Optional employee identifier">
+                                {% if form.employee_code.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.employee_code.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Email -->
+                            <div>
+                                <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Email Address <span class="text-red-500">*</span>
+                                </label>
+                                <input type="email" 
+                                       name="{{ form.email.name }}" 
+                                       id="{{ form.email.id_for_label }}"
+                                       value="{{ form.email.value|default_if_none:'' }}"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {% if form.email.errors %}border-red-300 focus:ring-red-500{% endif %}"
+                                       placeholder="user@example.com"
+                                       required>
+                                {% if form.email.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.email.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Phone -->
+                            <div>
+                                <label for="{{ form.phone.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Phone Number
+                                </label>
+                                <input type="tel" 
+                                       name="{{ form.phone.name }}" 
+                                       id="{{ form.phone.id_for_label }}"
+                                       value="{{ form.phone.value|default_if_none:'' }}"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {% if form.phone.errors %}border-red-300 focus:ring-red-500{% endif %}"
+                                       placeholder="+1 (555) 123-4567">
+                                {% if form.phone.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.phone.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Information -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="bi bi-shield-lock text-red-600 mr-2"></i>
+                            Security Information
+                        </h3>
+                        <p class="text-sm text-gray-600 mt-1">Set up login credentials for the new user</p>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Password -->
+                            <div>
+                                <label for="{{ form.password.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Password <span class="text-red-500">*</span>
+                                </label>
+                                <div class="relative">
+                                    <input type="password" 
+                                           name="{{ form.password.name }}" 
+                                           id="{{ form.password.id_for_label }}"
+                                           class="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {% if form.password.errors %}border-red-300 focus:ring-red-500{% endif %}"
+                                           placeholder="Enter secure password"
+                                           required>
+                                    <button type="button" 
+                                            onclick="togglePassword('{{ form.password.id_for_label }}', this)"
+                                            class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                        <i class="bi bi-eye text-gray-400 hover:text-gray-600"></i>
+                                    </button>
+                                </div>
+                                {% if form.password.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.password.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <div class="mt-2 text-xs text-gray-500">
+                                    <ul class="space-y-1">
+                                        <li>• At least 8 characters long</li>
+                                        <li>• Include uppercase and lowercase letters</li>
+                                        <li>• Include at least one number</li>
+                                        <li>• Include at least one special character</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Confirm Password -->
+                            <div>
+                                <label for="confirm_password" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Confirm Password <span class="text-red-500">*</span>
+                                </label>
+                                <div class="relative">
+                                    <input type="password" 
+                                           name="confirm_password" 
+                                           id="confirm_password"
+                                           class="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                           placeholder="Confirm password"
+                                           required>
+                                    <button type="button" 
+                                            onclick="togglePassword('confirm_password', this)"
+                                            class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                        <i class="bi bi-eye text-gray-400 hover:text-gray-600"></i>
+                                    </button>
+                                </div>
+                                <div id="password-match-error" class="mt-1 text-sm text-red-600 hidden">
+                                    <p>Passwords do not match</p>
+                                </div>
+                                <div id="password-match-success" class="mt-1 text-sm text-green-600 hidden">
+                                    <p>Passwords match</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Role and Organizational Information -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="bi bi-building text-green-600 mr-2"></i>
+                            Role & Organization
+                        </h3>
+                        <p class="text-sm text-gray-600 mt-1">Assign organizational roles and reporting structure</p>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- ACRP Role -->
+                            <div>
+                                <label for="{{ form.acrp_role.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    ACRP Role <span class="text-red-500">*</span>
+                                </label>
+                                <select name="{{ form.acrp_role.name }}" 
+                                        id="{{ form.acrp_role.id_for_label }}"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {% if form.acrp_role.errors %}border-red-300 focus:ring-red-500{% endif %}"
+                                        required>
+                                    <option value="">Select ACRP Role...</option>
+                                    {% for value, label in form.acrp_role.field.choices %}
+                                    <option value="{{ value }}" {% if form.acrp_role.value == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                {% if form.acrp_role.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.acrp_role.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <p class="mt-1 text-xs text-gray-500">System-wide role within ACRP</p>
+                            </div>
+
+                            <!-- Organizational Role -->
+                            <div>
+                                <label for="{{ form.role.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Organizational Role
+                                </label>
+                                <select name="{{ form.role.name }}" 
+                                        id="{{ form.role.id_for_label }}"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {% if form.role.errors %}border-red-300 focus:ring-red-500{% endif %}">
+                                    <option value="">Select a role...</option>
+                                    {% for role in form.role.field.queryset %}
+                                    <option value="{{ role.pk }}" {% if form.role.value == role.pk %}selected{% endif %}>
+                                        {{ role.title }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                {% if form.role.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.role.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <p class="mt-1 text-xs text-gray-500">Internal organizational role</p>
+                            </div>
+
+                            <!-- Department -->
+                            <div>
+                                <label for="{{ form.department.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Department
+                                </label>
+                                <select name="{{ form.department.name }}" 
+                                        id="{{ form.department.id_for_label }}"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {% if form.department.errors %}border-red-300 focus:ring-red-500{% endif %}">
+                                    <option value="">Select a department...</option>
+                                    {% for dept in form.department.field.queryset %}
+                                    <option value="{{ dept.pk }}" {% if form.department.value == dept.pk %}selected{% endif %}>
+                                        {{ dept.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                {% if form.department.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.department.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Manager -->
+                            <div>
+                                <label for="{{ form.manager.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Manager
+                                </label>
+                                <select name="{{ form.manager.name }}" 
+                                        id="{{ form.manager.id_for_label }}"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {% if form.manager.errors %}border-red-300 focus:ring-red-500{% endif %}">
+                                    <option value="">No manager assigned...</option>
+                                    {% for mgr in form.manager.field.queryset %}
+                                    <option value="{{ mgr.pk }}" {% if form.manager.value == mgr.pk %}selected{% endif %}>
+                                        {{ mgr.get_full_name }} ({{ mgr.username }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                {% if form.manager.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.manager.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0 sm:space-x-4">
+                    <div class="flex space-x-3">
+                        <a href="{% url 'accounts:user_list' %}" 
+                           class="inline-flex items-center px-6 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                            <i class="bi bi-x-circle mr-2"></i>
+                            Cancel
+                        </a>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button type="button" 
+                                onclick="resetForm()"
+                                class="inline-flex items-center px-6 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                            <i class="bi bi-arrow-clockwise mr-2"></i>
+                            Reset Form
+                        </button>
+                        <button type="submit" 
+                                class="inline-flex items-center px-6 py-3 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <i class="bi bi-person-plus mr-2"></i>
+                            Create User
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Picture Panel -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="bi bi-camera text-purple-600 mr-2"></i>
+                            Profile Picture
+                        </h3>
+                        <p class="text-sm text-gray-600 mt-1">Upload a profile picture for the new user</p>
+                    </div>
+                    <div class="p-6">
+                        <!-- Profile Picture Preview -->
+                        <div class="text-center mb-6">
+                            <div class="mx-auto h-32 w-32 rounded-full overflow-hidden bg-gray-100 mb-4" id="picture-preview-container">
+                                <div class="h-full w-full flex items-center justify-center">
+                                    <i class="bi bi-person text-gray-400 text-4xl" id="default-avatar"></i>
+                                </div>
+                            </div>
+                            <h4 class="text-lg font-medium text-gray-900" id="preview-name">New User</h4>
+                            <p class="text-sm text-gray-500" id="preview-username">@username</p>
+                        </div>
+
+                        <!-- Picture Upload -->
+                        <div>
+                            <label for="id_picture" class="block text-sm font-medium text-gray-700 mb-2">
+                                Upload Profile Picture
+                            </label>
+                            <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-gray-400 transition-colors">
+                                <div class="space-y-1 text-center">
+                                    <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                    <div class="flex text-sm text-gray-600">
+                                        <label for="id_picture" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                                            <span>Upload a file</span>
+                                            <input id="id_picture" 
+                                                   name="picture" 
+                                                   type="file" 
+                                                   accept="image/*"
+                                                   class="sr-only"
+                                                   onchange="previewImage(this)">
+                                        </label>
+                                        <p class="pl-1">or drag and drop</p>
+                                    </div>
+                                    <p class="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Upload Tips -->
+                            <div class="mt-4 p-3 bg-blue-50 rounded-lg">
+                                <h5 class="text-sm font-medium text-blue-900 mb-1">Upload Tips</h5>
+                                <ul class="text-xs text-blue-700 space-y-1">
+                                    <li>• Square images work best (1:1 aspect ratio)</li>
+                                    <li>• Minimum recommended size: 300x300 pixels</li>
+                                    <li>• File will be automatically resized if too large</li>
+                                    <li>• Profile picture is optional but recommended</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Registration Guidelines -->
+                <div class="mt-6 bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="bi bi-info-circle text-blue-600 mr-2"></i>
+                            Registration Guidelines
+                        </h3>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div class="space-y-3 text-sm text-gray-600">
+                            <div class="flex items-start space-x-2">
+                                <i class="bi bi-check-circle text-green-500 mt-0.5"></i>
+                                <p><strong>Required Fields:</strong> First name, last name, username, email, password, and ACRP role must be completed.</p>
+                            </div>
+                            <div class="flex items-start space-x-2">
+                                <i class="bi bi-shield-check text-blue-500 mt-0.5"></i>
+                                <p><strong>Security:</strong> Strong passwords are required. Users can change their password after first login.</p>
+                            </div>
+                            <div class="flex items-start space-x-2">
+                                <i class="bi bi-people text-purple-500 mt-0.5"></i>
+                                <p><strong>Roles:</strong> ACRP role determines system permissions. Organizational role is for internal hierarchy.</p>
+                            </div>
+                            <div class="flex items-start space-x-2">
+                                <i class="bi bi-envelope text-green-500 mt-0.5"></i>
+                                <p><strong>Notifications:</strong> User will receive welcome email with login instructions after registration.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+/**
+ * Toggle password visibility for password fields
+ * @param {string} fieldId - The ID of the password field
+ * @param {HTMLElement} button - The toggle button element
+ */
+function togglePassword(fieldId, button) {
+    const field = document.getElementById(fieldId);
+    const icon = button.querySelector('i');
+    
+    if (field.type === 'password') {
+        field.type = 'text';
+        icon.classList.remove('bi-eye');
+        icon.classList.add('bi-eye-slash');
+    } else {
+        field.type = 'password';
+        icon.classList.remove('bi-eye-slash');
+        icon.classList.add('bi-eye');
+    }
+}
+
+/**
+ * Preview uploaded profile image
+ * @param {HTMLInputElement} input - The file input element
+ */
+function previewImage(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        const container = document.getElementById('picture-preview-container');
+        
+        reader.onload = function(e) {
+            container.innerHTML = `<img src="${e.target.result}" alt="Profile Preview" class="h-full w-full object-cover" id="profile-preview">`;
+        };
+        
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+/**
+ * Update preview information based on form input
+ */
+function updatePreview() {
+    const firstName = document.getElementById('{{ form.first_name.id_for_label }}').value;
+    const lastName = document.getElementById('{{ form.last_name.id_for_label }}').value;
+    const username = document.getElementById('{{ form.username.id_for_label }}').value;
+    
+    const nameElement = document.getElementById('preview-name');
+    const usernameElement = document.getElementById('preview-username');
+    
+    if (firstName || lastName) {
+        nameElement.textContent = `${firstName} ${lastName}`.trim() || 'New User';
+    }
+    
+    if (username) {
+        usernameElement.textContent = `@${username}`;
+    }
+}
+
+/**
+ * Reset the entire form to initial state
+ */
+function resetForm() {
+    if (confirm('Are you sure you want to reset the form? All entered information will be lost.')) {
+        document.getElementById('registrationForm').reset();
+        
+        // Reset preview image
+        const container = document.getElementById('picture-preview-container');
+        container.innerHTML = `
+            <div class="h-full w-full flex items-center justify-center">
+                <i class="bi bi-person text-gray-400 text-4xl" id="default-avatar"></i>
+            </div>
+        `;
+        
+        // Reset preview text
+        document.getElementById('preview-name').textContent = 'New User';
+        document.getElementById('preview-username').textContent = '@username';
+        
+        // Clear password validation
+        document.getElementById('password-match-error').classList.add('hidden');
+        document.getElementById('password-match-success').classList.add('hidden');
+    }
+}
+
+/**
+ * Validate password match
+ */
+function validatePasswordMatch() {
+    const password = document.getElementById('{{ form.password.id_for_label }}').value;
+    const confirmPassword = document.getElementById('confirm_password').value;
+    const errorDiv = document.getElementById('password-match-error');
+    const successDiv = document.getElementById('password-match-success');
+    
+    if (confirmPassword && password) {
+        if (password === confirmPassword) {
+            errorDiv.classList.add('hidden');
+            successDiv.classList.remove('hidden');
+            return true;
+        } else {
+            errorDiv.classList.remove('hidden');
+            successDiv.classList.add('hidden');
+            return false;
+        }
+    } else {
+        errorDiv.classList.add('hidden');
+        successDiv.classList.add('hidden');
+        return true; // Don't show error if fields are empty
+    }
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Update preview on input changes
+    const nameFields = ['{{ form.first_name.id_for_label }}', '{{ form.last_name.id_for_label }}', '{{ form.username.id_for_label }}'];
+    nameFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('input', updatePreview);
+        }
+    });
+    
+    // Password validation
+    const passwordField = document.getElementById('{{ form.password.id_for_label }}');
+    const confirmPasswordField = document.getElementById('confirm_password');
+    
+    if (passwordField && confirmPasswordField) {
+        confirmPasswordField.addEventListener('input', validatePasswordMatch);
+        passwordField.addEventListener('input', validatePasswordMatch);
+    }
+    
+    // Form submission validation
+    document.getElementById('registrationForm').addEventListener('submit', function(e) {
+        // Validate required fields
+        const requiredFields = [
+            '{{ form.first_name.id_for_label }}',
+            '{{ form.last_name.id_for_label }}',
+            '{{ form.username.id_for_label }}',
+            '{{ form.email.id_for_label }}',
+            '{{ form.password.id_for_label }}',
+            '{{ form.acrp_role.id_for_label }}'
+        ];
+        
+        let hasErrors = false;
+        
+        requiredFields.forEach(function(fieldId) {
+            const field = document.getElementById(fieldId);
+            if (field && !field.value.trim()) {
+                hasErrors = true;
+                field.classList.add('border-red-300', 'focus:ring-red-500');
+                field.classList.remove('border-gray-300', 'focus:ring-blue-500');
+            } else if (field) {
+                field.classList.remove('border-red-300', 'focus:ring-red-500');
+                field.classList.add('border-gray-300', 'focus:ring-blue-500');
+            }
+        });
+        
+        // Validate password match
+        if (!validatePasswordMatch()) {
+            hasErrors = true;
+        }
+        
+        // Validate email format
+        const emailField = document.getElementById('{{ form.email.id_for_label }}');
+        if (emailField && emailField.value) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(emailField.value)) {
+                hasErrors = true;
+                emailField.classList.add('border-red-300', 'focus:ring-red-500');
+            }
+        }
+        
+        if (hasErrors) {
+            e.preventDefault();
+            alert('Please correct the highlighted errors before submitting.');
+            
+            // Scroll to first error
+            const firstError = document.querySelector('.border-red-300');
+            if (firstError) {
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstError.focus();
+            }
+        }
+    });
+    
+    // Auto-generate username from name (optional feature)
+    const autoGenerateUsername = function() {
+        const firstName = document.getElementById('{{ form.first_name.id_for_label }}').value;
+        const lastName = document.getElementById('{{ form.last_name.id_for_label }}').value;
+        const usernameField = document.getElementById('{{ form.username.id_for_label }}');
+        
+        if (firstName && lastName && !usernameField.value) {
+            const generatedUsername = (firstName.charAt(0) + lastName).toLowerCase().replace(/[^a-z0-9]/g, '');
+            usernameField.placeholder = `Suggested: ${generatedUsername}`;
+        }
+    };
+    
+    document.getElementById('{{ form.first_name.id_for_label }}').addEventListener('blur', autoGenerateUsername);
+    document.getElementById('{{ form.last_name.id_for_label }}').addEventListener('blur', autoGenerateUsername);
+});
+
+// Drag and drop functionality for profile picture
+document.addEventListener('DOMContentLoaded', function() {
+    const dropZone = document.querySelector('.border-dashed');
+    const fileInput = document.getElementById('id_picture');
+    
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+        document.body.addEventListener(eventName, preventDefaults, false);
+    });
+    
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, highlight, false);
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, unhighlight, false);
+    });
+    
+    dropZone.addEventListener('drop', handleDrop, false);
+    
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    function highlight(e) {
+        dropZone.classList.add('border-blue-400', 'bg-blue-50');
+    }
+    
+    function unhighlight(e) {
+        dropZone.classList.remove('border-blue-400', 'bg-blue-50');
+    }
+    
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        
+        if (files.length > 0) {
+            fileInput.files = files;
+            previewImage(fileInput);
+        }
+    }
+});
+</script>
+
+<!-- Custom CSS for enhanced styling -->
+<style>
+/* Ensure consistent form styling */
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="password"],
+select,
+textarea {
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+/* Enhanced focus states */
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Smooth transitions for all interactive elements */
+button,
+a {
+    transition: all 0.2s ease-in-out;
+}
+
+/* Drag and drop visual feedback */
+.border-dashed {
+    transition: all 0.2s ease-in-out;
+}
+
+/* Loading states */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Password strength indicator (for future enhancement) */
+.password-strength {
+    height: 4px;
+    border-radius: 2px;
+    transition: all 0.3s ease;
+}
+
+.password-weak { background-color: #ef4444; }
+.password-medium { background-color: #f59e0b; }
+.password-strong { background-color: #10b981; }
+</style>
+{% endblock %}

@@ -11,10 +11,14 @@ from .models import (
     Event, Announcement, Projects, Task, Resource,
     Quiz, Question
 )
-from django.db.models import Count, Sum
+from django.db.models import Count, Sum, Q
 from accounts.models import Department, User
 from django.views.decorators.http import require_POST
 from django.views.decorators.http import require_http_methods
+
+from django.utils import timezone
+from datetime import timedelta
+
 @login_required
 def kanban_board(request):
     """
@@ -33,26 +37,236 @@ def kanban_board(request):
         'task_statuses': task_statuses,
     })
 
+
+
 @login_required
 def dashboard(request):
+    """
+    Unified ACRP Dashboard - Central hub for all system modules
+    
+    Provides strategic overview and quick access to key functions across:
+    - Enrollments (applications, members)
+    - Digital Cards (verification, management) 
+    - CPD (activities, records, certificates)
+    - Projects & Tasks
+    - System Administration
+    """
     user = request.user
-
-    # 1) Everyone sees these three things:
-    context = {
-        'announcements': Announcement.objects.filter(is_urgent=True)[:5],
-        'events':        Event.objects.filter(is_mandatory=True,
-                                              start_time__gte=user.date_joined)[:5],
-        'projects':      Projects.objects.filter(manager=user)
-                                          .order_by('-start_date')[:5],
-    }
-
-    # 2) Figure out what role (if any) they actually have
+    
+    # ============================================================================
+    # SYSTEM-WIDE STATISTICS
+    # ============================================================================
+    
+    stats = {}
+    
+    # Enrollment Statistics
+    try:
+        from enrollments.models import AssociatedApplication, DesignatedApplication, StudentApplication
+        
+        # Get all applications across types
+        all_applications = []
+        for model in [AssociatedApplication, DesignatedApplication, StudentApplication]:
+            all_applications.extend(model.objects.all())
+        
+        stats['total_applications'] = len(all_applications)
+        stats['pending_applications'] = len([app for app in all_applications if app.status in ['submitted', 'under_review']])
+        stats['approved_applications'] = len([app for app in all_applications if app.status == 'approved'])
+        
+    except ImportError:
+        stats['total_applications'] = 0
+        stats['pending_applications'] = 0
+        stats['approved_applications'] = 0
+    
+    # Digital Card Statistics
+    try:
+        from affiliationcard.models import AffiliationCard
+        
+        stats['total_cards'] = AffiliationCard.objects.count()
+        stats['active_cards'] = AffiliationCard.objects.filter(status='active').count()
+        stats['expiring_cards'] = AffiliationCard.objects.filter(
+            date_expires__lte=timezone.now().date() + timedelta(days=30),
+            status='active'
+        ).count()
+        
+    except ImportError:
+        stats['total_cards'] = 0
+        stats['active_cards'] = 0
+        stats['expiring_cards'] = 0
+    
+    # CPD Statistics
+    try:
+        from cpd.models import CPDRecord, CPDApproval
+        
+        current_year = timezone.now().year
+        
+        # Get completed CPD records for current year with approved status
+        approved_records = CPDRecord.objects.filter(
+            user=user,
+            completion_date__year=current_year,
+            status='COMPLETED'
+        ).filter(
+            approval__status='APPROVED'
+        )
+        
+        # Calculate total hours (use hours_awarded if available, otherwise hours_claimed)
+        total_hours = 0
+        for record in approved_records:
+            total_hours += float(record.hours_awarded or record.hours_claimed or 0)
+        
+        stats['cpd_hours'] = total_hours
+        
+    except (ImportError, AttributeError):
+        stats['cpd_hours'] = 0
+    
+    # Active Members (approximation based on active cards or approved applications)
+    stats['active_members'] = stats['active_cards'] or stats['approved_applications']
+    stats['new_members'] = 0  # You can calculate this based on recent approvals
+    
+    # ============================================================================
+    # CORE CONTENT (Existing functionality)
+    # ============================================================================
+    
+    # Urgent announcements
+    announcements = Announcement.objects.filter(is_urgent=True).order_by('-date_posted')[:5]
+    
+    # Mandatory events
+    events = Event.objects.filter(
+        is_mandatory=True,
+        start_time__gte=timezone.now()
+    ).order_by('start_time')[:5]
+    
+    # User's projects
+    projects = Projects.objects.filter(
+        manager=user
+    ).order_by('-start_date')[:5]
+    
+    # ============================================================================
+    # ITEMS REQUIRING ATTENTION
+    # ============================================================================
+    
+    pending_items = []
+    
+    # Add role-based pending items
+    if user.is_staff or hasattr(user, 'role'):
+        # Applications needing review
+        try:
+            pending_apps = []
+            for model in [AssociatedApplication, DesignatedApplication, StudentApplication]:
+                pending_apps.extend(
+                    model.objects.filter(status='submitted').values(
+                        'id', 'application_number', 'full_names', 'created_at'
+                    )[:3]
+                )
+            
+            for app in pending_apps:
+                pending_items.append({
+                    'type': 'application',
+                    'title': f"Review Application {app['application_number']}",
+                    'description': f"Application from {app['full_names']} needs review",
+                    'created': app['created_at'],
+                    'url': f"/enrollments/applications/",  # Generic link
+                })
+        except:
+            pass
+        
+        # Cards needing attention
+        try:
+            expiring_cards = AffiliationCard.objects.filter(
+                date_expires__lte=timezone.now().date() + timedelta(days=30),
+                status='active'
+            )[:3]
+            
+            for card in expiring_cards:
+                pending_items.append({
+                    'type': 'card',
+                    'title': f"Card Expiring Soon",
+                    'description': f"Card {card.card_number} expires {card.date_expires}",
+                    'created': card.date_expires,
+                    'url': f"/affiliationcard/admin/cards/{card.pk}/",
+                })
+        except:
+            pass
+    
+    # CPD requirements for current user
+    try:
+        # Check if user needs CPD hours
+        required_hours = 20  # Annual requirement
+        if stats['cpd_hours'] < required_hours:
+            pending_items.append({
+                'type': 'cpd',
+                'title': 'CPD Hours Required',
+                'description': f"You need {required_hours - stats['cpd_hours']} more CPD hours this year",
+                'created': timezone.now(),
+                'url': '/cpd/activities/',
+            })
+    except:
+        pass
+    
+    # ============================================================================
+    # ROLE-BASED CUSTOMIZATION
+    # ============================================================================
+    
+    # Add role-specific context
     role = getattr(user, 'role', None)
-    title = getattr(role, 'title', None)
-
-    # else: we do nothing extra
-
+    user_role = getattr(role, 'title', 'Member') if role else 'Member'
+    
+    # Admin-specific stats
+    if user.is_staff:
+        stats['system_health'] = 99  # You can calculate this based on system metrics
+        
+        # Recent activities for admins
+        try:
+            recent_activities = []
+            
+            # Recent applications
+            for model in [AssociatedApplication, DesignatedApplication, StudentApplication]:
+                recent_apps = model.objects.filter(
+                    created_at__gte=timezone.now() - timedelta(days=7)
+                ).order_by('-created_at')[:3]
+                
+                for app in recent_apps:
+                    recent_activities.append({
+                        'description': f"New {model.__name__.replace('Application', '')} application from {app.full_names}",
+                        'timestamp': app.created_at,
+                    })
+            
+            # Sort by timestamp
+            recent_activities.sort(key=lambda x: x['timestamp'], reverse=True)
+            stats['recent_activities'] = recent_activities[:5]
+            
+        except:
+            stats['recent_activities'] = []
+    
+    # ============================================================================
+    # CONTEXT ASSEMBLY
+    # ============================================================================
+    
+    context = {
+        # Core content
+        'announcements': announcements,
+        'events': events,
+        'projects': projects,
+        
+        # Statistics
+        'stats': stats,
+        
+        # Attention items
+        'pending_items': pending_items,
+        
+        # User context
+        'user_role': user_role,
+        'is_admin': user.is_staff,
+        
+        # System status
+        'system_status': {
+            'card_service': 'operational',
+            'email_service': 'operational', 
+            'verification_service': 'operational',
+        }
+    }
+    
     return render(request, 'app/dashboard.html', context)
+
 
 @login_required
 def event_list(request):

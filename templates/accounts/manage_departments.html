@@ -1,7 +1,7 @@
 {% extends 'base/base.html' %}
 {% load static %}
 
-{% block title %}Role Management - ACRP{% endblock %}
+{% block title %}Department Management - ACRP{% endblock %}
 
 {% block content %}
 <div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 lg:p-8">
@@ -10,10 +10,10 @@
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
             <div>
                 <h1 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
-                    Role Management
+                    Department Management
                 </h1>
                 <p class="text-gray-600 text-lg">
-                    Create, organize, and manage organizational roles and their hierarchies within the ACRP system.
+                    Create, organize, and manage organizational departments within the ACRP system.
                 </p>
             </div>
             <div class="mt-4 lg:mt-0 flex space-x-3">
@@ -22,15 +22,15 @@
                     <i class="bi bi-people mr-2"></i>
                     User Management
                 </a>
-                <a href="{% url 'accounts:manage_departments' %}" 
+                <a href="{% url 'accounts:manage_roles' %}" 
                    class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                    <i class="bi bi-building mr-2"></i>
-                    Manage Departments
+                    <i class="bi bi-person-badge mr-2"></i>
+                    Manage Roles
                 </a>
-                <button onclick="openCreateRoleModal()" 
+                <button onclick="openCreateDepartmentModal()" 
                         class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
                     <i class="bi bi-plus-circle mr-2"></i>
-                    Create New Role
+                    Create New Department
                 </button>
             </div>
         </div>
@@ -63,48 +63,45 @@
     </div>
     {% endif %}
 
-    <!-- Role Creation Form Section -->
+    <!-- Department Creation Form Section -->
     <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
         <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
             <i class="bi bi-plus-square text-blue-600 mr-2"></i>
-            Create New Role
+            Create New Department
         </h3>
         
-        <form method="POST" class="space-y-4" id="roleForm">
+        <form method="POST" class="space-y-4" id="departmentForm">
             {% csrf_token %}
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Role Title -->
+                <!-- Department Name -->
                 <div class="col-span-1">
-                    <label for="{{ form.title.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
-                        Role Title <span class="text-red-500">*</span>
+                    <label for="{{ form.name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        Department Name <span class="text-red-500">*</span>
                     </label>
-                    {{ form.title }}
-                    {% if form.title.errors %}
+                    {{ form.name }}
+                    {% if form.name.errors %}
                         <div class="mt-1 text-sm text-red-600">
-                            {% for error in form.title.errors %}
+                            {% for error in form.name.errors %}
                                 <p>{{ error }}</p>
                             {% endfor %}
                         </div>
                     {% endif %}
+                    <p class="mt-1 text-xs text-gray-500">Must be unique across the organization</p>
                 </div>
 
-                <!-- Parent Role Selection -->
+                <!-- Department Code (if you want to add this field later) -->
                 <div class="col-span-1">
-                    <label for="{{ form.parent_role.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
-                        Parent Role
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Department Code
                     </label>
-                    {{ form.parent_role }}
-                    {% if form.parent_role.errors %}
-                        <div class="mt-1 text-sm text-red-600">
-                            {% for error in form.parent_role.errors %}
-                                <p>{{ error }}</p>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                    <p class="mt-1 text-xs text-gray-500">Optional: Select a parent role to create hierarchy</p>
+                    <input type="text" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           placeholder="Optional department code"
+                           disabled>
+                    <p class="mt-1 text-xs text-gray-500">Feature coming soon</p>
                 </div>
 
-                <!-- Role Description -->
+                <!-- Department Description -->
                 <div class="col-span-1 md:col-span-2">
                     <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
                         Description
@@ -117,7 +114,7 @@
                             {% endfor %}
                         </div>
                     {% endif %}
-                    <p class="mt-1 text-xs text-gray-500">Provide a detailed description of this role's responsibilities</p>
+                    <p class="mt-1 text-xs text-gray-500">Provide a detailed description of this department's purpose and responsibilities</p>
                 </div>
             </div>
 
@@ -130,70 +127,70 @@
                 <button type="submit" 
                         class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <i class="bi bi-plus-circle mr-1"></i>
-                    Create Role
+                    Create Department
                 </button>
             </div>
         </form>
     </div>
 
-    <!-- Roles Overview Statistics -->
+    <!-- Departments Overview Statistics -->
     <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
         <div class="flex items-center justify-between">
             <div>
-                <h3 class="text-lg font-semibold text-gray-900">Roles Overview</h3>
+                <h3 class="text-lg font-semibold text-gray-900">Departments Overview</h3>
                 <p class="text-gray-600">
-                    Manage {{ roles|length }} role{{ roles|length|pluralize }} in the system
+                    Manage {{ departments|length }} department{{ departments|length|pluralize }} in the system
                 </p>
             </div>
             <div class="flex space-x-4">
                 <div class="text-center">
-                    <div class="text-2xl font-bold text-blue-600" data-role-count>{{ roles|length }}</div>
-                    <div class="text-sm text-gray-500">Total Roles</div>
+                    <div class="text-2xl font-bold text-blue-600" data-department-count>{{ departments|length }}</div>
+                    <div class="text-sm text-gray-500">Total Departments</div>
                 </div>
                 <div class="text-center">
                     <div class="text-2xl font-bold text-green-600">
-                        {% comment %}Calculate roles with departments{% endcomment %}
-                        {{ roles|length }}
+                        {% comment %}Calculate departments with employees{% endcomment %}
+                        {{ departments|length }}
                     </div>
                     <div class="text-sm text-gray-500">Active</div>
                 </div>
                 <div class="text-center">
                     <div class="text-2xl font-bold text-purple-600">
-                        {% comment %}Count parent roles{% endcomment %}
+                        {% comment %}Count total employees across all departments{% endcomment %}
                         -
                     </div>
-                    <div class="text-sm text-gray-500">Parent Roles</div>
+                    <div class="text-sm text-gray-500">Total Employees</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Roles Listing -->
+    <!-- Departments Listing -->
     <div class="bg-white rounded-xl shadow-lg overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
             <h3 class="text-lg font-semibold text-gray-900 flex items-center">
-                <i class="bi bi-diagram-3 text-blue-600 mr-2"></i>
-                Role Directory
+                <i class="bi bi-building text-blue-600 mr-2"></i>
+                Department Directory
             </h3>
         </div>
         
-        {% if roles %}
+        {% if departments %}
         <!-- Desktop Table View -->
         <div class="hidden lg:block overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Role Information
+                            Department Information
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Hierarchy
+                            Employees
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Department
+                            Roles
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Users Assigned
+                            Status
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Actions
@@ -201,23 +198,23 @@
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                    {% for role in roles %}
-                    <tr class="hover:bg-gray-50 transition-colors duration-200" data-role-id="{{ role.id }}">
-                        <!-- Role Information -->
+                    {% for department in departments %}
+                    <tr class="hover:bg-gray-50 transition-colors duration-200" data-department-id="{{ department.id }}">
+                        <!-- Department Information -->
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center">
                                 <div class="flex-shrink-0 h-10 w-10">
-                                    <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                                        <i class="bi bi-person-badge text-blue-600 text-lg"></i>
+                                    <div class="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                                        <i class="bi bi-building text-indigo-600 text-lg"></i>
                                     </div>
                                 </div>
                                 <div class="ml-4">
                                     <div class="text-sm font-medium text-gray-900">
-                                        {{ role.title }}
+                                        {{ department.name }}
                                     </div>
                                     <div class="text-sm text-gray-500">
-                                        {% if role.description %}
-                                            {{ role.description|truncatechars:50 }}
+                                        {% if department.description %}
+                                            {{ department.description|truncatechars:50 }}
                                         {% else %}
                                             No description provided
                                         {% endif %}
@@ -226,69 +223,69 @@
                             </div>
                         </td>
 
-                        <!-- Hierarchy Information -->
+                        <!-- Employees Count -->
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-900">
-                                {% if role.parent_role %}
-                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                        <i class="bi bi-arrow-up mr-1"></i>
-                                        {{ role.parent_role.title }}
-                                    </span>
-                                {% else %}
-                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        <i class="bi bi-crown mr-1"></i>
-                                        Top Level
-                                    </span>
-                                {% endif %}
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <i class="bi bi-people mr-1"></i>
+                                    {{ department.employees.count }} employee{{ department.employees.count|pluralize }}
+                                </span>
                             </div>
-                            {% if role.child_roles.exists %}
+                            {% if department.employees.count > 0 %}
                             <div class="text-xs text-gray-500 mt-1">
-                                <i class="bi bi-arrow-down mr-1"></i>
-                                {{ role.child_roles.count }} subordinate{{ role.child_roles.count|pluralize }}
+                                <i class="bi bi-person-check mr-1"></i>
+                                Active staff members
                             </div>
                             {% endif %}
                         </td>
 
-                        <!-- Department Information -->
+                        <!-- Roles Count -->
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-900">
-                                {% if role.department %}
-                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                                        <i class="bi bi-building mr-1"></i>
-                                        {{ role.department.name }}
-                                    </span>
-                                {% else %}
-                                    <span class="text-gray-500 text-xs">No department assigned</span>
-                                {% endif %}
-                            </div>
-                        </td>
-
-                        <!-- Users Count -->
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">
-                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                    <i class="bi bi-people mr-1"></i>
-                                    {{ role.users.count }} user{{ role.users.count|pluralize }}
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                    <i class="bi bi-person-badge mr-1"></i>
+                                    {{ department.roles.count }} role{{ department.roles.count|pluralize }}
                                 </span>
                             </div>
+                            {% if department.roles.count > 0 %}
+                            <div class="text-xs text-gray-500 mt-1">
+                                <i class="bi bi-diagram-3 mr-1"></i>
+                                Organizational positions
+                            </div>
+                            {% endif %}
+                        </td>
+
+                        <!-- Status -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if department.employees.count > 0 or department.roles.count > 0 %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <i class="bi bi-check-circle mr-1"></i>
+                                Active
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                <i class="bi bi-exclamation-triangle mr-1"></i>
+                                Empty
+                            </span>
+                            {% endif %}
                         </td>
 
                         <!-- Actions -->
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div class="flex space-x-2">
-                                <button onclick="editRole({{ role.id }}, '{{ role.title }}', '{{ role.description|default:'' }}', {{ role.parent_role.id|default:'null' }})" 
+                                <button onclick="editDepartment({{ department.id }}, '{{ department.name|escapejs }}', '{{ department.description|default:""|escapejs }}')" 
                                         class="text-blue-600 hover:text-blue-900 flex items-center">
                                     <i class="bi bi-pencil mr-1"></i>
                                     Edit
                                 </button>
                                 <span class="text-gray-300">|</span>
-                                <button onclick="viewRoleDetails({{ role.id }})" 
+                                <button onclick="viewDepartmentDetails({{ department.id }})" 
                                         class="text-green-600 hover:text-green-900 flex items-center">
                                     <i class="bi bi-eye mr-1"></i>
                                     View
                                 </button>
                                 <span class="text-gray-300">|</span>
-                                <button onclick="confirmDeleteRole({{ role.id }}, '{{ role.title }}')" 
+                                <button onclick="confirmDeleteDepartment({{ department.id }}, '{{ department.name|escapejs }}')" 
                                         class="text-red-600 hover:text-red-900 flex items-center">
                                     <i class="bi bi-trash mr-1"></i>
                                     Delete
@@ -304,68 +301,60 @@
         <!-- Mobile Card View -->
         <div class="lg:hidden">
             <div class="space-y-4 p-4">
-                {% for role in roles %}
+                {% for department in departments %}
                 <div class="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors duration-200">
                     <div class="flex items-center space-x-3 mb-3">
                         <div class="flex-shrink-0">
-                            <div class="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
-                                <i class="bi bi-person-badge text-blue-600 text-xl"></i>
+                            <div class="h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center">
+                                <i class="bi bi-building text-indigo-600 text-xl"></i>
                             </div>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <div class="text-sm font-medium text-gray-900">{{ role.title }}</div>
+                            <div class="text-sm font-medium text-gray-900">{{ department.name }}</div>
                             <div class="text-sm text-gray-500">
-                                {% if role.description %}
-                                    {{ role.description|truncatechars:40 }}
+                                {% if department.description %}
+                                    {{ department.description|truncatechars:40 }}
                                 {% else %}
                                     No description
                                 {% endif %}
                             </div>
                         </div>
                         <div>
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                {{ role.users.count }} user{{ role.users.count|pluralize }}
+                            {% if department.employees.count > 0 or department.roles.count > 0 %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                Active
                             </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                Empty
+                            </span>
+                            {% endif %}
                         </div>
                     </div>
                     
                     <div class="grid grid-cols-2 gap-3 text-sm mb-3">
                         <div>
-                            <span class="text-gray-500">Parent Role:</span>
-                            <div class="font-medium">
-                                {% if role.parent_role %}
-                                    {{ role.parent_role.title }}
-                                {% else %}
-                                    Top Level
-                                {% endif %}
-                            </div>
+                            <span class="text-gray-500">Employees:</span>
+                            <div class="font-medium">{{ department.employees.count }}</div>
                         </div>
                         <div>
-                            <span class="text-gray-500">Department:</span>
-                            <div class="font-medium">{{ role.department.name|default:"None" }}</div>
-                        </div>
-                        <div>
-                            <span class="text-gray-500">Subordinates:</span>
-                            <div class="font-medium">{{ role.child_roles.count }}</div>
-                        </div>
-                        <div>
-                            <span class="text-gray-500">Assigned Users:</span>
-                            <div class="font-medium">{{ role.users.count }}</div>
+                            <span class="text-gray-500">Roles:</span>
+                            <div class="font-medium">{{ department.roles.count }}</div>
                         </div>
                     </div>
                     
                     <div class="flex space-x-2">
-                        <button onclick="editRole({{ role.id }}, '{{ role.title }}', '{{ role.description|default:'' }}', {{ role.parent_role.id|default:'null' }})" 
+                        <button onclick="editDepartment({{ department.id }}, '{{ department.name|escapejs }}', '{{ department.description|default:""|escapejs }}')" 
                                 class="flex-1 text-center bg-blue-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700">
                             <i class="bi bi-pencil mr-1"></i>
                             Edit
                         </button>
-                        <button onclick="viewRoleDetails({{ role.id }})" 
+                        <button onclick="viewDepartmentDetails({{ department.id }})" 
                                 class="flex-1 text-center bg-gray-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700">
                             <i class="bi bi-eye mr-1"></i>
                             View
                         </button>
-                        <button onclick="confirmDeleteRole({{ role.id }}, '{{ role.title }}')" 
+                        <button onclick="confirmDeleteDepartment({{ department.id }}, '{{ department.name|escapejs }}')" 
                                 class="flex-1 text-center bg-red-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-red-700">
                             <i class="bi bi-trash mr-1"></i>
                             Delete
@@ -379,54 +368,44 @@
         {% else %}
         <!-- Empty State -->
         <div class="text-center py-12">
-            <i class="bi bi-diagram-3 text-gray-300 text-6xl mb-4"></i>
-            <h3 class="text-lg font-medium text-gray-900 mb-2">No roles created yet</h3>
+            <i class="bi bi-building text-gray-300 text-6xl mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No departments created yet</h3>
             <p class="text-gray-500 mb-6">
-                Start building your organizational structure by creating your first role.
+                Start building your organizational structure by creating your first department.
             </p>
-            <button onclick="openCreateRoleModal()" 
+            <button onclick="openCreateDepartmentModal()" 
                     class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
                 <i class="bi bi-plus-circle mr-2"></i>
-                Create First Role
+                Create First Department
             </button>
         </div>
         {% endif %}
     </div>
 </div>
 
-<!-- Role Edit Modal -->
-<div id="editRoleModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+<!-- Department Edit Modal -->
+<div id="editDepartmentModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
     <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
         <div class="mt-3">
             <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-medium text-gray-900">Edit Role</h3>
+                <h3 class="text-lg font-medium text-gray-900">Edit Department</h3>
                 <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
                     <i class="bi bi-x-lg"></i>
                 </button>
             </div>
-            <form id="editRoleForm" method="POST">
+            <form id="editDepartmentForm" method="POST">
                 {% csrf_token %}
-                <input type="hidden" id="editRoleId" name="role_id">
+                <input type="hidden" id="editDepartmentId" name="department_id">
                 <div class="space-y-4">
                     <div>
-                        <label for="editTitle" class="block text-sm font-medium text-gray-700 mb-1">Role Title</label>
-                        <input type="text" id="editTitle" name="title" required 
+                        <label for="editName" class="block text-sm font-medium text-gray-700 mb-1">Department Name</label>
+                        <input type="text" id="editName" name="name" required 
                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     </div>
                     <div>
                         <label for="editDescription" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
                         <textarea id="editDescription" name="description" rows="3"
                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
-                    </div>
-                    <div>
-                        <label for="editParentRole" class="block text-sm font-medium text-gray-700 mb-1">Parent Role</label>
-                        <select id="editParentRole" name="parent_role"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <option value="">No Parent Role</option>
-                            {% for role in roles %}
-                            <option value="{{ role.id }}">{{ role.title }}</option>
-                            {% endfor %}
-                        </select>
                     </div>
                 </div>
                 <div class="flex justify-end space-x-3 pt-4 mt-6 border-t border-gray-200">
@@ -444,18 +423,18 @@
     </div>
 </div>
 
-<!-- Role Details Modal -->
-<div id="roleDetailsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+<!-- Department Details Modal -->
+<div id="departmentDetailsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
     <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
         <div class="mt-3">
             <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-medium text-gray-900">Role Details</h3>
+                <h3 class="text-lg font-medium text-gray-900">Department Details</h3>
                 <button onclick="closeDetailsModal()" class="text-gray-400 hover:text-gray-600">
                     <i class="bi bi-x-lg"></i>
                 </button>
             </div>
-            <div id="roleDetailsContent">
-                <!-- Role details will be loaded here -->
+            <div id="departmentDetailsContent">
+                <!-- Department details will be loaded here -->
             </div>
         </div>
     </div>
@@ -468,9 +447,9 @@
             <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
                 <i class="bi bi-exclamation-triangle text-red-600 text-xl"></i>
             </div>
-            <h3 class="text-lg font-medium text-gray-900 mb-2">Delete Role</h3>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">Delete Department</h3>
             <p class="text-sm text-gray-500 mb-4">
-                Are you sure you want to delete "<span id="deleteRoleName" class="font-medium"></span>"? 
+                Are you sure you want to delete "<span id="deleteDepartmentName" class="font-medium"></span>"? 
                 This action cannot be undone.
             </p>
             <div class="flex justify-center space-x-3">
@@ -478,9 +457,9 @@
                         class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
                     Cancel
                 </button>
-                <button onclick="deleteRole()" 
+                <button onclick="deleteDepartment()" 
                         class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">
-                    Delete Role
+                    Delete Department
                 </button>
             </div>
         </div>
@@ -488,138 +467,227 @@
 </div>
 
 <script>
-// Modal and form management functionality
-let currentEditRoleId = null;
-let currentDeleteRoleId = null;
+// Global variables for modal management
+let currentEditDepartmentId = null;
+let currentDeleteDepartmentId = null;
 
 /**
- * Opens the create role modal by scrolling to the form
- * This provides better UX than opening a separate modal
+ * Opens the create department modal by scrolling to the form
  */
-function openCreateRoleModal() {
-    document.getElementById('roleForm').scrollIntoView({ 
+function openCreateDepartmentModal() {
+    document.getElementById('departmentForm').scrollIntoView({ 
         behavior: 'smooth', 
         block: 'center' 
     });
-    document.querySelector('#roleForm input[name="title"]').focus();
+    document.querySelector('#departmentForm input[name="name"]').focus();
 }
 
 /**
- * Resets the role creation form to its initial state
- * Clears all input fields and removes validation errors
+ * Resets the department creation form
  */
 function resetForm() {
-    document.getElementById('roleForm').reset();
-    // Remove any error styling that might be present
+    document.getElementById('departmentForm').reset();
+    // Remove any error styling
     const errorElements = document.querySelectorAll('.text-red-600');
     errorElements.forEach(el => el.remove());
 }
 
 /**
- * Opens the edit modal for a specific role
- * @param {number} roleId - The ID of the role to edit
- * @param {string} title - Current role title
- * @param {string} description - Current role description
- * @param {number|null} parentRoleId - Current parent role ID
+ * Opens the edit modal for a specific department
  */
-function editRole(roleId, title, description, parentRoleId) {
-    currentEditRoleId = roleId;
+function editDepartment(departmentId, name, description) {
+    currentEditDepartmentId = departmentId;
     
     // Populate the form fields
-    document.getElementById('editRoleId').value = roleId;
-    document.getElementById('editTitle').value = title;
+    document.getElementById('editDepartmentId').value = departmentId;
+    document.getElementById('editName').value = name;
     document.getElementById('editDescription').value = description || '';
     
-    // Set parent role selection
-    const parentSelect = document.getElementById('editParentRole');
-    parentSelect.value = parentRoleId || '';
-    
-    // Remove the current role from parent options to prevent circular reference
-    Array.from(parentSelect.options).forEach(option => {
-        if (option.value == roleId) {
-            option.disabled = true;
-            option.style.display = 'none';
-        } else {
-            option.disabled = false;
-            option.style.display = '';
-        }
-    });
-    
     // Show the modal
-    document.getElementById('editRoleModal').classList.remove('hidden');
+    document.getElementById('editDepartmentModal').classList.remove('hidden');
 }
 
 /**
- * Closes the edit role modal
+ * Closes the edit department modal
  */
 function closeEditModal() {
-    document.getElementById('editRoleModal').classList.add('hidden');
-    currentEditRoleId = null;
+    document.getElementById('editDepartmentModal').classList.add('hidden');
+    currentEditDepartmentId = null;
 }
 
 /**
- * Displays detailed information about a role in a modal
- * @param {number} roleId - The ID of the role to view
+ * Displays detailed information about a department
  */
-function viewRoleDetails(roleId) {
-    const modal = document.getElementById('roleDetailsModal');
-    const content = document.getElementById('roleDetailsContent');
+function viewDepartmentDetails(departmentId) {
+    const modal = document.getElementById('departmentDetailsModal');
+    const content = document.getElementById('departmentDetailsContent');
     
     // Show modal with loading state
     modal.classList.remove('hidden');
     content.innerHTML = `
         <div class="text-center py-4">
             <i class="bi bi-arrow-repeat animate-spin text-2xl text-gray-400"></i>
-            <p class="text-gray-500 mt-2">Loading role details...</p>
+            <p class="text-gray-500 mt-2">Loading department details...</p>
         </div>
     `;
     
-    // In a production environment, this would fetch data via AJAX
-    // For now, we'll display a placeholder with role information
-    setTimeout(() => {
-        content.innerHTML = `
-            <div class="space-y-4">
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <h4 class="font-medium text-gray-900 mb-2">Role Information</h4>
-                    <p class="text-sm text-gray-600">Detailed role information would be displayed here, including:</p>
-                    <ul class="list-disc list-inside text-sm text-gray-600 mt-2 space-y-1">
-                        <li>Complete role description</li>
-                        <li>Assigned permissions</li>
-                        <li>Users with this role</li>
-                        <li>Subordinate roles</li>
-                        <li>Department associations</li>
-                    </ul>
+    // Get CSRF token
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    // Fetch real department data
+    fetch(`/auth/departments/details/${departmentId}/`, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const dept = data.department;
+            
+            // Build employees list
+            let employeesHtml = '';
+            if (dept.employees.length > 0) {
+                employeesHtml = dept.employees.map(emp => `
+                    <div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
+                        <div>
+                            <div class="font-medium text-sm">${emp.name}</div>
+                            <div class="text-xs text-gray-500">${emp.email} • ${emp.role}</div>
+                        </div>
+                        <div>
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${emp.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                                ${emp.is_active ? 'Active' : 'Inactive'}
+                            </span>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                employeesHtml = '<p class="text-sm text-gray-500 italic">No employees assigned to this department</p>';
+            }
+            
+            // Build roles list
+            let rolesHtml = '';
+            if (dept.roles.length > 0) {
+                rolesHtml = dept.roles.map(role => `
+                    <div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
+                        <div>
+                            <div class="font-medium text-sm">${role.title}</div>
+                            <div class="text-xs text-gray-500">${role.description || 'No description'}</div>
+                        </div>
+                        <div>
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                ${role.users_count} user${role.users_count !== 1 ? 's' : ''}
+                            </span>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                rolesHtml = '<p class="text-sm text-gray-500 italic">No roles defined for this department</p>';
+            }
+            
+            content.innerHTML = `
+                <div class="space-y-6">
+                    <!-- Department Information -->
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-medium text-gray-900 mb-2 flex items-center">
+                            <i class="bi bi-building text-indigo-600 mr-2"></i>
+                            ${dept.name}
+                        </h4>
+                        <p class="text-sm text-gray-600 mb-3">
+                            ${dept.description || 'No description provided for this department.'}
+                        </p>
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div class="bg-white p-3 rounded border">
+                                <div class="font-medium text-gray-900">${dept.employees_count}</div>
+                                <div class="text-gray-500">Employee${dept.employees_count !== 1 ? 's' : ''}</div>
+                            </div>
+                            <div class="bg-white p-3 rounded border">
+                                <div class="font-medium text-gray-900">${dept.roles_count}</div>
+                                <div class="text-gray-500">Role${dept.roles_count !== 1 ? 's' : ''}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Employees Section -->
+                    <div>
+                        <h5 class="font-medium text-gray-900 mb-3 flex items-center">
+                            <i class="bi bi-people text-green-600 mr-2"></i>
+                            Employees (${dept.employees_count})
+                        </h5>
+                        <div class="bg-white border rounded-lg p-4 max-h-60 overflow-y-auto">
+                            ${employeesHtml}
+                        </div>
+                    </div>
+
+                    <!-- Roles Section -->
+                    <div>
+                        <h5 class="font-medium text-gray-900 mb-3 flex items-center">
+                            <i class="bi bi-person-badge text-purple-600 mr-2"></i>
+                            Roles (${dept.roles_count})
+                        </h5>
+                        <div class="bg-white border rounded-lg p-4 max-h-60 overflow-y-auto">
+                            ${rolesHtml}
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                        <button onclick="closeDetailsModal()" 
+                                class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                            Close
+                        </button>
+                        <button onclick="editDepartment(${dept.id}, '${dept.name.replace(/'/g, "\\'")}', '${(dept.description || '').replace(/'/g, "\\'")}'); closeDetailsModal();" 
+                                class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                            Edit Department
+                        </button>
+                    </div>
                 </div>
-                <div class="flex justify-end space-x-3">
+            `;
+        } else {
+            content.innerHTML = `
+                <div class="text-center py-8">
+                    <i class="bi bi-exclamation-triangle text-red-500 text-3xl mb-3"></i>
+                    <h4 class="font-medium text-gray-900 mb-2">Error Loading Department</h4>
+                    <p class="text-sm text-gray-600 mb-4">${data.message}</p>
                     <button onclick="closeDetailsModal()" 
                             class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
                         Close
                     </button>
-                    <button onclick="editRole(${roleId}, 'Role Title', 'Description', null)" 
-                            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
-                        Edit Role
-                    </button>
                 </div>
+            `;
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching department details:', error);
+        content.innerHTML = `
+            <div class="text-center py-8">
+                <i class="bi bi-exclamation-triangle text-red-500 text-3xl mb-3"></i>
+                <h4 class="font-medium text-gray-900 mb-2">Connection Error</h4>
+                <p class="text-sm text-gray-600 mb-4">Unable to load department details. Please try again.</p>
+                <button onclick="closeDetailsModal()" 
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                    Close
+                </button>
             </div>
         `;
-    }, 500);
+    });
 }
 
 /**
- * Closes the role details modal
+ * Closes the department details modal
  */
 function closeDetailsModal() {
-    document.getElementById('roleDetailsModal').classList.add('hidden');
+    document.getElementById('departmentDetailsModal').classList.add('hidden');
 }
 
 /**
- * Shows confirmation dialog for role deletion
- * @param {number} roleId - The ID of the role to delete
- * @param {string} roleName - The name of the role to delete
+ * Shows confirmation dialog for department deletion
  */
-function confirmDeleteRole(roleId, roleName) {
-    currentDeleteRoleId = roleId;
-    document.getElementById('deleteRoleName').textContent = roleName;
+function confirmDeleteDepartment(departmentId, departmentName) {
+    currentDeleteDepartmentId = departmentId;
+    document.getElementById('deleteDepartmentName').textContent = departmentName;
     document.getElementById('deleteConfirmModal').classList.remove('hidden');
 }
 
@@ -628,15 +696,14 @@ function confirmDeleteRole(roleId, roleName) {
  */
 function closeDeleteModal() {
     document.getElementById('deleteConfirmModal').classList.add('hidden');
-    currentDeleteRoleId = null;
+    currentDeleteDepartmentId = null;
 }
 
 /**
- * Executes the role deletion via AJAX
- * Handles success/error responses and updates the UI accordingly
+ * Executes department deletion via AJAX
  */
-function deleteRole() {
-    if (!currentDeleteRoleId) return;
+function deleteDepartment() {
+    if (!currentDeleteDepartmentId) return;
     
     // Show loading state
     const modal = document.getElementById('deleteConfirmModal');
@@ -650,7 +717,7 @@ function deleteRole() {
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
     
     // Make AJAX request
-    fetch(`/auth/roles/delete/${currentDeleteRoleId}/`, {
+    fetch(`/auth/departments/delete/${currentDeleteDepartmentId}/`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -658,29 +725,29 @@ function deleteRole() {
             'X-Requested-With': 'XMLHttpRequest'
         },
         body: JSON.stringify({
-            'role_id': currentDeleteRoleId
+            'department_id': currentDeleteDepartmentId
         })
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
             // Show success message
-            showNotification('success', data.message || 'Role deleted successfully');
+            showNotification('success', data.message || 'Department deleted successfully');
             
-            // Remove the role from the UI
-            const roleRow = document.querySelector(`tr[data-role-id="${currentDeleteRoleId}"]`);
-            if (roleRow) {
-                roleRow.remove();
+            // Remove the department from the UI
+            const departmentRow = document.querySelector(`tr[data-department-id="${currentDeleteDepartmentId}"]`);
+            if (departmentRow) {
+                departmentRow.remove();
             }
             
-            // Update role count if displayed
-            updateRoleCount();
+            // Update department count
+            updateDepartmentCount();
             
             // Close modal
             closeDeleteModal();
         } else {
             // Show error message
-            showNotification('error', data.message || 'Failed to delete role');
+            showNotification('error', data.message || 'Failed to delete department');
             
             // Reset button
             deleteButton.disabled = false;
@@ -688,8 +755,8 @@ function deleteRole() {
         }
     })
     .catch(error => {
-        console.error('Error deleting role:', error);
-        showNotification('error', 'An error occurred while deleting the role');
+        console.error('Error deleting department:', error);
+        showNotification('error', 'An error occurred while deleting the department');
         
         // Reset button
         deleteButton.disabled = false;
@@ -699,11 +766,8 @@ function deleteRole() {
 
 /**
  * Display notification messages to the user
- * @param {string} type - success, error, warning, info
- * @param {string} message - Message to display
  */
 function showNotification(type, message) {
-    // Create notification element
     const notification = document.createElement('div');
     notification.className = `flex items-center p-4 rounded-lg border-l-4 mb-4 ${getNotificationClasses(type)}`;
     
@@ -758,21 +822,21 @@ function getNotificationIcon(type) {
 }
 
 /**
- * Update the role count display after deletion
+ * Update department count display after deletion
  */
-function updateRoleCount() {
-    const roleRows = document.querySelectorAll('tbody tr');
-    const countElements = document.querySelectorAll('[data-role-count]');
+function updateDepartmentCount() {
+    const departmentRows = document.querySelectorAll('tbody tr');
+    const countElements = document.querySelectorAll('[data-department-count]');
     
     countElements.forEach(element => {
-        element.textContent = roleRows.length;
+        element.textContent = departmentRows.length;
     });
 }
 
 // Event listeners for modal behavior
 document.addEventListener('DOMContentLoaded', function() {
-    // Close modals when clicking outside of them
-    const modals = ['editRoleModal', 'roleDetailsModal', 'deleteConfirmModal'];
+    // Close modals when clicking outside
+    const modals = ['editDepartmentModal', 'departmentDetailsModal', 'deleteConfirmModal'];
     
     modals.forEach(modalId => {
         document.getElementById(modalId).addEventListener('click', function(e) {
@@ -783,34 +847,23 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Handle edit form submission
-    document.getElementById('editRoleForm').addEventListener('submit', function(e) {
+    document.getElementById('editDepartmentForm').addEventListener('submit', function(e) {
         e.preventDefault();
         
         // In production, this would submit via AJAX
-        // For now, we'll simulate the update
         const formData = new FormData(this);
-        const title = formData.get('title');
+        const name = formData.get('name');
         
-        alert(`Role "${title}" would be updated with the new information.`);
+        alert(`Department "${name}" would be updated with the new information.`);
         closeEditModal();
     });
     
-    // Auto-focus on form inputs when modals open
-    const titleInput = document.querySelector('#roleForm input[name="title"]');
-    if (titleInput) {
-        titleInput.addEventListener('focus', function() {
-            this.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        });
-    }
-});
-
-// Form validation and enhancement
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('roleForm');
-    const titleInput = form.querySelector('input[name="title"]');
+    // Form validation
+    const form = document.getElementById('departmentForm');
+    const nameInput = form.querySelector('input[name="name"]');
     
     // Add real-time validation feedback
-    titleInput.addEventListener('input', function() {
+    nameInput.addEventListener('input', function() {
         const value = this.value.trim();
         const existingError = this.parentNode.querySelector('.validation-error');
         
@@ -821,7 +874,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (value.length > 50) {
             const errorDiv = document.createElement('div');
             errorDiv.className = 'mt-1 text-sm text-red-600 validation-error';
-            errorDiv.textContent = 'Role title must be 50 characters or less.';
+            errorDiv.textContent = 'Department name must be 50 characters or less.';
             this.parentNode.appendChild(errorDiv);
         }
     });
@@ -831,9 +884,9 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Custom CSS for enhanced styling -->
 <style>
 /* Ensure form controls have consistent styling */
-#roleForm select,
-#roleForm input[type="text"],
-#roleForm textarea {
+#departmentForm select,
+#departmentForm input[type="text"],
+#departmentForm textarea {
     @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
 }
 
@@ -842,7 +895,13 @@ document.addEventListener('DOMContentLoaded', function() {
     transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
 }
 
-/* Loading animation for spinners */
+/* Enhanced hover effects for buttons */
+button:hover, a:hover {
+    transform: translateY(-1px);
+    transition: transform 0.2s ease-in-out;
+}
+
+/* Loading animation */
 @keyframes spin {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
@@ -850,17 +909,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .animate-spin {
     animation: spin 1s linear infinite;
-}
-
-/* Enhanced hover effects for buttons */
-button:hover, a:hover {
-    transform: translateY(-1px);
-    transition: transform 0.2s ease-in-out;
-}
-
-/* Modal backdrop blur effect */
-.modal-backdrop {
-    backdrop-filter: blur(4px);
 }
 </style>
 {% endblock %}

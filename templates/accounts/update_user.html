@@ -1,0 +1,532 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Update User - ACRP{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 lg:p-8">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <div>
+                <h1 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+                    Update User
+                </h1>
+                <p class="text-gray-600 text-lg">
+                    Modify user account details, roles, and permissions.
+                </p>
+            </div>
+            <div class="mt-4 lg:mt-0">
+                <a href="{% url 'accounts:user_list' %}" 
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    <i class="bi bi-arrow-left mr-2"></i>
+                    Back to User List
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="mb-6 space-y-3">
+        {% for message in messages %}
+        <div class="flex items-center p-4 rounded-lg border-l-4 {% if message.tags == 'success' %}bg-green-50 border-green-400 text-green-700{% elif message.tags == 'error' %}bg-red-50 border-red-400 text-red-700{% elif message.tags == 'warning' %}bg-yellow-50 border-yellow-400 text-yellow-700{% else %}bg-blue-50 border-blue-400 text-blue-700{% endif %}">
+            <div class="flex-shrink-0">
+                {% if message.tags == 'success' %}
+                <i class="bi bi-check-circle-fill"></i>
+                {% elif message.tags == 'error' %}
+                <i class="bi bi-x-circle-fill"></i>
+                {% elif message.tags == 'warning' %}
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                {% else %}
+                <i class="bi bi-info-circle-fill"></i>
+                {% endif %}
+            </div>
+            <div class="ml-3 text-sm font-medium">
+                {{ message }}
+            </div>
+            <button type="button" class="ml-auto -mx-1.5 -my-1.5 rounded-lg p-1.5 inline-flex h-8 w-8 hover:bg-gray-200 focus:ring-2 focus:ring-gray-300" onclick="this.parentElement.remove()">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Form Errors -->
+    {% if form.non_field_errors %}
+    <div class="mb-6">
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="bi bi-exclamation-triangle text-red-400"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-red-800">Please correct the following errors:</h3>
+                    <div class="mt-2 text-sm text-red-700">
+                        <ul class="list-disc space-y-1 pl-5">
+                            {% for error in form.non_field_errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Main Form -->
+    <form method="post" enctype="multipart/form-data" class="space-y-8">
+        {% csrf_token %}
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Main Information Panel -->
+            <div class="lg:col-span-2 space-y-8">
+                
+                <!-- Personal Information -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="bi bi-person text-blue-600 mr-2"></i>
+                            Personal Information
+                        </h3>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- First Name -->
+                            <div>
+                                <label for="{{ form.first_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    First Name *
+                                </label>
+                                <input type="text" 
+                                       name="{{ form.first_name.name }}" 
+                                       id="{{ form.first_name.id_for_label }}"
+                                       value="{{ form.first_name.value|default_if_none:'' }}"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {% if form.first_name.errors %}border-red-300 focus:ring-red-500{% endif %}"
+                                       required>
+                                {% if form.first_name.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.first_name.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Last Name -->
+                            <div>
+                                <label for="{{ form.last_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Last Name *
+                                </label>
+                                <input type="text" 
+                                       name="{{ form.last_name.name }}" 
+                                       id="{{ form.last_name.id_for_label }}"
+                                       value="{{ form.last_name.value|default_if_none:'' }}"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {% if form.last_name.errors %}border-red-300 focus:ring-red-500{% endif %}"
+                                       required>
+                                {% if form.last_name.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.last_name.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Email -->
+                            <div>
+                                <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Email Address *
+                                </label>
+                                <input type="email" 
+                                       name="{{ form.email.name }}" 
+                                       id="{{ form.email.id_for_label }}"
+                                       value="{{ form.email.value|default_if_none:'' }}"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {% if form.email.errors %}border-red-300 focus:ring-red-500{% endif %}"
+                                       required>
+                                {% if form.email.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.email.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Phone -->
+                            <div>
+                                <label for="{{ form.phone.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Phone Number
+                                </label>
+                                <input type="tel" 
+                                       name="{{ form.phone.name }}" 
+                                       id="{{ form.phone.id_for_label }}"
+                                       value="{{ form.phone.value|default_if_none:'' }}"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {% if form.phone.errors %}border-red-300 focus:ring-red-500{% endif %}">
+                                {% if form.phone.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.phone.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Role and Organizational Information -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="bi bi-building text-green-600 mr-2"></i>
+                            Role & Organization
+                        </h3>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- ACRP Role -->
+                            <div>
+                                <label for="{{ form.acrp_role.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    ACRP Role *
+                                </label>
+                                <select name="{{ form.acrp_role.name }}" 
+                                        id="{{ form.acrp_role.id_for_label }}"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {% if form.acrp_role.errors %}border-red-300 focus:ring-red-500{% endif %}"
+                                        required>
+                                    {% for value, label in form.acrp_role.field.choices %}
+                                    <option value="{{ value }}" {% if form.acrp_role.value == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                {% if form.acrp_role.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.acrp_role.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <p class="mt-1 text-xs text-gray-500">System-wide role within ACRP</p>
+                            </div>
+
+                            <!-- Organizational Role -->
+                            <div>
+                                <label for="{{ form.role.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Organizational Role
+                                </label>
+                                <select name="{{ form.role.name }}" 
+                                        id="{{ form.role.id_for_label }}"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {% if form.role.errors %}border-red-300 focus:ring-red-500{% endif %}">
+                                    <option value="">Select a role...</option>
+                                    {% for role in form.role.field.queryset %}
+                                    <option value="{{ role.pk }}" {% if form.role.value == role.pk %}selected{% endif %}>
+                                        {{ role.title }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                {% if form.role.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.role.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <p class="mt-1 text-xs text-gray-500">Internal organizational role</p>
+                            </div>
+
+                            <!-- Department -->
+                            <div>
+                                <label for="{{ form.department.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Department
+                                </label>
+                                <select name="{{ form.department.name }}" 
+                                        id="{{ form.department.id_for_label }}"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {% if form.department.errors %}border-red-300 focus:ring-red-500{% endif %}">
+                                    <option value="">Select a department...</option>
+                                    {% for dept in form.department.field.queryset %}
+                                    <option value="{{ dept.pk }}" {% if form.department.value == dept.pk %}selected{% endif %}>
+                                        {{ dept.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                {% if form.department.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.department.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Manager -->
+                            <div>
+                                <label for="{{ form.manager.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Manager
+                                </label>
+                                <select name="{{ form.manager.name }}" 
+                                        id="{{ form.manager.id_for_label }}"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {% if form.manager.errors %}border-red-300 focus:ring-red-500{% endif %}">
+                                    <option value="">No manager assigned...</option>
+                                    {% for mgr in form.manager.field.queryset %}
+                                    <option value="{{ mgr.pk }}" {% if form.manager.value == mgr.pk %}selected{% endif %}>
+                                        {{ mgr.get_full_name }} ({{ mgr.username }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                {% if form.manager.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.manager.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0 sm:space-x-4">
+                    <div class="flex space-x-3">
+                        <a href="{% url 'accounts:user_list' %}" 
+                           class="inline-flex items-center px-6 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                            <i class="bi bi-x-circle mr-2"></i>
+                            Cancel
+                        </a>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button type="button" 
+                                onclick="resetForm()"
+                                class="inline-flex items-center px-6 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                            <i class="bi bi-arrow-clockwise mr-2"></i>
+                            Reset
+                        </button>
+                        <button type="submit" 
+                                class="inline-flex items-center px-6 py-3 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <i class="bi bi-check-circle mr-2"></i>
+                            Update User
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Picture Panel -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="bi bi-camera text-purple-600 mr-2"></i>
+                            Profile Picture
+                        </h3>
+                    </div>
+                    <div class="p-6">
+                        <!-- Current Picture Display -->
+                        <div class="text-center mb-6">
+                            <div class="mx-auto h-32 w-32 rounded-full overflow-hidden bg-gray-100 mb-4">
+                                {% if form.instance.picture %}
+                                <img src="{{ form.instance.get_picture }}" 
+                                     alt="{{ form.instance.get_full_name }}"
+                                     class="h-full w-full object-cover"
+                                     id="profile-preview">
+                                {% else %}
+                                <div class="h-full w-full flex items-center justify-center">
+                                    <i class="bi bi-person text-gray-400 text-4xl" id="profile-icon"></i>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <h4 class="text-lg font-medium text-gray-900">{{ form.instance.get_full_name }}</h4>
+                            <p class="text-sm text-gray-500">@{{ form.instance.username }}</p>
+                        </div>
+
+                        <!-- Picture Upload -->
+                        <div>
+                            <label for="{{ form.picture.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                Upload New Picture
+                            </label>
+                            <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-gray-400 transition-colors">
+                                <div class="space-y-1 text-center">
+                                    <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                    <div class="flex text-sm text-gray-600">
+                                        <label for="{{ form.picture.id_for_label }}" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                                            <span>Upload a file</span>
+                                            <input id="{{ form.picture.id_for_label }}" 
+                                                   name="{{ form.picture.name }}" 
+                                                   type="file" 
+                                                   accept="image/*"
+                                                   class="sr-only"
+                                                   onchange="previewImage(this)">
+                                        </label>
+                                        <p class="pl-1">or drag and drop</p>
+                                    </div>
+                                    <p class="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                                </div>
+                            </div>
+                            {% if form.picture.errors %}
+                            <div class="mt-1 text-sm text-red-600">
+                                {% for error in form.picture.errors %}
+                                <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Current Picture Info -->
+                        {% if form.instance.picture %}
+                        <div class="mt-4 p-3 bg-gray-50 rounded-lg">
+                            <h5 class="text-sm font-medium text-gray-900 mb-1">Current Picture</h5>
+                            <p class="text-xs text-gray-600">Leave empty to keep current picture</p>
+                            <div class="mt-2">
+                                <label class="inline-flex items-center">
+                                    <input type="checkbox" id="clear_picture" class="form-checkbox h-4 w-4 text-blue-600">
+                                    <span class="ml-2 text-xs text-gray-600">Remove current picture</span>
+                                </label>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- User Status Information -->
+                <div class="mt-6 bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="bi bi-info-circle text-blue-600 mr-2"></i>
+                            Account Status
+                        </h3>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-medium text-gray-700">Account Status</span>
+                            {% if form.instance.is_active %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <i class="bi bi-check-circle mr-1"></i>
+                                Active
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                <i class="bi bi-x-circle mr-1"></i>
+                                Inactive
+                            </span>
+                            {% endif %}
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-medium text-gray-700">Staff Access</span>
+                            {% if form.instance.is_staff %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                <i class="bi bi-shield-check mr-1"></i>
+                                Staff
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                <i class="bi bi-person mr-1"></i>
+                                Regular User
+                            </span>
+                            {% endif %}
+                        </div>
+
+                        <div class="text-sm text-gray-600">
+                            <p><strong>Joined:</strong> {{ form.instance.date_of_joining|date:"M d, Y" }}</p>
+                            <p><strong>Last Login:</strong> 
+                                {% if form.instance.last_login %}
+                                    {{ form.instance.last_login|date:"M d, Y g:i A" }}
+                                {% else %}
+                                    Never
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+// Preview uploaded image
+function previewImage(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById('profile-preview');
+            const icon = document.getElementById('profile-icon');
+            
+            if (preview) {
+                preview.src = e.target.result;
+            } else {
+                // Create new image element if none exists
+                const container = document.querySelector('.rounded-full.overflow-hidden');
+                container.innerHTML = `<img src="${e.target.result}" alt="Profile Preview" class="h-full w-full object-cover" id="profile-preview">`;
+            }
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+// Reset form to original values
+function resetForm() {
+    if (confirm('Are you sure you want to reset all changes? This will discard any unsaved modifications.')) {
+        location.reload();
+    }
+}
+
+// Clear picture checkbox functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const clearPictureCheckbox = document.getElementById('clear_picture');
+    const pictureInput = document.getElementById('{{ form.picture.id_for_label }}');
+    
+    if (clearPictureCheckbox) {
+        clearPictureCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                // Add hidden input to indicate picture should be cleared
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = 'clear_picture';
+                hiddenInput.value = 'true';
+                hiddenInput.id = 'hidden_clear_picture';
+                this.closest('form').appendChild(hiddenInput);
+                
+                // Reset file input
+                if (pictureInput) {
+                    pictureInput.value = '';
+                }
+            } else {
+                // Remove hidden input
+                const hiddenInput = document.getElementById('hidden_clear_picture');
+                if (hiddenInput) {
+                    hiddenInput.remove();
+                }
+            }
+        });
+    }
+});
+
+// Form validation and submission
+document.querySelector('form').addEventListener('submit', function(e) {
+    const requiredFields = ['first_name', 'last_name', 'email', 'acrp_role'];
+    let hasErrors = false;
+    
+    requiredFields.forEach(function(fieldName) {
+        const field = document.querySelector(`[name="${fieldName}"]`);
+        if (field && !field.value.trim()) {
+            hasErrors = true;
+            field.classList.add('border-red-300', 'focus:ring-red-500');
+            field.classList.remove('border-gray-300', 'focus:ring-blue-500');
+        } else if (field) {
+            field.classList.remove('border-red-300', 'focus:ring-red-500');
+            field.classList.add('border-gray-300', 'focus:ring-blue-500');
+        }
+    });
+    
+    if (hasErrors) {
+        e.preventDefault();
+        alert('Please fill in all required fields.');
+    }
+});
+</script>
+
+{% endblock %}

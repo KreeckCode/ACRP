@@ -11,7 +11,7 @@
                     Welcome back, {{ user.get_full_name|default:user.username }}! 👋
                 </h1>
                 <p class="text-gray-600 text-lg">
-                    Here's what's happening with your ACRP dashboard today.
+                    Your ACRP dashboard - everything you need in one place.
                 </p>
             </div>
             <div class="mt-4 lg:mt-0">
@@ -66,13 +66,15 @@
     </div>
     {% endif %}
 
-    <!-- Quick Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- System Overview Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+        <!-- Applications -->
         <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow duration-300">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-blue-100 text-sm font-medium">Total Applications</p>
-                    <p class="text-3xl font-bold">{{ total_applications|default:0 }}</p>
+                    <p class="text-blue-100 text-sm font-medium">Applications</p>
+                    <p class="text-3xl font-bold">{{ stats.total_applications|default:0 }}</p>
+                    <p class="text-blue-200 text-xs mt-1">{{ stats.pending_applications|default:0 }} pending</p>
                 </div>
                 <div class="bg-blue-400 bg-opacity-50 rounded-lg p-3">
                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -82,44 +84,170 @@
             </div>
         </div>
 
+        <!-- Digital Cards -->
         <div class="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow duration-300">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-emerald-100 text-sm font-medium">Approved</p>
-                    <p class="text-3xl font-bold">{{ approved_applications|default:0 }}</p>
+                    <p class="text-emerald-100 text-sm font-medium">Digital Cards</p>
+                    <p class="text-3xl font-bold">{{ stats.total_cards|default:0 }}</p>
+                    <p class="text-emerald-200 text-xs mt-1">{{ stats.active_cards|default:0 }} active</p>
                 </div>
                 <div class="bg-emerald-400 bg-opacity-50 rounded-lg p-3">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- CPD Activities -->
+        <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-purple-100 text-sm font-medium">CPD Progress</p>
+                    <p class="text-3xl font-bold">{{ stats.cpd_hours|default:0 }}</p>
+                    <p class="text-purple-200 text-xs mt-1">hours this year</p>
+                </div>
+                <div class="bg-purple-400 bg-opacity-50 rounded-lg p-3">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Members -->
+        <div class="bg-gradient-to-r from-amber-500 to-amber-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-amber-100 text-sm font-medium">Active Members</p>
+                    <p class="text-3xl font-bold">{{ stats.active_members|default:0 }}</p>
+                    <p class="text-amber-200 text-xs mt-1">{{ stats.new_members|default:0 }} this month</p>
+                </div>
+                <div class="bg-amber-400 bg-opacity-50 rounded-lg p-3">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Health -->
+        <div class="bg-gradient-to-r from-teal-500 to-teal-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-teal-100 text-sm font-medium">System Health</p>
+                    <p class="text-3xl font-bold">99%</p>
+                    <p class="text-teal-200 text-xs mt-1">uptime</p>
+                </div>
+                <div class="bg-teal-400 bg-opacity-50 rounded-lg p-3">
                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="bg-gradient-to-r from-amber-500 to-amber-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow duration-300">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-amber-100 text-sm font-medium">Pending Review</p>
-                    <p class="text-3xl font-bold">{{ pending_applications|default:0 }}</p>
-                </div>
-                <div class="bg-amber-400 bg-opacity-50 rounded-lg p-3">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+    <!-- Quick Action Navigation -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+        <h3 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+            <svg class="w-6 h-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+            Quick Actions & Navigation
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <!-- Enrollments -->
+            <div class="border-2 border-blue-200 rounded-lg p-4 hover:border-blue-300 transition-colors duration-200">
+                <h4 class="font-semibold text-blue-800 mb-3 flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
+                    Enrollments
+                </h4>
+                <div class="space-y-2">
+                    <a href="{% url 'enrollments:onboarding_start' %}" class="block text-sm text-blue-600 hover:text-blue-800 hover:underline">
+                        • New Application
+                    </a>
+                    <a href="{% url 'enrollments:application_list' %}" class="block text-sm text-blue-600 hover:text-blue-800 hover:underline">
+                        • View All Applications
+                    </a>
+                    <a href="{% url 'enrollments:enrollment_dashboard' %}" class="block text-sm text-blue-600 hover:text-blue-800 hover:underline">
+                        • Enrollment Dashboard
+                    </a>
                 </div>
             </div>
-        </div>
 
-        <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow duration-300">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-purple-100 text-sm font-medium">Active Members</p>
-                    <p class="text-3xl font-bold">{{ active_members|default:0 }}</p>
-                </div>
-                <div class="bg-purple-400 bg-opacity-50 rounded-lg p-3">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
+            <!-- Digital Cards -->
+            <div class="border-2 border-emerald-200 rounded-lg p-4 hover:border-emerald-300 transition-colors duration-200">
+                <h4 class="font-semibold text-emerald-800 mb-3 flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
                     </svg>
+                    Digital Cards
+                </h4>
+                <div class="space-y-2">
+                    <a href="{% url 'affiliationcard:dashboard' %}" class="block text-sm text-emerald-600 hover:text-emerald-800 hover:underline">
+                        • Card Dashboard
+                    </a>
+                    <a href="{% url 'affiliationcard:card_list' %}" class="block text-sm text-emerald-600 hover:text-emerald-800 hover:underline">
+                        • Manage Cards
+                    </a>
+                    <a href="{% url 'affiliationcard:verify_lookup' %}" target="_blank" class="block text-sm text-emerald-600 hover:text-emerald-800 hover:underline">
+                        • Verify Card
+                    </a>
+                </div>
+            </div>
+
+            <!-- CPD -->
+            <div class="border-2 border-purple-200 rounded-lg p-4 hover:border-purple-300 transition-colors duration-200">
+                <h4 class="font-semibold text-purple-800 mb-3 flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                    </svg>
+                    CPD
+                </h4>
+                <div class="space-y-2">
+                    <a href="{% url 'cpd:dashboard' %}" class="block text-sm text-purple-600 hover:text-purple-800 hover:underline">
+                        • CPD Dashboard
+                    </a>
+                    <a href="{% url 'cpd:activity_list' %}" class="block text-sm text-purple-600 hover:text-purple-800 hover:underline">
+                        • Browse Activities
+                    </a>
+                    <a href="{% url 'cpd:my_records' %}" class="block text-sm text-purple-600 hover:text-purple-800 hover:underline">
+                        • My CPD Records
+                    </a>
+                    <a href="{% url 'cpd:my_certificates' %}" class="block text-sm text-purple-600 hover:text-purple-800 hover:underline">
+                        • My Certificates
+                    </a>
+                </div>
+            </div>
+
+            <!-- Account & System -->
+            <div class="border-2 border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors duration-200">
+                <h4 class="font-semibold text-gray-800 mb-3 flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    Account & Admin
+                </h4>
+                <div class="space-y-2">
+                    <a href="{% url 'accounts:change_password' %}" class="block text-sm text-gray-600 hover:text-gray-800 hover:underline">
+                        • Change Password
+                    </a>
+                    {% if user.is_staff %}
+                    <a href="{% url 'accounts:user_list' %}" class="block text-sm text-gray-600 hover:text-gray-800 hover:underline">
+                        • Manage Users
+                    </a>
+                    <a href="{% url 'accounts:manage_roles' %}" class="block text-sm text-gray-600 hover:text-gray-800 hover:underline">
+                        • Manage Roles
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'accounts:logout' %}" class="block text-sm text-red-600 hover:text-red-800 hover:underline">
+                        • Logout
+                    </a>
                 </div>
             </div>
         </div>
@@ -127,7 +255,7 @@
 
     <!-- Main Content Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <!-- Announcements -->
+        <!-- Urgent Announcements -->
         <div class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden">
             <div class="bg-gradient-to-r from-red-500 to-red-600 px-6 py-4">
                 <div class="flex items-center">
@@ -146,7 +274,7 @@
                     <div class="flex items-start p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
                         <div class="flex-shrink-0 w-2 h-2 bg-red-400 rounded-full mt-2 mr-3"></div>
                         <div class="flex-1">
-                            <a href="{% url 'announcement_detail' ann.id %}" class="text-gray-900 hover:text-red-600 font-medium text-sm transition-colors duration-200">
+                            <a href="{% url 'common:announcement_detail' ann.id %}" class="text-gray-900 hover:text-red-600 font-medium text-sm transition-colors duration-200">
                                 {{ ann.title }}
                             </a>
                             <p class="text-xs text-gray-500 mt-1">{{ ann.created_at|timesince }} ago</p>
@@ -155,7 +283,7 @@
                     {% endfor %}
                 </div>
                 <div class="mt-4 pt-4 border-t border-gray-200">
-                    <a href="#" class="text-red-600 hover:text-red-700 font-medium text-sm flex items-center transition-colors duration-200">
+                    <a href="{% url 'common:announcement_list' %}" class="text-red-600 hover:text-red-700 font-medium text-sm flex items-center transition-colors duration-200">
                         View all announcements
                         <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -173,7 +301,7 @@
             </div>
         </div>
 
-        <!-- Events -->
+        <!-- Mandatory Events -->
         <div class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden">
             <div class="bg-gradient-to-r from-green-500 to-green-600 px-6 py-4">
                 <div class="flex items-center">
@@ -192,16 +320,16 @@
                     <div class="flex items-start p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
                         <div class="flex-shrink-0 w-2 h-2 bg-green-400 rounded-full mt-2 mr-3"></div>
                         <div class="flex-1">
-                            <a href="{% url 'event_detail' e.id %}" class="text-gray-900 hover:text-green-600 font-medium text-sm transition-colors duration-200">
+                            <a href="{% url 'common:event_detail' e.id %}" class="text-gray-900 hover:text-green-600 font-medium text-sm transition-colors duration-200">
                                 {{ e.title }}
                             </a>
-                            <p class="text-xs text-gray-500 mt-1">{{ e.date|date:"M d, Y" }}</p>
+                            <p class="text-xs text-gray-500 mt-1">{{ e.start_time|date:"M d, Y g:i A" }}</p>
                         </div>
                     </div>
                     {% endfor %}
                 </div>
                 <div class="mt-4 pt-4 border-t border-gray-200">
-                    <a href="#" class="text-green-600 hover:text-green-700 font-medium text-sm flex items-center transition-colors duration-200">
+                    <a href="{% url 'common:event_list' %}" class="text-green-600 hover:text-green-700 font-medium text-sm flex items-center transition-colors duration-200">
                         View all events
                         <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -219,7 +347,7 @@
             </div>
         </div>
 
-        <!-- Projects -->
+        <!-- Your Projects -->
         <div class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden">
             <div class="bg-gradient-to-r from-indigo-500 to-indigo-600 px-6 py-4">
                 <div class="flex items-center">
@@ -238,7 +366,7 @@
                     <div class="flex items-start p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
                         <div class="flex-shrink-0 w-2 h-2 bg-indigo-400 rounded-full mt-2 mr-3"></div>
                         <div class="flex-1">
-                            <a href="{% url 'project_detail' p.id %}" class="text-gray-900 hover:text-indigo-600 font-medium text-sm transition-colors duration-200">
+                            <a href="{% url 'common:project_detail' p.id %}" class="text-gray-900 hover:text-indigo-600 font-medium text-sm transition-colors duration-200">
                                 {{ p.name }}
                             </a>
                             <p class="text-xs text-gray-500 mt-1">{{ p.status|default:"Active" }}</p>
@@ -247,7 +375,7 @@
                     {% endfor %}
                 </div>
                 <div class="mt-4 pt-4 border-t border-gray-200">
-                    <a href="#" class="text-indigo-600 hover:text-indigo-700 font-medium text-sm flex items-center transition-colors duration-200">
+                    <a href="{% url 'common:project_list' %}" class="text-indigo-600 hover:text-indigo-700 font-medium text-sm flex items-center transition-colors duration-200">
                         View all projects
                         <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -266,96 +394,98 @@
         </div>
     </div>
 
-    <!-- Quick Actions -->
-    <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-        <h3 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
-            <svg class="w-6 h-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+    <!-- Items Requiring Attention -->
+    {% if pending_items %}
+    <div class="bg-gradient-to-r from-orange-100 to-yellow-100 border border-orange-200 rounded-xl shadow-lg p-6 mb-8">
+        <h3 class="text-xl font-semibold text-orange-800 mb-6 flex items-center">
+            <svg class="w-6 h-6 text-orange-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L12.732 4.5c-.77-.833-2.694-.833-3.464 0L1.349 16.5c-.77.833.192 2.5 1.732 2.5z"/>
             </svg>
-            Quick Actions
+            Items Requiring Your Attention
         </h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <a href="{% url 'enrollments:onboarding_start' %}" class="flex items-center p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors duration-200 group">
-                <div class="bg-blue-500 rounded-lg p-2 mr-4">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                    </svg>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for item in pending_items %}
+            <div class="bg-white rounded-lg p-4 border border-orange-200 hover:border-orange-300 transition-colors duration-200">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                        {{ item.type|title }}
+                    </span>
+                    <span class="text-xs text-gray-500">{{ item.created|timesince }} ago</span>
                 </div>
-                <div>
-                    <h4 class="font-semibold text-gray-900 group-hover:text-blue-600">New Application</h4>
-                    <p class="text-sm text-gray-600">Start a new membership application</p>
-                </div>
-            </a>
-
-            <a href="{% url 'enrollments:application_list' %}" class="flex items-center p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors duration-200 group">
-                <div class="bg-green-500 rounded-lg p-2 mr-4">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                    </svg>
-                </div>
-                <div>
-                    <h4 class="font-semibold text-gray-900 group-hover:text-green-600">View Applications</h4>
-                    <p class="text-sm text-gray-600">Review all submitted applications</p>
-                </div>
-            </a>
-
-            <a href="#" class="flex items-center p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors duration-200 group">
-                <div class="bg-purple-500 rounded-lg p-2 mr-4">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                    </svg>
-                </div>
-                <div>
-                    <h4 class="font-semibold text-gray-900 group-hover:text-purple-600">Member Directory</h4>
-                    <p class="text-sm text-gray-600">Browse member profiles</p>
-                </div>
-            </a>
-
-            <a href="#" class="flex items-center p-4 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors duration-200 group">
-                <div class="bg-amber-500 rounded-lg p-2 mr-4">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                    </svg>
-                </div>
-                <div>
-                    <h4 class="font-semibold text-gray-900 group-hover:text-amber-600">Reports</h4>
-                    <p class="text-sm text-gray-600">View analytics and reports</p>
-                </div>
-            </a>
-        </div>
-    </div>
-
-    <!-- Recent Activity -->
-    <div class="bg-white rounded-xl shadow-lg p-6">
-        <h3 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
-            <svg class="w-6 h-6 text-gray-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-            Recent Activity
-        </h3>
-        <div class="space-y-4">
-            {% if recent_activities %}
-            {% for activity in recent_activities %}
-            <div class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200">
-                <div class="flex-shrink-0 w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mr-4">
-                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                </div>
-                <div class="flex-1">
-                    <p class="text-sm text-gray-900">{{ activity.description }}</p>
-                    <p class="text-xs text-gray-500">{{ activity.timestamp|timesince }} ago</p>
-                </div>
+                <h4 class="font-medium text-gray-900 mb-2">{{ item.title }}</h4>
+                <p class="text-sm text-gray-600 mb-3">{{ item.description }}</p>
+                <a href="{{ item.url }}" class="text-orange-600 hover:text-orange-700 font-medium text-sm">
+                    Take Action →
+                </a>
             </div>
             {% endfor %}
-            {% else %}
-            <div class="text-center py-8">
-                <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                <p class="text-gray-500 text-sm">No recent activity to display.</p>
-            </div>
-            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- System Navigation Footer -->
+    <div class="bg-white rounded-xl shadow-lg p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">System Modules</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <a href="{% url 'enrollments:enrollment_dashboard' %}" class="flex items-center p-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors duration-200 group">
+                <div class="bg-blue-500 rounded-lg p-2 mr-3">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                </div>
+                <div class="text-sm">
+                    <div class="font-semibold text-gray-900 group-hover:text-blue-600">Enrollments</div>
+                    <div class="text-gray-600">Applications & Members</div>
+                </div>
+            </a>
+
+            <a href="{% url 'affiliationcard:dashboard' %}" class="flex items-center p-3 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors duration-200 group">
+                <div class="bg-emerald-500 rounded-lg p-2 mr-3">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                    </svg>
+                </div>
+                <div class="text-sm">
+                    <div class="font-semibold text-gray-900 group-hover:text-emerald-600">Digital Cards</div>
+                    <div class="text-gray-600">Card Management</div>
+                </div>
+            </a>
+
+            <a href="{% url 'cpd:dashboard' %}" class="flex items-center p-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors duration-200 group">
+                <div class="bg-purple-500 rounded-lg p-2 mr-3">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                    </svg>
+                </div>
+                <div class="text-sm">
+                    <div class="font-semibold text-gray-900 group-hover:text-purple-600">CPD</div>
+                    <div class="text-gray-600">Professional Development</div>
+                </div>
+            </a>
+
+            <a href="{% url 'common:project_list' %}" class="flex items-center p-3 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors duration-200 group">
+                <div class="bg-indigo-500 rounded-lg p-2 mr-3">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                    </svg>
+                </div>
+                <div class="text-sm">
+                    <div class="font-semibold text-gray-900 group-hover:text-indigo-600">Projects</div>
+                    <div class="text-gray-600">Task Management</div>
+                </div>
+            </a>
+
+            <a href="{% url 'accounts:user_list' %}" class="flex items-center p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors duration-200 group">
+                <div class="bg-gray-500 rounded-lg p-2 mr-3">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
+                    </svg>
+                </div>
+                <div class="text-sm">
+                    <div class="font-semibold text-gray-900 group-hover:text-gray-600">Administration</div>
+                    <div class="text-gray-600">User Management</div>
+                </div>
+            </a>
         </div>
     </div>
 </div>
@@ -378,5 +508,18 @@
     // Update time immediately and then every minute
     updateTime();
     setInterval(updateTime, 60000);
+
+    // Initialize dashboard
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('ACRP Main Dashboard initialized');
+        
+        // Add click tracking for analytics
+        document.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                const action = this.getAttribute('href');
+                console.log('Dashboard navigation:', action);
+            });
+        });
+    });
 </script>
 {% endblock %}
