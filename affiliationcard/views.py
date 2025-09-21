@@ -1966,10 +1966,6 @@ def api_verify(request):
 # CARD DELIVERY VIEWS
 # ============================================================================
 
-# ============================================================================
-# ENHANCED CARD DELIVERY PROCESSING FUNCTIONS
-# ============================================================================
-
 import base64
 import secrets
 from datetime import timedelta

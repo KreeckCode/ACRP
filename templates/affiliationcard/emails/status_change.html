@@ -1,0 +1,126 @@
+{% extends "affiliationcard/emails/email_base.html" %}
+
+{% block title %}ACRP Card Status Update - {{ card.card_number }}{% endblock %}
+
+{% block content %}
+    {% if new_status == 'active' %}
+        <div class="alert alert-success">
+            <h3 style="margin-top: 0; color: #065f46;">✅ Your Card Has Been Activated</h3>
+            <p style="margin-bottom: 0;">Great news! Your ACRP Digital Affiliation Card is now active and ready to use.</p>
+        </div>
+    {% elif new_status == 'suspended' %}
+        <div class="alert alert-warning">
+            <h3 style="margin-top: 0; color: #92400e;">⚠️ Your Card Has Been Suspended</h3>
+            <p style="margin-bottom: 0;">Your ACRP Digital Affiliation Card has been temporarily suspended.</p>
+        </div>
+    {% elif new_status == 'expired' %}
+        <div class="alert alert-warning">
+            <h3 style="margin-top: 0; color: #92400e;">⏰ Your Card Has Expired</h3>
+            <p style="margin-bottom: 0;">Your ACRP Digital Affiliation Card has expired and needs renewal.</p>
+        </div>
+    {% elif new_status == 'revoked' %}
+        <div class="alert alert-warning">
+            <h3 style="margin-top: 0; color: #991b1b;">🚫 Your Card Has Been Revoked</h3>
+            <p style="margin-bottom: 0;">Your ACRP Digital Affiliation Card has been revoked.</p>
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <h3 style="margin-top: 0; color: #1e40af;">📢 Card Status Update</h3>
+            <p style="margin-bottom: 0;">There has been an update to your ACRP Digital Affiliation Card status.</p>
+        </div>
+    {% endif %}
+
+    <!-- Status Change Summary -->
+    <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e2e8f0;">
+        <h4 style="margin-top: 0; color: #1f2937;">Status Change Details</h4>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 15px 0;">
+            <div>
+                <p style="margin: 0; font-size: 14px; color: #6b7280; font-weight: 600;">PREVIOUS STATUS</p>
+                <span class="status-badge status-{{ old_status }}">{{ old_status|title }}</span>
+            </div>
+            <div>
+                <p style="margin: 0; font-size: 14px; color: #6b7280; font-weight: 600;">NEW STATUS</p>
+                <span class="status-badge status-{{ new_status }}">{{ new_status|title }}</span>
+            </div>
+        </div>
+        
+        <div class="card-preview">
+            <div class="card-number">{{ card.card_number }}</div>
+            <p style="margin: 10px 0;"><strong>{{ card.get_display_name }}</strong></p>
+            <p style="margin: 5px 0; color: #6b7280;">{{ card.council_name }} - {{ card.affiliation_type|title }}</p>
+        </div>
+    </div>
+
+    {% if reason %}
+    <div style="background: #fffbeb; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+        <h4 style="margin-top: 0; color: #92400e;">📝 Reason for Change</h4>
+        <p style="margin-bottom: 0; color: #78350f;">{{ reason }}</p>
+    </div>
+    {% endif %}
+
+    <!-- Status-specific content -->
+    {% if new_status == 'active' %}
+        <h3 style="color: #1f2937;">What This Means</h3>
+        <ul style="color: #4b5563; line-height: 1.8;">
+            <li>Your card is now fully active and can be used for verification</li>
+            <li>You can download and share your digital card</li>
+            <li>Others can verify your affiliation status using your card number</li>
+            <li>All card features are now available to you</li>
+        </ul>
+
+        <a href="{{ verification_url }}" class="btn btn-primary" style="color: white; text-decoration: none;">
+            🔍 View My Active Card
+        </a>
+
+    {% elif new_status == 'suspended' %}
+        <h3 style="color: #1f2937;">What This Means</h3>
+        <ul style="color: #4b5563; line-height: 1.8;">
+            <li>Your card is temporarily suspended and cannot be used for verification</li>
+            <li>Verification attempts will show your card as inactive</li>
+            <li>This suspension may be temporary depending on the reason</li>
+            <li>Contact us if you believe this is an error</li>
+        </ul>
+
+        <div class="alert alert-info">
+            <strong>Need to Resolve This?</strong> Please contact our support team to discuss the suspension and potential resolution steps.
+        </div>
+
+    {% elif new_status == 'expired' %}
+        <h3 style="color: #1f2937;">Renew Your Card</h3>
+        <p>Your card has expired, but renewal is typically straightforward. Here's what you need to do:</p>
+        
+        <ul style="color: #4b5563; line-height: 1.8;">
+            <li>Contact your council administrator for renewal information</li>
+            <li>Complete any required renewal documentation</li>
+            <li>Pay any applicable renewal fees</li>
+            <li>Once processed, you'll receive a new digital card</li>
+        </ul>
+
+        <a href="#" class="btn btn-secondary" style="color: #3b82f6; text-decoration: none;">
+            📋 Start Renewal Process
+        </a>
+
+    {% elif new_status == 'revoked' %}
+        <h3 style="color: #1f2937;">What This Means</h3>
+        <ul style="color: #4b5563; line-height: 1.8;">
+            <li>Your card has been permanently revoked</li>
+            <li>You cannot use this card for verification purposes</li>
+            <li>If you believe this is an error, please contact us immediately</li>
+            <li>You may need to reapply for affiliation if eligible</li>
+        </ul>
+
+        <div class="alert alert-warning">
+            <strong>Questions About This Decision?</strong> If you need clarification or wish to appeal this decision, please contact our support team as soon as possible.
+        </div>
+    {% endif %}
+
+    <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <h4 style="margin-top: 0; color: #0c4a6e;">📞 Need Assistance?</h4>
+        <p>If you have questions about this status change or need help with your card:</p>
+        <ul style="margin-bottom: 0;">
+            <li>Email: ams@acrp.org.za</li>
+            <li>Reference your card number: <strong>{{ card.card_number }}</strong></li>
+        </ul>
+    </div>
+{% endblock %}

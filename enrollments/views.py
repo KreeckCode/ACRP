@@ -2690,6 +2690,22 @@ def application_detail(request, pk, app_type):
             pk=pk
         )
     
+    existing_card = None
+    try:
+        from django.contrib.contenttypes.models import ContentType
+        from affiliationcard.models import AffiliationCard
+        
+        content_type = ContentType.objects.get_for_model(application)
+        existing_card = AffiliationCard.objects.filter(
+            content_type=content_type,
+            object_id=application.pk,
+            status__in=['assigned', 'active']
+        ).first()
+    except ImportError:
+        # affiliationcard app not available
+        pass
+
+
     # Check permissions
     user_can_view = (
         request.user.is_authenticated and (
@@ -2712,11 +2728,14 @@ def application_detail(request, pk, app_type):
     # Get review form for admins
     review_form = None
     if can_review and request.method == 'GET':
-        review_form = ApplicationReviewForm(initial={
-            'status': application.status,
-            'reviewer_notes': application.reviewer_notes,
-            'rejection_reason': application.rejection_reason,
-        })
+        review_form = ApplicationReviewForm(
+            application=application, 
+            initial={
+                'status': application.status,
+                'reviewer_notes': application.reviewer_notes,
+                'rejection_reason': application.rejection_reason,
+            }
+        )
     
     # Calculate completion percentage
     completion_percentage = calculate_application_completion(application, app_type)
@@ -2750,6 +2769,7 @@ def application_detail(request, pk, app_type):
         'can_review': can_review,
         'can_edit': can_edit,
         'review_form': review_form,
+        'existing_card': existing_card,
         'completion_percentage': completion_percentage,
         'status_timeline': status_timeline,
         'documents_by_category': documents_by_category,
@@ -3099,6 +3119,10 @@ def application_delete(request, pk, app_type):
     }
     
     return render(request, 'enrollments/applications/delete_confirm.html', context)
+
+
+
+
 # ============================================================================
 # APPLICATION BULK ACTIONS
 # ============================================================================
@@ -3273,12 +3297,10 @@ def get_application_timeline(application):
 
 @login_required
 @permission_required('enrollments.change_baseapplication', raise_exception=True)
-@require_http_methods(["POST"])
 @transaction.atomic
 def application_review(request, pk, app_type):
     """
-    Handle application status changes and reviews.
-    Fixed to only use fields that exist in the model.
+    Review and update application status with optional card assignment.
     """
     model_map = {
         'associated': AssociatedApplication,
@@ -3288,124 +3310,172 @@ def application_review(request, pk, app_type):
     
     model = model_map.get(app_type)
     if not model:
-        messages.error(request, "Invalid application type.")
-        return redirect('enrollments:application_list')
+        raise Http404("Invalid application type")
     
-    try:
-        application = get_object_or_404(model, pk=pk)
+    application = get_object_or_404(model, pk=pk)
+    
+    if request.method == 'POST':
+        # DEBUG: Log all POST data
+        logger.info(f"=== APPLICATION REVIEW POST DATA ===")
+        logger.info(f"Application: {application.application_number}")
+        logger.info(f"POST data: {dict(request.POST)}")
         
-        # Create review form
-        review_form = ApplicationReviewForm(request.POST)
+        form = ApplicationReviewForm(request.POST, application=application)
         
-        if review_form.is_valid():
-            status = review_form.cleaned_data['status']
-            reviewer_notes = review_form.cleaned_data['reviewer_notes']
-            rejection_reason = review_form.cleaned_data['rejection_reason']
+        # DEBUG: Check if form has the field
+        logger.info(f"Form fields: {list(form.fields.keys())}")
+        logger.info(f"assign_digital_card in form: {'assign_digital_card' in form.fields}")
+        
+        if form.is_valid():
+            logger.info(f"Form is valid. Cleaned data: {form.cleaned_data}")
             
-            # Update application status
             old_status = application.status
-            application.status = status
+            new_status = form.cleaned_data['status']
+            assign_card = form.cleaned_data.get('assign_digital_card', False)
             
-            # Update review fields - only if they exist in the model
-            model_fields = [field.name for field in application._meta.get_fields()]
+            # DEBUG: Log card assignment decision
+            logger.info(f"Status change: {old_status} -> {new_status}")
+            logger.info(f"Assign card requested: {assign_card}")
+            logger.info(f"Will assign card: {assign_card and new_status == 'approved'}")
             
-            if 'reviewer_notes' in model_fields:
-                application.reviewer_notes = reviewer_notes
+            # Update application
+            application.status = new_status
+            application.reviewer_notes = form.cleaned_data['reviewer_notes']
+            application.reviewed_by = request.user
+            application.reviewed_at = timezone.now()
             
-            if 'rejection_reason' in model_fields:
-                application.rejection_reason = rejection_reason
+            if new_status == 'rejected':
+                application.rejection_reason = form.cleaned_data['rejection_reason']
             
-            # Set review timestamp and user if fields exist
-            if 'reviewed_at' in model_fields:
-                application.reviewed_at = timezone.now()
+            if new_status == 'approved':
+                application.approved_by = request.user
+                application.approved_at = timezone.now()
             
-            if 'reviewed_by' in model_fields:
-                application.reviewed_by = request.user
-            
-            # Handle status-specific fields - only if they exist
-            if status == 'approved':
-                if 'approved_at' in model_fields:
-                    application.approved_at = timezone.now()
-                if 'approved_by' in model_fields:
-                    application.approved_by = request.user
-                    
-            elif status == 'submitted' and old_status != 'submitted':
-                if 'submitted_at' in model_fields and not getattr(application, 'submitted_at', None):
-                    application.submitted_at = timezone.now()
-                if 'submitted_by' in model_fields and not getattr(application, 'submitted_by', None):
-                    application.submitted_by = request.user
-            
-            # Save the application
             application.save()
-
-            # Handle digital card assignment if requested
-            # Check if the checkbox was checked (it will be in POST if checked)
-            assign_digital_card = 'assign_digital_card' in request.POST
             
-            if assign_digital_card and status == 'approved':
+            # Handle card assignment if requested and approved
+            if assign_card and new_status == 'approved':
+                logger.info(f"Starting card assignment for application {application.pk}")
                 try:
-                    from affiliationcard.views import assign_card_programmatically
-                    
-                    # Get content type for this application model
-                    content_type = ContentType.objects.get_for_model(application.__class__)
-                    
-                    # Check if card already exists to prevent duplicates
-                    from affiliationcard.models import AffiliationCard
-                    existing_card = AffiliationCard.objects.filter(
-                        content_type=content_type,
-                        object_id=application.pk,
-                        status__in=['assigned', 'active']
-                    ).first()
-                    
-                    if not existing_card:
-                        # Create and send the digital card
-                        card = assign_card_programmatically(
-                            content_type=content_type,
-                            object_id=application.pk,
-                            assigned_by=request.user,
-                            send_email=True,
-                            request=request
+                    card = assign_digital_card_to_application(application, request.user)
+                    if card:
+                        logger.info(f"Card assigned successfully: {card.card_number}")
+                        messages.success(
+                            request, 
+                            f"Application approved and digital card {card.card_number} assigned successfully."
                         )
-                        
-                        messages.success(request, f"Digital card {card.card_number} assigned and sent to {application.email}")
-                        logger.info(f"Digital card {card.card_number} assigned to application {application.application_number}")
                     else:
-                        messages.info(request, f"Digital card already exists: {existing_card.card_number}")
-                        
+                        logger.warning("Card assignment returned None")
+                        messages.warning(
+                            request,
+                            "Application approved but card assignment failed. You can assign it manually later."
+                        )
                 except Exception as e:
-                    logger.error(f"Failed to assign digital card for application {application.application_number}: {str(e)}")
-                    messages.warning(request, "Application approved but digital card assignment failed. You can assign it manually from the card administration.")
+                    logger.error(f"Card assignment failed for application {application.pk}: {e}")
+                    messages.warning(
+                        request,
+                        f"Application approved but card assignment failed: {str(e)}"
+                    )
+            else:
+                logger.info(f"No card assignment: assign_card={assign_card}, status={new_status}")
+                messages.success(request, f"Application status updated to {new_status}.")
             
-            # Log the status change
-            logger.info(f"Application {application.application_number} status changed from {old_status} to {status} by {request.user}")
-            
-            # Add success message
-            messages.success(request, f"Application status updated to {application.get_status_display()}.")
-            
-            # Send notification email if needed
-            try:
-                if status == 'approved':
-                    send_application_approved_email(application, request)
-                elif status == 'rejected' and rejection_reason:
-                    send_application_rejected_email(application, rejection_reason, request)
-            except Exception as e:
-                logger.warning(f"Failed to send notification email: {str(e)}")
-                # Don't fail the status update if email fails
-                messages.warning(request, "Status updated but email notification failed to send.")
-            
+            return redirect('enrollments:application_detail', pk=pk, app_type=app_type)
+        
         else:
-            # Form validation failed
-            for field, errors in review_form.errors.items():
-                for error in errors:
-                    messages.error(request, f"{field.replace('_', ' ').title()}: {error}")
+            # DEBUG: Log form errors
+            logger.error(f"Form validation failed. Errors: {form.errors}")
+            logger.error(f"Form non-field errors: {form.non_field_errors()}")
     
+    else:
+        form = ApplicationReviewForm(application=application, initial={
+            'status': application.status,
+            'reviewer_notes': application.reviewer_notes,
+            'rejection_reason': application.rejection_reason,
+        })
+        
+        # DEBUG: Log form initialization
+        logger.info(f"Form initialized with fields: {list(form.fields.keys())}")
+        if hasattr(form, 'existing_card'):
+            logger.info(f"Existing card: {form.existing_card}")
+    
+    context = {
+        'form': form,
+        'application': application,
+        'app_type': app_type,
+    }
+    
+    return render(request, 'enrollments/applications/review.html', context)
+
+
+def assign_digital_card_to_application(application, assigned_by):
+    """
+    Assign a digital card to an approved application and send via email link.
+    
+    Args:
+        application: The approved application instance
+        assigned_by: User who is assigning the card
+    
+    Returns:
+        AffiliationCard instance or None if failed
+    """
+    try:
+        from django.contrib.contenttypes.models import ContentType
+        from affiliationcard.models import AffiliationCard
+        from affiliationcard.card_delivery import create_card_delivery
+        
+        # Check if card already exists
+        content_type = ContentType.objects.get_for_model(application)
+        existing_card = AffiliationCard.objects.filter(
+            content_type=content_type,
+            object_id=application.pk,
+            status__in=['assigned', 'active']
+        ).first()
+        
+        if existing_card:
+            logger.info(f"Card already exists for application {application.pk}: {existing_card.card_number}")
+            return existing_card
+        
+        # Create new card
+        card = AffiliationCard.objects.create(
+            content_type=content_type,
+            object_id=application.pk,
+            assigned_by=assigned_by,
+            assigned_at=timezone.now(),
+            status='assigned'
+        )
+        
+        # Issue the card immediately
+        card.issue_card(issued_by=assigned_by)
+        
+        logger.info(f"Created and issued card {card.card_number} for application {application.pk}")
+        
+        # Send card via email link (not attachment)
+        try:
+            delivery = create_card_delivery(
+                card=card,
+                delivery_method='email_link',  # Use link, not PDF attachment
+                recipient_email=application.email,
+                recipient_name=application.get_display_name(),
+                email_subject=f'Your ACRP Digital Card - {card.card_number}',
+                email_message=f'Your digital affiliation card is ready for download.',
+                initiated_by=assigned_by,
+                file_format='pdf',
+                max_downloads=5
+            )
+            
+            logger.info(f"Card delivery initiated for {card.card_number}: {delivery.id}")
+            
+        except Exception as delivery_error:
+            logger.error(f"Card delivery failed for {card.card_number}: {delivery_error}")
+            # Card is still created, just delivery failed
+        
+        return card
+        
     except Exception as e:
-        logger.error(f"Error reviewing application {pk}: {str(e)}")
-        messages.error(request, "An error occurred while updating the application status.")
+        logger.error(f"Failed to assign card to application {application.pk}: {e}")
+        return None
     
-    return redirect('enrollments:application_detail', pk=pk, app_type=app_type)
-
-
 
 
 

@@ -284,10 +284,13 @@ class CardStatusUpdateForm(forms.Form):
     """
     
     STATUS_CHOICES = [
-        ('active', 'Activate Card'),
-        ('suspended', 'Suspend Card'),
-        ('revoked', 'Revoke Card'),
-        ('cancelled', 'Cancel Card'),
+        ('pending_assignment', 'Pending Assignment'),
+        ('assigned', 'Assigned (Not Issued)'),
+        ('active', 'Active'),
+        ('expired', 'Expired'),
+        ('suspended', 'Suspended'),
+        ('revoked', 'Revoked'),
+        ('cancelled', 'Cancelled'),
     ]
     
     new_status = forms.ChoiceField(

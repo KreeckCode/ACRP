@@ -1168,9 +1168,8 @@ class ApplicationSearchForm(forms.Form):
         help_text="Applications submitted to this date"
     )
 
-
 class ApplicationReviewForm(forms.Form):
-    """Form for reviewing and updating application status"""
+    """Form for reviewing and updating application status with digital card assignment"""
     
     status = forms.ChoiceField(
         choices=[
@@ -1195,16 +1194,69 @@ class ApplicationReviewForm(forms.Form):
         help_text="Reason for rejection (visible to applicant)"
     )
     
+    assign_digital_card = forms.BooleanField(
+        initial=False,
+        required=False,
+        widget=forms.CheckboxInput(attrs={
+            'class': 'form-check-input'
+        }),
+        help_text="Check to automatically create and send a digital affiliation card"
+    )
+
+    def __init__(self, *args, **kwargs):
+        self.application = kwargs.pop('application', None)
+        super().__init__(*args, **kwargs)
+        
+        # Check for existing card and modify form accordingly
+        if self.application:
+            existing_card = self.check_existing_card()
+            if existing_card:
+                # Card already exists - hide the checkbox and show info
+                self.fields['assign_digital_card'].widget = forms.HiddenInput()
+                self.fields['assign_digital_card'].initial = True
+                self.fields['assign_digital_card'].help_text = f"Card already assigned: {existing_card.card_number}"
+                # Add a flag to indicate card exists
+                self.existing_card = existing_card
+            else:
+                self.existing_card = None
+    
+    def check_existing_card(self):
+        """Check if application already has an assigned card"""
+        if not self.application:
+            return None
+            
+        try:
+            from django.contrib.contenttypes.models import ContentType
+            from affiliationcard.models import AffiliationCard
+            
+            content_type = ContentType.objects.get_for_model(self.application)
+            return AffiliationCard.objects.filter(
+                content_type=content_type,
+                object_id=self.application.pk,
+                status__in=['assigned', 'active']
+            ).first()
+        except ImportError:
+            # affiliationcard app not available
+            return None
+    
     def clean(self):
         """Validate review form"""
         cleaned_data = super().clean()
         
         status = cleaned_data.get('status')
         rejection_reason = cleaned_data.get('rejection_reason')
+        assign_card = cleaned_data.get('assign_digital_card', False)
         
+        # Validate rejection reason
         if status == 'rejected' and not rejection_reason:
             raise ValidationError({
                 'rejection_reason': 'Rejection reason is required when rejecting an application.'
+            })
+        
+        # Validate card assignment - only allow if approving
+        if assign_card and status != 'approved':
+            raise ValidationError({
+                'assign_digital_card': 'Digital cards can only be assigned when approving applications.'
             })
         
         return cleaned_data

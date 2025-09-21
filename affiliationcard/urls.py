@@ -17,10 +17,9 @@ public_patterns = [
     # API endpoint for programmatic verification
     path('api/verify/', views.api_verify, name='api_verify'),
     
-    # Secure card download with token - CRITICAL: This must be uncommented!
     path('download/<str:token>/', views.download_card, name='download_card'),
     
-    # Optional: Download expired/invalid pages (you may need to create these views)
+    # Optional: Download expired/invalid pages
     # path('download/expired/', views.download_expired, name='download_expired'),
     # path('download/invalid/', views.download_invalid, name='download_invalid'),
 ]

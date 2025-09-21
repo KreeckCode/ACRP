@@ -1,3 +1,6 @@
+# Card_delivery.py
+
+
 import base64
 import secrets
 from datetime import timedelta
@@ -230,7 +233,7 @@ The ACRP Team"""
         email = EmailMultiAlternatives(
             subject=subject,
             body=text_content,
-            from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'dave@kreeck.com'),
+            from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'ams@acrp.org.za'),
             to=[delivery.recipient_email],
             reply_to=[getattr(settings, 'DEFAULT_FROM_EMAIL', 'ams@acrp.org.za')]
         )

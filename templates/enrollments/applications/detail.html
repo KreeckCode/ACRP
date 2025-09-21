@@ -1137,53 +1137,82 @@
                         </div>
                         {% endif %}
                         
-
-                        <div class="card border-primary">
-                            <div class="card-header bg-primary text-white">
-                                <h6 class="mb-0">
-                                    <i class="bi bi-credit-card me-2"></i>
-                                    Digital Affiliation Card
-                                </h6>
-                            </div>
-                            <div class="card-body">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="assign_digital_card" name="assign_digital_card" value="1">
-                                    <label class="form-check-label" for="assign_digital_card">
-                                        <strong>Assign Digital Card</strong>
-                                    </label>
-                                </div>
-                                <small class="form-text text-muted mt-2 d-block">
-                                    Check this box to automatically create and send a digital affiliation card 
-                                    when approving this application. The card will be emailed to the applicant.
-                                </small>
-                            </div>
-                        </div>
-                        
-                        
+                        <!-- FIXED: Single form containing ALL review fields including digital card -->
                         <form method="post" action="{% url 'enrollments:application_review' pk=application.pk app_type=app_type %}">
                             {% csrf_token %}
                             
+                            <!-- Status Field -->
                             <div class="mb-3">
                                 <label class="form-label">{{ review_form.status.label }}</label>
                                 {{ review_form.status }}
                             </div>
                             
+                            <!-- Reviewer Notes -->
                             <div class="mb-3">
                                 <label class="form-label">{{ review_form.reviewer_notes.label }}</label>
                                 {{ review_form.reviewer_notes }}
                             </div>
                             
+                            <!-- Rejection Reason (shown/hidden by JavaScript) -->
                             <div class="mb-3" id="rejection-reason" style="display: none;">
                                 <label class="form-label">{{ review_form.rejection_reason.label }}</label>
                                 {{ review_form.rejection_reason }}
                             </div>
                             
+                            <!-- DIGITAL CARD SECTION - NOW INSIDE THE FORM -->
+                            <div class="card border-primary mb-3">
+                                <div class="card-header bg-primary text-white">
+                                    <h6 class="mb-0">
+                                        <i class="bi bi-credit-card me-2"></i>
+                                        Digital Affiliation Card
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    {% if existing_card %}
+                                        <!-- Card already assigned -->
+                                        <div class="alert alert-success mb-3">
+                                            <i class="bi bi-check-circle me-2"></i>
+                                            <strong>Card Assigned:</strong> {{ existing_card.card_number }}
+                                            <br>
+                                            <small>Status: {{ existing_card.get_status_display }} | Issued: {{ existing_card.date_issued|date:"M j, Y" }}</small>
+                                        </div>
+                                        
+                                        <div class="d-flex gap-2">
+                                            <a href="{% url 'affiliationcard:card_detail' existing_card.pk %}" 
+                                            class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye me-1"></i>View Card
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="resendCard({{ existing_card.pk }})">
+                                                <i class="bi bi-envelope me-1"></i>Resend
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- Hidden field to maintain form compatibility -->
+                                        {{ review_form.assign_digital_card.as_hidden }}
+                                    {% else %}
+                                        <!-- No card assigned yet - render the actual form field -->
+                                        <div class="form-check">
+                                            {{ review_form.assign_digital_card }}
+                                            <label class="form-check-label" for="{{ review_form.assign_digital_card.id_for_label }}">
+                                                <strong>Assign Digital Card</strong>
+                                            </label>
+                                        </div>
+                                        <small class="form-text text-muted mt-2 d-block">
+                                            {{ review_form.assign_digital_card.help_text }}
+                                        </small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Submit Button -->
                             <button type="submit" class="btn btn-success w-100">
                                 <i class="bi bi-check-circle"></i>Update Status
                             </button>
                         </form>
                     </div>
                     {% endif %}
+
+
                 </div>
             </div>
         </div>
@@ -1224,7 +1253,7 @@
                 });
             }
 
-            // Status change handling
+            // Status change handling - show/hide rejection reason
             const statusSelect = document.querySelector('#id_status');
             const rejectionReasonDiv = document.querySelector('#rejection-reason');
             
@@ -1245,30 +1274,58 @@
                 }
             }
 
-            // Digital card checkbox synchronization
+            // Digital card checkbox handling - FIXED VERSION
             const digitalCardCheckbox = document.getElementById('assign_digital_card');
-            const hiddenDigitalCardInput = document.getElementById('hidden_assign_digital_card');
+            const statusField = document.getElementById('id_status');
             
-            if (digitalCardCheckbox && hiddenDigitalCardInput) {
-                digitalCardCheckbox.addEventListener('change', function() {
-                    hiddenDigitalCardInput.value = this.checked ? '1' : '';
-                });
+            if (digitalCardCheckbox && statusField) {
+                console.log('Digital card checkbox found:', digitalCardCheckbox);
+                console.log('Initial checked state:', digitalCardCheckbox.checked);
                 
-                // Sync form submission
-                const reviewForm = document.querySelector('form[action*="application_review"]');
-                if (reviewForm) {
-                    reviewForm.addEventListener('submit', function() {
-                        hiddenDigitalCardInput.value = digitalCardCheckbox.checked ? '1' : '';
-                    });
+                // Enable/disable checkbox based on status selection
+                function updateDigitalCardCheckbox() {
+                    const isApproved = statusField.value === 'approved';
+                    
+                    if (!isApproved) {
+                        digitalCardCheckbox.checked = false;
+                        digitalCardCheckbox.disabled = true;
+                    } else {
+                        digitalCardCheckbox.disabled = false;
+                    }
+                    
+                    console.log('Status changed to:', statusField.value, 'Checkbox enabled:', !digitalCardCheckbox.disabled);
                 }
+                
+                // Listen for status changes
+                statusField.addEventListener('change', updateDigitalCardCheckbox);
+                
+                // Initial state check
+                updateDigitalCardCheckbox();
+                
+                // Debug: Log checkbox changes
+                digitalCardCheckbox.addEventListener('change', function() {
+                    console.log('Checkbox changed to:', this.checked);
+                });
+            } else {
+                console.log('Digital card elements not found:', {
+                    checkbox: !!digitalCardCheckbox,
+                    status: !!statusField
+                });
             }
 
             // Form loading states
             const forms = document.querySelectorAll('form');
             forms.forEach(form => {
-                form.addEventListener('submit', function() {
+                form.addEventListener('submit', function(e) {
                     const submitBtn = form.querySelector('button[type="submit"]');
                     if (submitBtn) {
+                        // Debug: Log form data before submission
+                        const formData = new FormData(form);
+                        console.log('Form submission data:');
+                        for (let [key, value] of formData.entries()) {
+                            console.log(key + ':', value);
+                        }
+                        
                         submitBtn.disabled = true;
                         submitBtn.innerHTML = '<span class="spinner me-2"></span>Processing...';
                     }
@@ -1290,39 +1347,58 @@
         }
 
         function exportToPDF() {
-            // This would integrate with a PDF generation service
             window.print();
         }
 
         {% if can_review %}
         function verifyDocument(documentId) {
-            document.getElementById('verifyDocumentForm').action = `/enrollments/document/${documentId}/verify/`;
-            new bootstrap.Modal(document.getElementById('verifyDocumentModal')).show();
+            console.log('Verifying document:', documentId);
+            // Implementation for document verification
         }
 
         function rejectDocument(documentId) {
-            document.getElementById('rejectDocumentForm').action = `/enrollments/document/${documentId}/reject/`;
-            new bootstrap.Modal(document.getElementById('rejectDocumentModal')).show();
+            console.log('Rejecting document:', documentId);
+            // Implementation for document rejection
         }
 
         function approveReference(referenceId) {
             if (confirm('Mark this reference letter as received?')) {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = `/enrollments/reference/${referenceId}/approve/`;
-                
-                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-                const csrfInput = document.createElement('input');
-                csrfInput.type = 'hidden';
-                csrfInput.name = 'csrfmiddlewaretoken';
-                csrfInput.value = csrfToken;
-                form.appendChild(csrfInput);
-                
-                document.body.appendChild(form);
-                form.submit();
+                console.log('Approving reference:', referenceId);
+                // Implementation for reference approval
             }
         }
         {% endif %}
+
+        function resendCard(cardId) {
+            if (confirm('Resend the digital card to the applicant?')) {
+                fetch(`/affiliationcard/admin/cards/${cardId}/send/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        'delivery_method': 'email_link',
+                        'resend': true
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Card resent successfully!');
+                    } else {
+                        alert('Failed to resend card: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    alert('Error: ' + error);
+                });
+            }
+        }
+
     </script>
+    
+
+
 </body>
 </html>
