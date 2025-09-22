@@ -1,45 +1,904 @@
 {% extends 'base/base.html' %}
 {% load static %}
-{% load crispy_forms_tags %}
+
+{% block title %}
+    {% if project %}Edit Project{% else %}Create Project{% endif %} - ACRP
+{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-  <div class="card shadow-sm">
-    <div class="card-header d-flex align-items-center">
-      <h5 class="mb-0">
-        <i class="bi bi-diagram-3 me-2"></i>
-        {% if project %}Edit{% else %}Create{% endif %} Project
-      </h5>
+<div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 lg:p-8">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <div>
+                <h1 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+                    {% if project %}
+                        Edit Project
+                    {% else %}
+                        Create New Project
+                    {% endif %}
+                </h1>
+                <p class="text-gray-600 text-lg">
+                    {% if project %}
+                        Update project details, team assignments, and timeline.
+                    {% else %}
+                        Set up a new project with team members, timeline, and budget tracking.
+                    {% endif %}
+                </p>
+            </div>
+            <div class="mt-4 lg:mt-0">
+                <a href="{% url 'common:project_list' %}" 
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    <i class="bi bi-arrow-left mr-2"></i>
+                    Back to Projects
+                </a>
+            </div>
+        </div>
     </div>
-    <div class="card-body">
 
-      {% if messages %}
+    <!-- Messages Display -->
+    {% if messages %}
+    <div class="mb-6 space-y-3">
         {% for message in messages %}
-          <div class="alert alert-{{ message.tags }} my-2">{{ message }}</div>
+        <div class="flex items-center p-4 rounded-lg border-l-4 {% if message.tags == 'success' %}bg-green-50 border-green-400 text-green-700{% elif message.tags == 'error' %}bg-red-50 border-red-400 text-red-700{% elif message.tags == 'warning' %}bg-yellow-50 border-yellow-400 text-yellow-700{% else %}bg-blue-50 border-blue-400 text-blue-700{% endif %}">
+            <div class="flex-shrink-0">
+                {% if message.tags == 'success' %}
+                <i class="bi bi-check-circle-fill"></i>
+                {% elif message.tags == 'error' %}
+                <i class="bi bi-x-circle-fill"></i>
+                {% elif message.tags == 'warning' %}
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                {% else %}
+                <i class="bi bi-info-circle-fill"></i>
+                {% endif %}
+            </div>
+            <div class="ml-3 text-sm font-medium">
+                {{ message }}
+            </div>
+            <button type="button" class="ml-auto -mx-1.5 -my-1.5 rounded-lg p-1.5 inline-flex h-8 w-8 hover:bg-gray-200 focus:ring-2 focus:ring-gray-300" onclick="this.parentElement.remove()">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
         {% endfor %}
-      {% endif %}
-
-      {% if form.non_field_errors %}
-        <div class="alert alert-danger mb-3">
-          {{ form.non_field_errors }}
-        </div>
-      {% endif %}
-
-      <form method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form|crispy }}
-        <div class="mt-3">
-          <button type="submit" class="btn btn-primary">
-            <i class="bi bi-check-circle"></i>
-            {% if project %}Update{% else %}Create{% endif %}
-          </button>
-          <a href="{% url 'project_list' %}" class="btn btn-secondary ms-2">
-            <i class="bi bi-arrow-left-circle"></i> Cancel
-          </a>
-        </div>
-      </form>
-
     </div>
-  </div>
+    {% endif %}
+
+    <!-- Form Errors -->
+    {% if form.non_field_errors %}
+    <div class="mb-6">
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="bi bi-exclamation-triangle text-red-400"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-red-800">Please correct the following errors:</h3>
+                    <div class="mt-2 text-sm text-red-700">
+                        <ul class="list-disc space-y-1 pl-5">
+                            {% for error in form.non_field_errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Project Form -->
+    <form method="post" class="space-y-8" id="projectForm">
+        {% csrf_token %}
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Main Project Information Panel -->
+            <div class="lg:col-span-2 space-y-8">
+                
+                <!-- Basic Project Information -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="bi bi-info-circle text-blue-600 mr-2"></i>
+                            Project Information
+                        </h3>
+                        <p class="text-sm text-gray-600 mt-1">Basic details about your project</p>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-6">
+                            <!-- Project Name and Code -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div class="md:col-span-2">
+                                    <label for="{{ form.name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Project Name <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           name="{{ form.name.name }}" 
+                                           id="{{ form.name.id_for_label }}"
+                                           value="{{ form.name.value|default_if_none:'' }}"
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {% if form.name.errors %}border-red-300 focus:ring-red-500{% endif %}"
+                                           placeholder="Enter project name"
+                                           required>
+                                    {% if form.name.errors %}
+                                    <div class="mt-1 text-sm text-red-600">
+                                        {% for error in form.name.errors %}
+                                        <p>{{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <label for="{{ form.code.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Project Code
+                                    </label>
+                                    <input type="text" 
+                                           name="{{ form.code.name }}" 
+                                           id="{{ form.code.id_for_label }}"
+                                           value="{{ form.code.value|default_if_none:'' }}"
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {% if form.code.errors %}border-red-300 focus:ring-red-500{% endif %}"
+                                           placeholder="AUTO"
+                                           maxlength="20">
+                                    {% if form.code.errors %}
+                                    <div class="mt-1 text-sm text-red-600">
+                                        {% for error in form.code.errors %}
+                                        <p>{{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    <p class="mt-1 text-xs text-gray-500">Leave blank to auto-generate</p>
+                                </div>
+                            </div>
+
+                            <!-- Project Description -->
+                            <div>
+                                <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Description <span class="text-red-500">*</span>
+                                </label>
+                                <textarea name="{{ form.description.name }}" 
+                                          id="{{ form.description.id_for_label }}"
+                                          rows="4"
+                                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {% if form.description.errors %}border-red-300 focus:ring-red-500{% endif %}"
+                                          placeholder="Describe the project's purpose and goals"
+                                          required>{{ form.description.value|default_if_none:'' }}</textarea>
+                                {% if form.description.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.description.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Project Objectives -->
+                            <div>
+                                <label for="{{ form.objectives.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Project Objectives
+                                </label>
+                                <textarea name="{{ form.objectives.name }}" 
+                                          id="{{ form.objectives.id_for_label }}"
+                                          rows="3"
+                                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {% if form.objectives.errors %}border-red-300 focus:ring-red-500{% endif %}"
+                                          placeholder="Define key objectives and success criteria">{{ form.objectives.value|default_if_none:'' }}</textarea>
+                                {% if form.objectives.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.objectives.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <p class="mt-1 text-xs text-gray-500">Optional: Define measurable project outcomes</p>
+                            </div>
+
+                            <!-- Client -->
+                            <div>
+                                <label for="{{ form.client.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Client/Department
+                                </label>
+                                <input type="text" 
+                                       name="{{ form.client.name }}" 
+                                       id="{{ form.client.id_for_label }}"
+                                       value="{{ form.client.value|default_if_none:'' }}"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {% if form.client.errors %}border-red-300 focus:ring-red-500{% endif %}"
+                                       placeholder="External client or internal department">
+                                {% if form.client.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.client.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project Template (New Projects Only) -->
+                {% if not project %}
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="bi bi-clipboard text-purple-600 mr-2"></i>
+                            Project Template
+                        </h3>
+                        <p class="text-sm text-gray-600 mt-1">Start with a pre-configured template</p>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-4">
+                            <div>
+                                <label for="{{ form.template.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Select Template
+                                </label>
+                                <select name="{{ form.template.name }}" 
+                                        id="{{ form.template.id_for_label }}"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        onchange="showTemplatePreview()">
+                                    <option value="">Start from scratch</option>
+                                    <option value="web_development">Web Development Project</option>
+                                    <option value="marketing_campaign">Marketing Campaign</option>
+                                    <option value="product_launch">Product Launch</option>
+                                    <option value="research_project">Research Project</option>
+                                    <option value="event_planning">Event Planning</option>
+                                </select>
+                                <p class="mt-1 text-xs text-gray-500">Templates include pre-configured tasks and milestones</p>
+                            </div>
+                            
+                            <!-- Template Preview -->
+                            <div id="templatePreview" class="hidden bg-gray-50 rounded-lg p-4">
+                                <h5 class="text-sm font-medium text-gray-900 mb-2">Template Preview:</h5>
+                                <div id="templateContent" class="text-sm text-gray-600"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Timeline & Priority -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="bi bi-calendar text-green-600 mr-2"></i>
+                            Timeline & Priority
+                        </h3>
+                        <p class="text-sm text-gray-600 mt-1">Set project schedule and importance</p>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <!-- Start Date -->
+                                <div>
+                                    <label for="{{ form.start_date.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Start Date <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="date" 
+                                           name="{{ form.start_date.name }}" 
+                                           id="{{ form.start_date.id_for_label }}"
+                                           value="{{ form.start_date.value|default_if_none:'' }}"
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {% if form.start_date.errors %}border-red-300 focus:ring-red-500{% endif %}"
+                                           required>
+                                    {% if form.start_date.errors %}
+                                    <div class="mt-1 text-sm text-red-600">
+                                        {% for error in form.start_date.errors %}
+                                        <p>{{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- End Date -->
+                                <div>
+                                    <label for="{{ form.planned_end_date.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Planned End Date <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="date" 
+                                           name="{{ form.planned_end_date.name }}" 
+                                           id="{{ form.planned_end_date.id_for_label }}"
+                                           value="{{ form.planned_end_date.value|default_if_none:'' }}"
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {% if form.planned_end_date.errors %}border-red-300 focus:ring-red-500{% endif %}"
+                                           required>
+                                    {% if form.planned_end_date.errors %}
+                                    <div class="mt-1 text-sm text-red-600">
+                                        {% for error in form.planned_end_date.errors %}
+                                        <p>{{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Estimated Hours -->
+                                <div>
+                                    <label for="{{ form.estimated_hours.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Estimated Hours
+                                    </label>
+                                    <input type="number" 
+                                           name="{{ form.estimated_hours.name }}" 
+                                           id="{{ form.estimated_hours.id_for_label }}"
+                                           value="{{ form.estimated_hours.value|default_if_none:'' }}"
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {% if form.estimated_hours.errors %}border-red-300 focus:ring-red-500{% endif %}"
+                                           min="1"
+                                           placeholder="0">
+                                    {% if form.estimated_hours.errors %}
+                                    <div class="mt-1 text-sm text-red-600">
+                                        {% for error in form.estimated_hours.errors %}
+                                        <p>{{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Priority -->
+                                <div>
+                                    <label for="{{ form.priority.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Priority <span class="text-red-500">*</span>
+                                    </label>
+                                    <select name="{{ form.priority.name }}" 
+                                            id="{{ form.priority.id_for_label }}"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            onchange="updatePriorityIndicator()"
+                                            required>
+                                        <option value="">Select Priority</option>
+                                        <option value="1" {% if form.priority.value == '1' or form.priority.value == 1 %}selected{% endif %}>Critical</option>
+                                        <option value="2" {% if form.priority.value == '2' or form.priority.value == 2 %}selected{% endif %}>High</option>
+                                        <option value="3" {% if form.priority.value == '3' or form.priority.value == 3 %}selected{% endif %}>Medium</option>
+                                        <option value="4" {% if form.priority.value == '4' or form.priority.value == 4 %}selected{% endif %}>Low</option>
+                                    </select>
+                                    {% if form.priority.errors %}
+                                    <div class="mt-1 text-sm text-red-600">
+                                        {% for error in form.priority.errors %}
+                                        <p>{{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <!-- Priority Indicator -->
+                                    <div id="priorityIndicator" class="mt-2 flex items-center text-sm">
+                                        <div id="priorityDot" class="h-3 w-3 rounded-full mr-2 bg-gray-300"></div>
+                                        <span id="priorityText" class="text-gray-600">Select a priority level</span>
+                                    </div>
+                                </div>
+
+                                <!-- Status -->
+                                <div>
+                                    <label for="{{ form.status.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Status
+                                    </label>
+                                    <select name="{{ form.status.name }}" 
+                                            id="{{ form.status.id_for_label }}"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                        {% for value, label in form.status.field.choices %}
+                                        <option value="{{ value }}" {% if form.status.value == value %}selected{% endif %}>{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    {% if form.status.errors %}
+                                    <div class="mt-1 text-sm text-red-600">
+                                        {% for error in form.status.errors %}
+                                        <p>{{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Budget & Resources -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="bi bi-currency-dollar text-emerald-600 mr-2"></i>
+                            Budget & Resources
+                        </h3>
+                        <p class="text-sm text-gray-600 mt-1">Financial planning and resource allocation</p>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Budget Allocated -->
+                                <div>
+                                    <label for="{{ form.budget_allocated.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Allocated Budget
+                                    </label>
+                                    <div class="relative">
+                                        <span class="absolute left-3 top-2 text-gray-500">$</span>
+                                        <input type="number" 
+                                               name="{{ form.budget_allocated.name }}" 
+                                               id="{{ form.budget_allocated.id_for_label }}"
+                                               value="{{ form.budget_allocated.value|default_if_none:'' }}"
+                                               class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {% if form.budget_allocated.errors %}border-red-300 focus:ring-red-500{% endif %}"
+                                               step="0.01"
+                                               min="0"
+                                               placeholder="0.00">
+                                    </div>
+                                    {% if form.budget_allocated.errors %}
+                                    <div class="mt-1 text-sm text-red-600">
+                                        {% for error in form.budget_allocated.errors %}
+                                        <p>{{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Parent Project -->
+                                <div>
+                                    <label for="{{ form.parent_project.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Parent Project
+                                    </label>
+                                    <select name="{{ form.parent_project.name }}" 
+                                            id="{{ form.parent_project.id_for_label }}"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                        <option value="">None (Independent Project)</option>
+                                        {% for value, label in form.parent_project.field.choices %}
+                                        {% if value %}
+                                        <option value="{{ value }}" {% if form.parent_project.value == value %}selected{% endif %}>{{ label }}</option>
+                                        {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                    {% if form.parent_project.errors %}
+                                    <div class="mt-1 text-sm text-red-600">
+                                        {% for error in form.parent_project.errors %}
+                                        <p>{{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    <p class="mt-1 text-xs text-gray-500">Optional: Link to a parent project</p>
+                                </div>
+                            </div>
+
+                            <!-- Budget Categories -->
+                            <div>
+                                <label for="{{ form.budget_categories.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Budget Breakdown
+                                </label>
+                                <textarea name="{{ form.budget_categories.name }}" 
+                                          id="{{ form.budget_categories.id_for_label }}"
+                                          rows="4"
+                                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {% if form.budget_categories.errors %}border-red-300 focus:ring-red-500{% endif %}"
+                                          placeholder="Personnel: $50000&#10;Materials: $10000&#10;Marketing: $5000">{{ form.budget_categories.value|default_if_none:'' }}</textarea>
+                                {% if form.budget_categories.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.budget_categories.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <p class="mt-1 text-xs text-gray-500">Optional: Break down budget by category (one per line)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0 sm:space-x-4">
+                    <div class="flex space-x-3">
+                        <a href="{% url 'common:project_list' %}" 
+                           class="inline-flex items-center px-6 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                            <i class="bi bi-x-circle mr-2"></i>
+                            Cancel
+                        </a>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button type="button" 
+                                onclick="resetForm()"
+                                class="inline-flex items-center px-6 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                            <i class="bi bi-arrow-clockwise mr-2"></i>
+                            Reset
+                        </button>
+                        <button type="submit" 
+                                class="inline-flex items-center px-6 py-3 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <i class="bi bi-{% if project %}pencil{% else %}plus-circle{% endif %} mr-2"></i>
+                            {% if project %}Update Project{% else %}Create Project{% endif %}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Project Settings Panel -->
+            <div class="lg:col-span-1">
+                <!-- Team Management -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="bi bi-people text-indigo-600 mr-2"></i>
+                            Team Management
+                        </h3>
+                        <p class="text-sm text-gray-600 mt-1">Assign project manager and team</p>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-6">
+                            <!-- Project Manager -->
+                            <div>
+                                <label for="{{ form.manager.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Project Manager <span class="text-red-500">*</span>
+                                </label>
+                                <select name="{{ form.manager.name }}" 
+                                        id="{{ form.manager.id_for_label }}"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        required>
+                                    <option value="">Select Manager</option>
+                                    {% for value, label in form.manager.field.choices %}
+                                    {% if value %}
+                                    <option value="{{ value }}" {% if form.manager.value == value %}selected{% endif %}>{{ label }}</option>
+                                    {% endif %}
+                                    {% endfor %}
+                                </select>
+                                {% if form.manager.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.manager.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Team Members -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Team Members
+                                </label>
+                                <div class="max-h-60 overflow-y-auto border border-gray-300 rounded-md p-3 space-y-2">
+                                    {% for choice in form.team_members %}
+                                    <div class="flex items-center">
+                                        {{ choice.tag }}
+                                        <label for="{{ choice.id_for_label }}" class="ml-2 text-sm text-gray-700">
+                                            {{ choice.choice_label }}
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% if form.team_members.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.team_members.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                
+                                <!-- Team Member Actions -->
+                                <div class="flex space-x-2 mt-2">
+                                    <button type="button" onclick="selectAllMembers()" 
+                                            class="flex-1 px-3 py-2 text-xs font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200">
+                                        Select All
+                                    </button>
+                                    <button type="button" onclick="clearAllMembers()" 
+                                            class="flex-1 px-3 py-2 text-xs font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200">
+                                        Clear All
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Invite Members -->
+                            <div>
+                                <label for="{{ form.invite_members.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Invite New Members
+                                </label>
+                                <input type="text" 
+                                       name="{{ form.invite_members.name }}" 
+                                       id="{{ form.invite_members.id_for_label }}"
+                                       value="{{ form.invite_members.value|default_if_none:'' }}"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {% if form.invite_members.errors %}border-red-300 focus:ring-red-500{% endif %}"
+                                       placeholder="email1@example.com, email2@example.com">
+                                {% if form.invite_members.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.invite_members.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <p class="mt-1 text-xs text-gray-500">Comma-separated email addresses</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project Settings -->
+                <div class="mt-6 bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="bi bi-gear text-purple-600 mr-2"></i>
+                            Project Settings
+                        </h3>
+                        <p class="text-sm text-gray-600 mt-1">Configure project options</p>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-6">
+                            <!-- Tags -->
+                            <div>
+                                <label for="{{ form.tag_input.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Project Tags
+                                </label>
+                                <input type="text" 
+                                       name="{{ form.tag_input.name }}" 
+                                       id="{{ form.tag_input.id_for_label }}"
+                                       value="{{ form.tag_input.value|default_if_none:'' }}"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {% if form.tag_input.errors %}border-red-300 focus:ring-red-500{% endif %}"
+                                       placeholder="web-dev, urgent, client-work">
+                                {% if form.tag_input.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.tag_input.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <p class="mt-1 text-xs text-gray-500">Comma-separated tags (max 15)</p>
+                            </div>
+
+                            <!-- Public Project -->
+                            <div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" 
+                                           name="{{ form.is_public.name }}" 
+                                           id="{{ form.is_public.id_for_label }}"
+                                           {% if form.is_public.value %}checked{% endif %}
+                                           class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                    <label for="{{ form.is_public.id_for_label }}" class="ml-2 block text-sm text-gray-900">
+                                        Public Project
+                                    </label>
+                                </div>
+                                <p class="mt-1 text-xs text-gray-500">Visible to all workspace members</p>
+                                {% if form.is_public.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {% for error in form.is_public.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project Preview -->
+                {% if project %}
+                <div class="mt-6 bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="bi bi-eye text-gray-600 mr-2"></i>
+                            Project Details
+                        </h3>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div class="text-sm text-gray-600">
+                            <p><strong>Created by:</strong> {{ project.created_by.get_full_name|default:project.created_by.username }}</p>
+                            <p><strong>Team size:</strong> {{ project.team_members.count }} members</p>
+                            <p><strong>Current progress:</strong> {{ project.progress_percentage|floatformat:0 }}%</p>
+                            {% if project.budget_allocated %}
+                            <p><strong>Budget:</strong> ${{ project.budget_allocated|floatformat:2 }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="pt-3 border-t border-gray-200">
+                            <a href="{% url 'common:project_detail' pk=project.id %}" 
+                               class="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                                View Full Project Details →
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </form>
 </div>
+
+<script>
+/**
+ * Update priority indicator based on selection
+ */
+function updatePriorityIndicator() {
+    const prioritySelect = document.getElementById('{{ form.priority.id_for_label }}');
+    const priorityDot = document.getElementById('priorityDot');
+    const priorityText = document.getElementById('priorityText');
+    
+    const value = prioritySelect.value;
+    const priorities = {
+        '1': { color: 'bg-red-500', text: 'Critical Priority', textColor: 'text-red-700' },
+        '2': { color: 'bg-orange-500', text: 'High Priority', textColor: 'text-orange-700' },
+        '3': { color: 'bg-yellow-500', text: 'Medium Priority', textColor: 'text-yellow-700' },
+        '4': { color: 'bg-green-500', text: 'Low Priority', textColor: 'text-green-700' }
+    };
+    
+    if (value && priorities[value]) {
+        priorityDot.className = `h-3 w-3 rounded-full mr-2 ${priorities[value].color}`;
+        priorityText.className = `${priorities[value].textColor}`;
+        priorityText.textContent = priorities[value].text;
+    } else {
+        priorityDot.className = 'h-3 w-3 rounded-full mr-2 bg-gray-300';
+        priorityText.className = 'text-gray-600';
+        priorityText.textContent = 'Select a priority level';
+    }
+}
+
+/**
+ * Show template preview
+ */
+function showTemplatePreview() {
+    const templateSelect = document.getElementById('{{ form.template.id_for_label }}');
+    const templatePreview = document.getElementById('templatePreview');
+    const templateContent = document.getElementById('templateContent');
+    
+    const templates = {
+        'web_development': {
+            tasks: ['Requirements Gathering', 'UI/UX Design', 'Frontend Development', 'Backend Development', 'Testing & QA', 'Deployment'],
+            milestones: ['Design Approval (14 days)', 'Development Complete (60 days)', 'Go Live (90 days)']
+        },
+        'marketing_campaign': {
+            tasks: ['Market Research', 'Campaign Strategy', 'Content Creation', 'Asset Design', 'Campaign Launch', 'Performance Analysis'],
+            milestones: ['Strategy Approval (7 days)', 'Content Complete (30 days)', 'Campaign Launch (45 days)']
+        },
+        'product_launch': {
+            tasks: ['Product Planning', 'Feature Development', 'Quality Assurance', 'Marketing Materials', 'Launch Event', 'Post-Launch Support'],
+            milestones: ['MVP Complete (30 days)', 'Beta Testing (60 days)', 'Public Launch (90 days)']
+        },
+        'research_project': {
+            tasks: ['Literature Review', 'Methodology Design', 'Data Collection', 'Analysis', 'Report Writing', 'Peer Review'],
+            milestones: ['Research Plan (14 days)', 'Data Collection Complete (60 days)', 'Final Report (90 days)']
+        },
+        'event_planning': {
+            tasks: ['Venue Selection', 'Vendor Coordination', 'Marketing & Promotion', 'Registration Setup', 'Event Execution', 'Post-Event Follow-up'],
+            milestones: ['Venue Booked (30 days)', 'Marketing Launch (60 days)', 'Event Day (90 days)']
+        }
+    };
+    
+    const selectedTemplate = templateSelect.value;
+    if (selectedTemplate && templates[selectedTemplate]) {
+        const template = templates[selectedTemplate];
+        templateContent.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <h6 class="font-medium text-gray-900 mb-2">Default Tasks:</h6>
+                    <ul class="space-y-1">
+                        ${template.tasks.map(task => `<li class="flex items-center text-xs"><i class="bi bi-check-circle text-green-500 mr-1"></i>${task}</li>`).join('')}
+                    </ul>
+                </div>
+                <div>
+                    <h6 class="font-medium text-gray-900 mb-2">Default Milestones:</h6>
+                    <ul class="space-y-1">
+                        ${template.milestones.map(milestone => `<li class="flex items-center text-xs"><i class="bi bi-flag text-blue-500 mr-1"></i>${milestone}</li>`).join('')}
+                    </ul>
+                </div>
+            </div>
+        `;
+        templatePreview.classList.remove('hidden');
+    } else {
+        templatePreview.classList.add('hidden');
+    }
+}
+
+/**
+ * Select all team members
+ */
+function selectAllMembers() {
+    const checkboxes = document.querySelectorAll('input[name="{{ form.team_members.name }}"]');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = true;
+    });
+}
+
+/**
+ * Clear all team member selections
+ */
+function clearAllMembers() {
+    const checkboxes = document.querySelectorAll('input[name="{{ form.team_members.name }}"]');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+}
+
+/**
+ * Reset form to initial state
+ */
+function resetForm() {
+    if (confirm('Are you sure you want to reset the form? All unsaved changes will be lost.')) {
+        document.getElementById('projectForm').reset();
+        updatePriorityIndicator();
+        showTemplatePreview();
+    }
+}
+
+/**
+ * Form validation
+ */
+function validateForm() {
+    const startDate = document.getElementById('{{ form.start_date.id_for_label }}').value;
+    const endDate = document.getElementById('{{ form.planned_end_date.id_for_label }}').value;
+    
+    if (startDate && endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        
+        if (end <= start) {
+            alert('End date must be after start date.');
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize priority indicator
+    updatePriorityIndicator();
+    
+    // Initialize template preview if form has a selected template
+    showTemplatePreview();
+    
+    // Form submission validation
+    document.getElementById('projectForm').addEventListener('submit', function(e) {
+        if (!validateForm()) {
+            e.preventDefault();
+        }
+    });
+    
+    // Date validation
+    const startDateInput = document.getElementById('{{ form.start_date.id_for_label }}');
+    const endDateInput = document.getElementById('{{ form.planned_end_date.id_for_label }}');
+    
+    function validateDates() {
+        const startDate = new Date(startDateInput.value);
+        const endDate = new Date(endDateInput.value);
+        
+        if (startDate && endDate && startDate >= endDate) {
+            endDateInput.classList.add('border-red-300', 'focus:ring-red-500');
+            return false;
+        } else {
+            endDateInput.classList.remove('border-red-300', 'focus:ring-red-500');
+            return true;
+        }
+    }
+    
+    if (startDateInput && endDateInput) {
+        startDateInput.addEventListener('change', validateDates);
+        endDateInput.addEventListener('change', validateDates);
+    }
+});
+</script>
+
+<!-- Custom styles for enhanced appearance -->
+<style>
+/* Smooth transitions for all interactive elements */
+* {
+    transition: all 0.2s ease-in-out;
+}
+
+/* Enhanced focus states */
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Loading states */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Enhanced hover effects for form sections */
+.bg-white:hover {
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Custom checkbox styling */
+input[type="checkbox"]:checked {
+    background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='m13.854 3.646-7.5 7.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6 10.293l7.146-7.147a.5.5 0 0 1 .708.708z'/%3e%3c/svg%3e");
+}
+
+/* Form animations */
+.space-y-8 > div {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
 {% endblock %}

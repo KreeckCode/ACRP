@@ -293,7 +293,7 @@
                     </div>
                     
                     <div class="mt-3 flex justify-between">
-                        <a href="{% url 'app:project_detail' pk=project.id %}" 
+                        <a href="{% url 'common:project_detail' pk=project.id %}" 
                            class="text-xs text-blue-600 hover:text-blue-700">
                             View Details
                         </a>
@@ -721,7 +721,7 @@
     function updateTaskStatus(taskId, statusId) {
         showLoading();
         
-        fetch(`/app/ajax/tasks/${taskId}/update-status/`, {
+        fetch(`/ajax/tasks/${taskId}/update-status/`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -792,8 +792,8 @@
         showLoading();
         
         const url = currentTaskId ? 
-            `/app/ajax/tasks/${currentTaskId}/edit/` : 
-            '/app/ajax/tasks/create/';
+            `/ajax/tasks/${currentTaskId}/edit/` : 
+            '/ajax/tasks/create/';
         
         fetch(url, {
             method: 'POST',
@@ -825,7 +825,7 @@
     function openTaskDetail(taskId) {
         showLoading();
         
-        fetch(`/app/ajax/tasks/${taskId}/details/`)
+        fetch(`/ajax/tasks/${taskId}/details/`)
         .then(response => response.json())
         .then(data => {
             hideLoading();

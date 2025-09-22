@@ -850,8 +850,17 @@ class TaskForm(forms.ModelForm):
         if not task.created_by and self.user:
             task.created_by = self.user
         
+        # Fix: Handle project assignment from form data
+        if not task.project and hasattr(self, 'cleaned_data'):
+            project_id = self.cleaned_data.get('project_id') or self.data.get('project_id')
+            if project_id:
+                try:
+                    task.project = Projects.objects.get(id=project_id)
+                except Projects.DoesNotExist:
+                    pass
+        
         # Auto-set initial status if not set
-        if not task.status_id:
+        if not task.status:
             initial_status = TaskStatus.objects.filter(
                 is_initial=True, is_active=True
             ).first()

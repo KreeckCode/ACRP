@@ -402,7 +402,7 @@
                            class="flex-1 text-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                             View Details
                         </a>
-                        <a href="{% url 'common:project_kanban' pk=project.pk %}" 
+                        <a href="{% url 'common:project_kanban' project_id=project.pk %}"
                            class="flex-1 text-center px-3 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
                             Kanban
                         </a>
@@ -522,7 +522,7 @@
                                 <div class="flex items-center space-x-2">
                                     <a href="{% url 'common:project_detail' pk=project.pk %}" 
                                        class="text-blue-600 hover:text-blue-900">View</a>
-                                    <a href="{% url 'common:project_kanban' pk=project.pk %}" 
+                                    <a href="{% url 'common:project_kanban' project_id=project.pk %}" 
                                        class="text-blue-600 hover:text-blue-900">Kanban</a>
                                 </div>
                             </td>

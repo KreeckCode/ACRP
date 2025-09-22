@@ -142,7 +142,7 @@ class Event(BaseModel):
         return int((self.end_time - self.start_time).total_seconds() / 60)
     
     def get_absolute_url(self):
-        return reverse('app:event_detail', kwargs={'pk': self.pk})
+        return reverse('common:event_detail', kwargs={'pk': self.pk})
     
     class Meta:
         permissions = [
@@ -264,7 +264,7 @@ class Announcement(BaseModel):
         return (read_count / total_targets * 100) if total_targets > 0 else 0
     
     def get_absolute_url(self):
-        return reverse('app:announcement_detail', kwargs={'pk': self.pk})
+        return reverse('common:announcement_detail', kwargs={'pk': self.pk})
     
     class Meta:
         permissions = [
@@ -417,7 +417,7 @@ class Projects(BaseModel):
         return self.team_members.count()
     
     def get_absolute_url(self):
-        return reverse('app:project_detail', kwargs={'pk': self.pk})
+        return reverse('common:project_detail', kwargs={'pk': self.pk})
     
     class Meta:
         permissions = [
@@ -683,7 +683,7 @@ class Task(BaseModel):
         return (completed_subtasks / total_subtasks) * 100
     
     def get_absolute_url(self):
-        return reverse('app:task_detail', kwargs={'pk': self.pk})
+        return reverse('common:task_detail', kwargs={'pk': self.pk})
     
     class Meta:
         permissions = [
@@ -1095,7 +1095,7 @@ class Resource(BaseModel):
         return self.title
     
     def get_absolute_url(self):
-        return reverse('app:resource_detail', kwargs={'pk': self.pk})
+        return reverse('common:resource_detail', kwargs={'pk': self.pk})
     
     class Meta:
         ordering = ['-created_at']

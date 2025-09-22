@@ -15,7 +15,9 @@ urlpatterns = [
     
     # Kanban board functionality
     path('kanban/', views.kanban_workspace, name='kanban_workspace'),
-    path('kanban-board/', views.kanban_workspace, name='kanban_board'),  # Legacy alias
+    path('kanban-board/', views.kanban_workspace, name='kanban_board'),
+    # Add this line in the PROJECT MANAGEMENT section:
+    path('projects/<uuid:project_id>/kanban/', views.project_kanban, name='project_kanban'),
     
     # Global search and notifications
     path('search/', views.workspace_search, name='workspace_search'),
@@ -48,8 +50,6 @@ urlpatterns = [
     path('projects/<uuid:pk>/edit/', views.edit_project, name='edit_project'),
     path('projects/<uuid:pk>/delete/', views.delete_project, name='delete_project'),
     
-    # Project-specific kanban
-    path('projects/<uuid:project_id>/kanban/', views.project_kanban, name='project_kanban'),
     
     ### ========== TASK MANAGEMENT ========== ###
     
@@ -120,16 +120,6 @@ urlpatterns = [
     path('resources/<uuid:resource_id>/delete/', views.delete_resource, name='delete_resource_legacy'),
 ]
 
-### ========== CONDITIONAL URL PATTERNS ========== ###
-
-# Debug URLs (only in development)
-if settings.DEBUG:
-    urlpatterns += [
-        # Add debug URLs here when you implement debug views
-        # path('debug/info/', views.debug_info, name='debug_info'),
-    ]
-
-### ========== ERROR HANDLER ASSIGNMENTS ========== ###
 
 # Custom error handlers (configured in main URLs)
 handler404 = 'app.views.error_404'

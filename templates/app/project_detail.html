@@ -49,26 +49,19 @@
             </div>
             <div class="mt-4 lg:mt-0 flex flex-wrap gap-3">
                 {% if can_edit %}
-                <a href="{% url 'app:project_edit' pk=project.pk %}" 
+                <a href="{% url 'common:edit_project_legacy' project_id=project.pk %}" 
                    class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                     <i class="bi bi-pencil mr-2"></i>
                     Edit Project
                 </a>
                 {% endif %}
                 
-                <a href="{% url 'app:project_kanban' pk=project.pk %}" 
+                <a href="{% url 'common:kanban_board' %}" 
                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
                     <i class="bi bi-kanban mr-2"></i>
                     Kanban Board
                 </a>
                 
-                {% if can_manage_team %}
-                <a href="{% url 'app:project_team' pk=project.pk %}" 
-                   class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                    <i class="bi bi-people mr-2"></i>
-                    Manage Team
-                </a>
-                {% endif %}
             </div>
         </div>
     </div>
@@ -93,7 +86,7 @@
                         <circle cx="32" cy="32" r="28" stroke="currentColor" stroke-width="4" 
                                 fill="transparent" stroke-linecap="round"
                                 class="text-blue-600 progress-ring"
-                                stroke-dasharray="{{ overall_health|mul:1.76|floatformat:2 }} 176"
+                                stroke-dasharray="{{ health_stroke_value }} 176"
                                 stroke-dashoffset="0"></circle>
                     </svg>
                 </div>
@@ -244,7 +237,7 @@
                                 {% endfor %}
                                 
                                 {% if status_group.count > 5 %}
-                                <a href="{% url 'app:task_list' %}?project={{ project.id }}&status={{ status_group.status.id }}" 
+                                <a href="{% url 'common:task_list' %}?project={{ project.id }}&status={{ status_group.status.id }}" 
                                    class="block text-sm text-blue-600 hover:text-blue-700 text-center py-2">
                                     View all {{ status_group.count }} tasks
                                 </a>
@@ -266,7 +259,7 @@
                             Milestones
                         </h3>
                         {% if can_edit %}
-                        <a href="{% url 'app:milestone_create' project_pk=project.pk %}" 
+                        <a href="{% url 'common:milestone_create' project_project_id=project.pk %}" 
                            class="inline-flex items-center px-3 py-1 border border-transparent rounded-md text-sm font-medium text-white bg-orange-600 hover:bg-orange-700">
                             <i class="bi bi-plus mr-1"></i>
                             Add Milestone
@@ -431,7 +424,7 @@
                             Team Members
                         </h3>
                         {% if can_manage_team %}
-                        <a href="{% url 'app:project_team' pk=project.pk %}" 
+                        <a href="" 
                            class="text-sm text-blue-600 hover:text-blue-700">
                             Manage
                         </a>
@@ -495,7 +488,7 @@
                     </h3>
                 </div>
                 <div class="p-6 space-y-3">
-                    <a href="{% url 'app:project_kanban' pk=project.pk %}" 
+                    <a href="{% url 'common:kanban_board'%}" 
                        class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
                         <i class="bi bi-kanban mr-2"></i>
                         View Kanban Board
@@ -509,17 +502,12 @@
                     </button>
                     {% endif %}
                     
-                    <a href="{% url 'app:time_tracking_dashboard' %}?project={{ project.id }}" 
+                    <a href="{% url 'common:time_tracking_dashboard' %}?project={{ project.id }}" 
                        class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                         <i class="bi bi-clock mr-2"></i>
                         Time Tracking
                     </a>
                     
-                    <a href="{% url 'app:project_analytics' pk=project.pk %}" 
-                       class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                        <i class="bi bi-graph-up mr-2"></i>
-                        Analytics
-                    </a>
                 </div>
             </div>
 
@@ -628,6 +616,36 @@
                 </div>
                 
                 <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Task Type</label>
+                    <select name="task_type" class="w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                        <option value="task" selected>Task</option>
+                        <option value="bug">Bug</option>
+                        <option value="feature">Feature</option>
+                        <option value="improvement">Improvement</option>
+                        <option value="research">Research</option>
+                        <option value="review">Review</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                    <input type="date" name="start_date"
+                        class="w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                </div>
+
+                <!-- Add after assigned_to field -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Reviewer</label>
+                    <select name="reviewer" class="w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">No reviewer</option>
+                        {% for member_id, workload in team_workload.items %}
+                        <option value="{{ workload.user.id }}">{{ workload.user.get_full_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+
+                <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Estimated Hours</label>
                     <input type="number" name="estimated_hours" step="0.5" min="0.5"
                            class="w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500"
@@ -710,7 +728,7 @@
 
     // Task detail modal
     function openTaskDetail(taskId) {
-        fetch(`/app/ajax/tasks/${taskId}/details/`)
+        fetch(`/ajax/tasks/${taskId}/details/`)
         .then(response => response.json())
         .then(data => {
             document.getElementById('taskDetailContent').innerHTML = generateTaskDetailHTML(data);
@@ -788,7 +806,7 @@
         const formData = new FormData(this);
         const data = Object.fromEntries(formData.entries());
         
-        fetch('/app/ajax/tasks/create/', {
+        fetch('{% url "common:task_create_ajax" %}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -798,10 +816,11 @@
         })
         .then(response => response.json())
         .then(data => {
+            console.log('Response received:', data); // Add this line
             if (data.success) {
                 closeTaskModal();
                 showToast('Task created successfully', 'success');
-                location.reload(); // Refresh to show new task
+                location.reload();
             } else {
                 showToast(data.error || 'Failed to create task', 'error');
             }
