@@ -342,6 +342,14 @@ class BaseApplication(models.Model):
         choices=STATUS_CHOICES, 
         default='draft'
     )
+
+    registration_number = models.CharField(
+        max_length=20,
+        unique=True,
+        blank=True,
+        null=True,
+        help_text="Unique registration number assigned upon approval (becomes username)"
+    )
     
     submitted_at = models.DateTimeField(null=True, blank=True)
     reviewed_at = models.DateTimeField(null=True, blank=True)

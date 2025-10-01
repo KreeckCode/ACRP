@@ -1181,6 +1181,13 @@ class ApplicationReviewForm(forms.Form):
         widget=SELECT_WIDGET,
         required=True
     )
+
+    registration_number = forms.CharField(
+        max_length=20,
+        required=False,
+        widget=TEXT_INPUT_WIDGET,
+        help_text="Assign registration number (required for approval - will become username)"
+    )
     
     reviewer_notes = forms.CharField(
         widget=TEXTAREA_WIDGET,
@@ -1206,6 +1213,12 @@ class ApplicationReviewForm(forms.Form):
     def __init__(self, *args, **kwargs):
         self.application = kwargs.pop('application', None)
         super().__init__(*args, **kwargs)
+
+        # Pre-populate registration number if already assigned
+        if self.application and self.application.registration_number:
+            self.fields['registration_number'].initial = self.application.registration_number
+            self.fields['registration_number'].widget.attrs['readonly'] = True
+            self.fields['registration_number'].help_text = "Registration number already assigned"
         
         # Check for existing card and modify form accordingly
         if self.application:
@@ -1252,6 +1265,36 @@ class ApplicationReviewForm(forms.Form):
             raise ValidationError({
                 'rejection_reason': 'Rejection reason is required when rejecting an application.'
             })
+        
+        # Validate registration number is provided when approving
+        if status == 'approved' and not registration_number:
+            raise ValidationError({
+                'registration_number': 'Registration number is required when approving an application.'
+            })
+        
+        # Validate registration number format (customize as needed)
+        if registration_number:
+            # Remove spaces and convert to uppercase for consistency
+            registration_number = registration_number.strip().upper()
+            cleaned_data['registration_number'] = registration_number
+            
+            # Check if registration number already exists (exclude current application)
+            from .models import BaseApplication
+            existing = None
+            
+            # Check across all application types
+            for model in [AssociatedApplication, DesignatedApplication, StudentApplication]:
+                query = model.objects.filter(registration_number=registration_number)
+                if self.application:
+                    query = query.exclude(pk=self.application.pk)
+                if query.exists():
+                    existing = query.first()
+                    break
+            
+            if existing:
+                raise ValidationError({
+                    'registration_number': f'Registration number already assigned to another application.'
+                })
         
         # Validate card assignment - only allow if approving
         if assign_card and status != 'approved':

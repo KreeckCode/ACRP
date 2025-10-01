@@ -180,6 +180,11 @@
 </head>
 
 <body class="bg-gray-50">
+    <!-- User Role Detection -->
+    {% if user.is_authenticated %}
+        {% with user.acrp_role as user_role %}
+        {% endwith %}
+    {% endif %}
     
     <!-- Skip to Content (Accessibility) -->
     <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-0 focus:left-0 z-50 bg-blue-600 text-white px-4 py-2 rounded">Skip to main content</a>
@@ -294,171 +299,264 @@
         <nav class="mt-5 px-2">
             <div class="space-y-1">
                 
-                <!-- Main Menu Section -->
-                <div class="px-3 py-2">
-                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Main Menu</h3>
-                </div>
-                
-                <!-- Dashboard -->
-                <a href="{% url 'common:dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'dashboard' %}active text-white{% else %}text-gray-300 hover:text-white{% endif %} group flex items-center px-3 py-2 text-sm font-medium rounded-md">
-                    <i class="bi bi-speedometer2 mr-3 text-lg"></i>
-                    Dashboard
-                    <span class="ml-auto inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">6</span>
-                </a>
-                
-                <!-- My Profile -->
-                <a href="javascript:void(0)" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
-                    <i class="bi bi-person mr-3 text-lg"></i>
-                    My Profile
-                </a>
-                
-                <!-- Quick Actions -->
-                <div class="px-3 py-2 mt-6">
-                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Quick Actions</h3>
-                </div>
-                
-                <div class="px-3 py-2">
-                    <div class="space-y-2">
-                        <a href="{% url 'enrollments:onboarding_start' %}" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-3 rounded-md flex items-center">
-                            <i class="bi bi-plus mr-2"></i>New Enrollment
-                        </a>
-                        <a href="{% url 'cpd:dashboard' %}"  class="w-full bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-3 rounded-md flex items-center" onclick="showToast('Upload Documents feature coming soon!', 'info')">
-                            <i class="bi bi-graph-up mr-2"></i>CPD Dashboard
-                        </a>
-                        <a type="button" class="w-full bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium py-2 px-3 rounded-md flex items-center" onclick="showToast('Generate Report feature coming soon!', 'info')">
-                            <i class="bi bi-mortarboard mr-2"></i>Learn
-                        </a>
-                        <a href="{% url 'affiliationcard:dashboard' %}" type="button" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-medium py-2 px-3 rounded-md flex items-center">
-                            <i class="bi bi-credit-card mr-2"></i>Digital Card
-                        </a>
+                <!-- LEARNER SIDEBAR (Only for users with LEARNER role) -->
+                {% if user.is_authenticated and user.acrp_role == 'LEARNER' %}
+                    
+                    <!-- Main Menu Section -->
+                    <div class="px-3 py-2">
+                        <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Student Portal</h3>
                     </div>
                     
-                    <!-- Quick Create Dropdown -->
-                    <div class="mt-3">
-                        <div class="relative">
-                            <button type="button" class="w-full bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium py-2 px-3 rounded-md flex items-center justify-between" onclick="toggleDropdown('quick-create')">
-                                <span><i class="bi bi-plus-circle mr-2"></i>Quick Create</span>
-                                <i class="bi bi-chevron-down"></i>
-                            </button>
-                            <div class="hidden absolute bottom-full left-0 w-full mb-2 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50" id="quick-create-dropdown">
-                                <div class="py-1">
-                                    <a href="{% url 'common:create_event' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                        <i class="bi bi-calendar-plus mr-2"></i>New Event
-                                    </a>
-                                    <a href="{% url 'common:create_announcement' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                        <i class="bi bi-megaphone mr-2"></i>New Announcement
-                                    </a>
-                                    <a href="{% url 'common:create_project' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                        <i class="bi bi-folder-plus mr-2"></i>New Project
-                                    </a>
-                                    <a href="{% url 'common:create_task' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                        <i class="bi bi-check-square mr-2"></i>New Task
-                                    </a>
+                    <!-- Dashboard -->
+                    <a href="{% url 'common:dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'dashboard' %}active text-white{% else %}text-gray-300 hover:text-white{% endif %} group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                        <i class="bi bi-speedometer2 mr-3 text-lg"></i>
+                        My Dashboard
+                    </a>
+                    
+                    <!-- My Profile -->
+                    <a href="javascript:void(0)" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                        <i class="bi bi-person mr-3 text-lg"></i>
+                        My Profile
+                    </a>
+                    
+                    <!-- Learning Section -->
+                    <div class="px-3 py-2 mt-6">
+                        <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Learning</h3>
+                    </div>
+                    
+                    <!-- My Courses -->
+                    <a href="javascript:void(0)" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                        <i class="bi bi-book mr-3 text-lg"></i>
+                        My Courses
+                        <span class="ml-auto inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">3</span>
+                    </a>
+                    
+                    <!-- Assignments -->
+                    <a href="javascript:void(0)" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                        <i class="bi bi-file-text mr-3 text-lg"></i>
+                        Assignments
+                        <span class="ml-auto inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">2</span>
+                    </a>
+                    
+                    <!-- Grades -->
+                    <a href="javascript:void(0)" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                        <i class="bi bi-bar-chart mr-3 text-lg"></i>
+                        My Grades
+                    </a>
+                    
+                    <!-- CPD Tracking -->
+                    <a href="{% url 'cpd:dashboard' %}" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                        <i class="bi bi-award mr-3 text-lg"></i>
+                        CPD Tracking
+                    </a>
+                    
+                    <!-- Resources Section -->
+                    <div class="px-3 py-2 mt-6">
+                        <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Resources</h3>
+                    </div>
+                    
+                    <!-- Digital Card -->
+                    <a href="{% url 'affiliationcard:dashboard' %}" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                        <i class="bi bi-credit-card mr-3 text-lg"></i>
+                        My Digital Card
+                    </a>
+                    
+                    <!-- Library -->
+                    <a href="javascript:void(0)" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                        <i class="bi bi-collection mr-3 text-lg"></i>
+                        Resource Library
+                    </a>
+                    
+                    <!-- Events -->
+                    <a href="{% url 'common:event_list' %}" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                        <i class="bi bi-calendar-event mr-3 text-lg"></i>
+                        Events & Workshops
+                    </a>
+                    
+                    <!-- Announcements -->
+                    <a href="{% url 'common:announcement_list' %}" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                        <i class="bi bi-megaphone mr-3 text-lg"></i>
+                        Announcements
+                    </a>
+                    
+                    <!-- Bottom Links -->
+                    <div class="mt-8 pt-8 border-t border-gray-700">
+                        <div class="space-y-1">
+                            <a href="javascript:void(0)" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                                <i class="bi bi-question-circle mr-3 text-lg"></i>
+                                Help & Support
+                            </a>
+                        </div>
+                    </div>
+                
+                {% else %}
+                    <!-- ADMIN/STAFF SIDEBAR (For all other roles) -->
+                    
+                    <!-- Main Menu Section -->
+                    <div class="px-3 py-2">
+                        <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Main Menu</h3>
+                    </div>
+                    
+                    <!-- Dashboard -->
+                    <a href="{% url 'common:dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'dashboard' %}active text-white{% else %}text-gray-300 hover:text-white{% endif %} group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                        <i class="bi bi-speedometer2 mr-3 text-lg"></i>
+                        Dashboard
+                        <span class="ml-auto inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">6</span>
+                    </a>
+                    
+                    <!-- My Profile -->
+                    <a href="javascript:void(0)" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                        <i class="bi bi-person mr-3 text-lg"></i>
+                        My Profile
+                    </a>
+                    
+                    <!-- Quick Actions -->
+                    <div class="px-3 py-2 mt-6">
+                        <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Quick Actions</h3>
+                    </div>
+                    
+                    <div class="px-3 py-2">
+                        <div class="space-y-2">
+                            <a href="{% url 'enrollments:onboarding_start' %}" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-3 rounded-md flex items-center">
+                                <i class="bi bi-plus mr-2"></i>New Enrollment
+                            </a>
+                            <a href="{% url 'cpd:dashboard' %}"  class="w-full bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-3 rounded-md flex items-center">
+                                <i class="bi bi-graph-up mr-2"></i>CPD Dashboard
+                            </a>
+                            <a type="button" class="w-full bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium py-2 px-3 rounded-md flex items-center" onclick="showToast('Generate Report feature coming soon!', 'info')">
+                                <i class="bi bi-mortarboard mr-2"></i>Learn
+                            </a>
+                            <a href="{% url 'affiliationcard:dashboard' %}" type="button" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-medium py-2 px-3 rounded-md flex items-center">
+                                <i class="bi bi-credit-card mr-2"></i>Digital Card
+                            </a>
+                        </div>
+                        
+                        <!-- Quick Create Dropdown -->
+                        <div class="mt-3">
+                            <div class="relative">
+                                <button type="button" class="w-full bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium py-2 px-3 rounded-md flex items-center justify-between" onclick="toggleDropdown('quick-create')">
+                                    <span><i class="bi bi-plus-circle mr-2"></i>Quick Create</span>
+                                    <i class="bi bi-chevron-down"></i>
+                                </button>
+                                <div class="hidden absolute bottom-full left-0 w-full mb-2 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50" id="quick-create-dropdown">
+                                    <div class="py-1">
+                                        <a href="{% url 'common:create_event' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                            <i class="bi bi-calendar-plus mr-2"></i>New Event
+                                        </a>
+                                        <a href="{% url 'common:create_announcement' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                            <i class="bi bi-megaphone mr-2"></i>New Announcement
+                                        </a>
+                                        <a href="{% url 'common:create_project' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                            <i class="bi bi-folder-plus mr-2"></i>New Project
+                                        </a>
+                                        <a href="{% url 'common:create_task' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                            <i class="bi bi-check-square mr-2"></i>New Task
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                
-                <!-- Activities Section -->
-                <div class="px-3 py-2 mt-6">
-                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Activities</h3>
-                </div>
-                
-                <!-- Events with submenu -->
-                <div class="space-y-1">
-                    <button class="sidebar-link {% if 'event' in request.resolver_match.url_name %}text-white{% else %}text-gray-300 hover:text-white{% endif %} group w-full flex items-center px-3 py-2 text-sm font-medium rounded-md" onclick="toggleSubmenu('events')">
-                        <i class="bi bi-calendar-event mr-3 text-lg"></i>
-                        Events
-                        <span class="ml-auto mr-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">2</span>
-                        <i class="bi bi-chevron-down transition-transform duration-200" id="events-icon"></i>
-                    </button>
-                    <div class="hidden ml-6 space-y-1" id="events-submenu">
-                        <a href="{% url 'common:event_list' %}" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">All Events</a>
-                        <a href="{% url 'common:create_event' %}" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">Create Event</a>
+                    
+                    <!-- Activities Section -->
+                    <div class="px-3 py-2 mt-6">
+                        <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Activities</h3>
                     </div>
-                </div>
-                
-                <!-- Announcements with submenu -->
-                <div class="space-y-1">
-                    <button class="sidebar-link {% if 'announcement' in request.resolver_match.url_name %}text-white{% else %}text-gray-300 hover:text-white{% endif %} group w-full flex items-center px-3 py-2 text-sm font-medium rounded-md" onclick="toggleSubmenu('announcements')">
-                        <i class="bi bi-megaphone mr-3 text-lg"></i>
-                        Announcements
-                        <span class="ml-auto mr-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">1</span>
-                        <i class="bi bi-chevron-down transition-transform duration-200" id="announcements-icon"></i>
-                    </button>
-                    <div class="hidden ml-6 space-y-1" id="announcements-submenu">
-                        <a href="{% url 'common:announcement_list' %}" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">All Announcements</a>
-                        <a href="{% url 'common:create_announcement' %}" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">Create Announcement</a>
+                    
+                    <!-- Events with submenu -->
+                    <div class="space-y-1">
+                        <button class="sidebar-link {% if 'event' in request.resolver_match.url_name %}text-white{% else %}text-gray-300 hover:text-white{% endif %} group w-full flex items-center px-3 py-2 text-sm font-medium rounded-md" onclick="toggleSubmenu('events')">
+                            <i class="bi bi-calendar-event mr-3 text-lg"></i>
+                            Events
+                            <span class="ml-auto mr-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">2</span>
+                            <i class="bi bi-chevron-down transition-transform duration-200" id="events-icon"></i>
+                        </button>
+                        <div class="hidden ml-6 space-y-1" id="events-submenu">
+                            <a href="{% url 'common:event_list' %}" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">All Events</a>
+                            <a href="{% url 'common:create_event' %}" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">Create Event</a>
+                        </div>
                     </div>
-                </div>
-                <!-- Budget Requests -->
-                <a href="{% url "common:workspace_dashboard" %}" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
-                    <i class="bi bi-kanban mr-3 text-lg"></i>
-                    Workspace
-                </a>
-                
-
-                <!-- Education Section -->
-                <div class="px-3 py-2 mt-6">
-                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Education</h3>
-                </div>
-                
-                <!-- Enrollments with submenu -->
-                <div class="space-y-1">
-                    <button class="sidebar-link text-gray-300 hover:text-white group w-full flex items-center px-3 py-2 text-sm font-medium rounded-md" onclick="toggleSubmenu('enrollments')">
-                        <i class="bi bi-people mr-3 text-lg"></i>
-                        Enrollments
-                        <i class="bi bi-chevron-down ml-auto transition-transform duration-200" id="enrollments-icon"></i>
-                    </button>
-                    <div class="hidden ml-6 space-y-1" id="enrollments-submenu">
-                        <a href="{% url "enrollments:enrollment_dashboard" %}" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">Enrollment Dashboard</a>
-                        <a href="javascript:void(0)" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">Pending Review</a>
-                        <a href="javascript:void(0)" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">Approved</a>
-                        <a href="javascript:void(0)" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">Rejected</a>
+                    
+                    <!-- Announcements with submenu -->
+                    <div class="space-y-1">
+                        <button class="sidebar-link {% if 'announcement' in request.resolver_match.url_name %}text-white{% else %}text-gray-300 hover:text-white{% endif %} group w-full flex items-center px-3 py-2 text-sm font-medium rounded-md" onclick="toggleSubmenu('announcements')">
+                            <i class="bi bi-megaphone mr-3 text-lg"></i>
+                            Announcements
+                            <span class="ml-auto mr-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">1</span>
+                            <i class="bi bi-chevron-down transition-transform duration-200" id="announcements-icon"></i>
+                        </button>
+                        <div class="hidden ml-6 space-y-1" id="announcements-submenu">
+                            <a href="{% url 'common:announcement_list' %}" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">All Announcements</a>
+                            <a href="{% url 'common:create_announcement' %}" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">Create Announcement</a>
+                        </div>
                     </div>
-                </div>
-                
-                <!-- Students -->
-                <a href="{% url "enrollments:enrollment_dashboard" %}" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
-                    <i class="bi bi-mortarboard mr-3 text-lg"></i>
-                    Enrollment Dashboard
-                </a>
-                
-                <!-- CPD Tracking -->
-                <a href="{% url 'cpd:dashboard' %}" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
-                    <i class="bi bi-award mr-3 text-lg"></i>
-                    CPD Dashboard
-                </a>
-                
-                <!-- Administration Section -->
-                <div class="px-3 py-2 mt-6">
-                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Administration</h3>
-                </div>
-                
-                
-                <!-- Reports -->
-                <a href="javascript:void(0)" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
-                    <i class="bi bi-bar-chart mr-3 text-lg"></i>
-                    Reports
-                </a>
-                
-                <!-- Settings -->
-                <a href="javascript:void(0)" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
-                    <i class="bi bi-gear mr-3 text-lg"></i>
-                    Provider Settings
-                </a>
-                
-            </div>
-            
-            <!-- Bottom Links -->
-            <div class="mt-8 pt-8 border-t border-gray-700">
-                <div class="space-y-1">
-                    <a href="javascript:void(0)" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
-                        <i class="bi bi-question-circle mr-3 text-lg"></i>
-                        Help & Support
+                    
+                    <!-- Workspace -->
+                    <a href="{% url 'common:workspace_dashboard' %}" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                        <i class="bi bi-kanban mr-3 text-lg"></i>
+                        Workspace
                     </a>
-                </div>
+                    
+                    <!-- Education Section -->
+                    <div class="px-3 py-2 mt-6">
+                        <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Education</h3>
+                    </div>
+                    
+                    <!-- Enrollments with submenu -->
+                    <div class="space-y-1">
+                        <button class="sidebar-link text-gray-300 hover:text-white group w-full flex items-center px-3 py-2 text-sm font-medium rounded-md" onclick="toggleSubmenu('enrollments')">
+                            <i class="bi bi-people mr-3 text-lg"></i>
+                            Enrollments
+                            <i class="bi bi-chevron-down ml-auto transition-transform duration-200" id="enrollments-icon"></i>
+                        </button>
+                        <div class="hidden ml-6 space-y-1" id="enrollments-submenu">
+                            <a href="{% url 'enrollments:enrollment_dashboard' %}" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">Enrollment Dashboard</a>
+                            <a href="javascript:void(0)" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">Pending Review</a>
+                            <a href="javascript:void(0)" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">Approved</a>
+                            <a href="javascript:void(0)" class="text-gray-400 hover:text-white block px-3 py-2 text-sm rounded-md">Rejected</a>
+                        </div>
+                    </div>
+                    
+                    <!-- Students -->
+                    <a href="{% url 'enrollments:enrollment_dashboard' %}" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                        <i class="bi bi-mortarboard mr-3 text-lg"></i>
+                        Enrollment Dashboard
+                    </a>
+                    
+                    <!-- CPD Tracking -->
+                    <a href="{% url 'cpd:dashboard' %}" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                        <i class="bi bi-award mr-3 text-lg"></i>
+                        CPD Dashboard
+                    </a>
+                    
+                    <!-- Administration Section -->
+                    <div class="px-3 py-2 mt-6">
+                        <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Administration</h3>
+                    </div>
+                    
+                    <!-- Reports -->
+                    <a href="javascript:void(0)" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                        <i class="bi bi-bar-chart mr-3 text-lg"></i>
+                        Reports
+                    </a>
+                    
+                    <!-- Settings -->
+                    <a href="javascript:void(0)" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                        <i class="bi bi-gear mr-3 text-lg"></i>
+                        Provider Settings
+                    </a>
+                    
+                    <!-- Bottom Links -->
+                    <div class="mt-8 pt-8 border-t border-gray-700">
+                        <div class="space-y-1">
+                            <a href="javascript:void(0)" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                                <i class="bi bi-question-circle mr-3 text-lg"></i>
+                                Help & Support
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+                
             </div>
         </nav>
     </div>

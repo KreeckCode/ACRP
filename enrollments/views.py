@@ -2,6 +2,7 @@ from datetime import timedelta
 import json
 import logging
 import os
+import random
 from typing import Type, Dict, Any, Optional
 from django.db.models import Count, Q, Case, When, IntegerField, Prefetch
 from django.db.models.functions import Coalesce
@@ -97,8 +98,166 @@ ONBOARDING_SESSION_TIMEOUT = 3600  # 1 hour
 # ============================================================================
 # UTILITY FUNCTIONS
 # ============================================================================
-from django.utils import timezone
-from datetime import datetime
+from django.contrib.auth.hashers import make_password
+
+
+def generate_memorable_password(full_name, length=10):
+    """
+    Generate a memorable password based on the user's name and random elements.
+    
+    Format: FirstnameYYYY#nnn
+    Example: John2024#147
+    
+    Args:
+        full_name: User's full name
+        length: Minimum password length (default 10)
+    
+    Returns:
+        str: Generated password
+    """
+    # Extract first name (capitalize first letter only)
+    first_name = full_name.split()[0].capitalize() if full_name else "User"
+    
+    # Get current year
+    current_year = timezone.now().year
+    
+    # Generate random 3-digit number
+    random_number = random.randint(100, 999)
+    
+    # Choose a random special character
+    special_char = random.choice(['@', '!'])
+    
+    # Construct password: Firstname + Year + Special + Number
+    password = f"{first_name}{current_year}{special_char}{random_number}"
+    
+    return password
+
+
+def create_learner_account(application, registration_number):
+    """
+    Create a user account for an approved application with LEARNER role.
+    
+    This function:
+    1. Creates a new User account with registration_number as username
+    2. Sets the acrp_role to LEARNER
+    3. Generates a memorable password
+    4. Links the user to the application
+    5. Returns the user and generated password
+    
+    Args:
+        application: Approved application instance (any type)
+        registration_number: Unique registration number (becomes username)
+    
+    Returns:
+        tuple: (User instance, generated_password) or (None, None) if failed
+    """
+    try:
+        # Check if user already exists with this username
+        if User.objects.filter(username=registration_number).exists():
+            logger.warning(f"User account already exists for registration number: {registration_number}")
+            existing_user = User.objects.get(username=registration_number)
+            return existing_user, None  # Return None for password as it already exists
+        
+        # Generate memorable password
+        generated_password = generate_memorable_password(application.get_full_name())
+        
+        # Create user account
+        user = User.objects.create(
+            username=registration_number,
+            email=application.email,
+            first_name=application.full_names.split()[0] if application.full_names else '',
+            last_name=application.surname,
+            
+            # Set ACRP role to LEARNER
+            acrp_role=User.ACRPRole.LEARNER,
+            
+            # Set additional fields from application
+            employee_code=registration_number,
+            phone=application.cell_phone,
+            
+            # Set password
+            password=make_password(generated_password),
+            
+            # Activate account
+            is_active=True,
+        )
+        
+        logger.info(f"Created learner account for {application.get_full_name()} with username: {registration_number}")
+        
+        return user, generated_password
+        
+    except Exception as e:
+        logger.error(f"Failed to create learner account for application {application.pk}: {e}")
+        return None, None
+
+
+def send_login_credentials_email(application, registration_number, password, request=None):
+    """
+    Send email with login credentials to newly approved learner.
+    
+    This email contains:
+    - Registration number (username)
+    - Generated password
+    - Login instructions
+    - Link to student portal
+    
+    Args:
+        application: The approved application instance
+        registration_number: The assigned registration number (username)
+        password: The generated password
+        request: HTTP request object for building URLs
+    
+    Returns:
+        bool: True if email sent successfully, False otherwise
+    """
+    try:
+        from django.template.loader import render_to_string
+        from django.core.mail import EmailMultiAlternatives
+        from django.conf import settings
+        
+        # Build login URL (adjust to your actual login URL)
+        if request:
+            login_url = request.build_absolute_uri('/accounts/login/')
+        else:
+            login_url = f"{settings.SITE_URL}/accounts/login/" if hasattr(settings, 'SITE_URL') else "Login to your account"
+        
+        # Context for email template
+        context = {
+            'application': application,
+            'applicant_name': application.get_display_name(),
+            'registration_number': registration_number,
+            'password': password,
+            'login_url': login_url,
+            'council': application.onboarding_session.selected_council,
+            'affiliation_type': application.onboarding_session.selected_affiliation_type,
+            'current_year': timezone.now().year,
+        }
+        
+        # Render HTML email template
+        subject = f"Your Login Credentials - Registration Number: {registration_number}"
+        html_content = render_to_string('email_templates/enrollment/login_credentials_email.html', context)
+        
+        # Create email with HTML only
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body='',  # Empty body since we're using HTML only
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[application.email],
+            reply_to=[settings.DEFAULT_FROM_EMAIL],
+        )
+        email.attach_alternative(html_content, "text/html")
+        
+        # Send email
+        email.send()
+        
+        logger.info(f"Login credentials email sent to {application.email} for registration {registration_number}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Failed to send login credentials email for {registration_number}: {str(e)}")
+        return False
+    
+
 
 def make_naive_datetime(dt):
     """
@@ -3300,7 +3459,8 @@ def get_application_timeline(application):
 @transaction.atomic
 def application_review(request, pk, app_type):
     """
-    Review and update application status with optional card assignment.
+    Handle application status updates, registration number assignment, and learner account creation.
+    This view processes the review form submission from application_detail.
     """
     model_map = {
         'associated': AssociatedApplication,
@@ -3315,97 +3475,120 @@ def application_review(request, pk, app_type):
     application = get_object_or_404(model, pk=pk)
     
     if request.method == 'POST':
-        # DEBUG: Log all POST data
-        logger.info(f"=== APPLICATION REVIEW POST DATA ===")
+        logger.info(f"=== APPLICATION REVIEW POST ===")
         logger.info(f"Application: {application.application_number}")
-        logger.info(f"POST data: {dict(request.POST)}")
         
         form = ApplicationReviewForm(request.POST, application=application)
         
-        # DEBUG: Check if form has the field
-        logger.info(f"Form fields: {list(form.fields.keys())}")
-        logger.info(f"assign_digital_card in form: {'assign_digital_card' in form.fields}")
-        
         if form.is_valid():
-            logger.info(f"Form is valid. Cleaned data: {form.cleaned_data}")
-            
             old_status = application.status
             new_status = form.cleaned_data['status']
+            registration_number = form.cleaned_data.get('registration_number')
             assign_card = form.cleaned_data.get('assign_digital_card', False)
             
-            # DEBUG: Log card assignment decision
             logger.info(f"Status change: {old_status} -> {new_status}")
-            logger.info(f"Assign card requested: {assign_card}")
-            logger.info(f"Will assign card: {assign_card and new_status == 'approved'}")
             
-            # Update application
             application.status = new_status
             application.reviewer_notes = form.cleaned_data['reviewer_notes']
             application.reviewed_by = request.user
             application.reviewed_at = timezone.now()
             
+            # REJECTION WORKFLOW
             if new_status == 'rejected':
                 application.rejection_reason = form.cleaned_data['rejection_reason']
+                application.rejected_at = timezone.now()
+                application.save()
+                
+                try:
+                    send_application_rejected_email(application, application.rejection_reason, request)
+                except Exception as e:
+                    logger.error(f"Failed to send rejection email: {e}")
+                
+                messages.warning(request, f"Application {application.application_number} has been rejected.")
+                return redirect('enrollments:application_detail', pk=pk, app_type=app_type)
             
+            # APPROVAL WORKFLOW
             if new_status == 'approved':
                 application.approved_by = request.user
                 application.approved_at = timezone.now()
-            
-            application.save()
-            
-            # Handle card assignment if requested and approved
-            if assign_card and new_status == 'approved':
-                logger.info(f"Starting card assignment for application {application.pk}")
+                
+                if registration_number:
+                    application.registration_number = registration_number
+                    logger.info(f"Registration number {registration_number} assigned")
+                
+                application.save()
+                
+                # CREATE LEARNER ACCOUNT
+                user_account = None
+                generated_password = None
+                
+                if registration_number:
+                    logger.info(f"Creating learner account for {registration_number}")
+                    try:
+                        user_account, generated_password = create_learner_account(application, registration_number)
+                        
+                        if user_account and generated_password:
+                            logger.info(f"Learner account created: {user_account.username}")
+                        elif user_account and not generated_password:
+                            logger.info(f"Learner account already exists: {user_account.username}")
+                            messages.info(request, f"User account for {registration_number} already exists.")
+                        else:
+                            logger.error(f"Failed to create learner account")
+                            messages.warning(request, "Application approved but learner account creation failed.")
+                    except Exception as e:
+                        logger.error(f"Exception creating learner account: {e}")
+                        messages.warning(request, f"Application approved but account creation failed: {str(e)}")
+                
+                # SEND APPROVAL EMAIL
                 try:
-                    card = assign_digital_card_to_application(application, request.user)
-                    if card:
-                        logger.info(f"Card assigned successfully: {card.card_number}")
-                        messages.success(
-                            request, 
-                            f"Application approved and digital card {card.card_number} assigned successfully."
-                        )
-                    else:
-                        logger.warning("Card assignment returned None")
-                        messages.warning(
-                            request,
-                            "Application approved but card assignment failed. You can assign it manually later."
-                        )
+                    send_application_approved_email(application, request)
+                    logger.info(f"Approval email sent")
                 except Exception as e:
-                    logger.error(f"Card assignment failed for application {application.pk}: {e}")
-                    messages.warning(
-                        request,
-                        f"Application approved but card assignment failed: {str(e)}"
-                    )
+                    logger.error(f"Failed to send approval email: {e}")
+                
+                # SEND LOGIN CREDENTIALS EMAIL
+                if user_account and generated_password:
+                    try:
+                        send_login_credentials_email(application, registration_number, generated_password, request)
+                        logger.info(f"Login credentials email sent")
+                    except Exception as e:
+                        logger.error(f"Failed to send credentials email: {e}")
+                        messages.warning(request, "Account created but credentials email failed.")
+                
+                # DIGITAL CARD ASSIGNMENT
+                if assign_card:
+                    logger.info(f"Assigning digital card")
+                    try:
+                        card = assign_digital_card_to_application(application, request.user)
+                        if card:
+                            logger.info(f"Card {card.card_number} assigned")
+                            messages.success(request, f"Application approved, account created (Username: {registration_number}), and card {card.card_number} assigned.")
+                        else:
+                            messages.warning(request, "Application approved and account created, but card assignment failed.")
+                    except Exception as e:
+                        logger.error(f"Card assignment failed: {e}")
+                        messages.warning(request, f"Application approved and account created, but card failed: {str(e)}")
+                else:
+                    if user_account and generated_password:
+                        messages.success(request, f"Application approved and learner account created. Username: {registration_number}")
+                    else:
+                        messages.success(request, f"Application approved with registration: {registration_number}")
+            
             else:
-                logger.info(f"No card assignment: assign_card={assign_card}, status={new_status}")
+                # OTHER STATUS CHANGES
+                application.save()
                 messages.success(request, f"Application status updated to {new_status}.")
             
             return redirect('enrollments:application_detail', pk=pk, app_type=app_type)
         
         else:
-            # DEBUG: Log form errors
-            logger.error(f"Form validation failed. Errors: {form.errors}")
-            logger.error(f"Form non-field errors: {form.non_field_errors()}")
+            logger.error(f"Form validation failed: {form.errors}")
+            messages.error(request, "Please correct the errors in the form.")
+            return redirect('enrollments:application_detail', pk=pk, app_type=app_type)
     
-    else:
-        form = ApplicationReviewForm(application=application, initial={
-            'status': application.status,
-            'reviewer_notes': application.reviewer_notes,
-            'rejection_reason': application.rejection_reason,
-        })
-        
-        # DEBUG: Log form initialization
-        logger.info(f"Form initialized with fields: {list(form.fields.keys())}")
-        if hasattr(form, 'existing_card'):
-            logger.info(f"Existing card: {form.existing_card}")
-    
-    context = {
-        'form': form,
-        'application': application,
-        'app_type': app_type,
-    }
-    
-    return render(request, 'enrollments/applications/review.html', context)
+    return redirect('enrollments:application_detail', pk=pk, app_type=app_type)
+
+
 
 
 def assign_digital_card_to_application(application, assigned_by):

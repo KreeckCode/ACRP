@@ -181,8 +181,20 @@ def workspace_analytics(request):
 
 @login_required
 def dashboard(request):
+    """
+    Main dashboard entry point - routes to appropriate dashboard based on user role.
+    
+    Routes:
+    - LEARNER role -> Student-focused dashboard with learning progress
+    - All other roles -> Admin/Staff dashboard with system management
+    """
     user = request.user
     
+    # Check if user is a learner - route to student dashboard
+    if hasattr(user, 'acrp_role') and user.acrp_role == 'LEARNER':
+        return learner_dashboard(request)
+    
+    # Otherwise, show the admin/staff dashboard
     # ============================================================================
     # SYSTEM-WIDE STATISTICS
     # ============================================================================
@@ -238,7 +250,7 @@ def dashboard(request):
             approval__status='APPROVED'
         )
         
-        # Calculate total hours (use hours_awarded if available, otherwise hours_claimed)
+        # Calculate total hours
         total_hours = 0
         for record in approved_records:
             total_hours += float(record.hours_awarded or record.hours_claimed or 0)
@@ -248,12 +260,12 @@ def dashboard(request):
     except (ImportError, AttributeError):
         stats['cpd_hours'] = 0
     
-    # Active Members (approximation based on active cards or approved applications)
+    # Active Members
     stats['active_members'] = stats['active_cards'] or stats['approved_applications']
-    stats['new_members'] = 0  # You can calculate this based on recent approvals
+    stats['new_members'] = 0
     
     # ============================================================================
-    # CORE CONTENT (Existing functionality)
+    # CORE CONTENT
     # ============================================================================
     
     # Urgent announcements
@@ -276,7 +288,7 @@ def dashboard(request):
     
     pending_items = []
     
-    # Add role-based pending items
+    # Add role-based pending items for staff
     if user.is_staff or hasattr(user, 'role'):
         # Applications needing review
         try:
@@ -294,7 +306,7 @@ def dashboard(request):
                     'title': f"Review Application {app['application_number']}",
                     'description': f"Application from {app['full_names']} needs review",
                     'created': app['created_at'],
-                    'url': f"/enrollments/applications/",  # Generic link
+                    'url': f"/enrollments/applications/",
                 })
         except:
             pass
@@ -317,77 +329,18 @@ def dashboard(request):
         except:
             pass
     
-    # CPD requirements for current user
-    try:
-        # Check if user needs CPD hours
-        required_hours = 20  # Annual requirement
-        if stats['cpd_hours'] < required_hours:
-            pending_items.append({
-                'type': 'cpd',
-                'title': 'CPD Hours Required',
-                'description': f"You need {required_hours - stats['cpd_hours']} more CPD hours this year",
-                'created': timezone.now(),
-                'url': '/cpd/activities/',
-            })
-    except:
-        pass
-    
-    # ============================================================================
-    # ROLE-BASED CUSTOMIZATION
-    # ============================================================================
-    
-    # Add role-specific context
-    role = getattr(user, 'role', None)
-    user_role = getattr(role, 'title', 'Member') if role else 'Member'
-    
-    # Admin-specific stats
-    if user.is_staff:
-        stats['system_health'] = 99  # You can calculate this based on system metrics
-        
-        # Recent activities for admins
-        try:
-            recent_activities = []
-            
-            # Recent applications
-            for model in [AssociatedApplication, DesignatedApplication, StudentApplication]:
-                recent_apps = model.objects.filter(
-                    created_at__gte=timezone.now() - timedelta(days=7)
-                ).order_by('-created_at')[:3]
-                
-                for app in recent_apps:
-                    recent_activities.append({
-                        'description': f"New {model.__name__.replace('Application', '')} application from {app.full_names}",
-                        'timestamp': app.created_at,
-                    })
-            
-            # Sort by timestamp
-            recent_activities.sort(key=lambda x: x['timestamp'], reverse=True)
-            stats['recent_activities'] = recent_activities[:5]
-            
-        except:
-            stats['recent_activities'] = []
-    
     # ============================================================================
     # CONTEXT ASSEMBLY
     # ============================================================================
     
     context = {
-        # Core content
         'announcements': announcements,
         'events': events,
         'projects': projects,
-        
-        # Statistics
         'stats': stats,
-        
-        # Attention items
         'pending_items': pending_items,
-        
-        # User context
-        'user_role': user_role,
+        'user_role': getattr(getattr(user, 'role', None), 'title', 'Member') if hasattr(user, 'role') else 'Member',
         'is_admin': user.is_staff,
-        
-        # System status
         'system_status': {
             'card_service': 'operational',
             'email_service': 'operational', 
@@ -396,6 +349,265 @@ def dashboard(request):
     }
     
     return render(request, 'app/dashboard.html', context)
+
+
+@login_required
+def learner_dashboard(request):
+    """
+    Student-focused dashboard showing learning progress, courses, assignments,
+    CPD tracking, and personalized learning resources.
+    
+    This dashboard is specifically designed for users with LEARNER role,
+    providing a clean, focused interface for their educational journey.
+    """
+    user = request.user
+    
+    # ============================================================================
+    # LEARNER PROFILE AND ENROLLMENT INFO
+    # ============================================================================
+    
+    learner_profile = {
+        'username': user.username,
+        'full_name': user.get_full_name() if hasattr(user, 'get_full_name') else user.username,
+        'email': user.email,
+        'registration_number': getattr(user, 'employee_code', user.username),
+        'phone': getattr(user, 'phone', 'Not provided'),
+    }
+    
+    # Get learner's application information
+    application_info = None
+    try:
+        from enrollments.models import AssociatedApplication, DesignatedApplication, StudentApplication
+        from django.contrib.contenttypes.models import ContentType
+        
+        # Try to find application linked to this user's email or registration number
+        for model in [StudentApplication, AssociatedApplication, DesignatedApplication]:
+            application = model.objects.filter(
+                Q(email=user.email) | Q(registration_number=user.username)
+            ).first()
+            
+            if application:
+                application_info = {
+                    'type': model.__name__.replace('Application', ''),
+                    'number': application.application_number,
+                    'status': application.get_status_display(),
+                    'council': application.onboarding_session.selected_council.name,
+                    'affiliation_type': application.onboarding_session.selected_affiliation_type.name,
+                }
+                break
+    except:
+        pass
+    
+    # ============================================================================
+    # DIGITAL CARD STATUS
+    # ============================================================================
+    
+    digital_card = None
+    try:
+        from affiliationcard.models import AffiliationCard
+        
+        # Find card associated with this learner's email
+        digital_card = AffiliationCard.objects.filter(
+            Q(email=user.email) | Q(registration_number=user.username)
+        ).first()
+        
+        if digital_card:
+            # Calculate days until expiry
+            days_until_expiry = (digital_card.date_expires - timezone.now().date()).days if digital_card.date_expires else None
+            
+            digital_card_info = {
+                'card_number': digital_card.card_number,
+                'status': digital_card.get_status_display(),
+                'issue_date': digital_card.date_issued,
+                'expiry_date': digital_card.date_expires,
+                'days_until_expiry': days_until_expiry,
+                'is_expiring_soon': days_until_expiry and days_until_expiry <= 30,
+                'url': f'/affiliationcard/cards/{digital_card.pk}/',
+            }
+            digital_card = digital_card_info
+    except:
+        pass
+    
+    # ============================================================================
+    # CPD PROGRESS TRACKING
+    # ============================================================================
+    
+    cpd_progress = {
+        'current_year_hours': 0,
+        'required_hours': 20,  # Standard annual requirement
+        'completion_percentage': 0,
+        'pending_hours': 0,
+        'approved_hours': 0,
+        'recent_activities': [],
+    }
+    
+    try:
+        from cpd.models import CPDRecord, CPDActivity
+        
+        current_year = timezone.now().year
+        
+        # Get all CPD records for current year
+        year_records = CPDRecord.objects.filter(
+            user=user,
+            completion_date__year=current_year
+        )
+        
+        # Calculate approved hours
+        approved_records = year_records.filter(
+            status='COMPLETED',
+            approval__status='APPROVED'
+        )
+        
+        for record in approved_records:
+            cpd_progress['approved_hours'] += float(record.hours_awarded or record.hours_claimed or 0)
+        
+        # Calculate pending hours
+        pending_records = year_records.filter(
+            status='COMPLETED',
+            approval__status__in=['PENDING', 'UNDER_REVIEW']
+        )
+        
+        for record in pending_records:
+            cpd_progress['pending_hours'] += float(record.hours_claimed or 0)
+        
+        # Total current year hours
+        cpd_progress['current_year_hours'] = cpd_progress['approved_hours']
+        
+        # Calculate completion percentage
+        cpd_progress['completion_percentage'] = min(
+            int((cpd_progress['current_year_hours'] / cpd_progress['required_hours']) * 100),
+            100
+        )
+        
+        # Get recent CPD activities (last 5)
+        cpd_progress['recent_activities'] = year_records.order_by('-completion_date')[:5]
+        
+    except:
+        pass
+    
+    # ============================================================================
+    # LEARNING ACTIVITIES (COURSES, ASSIGNMENTS, ETC.)
+    # ============================================================================
+    
+    learning_stats = {
+        'courses_enrolled': 0,
+        'courses_completed': 0,
+        'assignments_pending': 0,
+        'assignments_completed': 0,
+        'current_grade_average': 0,
+    }
+    
+    # Placeholder for future LMS integration
+    # When you add courses/assignments modules, populate these stats
+    
+    # ============================================================================
+    # UPCOMING EVENTS AND WORKSHOPS
+    # ============================================================================
+    
+    upcoming_events = Event.objects.filter(
+        start_time__gte=timezone.now(),
+        start_time__lte=timezone.now() + timedelta(days=30),
+        is_active=True
+    ).order_by('start_time')[:5]
+    
+    # ============================================================================
+    # RECENT ANNOUNCEMENTS FOR LEARNERS
+    # ============================================================================
+    
+    announcements = Announcement.objects.filter(
+        published_at__lte=timezone.now(),
+        is_active=True
+    ).order_by('-published_at')[:5]
+    
+    # ============================================================================
+    # ACTION ITEMS FOR LEARNER
+    # ============================================================================
+    
+    action_items = []
+    
+    # Check if CPD hours are below requirement
+    if cpd_progress['current_year_hours'] < cpd_progress['required_hours']:
+        hours_needed = cpd_progress['required_hours'] - cpd_progress['current_year_hours']
+        action_items.append({
+            'type': 'cpd',
+            'priority': 'high' if hours_needed > 10 else 'medium',
+            'title': 'Complete CPD Hours',
+            'description': f'You need {hours_needed} more CPD hours to meet annual requirements',
+            'url': '/cpd/activities/',
+            'icon': 'award',
+        })
+    
+    # Check if digital card is expiring soon
+    if digital_card and digital_card.get('is_expiring_soon'):
+        action_items.append({
+            'type': 'card',
+            'priority': 'high',
+            'title': 'Digital Card Expiring Soon',
+            'description': f"Your card expires in {digital_card['days_until_expiry']} days",
+            'url': digital_card['url'],
+            'icon': 'credit-card',
+        })
+    
+    # Check for pending assignments (when implemented)
+    if learning_stats['assignments_pending'] > 0:
+        action_items.append({
+            'type': 'assignment',
+            'priority': 'medium',
+            'title': 'Pending Assignments',
+            'description': f"You have {learning_stats['assignments_pending']} assignments to complete",
+            'url': '/learning/assignments/',
+            'icon': 'file-text',
+        })
+    
+    # ============================================================================
+    # QUICK LINKS FOR LEARNERS
+    # ============================================================================
+    
+    quick_links = [
+        {
+            'title': 'My Courses',
+            'description': 'View enrolled courses',
+            'url': '/learning/courses/',  # Placeholder URL
+            'icon': 'book',
+            'color': 'blue',
+        },
+        {
+            'title': 'CPD Activities',
+            'description': 'Browse CPD opportunities',
+            'url': '/cpd/activities/',
+            'icon': 'award',
+            'color': 'purple',
+        },
+        {
+            'title': 'My Digital Card',
+            'description': 'View your affiliation card',
+            'url': digital_card['url'] if digital_card else '/affiliationcard/dashboard/',
+            'icon': 'credit-card',
+            'color': 'green',
+        },
+        {
+            'title': 'Resource Library',
+            'description': 'Access learning resources',
+            'url': '/app/resources/',
+            'icon': 'folder',
+            'color': 'amber',
+        },
+        {
+            'title': 'Events & Workshops',
+            'description': 'Register for events',
+            'url': '/app/events/',
+            'icon': 'calendar',
+            'color': 'indigo',
+        },
+        {
+            'title': 'My Certificates',
+            'description': 'View earned certificates',
+            'url': '/cpd/certificates/',
+            'icon': 'file-badge',
+            'color': 'teal',
+        },
+    ]
+    
 
 
 

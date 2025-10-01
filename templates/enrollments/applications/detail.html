@@ -1146,6 +1146,20 @@
                                 <label class="form-label">{{ review_form.status.label }}</label>
                                 {{ review_form.status }}
                             </div>
+                            <!-- Registration Number Field (shows when status is approved) -->
+                            <div class="mb-3" id="registration-number-field" style="display: none;">
+                                <label class="form-label fw-bold text-primary">
+                                    {{ review_form.registration_number.label }}
+                                    <span class="text-danger">*</span>
+                                </label>
+                                {{ review_form.registration_number }}
+                                <small class="form-text text-muted d-block mt-1">
+                                    {{ review_form.registration_number.help_text }}
+                                </small>
+                                {% if review_form.registration_number.errors %}
+                                    <div class="text-danger mt-1">{{ review_form.registration_number.errors.0 }}</div>
+                                {% endif %}
+                            </div>
                             
                             <!-- Reviewer Notes -->
                             <div class="mb-3">
@@ -1253,12 +1267,14 @@
                 });
             }
 
-            // Status change handling - show/hide rejection reason
+            // Status change handling - show/hide rejection reason AND registration number
             const statusSelect = document.querySelector('#id_status');
             const rejectionReasonDiv = document.querySelector('#rejection-reason');
-            
+            const registrationNumberDiv = document.querySelector('#registration-number-field');
+
             if (statusSelect && rejectionReasonDiv) {
                 statusSelect.addEventListener('change', function() {
+                    // Handle rejection reason
                     if (this.value === 'rejected') {
                         rejectionReasonDiv.style.display = 'block';
                         rejectionReasonDiv.querySelector('textarea').required = true;
@@ -1266,11 +1282,25 @@
                         rejectionReasonDiv.style.display = 'none';
                         rejectionReasonDiv.querySelector('textarea').required = false;
                     }
+                    
+                    // Handle registration number (show only when approving)
+                    if (registrationNumberDiv) {
+                        if (this.value === 'approved') {
+                            registrationNumberDiv.style.display = 'block';
+                            registrationNumberDiv.querySelector('input').required = true;
+                        } else {
+                            registrationNumberDiv.style.display = 'none';
+                            registrationNumberDiv.querySelector('input').required = false;
+                        }
+                    }
                 });
                 
-                // Initial check
+                // Initial check for both fields
                 if (statusSelect.value === 'rejected') {
                     rejectionReasonDiv.style.display = 'block';
+                }
+                if (registrationNumberDiv && statusSelect.value === 'approved') {
+                    registrationNumberDiv.style.display = 'block';
                 }
             }
 
