@@ -1252,12 +1252,15 @@ class ApplicationReviewForm(forms.Form):
             # affiliationcard app not available
             return None
     
+    #msdnfsd
+
     def clean(self):
         """Validate review form"""
         cleaned_data = super().clean()
         
         status = cleaned_data.get('status')
         rejection_reason = cleaned_data.get('rejection_reason')
+        registration_number = cleaned_data.get('registration_number')  # FIX: Get it from cleaned_data FIRST
         assign_card = cleaned_data.get('assign_digital_card', False)
         
         # Validate rejection reason
@@ -1279,7 +1282,6 @@ class ApplicationReviewForm(forms.Form):
             cleaned_data['registration_number'] = registration_number
             
             # Check if registration number already exists (exclude current application)
-            from .models import BaseApplication
             existing = None
             
             # Check across all application types

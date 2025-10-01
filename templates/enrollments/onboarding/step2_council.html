@@ -152,6 +152,7 @@
             </div>
           </div>
 
+          {% if session.selected_council.name == "CPSC" or session.selected_council.name == "CGMP" %}
           <!-- Student Affiliation -->
           <div class="affiliation-card cursor-pointer" data-value="student" data-type="student" id="card-student">
             <input type="radio" name="affiliation_type" value="student" class="hidden radio-input" id="radio-student" required>
@@ -206,6 +207,7 @@
               </div>
             </div>
           </div>
+          {% endif %}
 
           {% if session.selected_council.name == "CPSC" or session.selected_council.name == "CGMP" %}
           <!-- Associated Affiliation -->
@@ -232,13 +234,24 @@
                   For persons who are informally or non-professionally involved in ministry, who want to be associated with the professional body.
                 </p>
                 {% endif %}
-                
+                {% if session.selected_council.name == "CGMP" %}
                 <div class="bg-blue-50 p-4 rounded-lg">
                   <h4 class="font-semibold text-blue-800 mb-2">Who This Is For:</h4>
                   <ul class="text-blue-700 text-sm space-y-1">
-                    <li>• People who belong to another professional body with a similar counselling scope of practice.</li>
+                    <li>• Volunteer ministry workers</li>
+                    <li>• Church committee members</li>
+                    <li>• Ministry training institution administrators</li>
+                    <li>• Those exploring ministry</li>
                   </ul>
                 </div>
+                {% else %}
+                  <div class="bg-blue-50 p-4 rounded-lg">
+                      <h4 class="font-semibold text-blue-800 mb-2">Who This Is For:</h4>
+                      <ul class="text-blue-700 text-sm space-y-1">
+                        <li>• People who belong to another professional body with a similar counselling scope of practice.</li>
+                      </ul>
+                    </div>
+                {% endif %}
                 
                 <div class="flex items-center justify-center mt-6">
                   <div class="check-indicator w-6 h-6 border-2 border-blue-600 rounded-full flex items-center justify-center">

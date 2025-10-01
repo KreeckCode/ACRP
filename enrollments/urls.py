@@ -93,13 +93,15 @@ urlpatterns = [
     # ============================================================================
     # DOCUMENT MANAGEMENT
     # ============================================================================
-    path('document/<int:pk>/verify/', views.document_verify, name='document_verify'),
+    path('documents/<int:pk>/verify/', views.document_verify, name='document_verify'),
     path('document/<int:pk>/reject/', views.document_reject, name='document_reject'),
     path('document/<int:pk>/delete/', views.document_delete, name='document_delete'),
     # ============================================================================
     # REFERENCE MANAGEMENT
     # ============================================================================
     path('reference/<int:pk>/approve/', views.reference_approve, name='reference_approve'),
+    
+    path('references/<int:pk>/approve-ajax/', views.reference_approve_ajax, name='reference_approve_ajax'),
     
     # ============================================================================
     # BULK ACTIONS

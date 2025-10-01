@@ -898,25 +898,102 @@ def application_create(request, session_id):
 # ============================================================================
 # DOCUMENT MANAGEMENT VIEWS
 # ============================================================================
+@login_required
+@permission_required('enrollments.change_reference', raise_exception=True)
+@require_POST
+def reference_approve_ajax(request, pk):
+    """
+    Approve a reference via AJAX.
+    """
+    try:
+        reference = get_object_or_404(Reference, pk=pk)
+        
+        # Mark as approved
+        reference.letter_received = True
+        reference.letter_received_date = timezone.now()
+        reference.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Reference approved successfully',
+            'reference_name': reference.get_reference_full_name(),
+            'approved_date': reference.letter_received_date.strftime('%Y-%m-%d %H:%M:%S')
+        })
+        
+    except Exception as e:
+        logger.error(f"Error approving reference: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+    
 
 @login_required
-@user_passes_test(can_approve_applications, login_url='/', redirect_field_name=None)
+@permission_required('enrollments.change_document', raise_exception=True)
 @require_POST
 def document_verify(request, pk):
-    """Verify a document"""
-    document = get_object_or_404(Document, pk=pk)
+    """
+    Verify or reject a document via AJAX.
+    """
+    try:
+        document = get_object_or_404(Document, pk=pk)
+        
+        data = json.loads(request.body)
+        action = data.get('action')  # 'verify' or 'reject'
+        notes = data.get('notes', '')
+        
+        # Get user's name safely
+        user_name = f"{request.user.first_name} {request.user.last_name}".strip() or request.user.username
+        
+        if action == 'verify':
+            document.verified = True
+            document.verified_by = request.user
+            document.verified_at = timezone.now()
+            document.verification_notes = notes or 'Verified'
+            document.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Document verified successfully',
+                'verified': True,
+                'verified_at': document.verified_at.strftime('%Y-%m-%d %H:%M:%S'),
+                'verified_by': user_name  # Use the safe version
+            })
+            
+        elif action == 'reject':
+            document.verified = False
+            document.verified_by = request.user
+            document.verified_at = timezone.now()
+            document.verification_notes = notes or 'Rejected'
+            document.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Document rejected',
+                'verified': False,
+                'verified_at': document.verified_at.strftime('%Y-%m-%d %H:%M:%S'),
+                'verified_by': user_name  # Use the safe version
+            })
+        
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': 'Invalid action'
+            }, status=400)
+            
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid JSON'
+        }, status=400)
+    except Exception as e:
+        logger.error(f"Error verifying document: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
     
-    notes = request.POST.get('notes', '')
-    document.verify(verified_by=request.user, notes=notes)
     
-    messages.success(request, f'Document "{document.title}" verified successfully.')
-    
-    # Return to application detail
-    app = document.content_object
-    app_type = app.get_affiliation_type()
-    return redirect('enrollments:application_detail', pk=app.pk, app_type=app_type)
-
-
 @login_required
 @user_passes_test(can_approve_applications, login_url='/', redirect_field_name=None)
 @require_POST

@@ -413,7 +413,13 @@
               <li>Allow 24-48 hours for payment verification</li>
               <!-- CHANGED: Added emphasis about saving proof of payment -->
               <li><strong>Save your proof of payment - it's required for application completion</strong></li>
-              <li> <a href="https://www.acrp.org.za/affiliation/affiliation-of-persons/fee-structure" class="color-blue"> Click here to View Full Fee Structure</a> </li>
+              <li> 
+                  <a href="https://www.acrp.org.za/affiliation/affiliation-of-persons/fee-structure" 
+                    class="text-blue-600 hover:text-blue-700 underline" 
+                    target="_blank"> 
+                      Click here to View Full Fee Structure
+                  </a> 
+              </li>
             </ul>
           </div>
           
@@ -641,6 +647,9 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Update bank details in the modal
       updateBankDetails(bankDetails);
+      
+      // **NEW: Automatically switch to the correct council's contact info**
+      switchCouncilContact(councilToUse);
       
       // Show the modal
       document.getElementById('paymentModal').classList.remove('hidden');

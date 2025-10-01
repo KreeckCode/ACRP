@@ -1381,22 +1381,100 @@
         }
 
         {% if can_review %}
-        function verifyDocument(documentId) {
-            console.log('Verifying document:', documentId);
-            // Implementation for document verification
-        }
-
-        function rejectDocument(documentId) {
-            console.log('Rejecting document:', documentId);
-            // Implementation for document rejection
-        }
-
-        function approveReference(referenceId) {
-            if (confirm('Mark this reference letter as received?')) {
-                console.log('Approving reference:', referenceId);
-                // Implementation for reference approval
+            function verifyDocument(documentId) {
+                if (!confirm('Verify this document as authentic and valid?')) {
+                    return;
+                }
+                
+                fetch(`/enrollments/documents/${documentId}/verify/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        'action': 'verify',
+                        'notes': 'Verified'
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Document verified successfully!');
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    alert('Error: ' + error);
+                });
             }
-        }
+
+            function rejectDocument(documentId) {
+                const notes = prompt('Please provide a reason for rejection:');
+                
+                // User cancelled
+                if (notes === null) {
+                    return;
+                }
+                
+                // Empty reason
+                if (!notes.trim()) {
+                    alert('Please provide a reason for rejection.');
+                    return;
+                }
+                
+                fetch(`/enrollments/documents/${documentId}/verify/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        'action': 'reject',
+                        'notes': notes
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Document rejected: ' + notes);
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    alert('Error: ' + error);
+                });
+            }
+
+            function approveReference(referenceId) {
+                if (!confirm('Mark this reference letter as received and approved?')) {
+                    return;
+                }
+                
+                fetch(`/enrollments/references/${referenceId}/approve-ajax/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(`Reference from ${data.reference_name} approved successfully!`);
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    alert('Error: ' + error);
+                });
+            }
         {% endif %}
 
         function resendCard(cardId) {

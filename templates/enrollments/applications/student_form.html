@@ -1204,7 +1204,11 @@
                             Academic Qualifications
                         </h3>
                         <i class="bi bi-chevron-down toggle-icon"></i>
-                        <p class="form-text">Note: Note: Please indicate your highest School education, Accredited Christian Pastoral Counselling /theological training and other Counselling relevant training in this section. The certificates for these qualifications / training must be submitted with this application.</p>
+                        {% if session.selected_council.name == "CMTP" or session.selected_council.name == "CGMP" %}
+                        <p class="form-text">Note: Please indicate your highest School education, Ministry / theological training and other Ministry relevant training in this section. The certificates for these qualifications / training must be submitted with this application.</p>
+                        {% else %}
+                        <p class="form-text">Note: Please indicate your highest School education, Accredited Christian Pastoral Counselling /theological training and other Counselling relevant training in this section. The certificates for these qualifications / training must be submitted with this application.</p>
+                        {% endif %}
                     </div>
                     <div class="section-content" id="content-qualifications">
                         

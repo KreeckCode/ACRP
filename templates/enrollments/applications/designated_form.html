@@ -1043,6 +1043,25 @@
                                 {% endif %}
                             </div>
                             {% endif %}
+
+                            {% if form.ministry_type_other %}
+                            <div class="form-group">
+                                <label for="{{ form.ministry_type_other.id_for_label }}">
+                                    {{ form.ministry_type_other.label }}
+                                </label>
+                                {{ form.ministry_type_other }}
+                                {% if form.ministry_type_other.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.ministry_type.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+
+                                {% if form.ministry_type_other.help_text %}
+                                        <div class="form-text">{{ form.ministry_type_other.help_text }}</div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+
                         </div>
                         {% endif %}
 
