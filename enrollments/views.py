@@ -309,7 +309,7 @@ def get_client_ip(request):
     return request.META.get('REMOTE_ADDR')
 
 
-def rate_limit(max_requests=50, window=3600):
+def rate_limit(max_requests=550, window=3600):
     """Simple rate limiting decorator"""
     def decorator(view_func):
         def wrapper(request, *args, **kwargs):

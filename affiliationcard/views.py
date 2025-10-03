@@ -559,6 +559,10 @@ def card_dashboard(request):
     Shows overview statistics, recent activity, quick actions, and alerts
     for applications needing card assignment.
     """
+    # REDIRECT LEARNERS TO THEIR OWN DASHBOARD
+    if hasattr(request.user, 'acrp_role') and request.user.acrp_role == 'LEARNER':
+        return redirect('affiliationcard:learner_dashboard')
+    
     from enrollments.models import AssociatedApplication, DesignatedApplication, StudentApplication
     
     # Get summary statistics
@@ -3698,3 +3702,803 @@ def download_card(request, token):
     }
 
     return render(request, 'affiliationcard/public/download_card.html', context)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ============================================================================
+# LEARNER/STUDENT DASHBOARD VIEWS
+# ============================================================================
+
+@login_required
+def learner_card_dashboard(request):
+    """
+    Main dashboard for learners to manage their digital affiliation card.
+    
+    This view provides learners with:
+    - Current card status and details
+    - Quick download options
+    - Verification history
+    - Card validity information
+    - Quick actions (download, verify, report issues)
+    
+    Design Philosophy:
+    - Learner-centric: Shows only information relevant to the individual
+    - Action-oriented: Provides clear CTAs for common tasks
+    - Status-aware: Highlights important dates and status changes
+    - Secure: Only shows cards belonging to the authenticated user
+    
+    Args:
+        request: HTTP request object containing user authentication
+        
+    Returns:
+        Rendered template with card data and statistics
+        
+    Security:
+        - Requires authentication
+        - Users can only view their own cards
+        - Sensitive data is filtered appropriately
+    """
+    user = request.user
+    
+    # ============================================================================
+    # FETCH USER'S CARD(S)
+    # Primary lookup: Find cards associated with this user
+    # We check both email and username to handle various registration scenarios
+    # ============================================================================
+    
+    try:
+        # Try to find card by user's email first (most common case)
+        user_cards = AffiliationCard.objects.filter(
+        affiliate_email=user.email
+            ).select_related('card_template').prefetch_related(
+                'verifications', 'deliveries', 'status_changes'
+            ).order_by('-created_at')
+        
+        # Get the most recent active card
+        primary_card = user_cards.filter(
+            status__in=['active', 'assigned']
+        ).first() or user_cards.first()
+        
+        if not primary_card:
+            # No card found - render empty state
+            context = {
+                'has_card': False,
+                'page_title': 'My Digital Card',
+                'message': 'No digital affiliation card found for your account.',
+                'help_text': 'If you recently applied, your card may still be processing. Contact support if you believe this is an error.'
+            }
+            return render(request, 'affiliationcard/learner/dashboard.html', context)
+        
+    except Exception as e:
+        logger.error(f"Error fetching card for user {user.username}: {e}")
+        messages.error(request, "Error loading your card information. Please try again.")
+        return redirect('common:dashboard')
+    
+    # ============================================================================
+    # CARD STATUS AND VALIDITY
+    # Calculate important dates and status indicators
+    # ============================================================================
+    
+    card_status = {
+        'is_active': primary_card.is_active() if hasattr(primary_card, 'is_active') else primary_card.status == 'active',
+        'is_expired': primary_card.is_expired() if hasattr(primary_card, 'is_expired') else False,
+        'status_display': primary_card.get_status_display(),
+        'status_class': primary_card.status,
+        'can_download': primary_card.status in ['active', 'assigned'],
+    }
+    
+    # Calculate days until expiration
+    if hasattr(primary_card, 'date_expires') and primary_card.date_expires:
+        from datetime import date
+        today = date.today()
+        days_until_expiry = (primary_card.date_expires - today).days
+        
+        card_status.update({
+            'days_until_expiry': days_until_expiry,
+            'expiry_date': primary_card.date_expires,
+            'is_expiring_soon': 0 < days_until_expiry <= 90,  # Within 3 months
+            'expiry_urgency': 'critical' if days_until_expiry <= 30 else 'warning' if days_until_expiry <= 90 else 'normal'
+        })
+    
+    # ============================================================================
+    # VERIFICATION STATISTICS
+    # Show how many times the card has been verified
+    # ============================================================================
+    
+    verification_stats = {
+        'total_verifications': primary_card.total_verifications if hasattr(primary_card, 'total_verifications') else primary_card.verifications.count(),
+        'last_30_days': primary_card.verifications.filter(
+            verified_at__gte=timezone.now() - timedelta(days=30)
+        ).count(),
+        'last_7_days': primary_card.verifications.filter(
+            verified_at__gte=timezone.now() - timedelta(days=7)
+        ).count(),
+        'last_24_hours': primary_card.verifications.filter(
+            verified_at__gte=timezone.now() - timedelta(hours=24)
+        ).count(),
+    }
+    
+    # Get recent verifications with location data
+    recent_verifications = primary_card.verifications.select_related().order_by('-verified_at')[:5]
+    
+    # ============================================================================
+    # DOWNLOAD OPTIONS
+    # Check if user has any pending downloads or download links
+    # ============================================================================
+    
+    available_downloads = primary_card.deliveries.filter(
+        status__in=['completed', 'ready_for_download'],
+        download_expires_at__gte=timezone.now()
+    ).order_by('-initiated_at')[:3]
+    
+    # Generate fresh download token if needed
+    download_token = None
+    if card_status['can_download']:
+        # Check for existing valid delivery
+        existing_delivery = primary_card.deliveries.filter(
+            delivery_type='direct_download',
+            download_expires_at__gte=timezone.now()
+        ).first()
+        
+        if existing_delivery and existing_delivery.download_token:
+            download_token = existing_delivery.download_token
+    
+    # ============================================================================
+    # QUICK STATS FOR DASHBOARD CARDS
+    # Visual statistics displayed prominently
+    # ============================================================================
+    
+    quick_stats = [
+        {
+            'label': 'Card Status',
+            'value': card_status['status_display'],
+            'icon': 'credit-card',
+            'color': 'emerald' if card_status['is_active'] else 'amber' if primary_card.status == 'assigned' else 'gray',
+            'description': 'Current status of your digital card'
+        },
+        {
+            'label': 'Verifications',
+            'value': verification_stats['total_verifications'],
+            'icon': 'shield-check',
+            'color': 'blue',
+            'description': 'Total times your card was verified'
+        },
+        {
+            'label': 'Valid Until',
+            'value': primary_card.date_expires.strftime('%b %Y') if hasattr(primary_card, 'date_expires') and primary_card.date_expires else 'N/A',
+            'icon': 'calendar',
+            'color': card_status.get('expiry_urgency', 'normal') if card_status.get('days_until_expiry') else 'gray',
+            'description': 'Card expiration date'
+        },
+        {
+            'label': 'Card Number',
+            'value': primary_card.card_number,
+            'icon': 'hashtag',
+            'color': 'purple',
+            'description': 'Your unique card identifier'
+        },
+    ]
+    
+    # ============================================================================
+    # QUICK ACTIONS
+    # Main actions users can take with their card
+    # ============================================================================
+    
+    quick_actions = []
+    
+    if card_status['can_download']:
+        quick_actions.append({
+            'title': 'Download Card',
+            'description': 'Download your digital card as PDF or image',
+            'icon': 'download',
+            'url': reverse('affiliationcard:learner_download_card'),
+            'color': 'blue',
+            'primary': True
+        })
+    
+    quick_actions.extend([
+        {
+            'title': 'Verify Card',
+            'description': 'View your card verification URL and QR code',
+            'icon': 'qrcode',
+            'url': reverse('affiliationcard:learner_verify_info'),
+            'color': 'emerald',
+            'primary': False
+        },
+        {
+            'title': 'View History',
+            'description': 'See when and where your card was verified',
+            'icon': 'clock-history',
+            'url': reverse('affiliationcard:learner_verification_history'),
+            'color': 'purple',
+            'primary': False
+        },
+        {
+            'title': 'Report Issue',
+            'description': 'Report lost, stolen, or damaged card',
+            'icon': 'exclamation-triangle',
+            'url': reverse('affiliationcard:learner_report_issue'),
+            'color': 'red',
+            'primary': False
+        },
+    ])
+    
+    # ============================================================================
+    # ALERTS AND NOTIFICATIONS
+    # Important messages the user should see
+    # ============================================================================
+    
+    alerts = []
+    
+    # Expiring soon alert
+    if card_status.get('is_expiring_soon') and not card_status.get('is_expired'):
+        days = card_status.get('days_until_expiry', 0)
+        alerts.append({
+            'type': 'warning' if days > 30 else 'error',
+            'title': 'Card Expiring Soon',
+            'message': f'Your card will expire in {days} days. Please renew before {primary_card.date_expires.strftime("%B %d, %Y")}.',
+            'action': 'Contact your administrator for renewal information.',
+            'icon': 'clock'
+        })
+    
+    # Expired alert
+    if card_status.get('is_expired'):
+        alerts.append({
+            'type': 'error',
+            'title': 'Card Expired',
+            'message': 'Your digital affiliation card has expired and is no longer valid.',
+            'action': 'Contact your administrator to renew your card.',
+            'icon': 'x-circle'
+        })
+    
+    # Pending status alert
+    if primary_card.status == 'pending_assignment':
+        alerts.append({
+            'type': 'info',
+            'title': 'Card Pending',
+            'message': 'Your digital card is being prepared and will be available soon.',
+            'action': 'You will receive an email when your card is ready.',
+            'icon': 'info-circle'
+        })
+    
+    # Suspended status alert
+    if primary_card.status == 'suspended':
+        alerts.append({
+            'type': 'error',
+            'title': 'Card Suspended',
+            'message': 'Your digital affiliation card has been suspended.',
+            'action': 'Please contact your administrator for more information.',
+            'icon': 'ban'
+        })
+    
+    # ============================================================================
+    # CARD DETAILS
+    # Complete information about the card
+    # ============================================================================
+    
+    card_details = {
+        'card_number': primary_card.card_number,
+        'full_name': primary_card.get_display_name() if hasattr(primary_card, 'get_display_name') else primary_card.affiliate_full_name,
+        'email': primary_card.affiliate_email,
+        'phone': getattr(primary_card, 'affiliate_phone', 'Not provided'),
+        'council': primary_card.council_name if hasattr(primary_card, 'council_name') else 'N/A',
+        'council_code': primary_card.council_code if hasattr(primary_card, 'council_code') else 'N/A',
+        'affiliation_type': primary_card.affiliation_type.title() if hasattr(primary_card, 'affiliation_type') else 'Member',
+        'date_issued': primary_card.date_issued if hasattr(primary_card, 'date_issued') else None,
+        'date_expires': primary_card.date_expires if hasattr(primary_card, 'date_expires') else None,
+        'verification_url': request.build_absolute_uri(
+            reverse('affiliationcard:verify_token', args=[primary_card.verification_token])
+        ) if hasattr(primary_card, 'verification_token') else None,
+    }
+    
+    # ============================================================================
+    # COMPILE CONTEXT AND RENDER
+    # ============================================================================
+    
+    context = {
+        'has_card': True,
+        'card': primary_card,
+        'card_status': card_status,
+        'card_details': card_details,
+        'verification_stats': verification_stats,
+        'recent_verifications': recent_verifications,
+        'available_downloads': available_downloads,
+        'download_token': download_token,
+        'quick_stats': quick_stats,
+        'quick_actions': quick_actions,
+        'alerts': alerts,
+        'all_user_cards': user_cards if user_cards.count() > 1 else None,
+        'page_title': 'My Digital Card',
+    }
+    
+    return render(request, 'affiliationcard/learner/dashboard.html', context)
+
+
+@login_required
+def learner_download_card(request):
+    """
+    Allow learners to download their digital card in various formats.
+    
+    Provides a simple interface for learners to:
+    - Choose download format (PDF, PNG, JPEG)
+    - Generate and download their card instantly
+    - Track download history
+    
+    Security:
+    - Only allows downloading user's own card
+    - Creates delivery tracking record
+    - Rate-limited to prevent abuse
+    
+    Args:
+        request: HTTP request object
+        
+    Returns:
+        File download response or form template
+    """
+    user = request.user
+    
+    # Find user's active card
+    try:
+        card = AffiliationCard.objects.filter(
+            affiliate_email=user.email, 
+            status__in=['active', 'assigned']
+        ).first()
+        
+        if not card:
+            messages.error(request, "No active card found for your account.")
+            return redirect('affiliationcard:learner_dashboard')
+            
+    except Exception as e:
+        logger.error(f"Error fetching card for download: {e}")
+        messages.error(request, "Error loading your card.")
+        return redirect('affiliationcard:learner_dashboard')
+    
+    if request.method == 'POST':
+        file_format = request.POST.get('file_format', 'pdf').lower()
+        
+        # Validate format
+        if file_format not in ['pdf', 'png', 'jpg', 'jpeg']:
+            messages.error(request, "Invalid file format selected.")
+            return redirect('affiliationcard:learner_download_card')
+        
+        try:
+            # Generate card file
+            logger.info(f"Learner {user.username} downloading card {card.card_number} as {file_format}")
+            
+            file_content, filename, content_type = generate_card_file(card, file_format)
+            
+            # Create delivery record for tracking
+            try:
+                CardDelivery.objects.create(
+                    card=card,
+                    delivery_type='direct_download',
+                    recipient_email=user.email,
+                    recipient_name=user.get_full_name if hasattr(user, 'get_full_name') else user.username,
+                    initiated_by=user,
+                    file_format=file_format,
+                    status='completed',
+                    completed_at=timezone.now(),
+                    delivery_notes=f'Self-service download by learner from dashboard'
+                )
+            except Exception as e:
+                # Don't fail download if tracking fails
+                logger.error(f"Failed to create delivery record: {e}")
+            
+            # Return file
+            response = HttpResponse(file_content, content_type=content_type)
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+            
+            messages.success(request, f"Your card has been downloaded as {file_format.upper()}.")
+            return response
+            
+        except Exception as e:
+            logger.error(f"Card download failed for {user.username}: {e}")
+            messages.error(request, "Failed to generate card file. Please try again or contact support.")
+            return redirect('affiliationcard:learner_download_card')
+    
+    # GET request - show download options
+    context = {
+        'card': card,
+        'page_title': 'Download My Card',
+        'format_options': [
+            {'value': 'pdf', 'label': 'PDF Document', 'description': 'Best for printing and official use', 'icon': 'file-pdf'},
+            {'value': 'png', 'label': 'PNG Image', 'description': 'High quality image with transparency', 'icon': 'file-image'},
+            {'value': 'jpg', 'label': 'JPEG Image', 'description': 'Smaller file size, good for email', 'icon': 'file-image'},
+        ]
+    }
+    
+    return render(request, 'affiliationcard/learner/download_card.html', context)
+
+
+@login_required
+def learner_verification_history(request):
+    """
+    Show learner the complete history of when and where their card was verified.
+    
+    Provides transparency and security by showing:
+    - All verification events
+    - Verification dates and times
+    - Verification methods (QR scan, manual lookup, API)
+    - Location data (IP addresses)
+    - Success/failure status
+    
+    This helps learners:
+    - Track card usage
+    - Detect unauthorized use
+    - Understand verification patterns
+    
+    Args:
+        request: HTTP request object
+        
+    Returns:
+        Rendered template with verification history
+    """
+    user = request.user
+    
+    # Find user's card
+    try:
+        card = AffiliationCard.objects.filter(
+            affiliate_email=user.email
+        ).first()
+        
+        if not card:
+            messages.error(request, "No card found for your account.")
+            return redirect('affiliationcard:learner_dashboard')
+            
+    except Exception as e:
+        logger.error(f"Error fetching card for verification history: {e}")
+        messages.error(request, "Error loading your card.")
+        return redirect('affiliationcard:learner_dashboard')
+    
+    # Get all verifications with pagination
+    verifications_list = card.verifications.order_by('-verified_at')
+    
+    # Pagination
+    paginator = Paginator(verifications_list, 25)  # 25 verifications per page
+    page = request.GET.get('page', 1)
+    
+    try:
+        verifications = paginator.page(page)
+    except PageNotAnInteger:
+        verifications = paginator.page(1)
+    except EmptyPage:
+        verifications = paginator.page(paginator.num_pages)
+    
+    # Calculate statistics
+    stats = {
+        'total_verifications': verifications_list.count(),
+        'last_30_days': verifications_list.filter(
+            verified_at__gte=timezone.now() - timedelta(days=30)
+        ).count(),
+        'last_7_days': verifications_list.filter(
+            verified_at__gte=timezone.now() - timedelta(days=7)
+        ).count(),
+        'by_type': {
+            'qr_scan': verifications_list.filter(verification_type='qr_scan').count(),
+            'manual_lookup': verifications_list.filter(verification_type='manual_lookup').count(),
+            'api_verification': verifications_list.filter(verification_type='api_verification').count(),
+        },
+        'success_rate': round(
+            (verifications_list.filter(was_successful=True).count() / max(verifications_list.count(), 1)) * 100, 1
+        )
+    }
+    
+    # Get most recent verification
+    latest_verification = verifications_list.first()
+    
+    context = {
+        'card': card,
+        'verifications': verifications,
+        'stats': stats,
+        'latest_verification': latest_verification,
+        'page_title': 'Verification History',
+    }
+    
+    return render(request, 'affiliationcard/learner/verification_history.html', context)
+
+
+@login_required
+def learner_verify_info(request):
+    """
+    Show learner their card's verification information.
+    
+    Displays:
+    - QR code for scanning
+    - Verification URL
+    - Instructions for verifiers
+    - How to share verification info
+    
+    This helps learners:
+    - Understand how their card can be verified
+    - Share verification methods with others
+    - Access QR code for mobile use
+    
+    Args:
+        request: HTTP request object
+        
+    Returns:
+        Rendered template with verification information
+    """
+    user = request.user
+    
+    # Find user's card
+    try:
+        card = AffiliationCard.objects.filter(
+            affiliate_email=user.email, 
+            status__in=['active', 'assigned']
+        ).first()
+        
+        if not card:
+            messages.error(request, "No active card found for your account.")
+            return redirect('affiliationcard:learner_dashboard')
+            
+    except Exception as e:
+        logger.error(f"Error fetching card for verify info: {e}")
+        messages.error(request, "Error loading your card.")
+        return redirect('affiliationcard:learner_dashboard')
+    
+    # Build verification URLs
+    verification_token = getattr(card, 'verification_token', None)
+    
+    if not verification_token:
+        messages.warning(request, "Verification information not available for your card.")
+        return redirect('affiliationcard:learner_dashboard')
+    
+    verify_url = request.build_absolute_uri(
+        reverse('affiliationcard:verify_token', args=[verification_token])
+    )
+    
+    # Generate QR code
+    try:
+        qr = qrcode.QRCode(
+            version=2,
+            box_size=10,
+            border=4,
+            error_correction=qrcode.constants.ERROR_CORRECT_M
+        )
+        qr.add_data(verify_url)
+        qr.make(fit=True)
+        
+        qr_img = qr.make_image(fill_color="black", back_color="white")
+        
+        # Convert to base64 for inline display
+        buffer = BytesIO()
+        qr_img.save(buffer, format='PNG')
+        qr_base64 = base64.b64encode(buffer.getvalue()).decode()
+        
+    except Exception as e:
+        logger.error(f"QR code generation failed: {e}")
+        qr_base64 = None
+    
+    context = {
+        'card': card,
+        'verify_url': verify_url,
+        'qr_code_base64': qr_base64,
+        'short_token': verification_token[:8] if verification_token else None,
+        'page_title': 'Card Verification Info',
+    }
+    
+    return render(request, 'affiliationcard/learner/verify_info.html', context)
+
+
+@login_required
+def learner_report_issue(request):
+    """
+    Allow learners to report issues with their digital card.
+    
+    Common issues:
+    - Lost or stolen card
+    - Damaged card
+    - Incorrect information
+    - Cannot download
+    - Verification problems
+    
+    Creates a support ticket and notifies administrators.
+    
+    Args:
+        request: HTTP request object
+        
+    Returns:
+        Form template or redirect on success
+    """
+    user = request.user
+    
+    # Find user's card
+    try:
+        card = AffiliationCard.objects.filter(
+            affiliate_email=user.email 
+        ).first()
+                
+        if not card:
+            messages.error(request, "No card found for your account.")
+            return redirect('affiliationcard:learner_dashboard')
+            
+    except Exception as e:
+        logger.error(f"Error fetching card for issue report: {e}")
+        messages.error(request, "Error loading your card.")
+        return redirect('affiliationcard:learner_dashboard')
+    
+    if request.method == 'POST':
+        issue_type = request.POST.get('issue_type')
+        description = request.POST.get('description', '').strip()
+        contact_method = request.POST.get('contact_method', 'email')
+        
+        # Validate
+        if not issue_type or not description:
+            messages.error(request, "Please select an issue type and provide a description.")
+            return redirect('affiliationcard:learner_report_issue')
+        
+        if len(description) < 10:
+            messages.error(request, "Please provide a more detailed description (at least 10 characters).")
+            return redirect('affiliationcard:learner_report_issue')
+        
+        try:
+            # Log the issue
+            logger.info(f"Card issue reported by {user.username} for card {card.card_number}: {issue_type}")
+            
+            # Create status change record with issue details
+            CardStatusChange.objects.create(
+                card=card,
+                old_status=card.status,
+                new_status=card.status,  # Status doesn't change
+                reason=f"Issue reported: {issue_type}",
+                changed_by=user,
+                ip_address=get_client_ip(request),
+                user_agent=request.META.get('HTTP_USER_AGENT', ''),
+                additional_data=json.dumps({
+                    'issue_type': issue_type,
+                    'description': description,
+                    'contact_method': contact_method,
+                    'user_email': user.email,
+                    'user_phone': getattr(user, 'phone', 'N/A')
+                })
+            )
+            
+            # Send notification email to admins
+            try:
+                admin_email = getattr(settings, 'CARD_ADMIN_EMAIL', settings.DEFAULT_FROM_EMAIL)
+                
+                subject = f"Card Issue Report - {card.card_number}"
+                message = f"""
+Card Issue Report Received
+
+Card Number: {card.card_number}
+Reporter: {user.get_full_name if hasattr(user, 'get_full_name') else user.username}
+Email: {user.email}
+Issue Type: {issue_type}
+
+Description:
+{description}
+
+Preferred Contact Method: {contact_method}
+
+Please review and respond to this issue promptly.
+                """
+                
+                send_mail(
+                    subject=subject,
+                    message=message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[admin_email],
+                    fail_silently=True
+                )
+            except Exception as e:
+                logger.error(f"Failed to send issue notification email: {e}")
+            
+            messages.success(request, 
+                "Your issue has been reported successfully. An administrator will contact you soon.")
+            return redirect('affiliationcard:learner_dashboard')
+            
+        except Exception as e:
+            logger.error(f"Failed to create issue report: {e}")
+            messages.error(request, "Failed to submit your issue report. Please try again.")
+    
+    # Issue type options
+    issue_types = [
+        {'value': 'lost_stolen', 'label': 'Lost or Stolen Card', 'icon': 'shield-x'},
+        {'value': 'damaged', 'label': 'Damaged or Unreadable Card', 'icon': 'file-x'},
+        {'value': 'incorrect_info', 'label': 'Incorrect Information', 'icon': 'pencil'},
+        {'value': 'download_problem', 'label': 'Cannot Download Card', 'icon': 'download'},
+        {'value': 'verification_problem', 'label': 'Verification Issues', 'icon': 'x-circle'},
+        {'value': 'expired', 'label': 'Card Expired - Need Renewal', 'icon': 'calendar-x'},
+        {'value': 'other', 'label': 'Other Issue', 'icon': 'question-circle'},
+    ]
+    
+    context = {
+        'card': card,
+        'issue_types': issue_types,
+        'page_title': 'Report Card Issue',
+    }
+    
+    return render(request, 'affiliationcard/learner/report_issue.html', context)
+
+
+@login_required
+def learner_card_detail(request):
+    """
+    Detailed view of learner's card with all information.
+    
+    Shows complete card details including:
+    - All card fields
+    - Status history
+    - Verification statistics
+    - Download history
+    - Card template information
+    
+    This is a read-only view for learners to see
+    complete information about their card.
+    
+    Args:
+        request: HTTP request object
+        
+    Returns:
+        Rendered template with complete card details
+    """
+    user = request.user
+    
+    # Find user's card
+    try:
+        card = AffiliationCard.objects.filter(
+            affiliate_email=user.email  
+        ).select_related('card_template').prefetch_related(
+            'verifications', 'deliveries', 'status_changes'
+        ).first()
+        
+        if not card:
+            messages.error(request, "No card found for your account.")
+            return redirect('affiliationcard:learner_dashboard')
+            
+    except Exception as e:
+        logger.error(f"Error fetching card details: {e}")
+        messages.error(request, "Error loading your card.")
+        return redirect('affiliationcard:learner_dashboard')
+    
+    # Recent activity
+    recent_verifications = card.verifications.order_by('-verified_at')[:10]
+    recent_downloads = card.deliveries.filter(
+        status='completed'
+    ).order_by('-completed_at')[:5]
+    status_history = card.status_changes.order_by('-changed_at')[:10]
+    
+    # Statistics
+    verification_stats = {
+        'total': card.verifications.count(),
+        'last_30_days': card.verifications.filter(
+            verified_at__gte=timezone.now() - timedelta(days=30)
+        ).count(),
+        'by_type': card.verifications.values('verification_type').annotate(
+            count=Count('id')
+        )
+    }
+    
+    download_stats = {
+        'total': card.deliveries.filter(status='completed').count(),
+        'last_download': card.deliveries.filter(
+            status='completed'
+        ).order_by('-completed_at').first()
+    }
+    
+    context = {
+        'card': card,
+        'recent_verifications': recent_verifications,
+        'recent_downloads': recent_downloads,
+        'status_history': status_history,
+        'verification_stats': verification_stats,
+        'download_stats': download_stats,
+        'page_title': f'Card Details - {card.card_number}',
+    }
+    
+    return render(request, 'affiliationcard/learner/card_detail.html', context)

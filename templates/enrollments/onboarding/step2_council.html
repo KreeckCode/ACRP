@@ -126,16 +126,16 @@
               
               <div class="space-y-4 text-left">
                 <p class="text-gray-700 leading-relaxed">
-                  For applicants with required SAQA registered qualifications and necessary experience to apply for professional designation.
+                  For applicants with relevent SAQA registered qualifications and experience (unless newly graduated) to apply for professional designation.
                 </p>
                 
                 <div class="bg-green-50 p-4 rounded-lg">
                   <h4 class="font-semibold text-green-800 mb-2">Requirements:</h4>
                   <ul class="text-green-700 text-sm space-y-1">
-                    <li>• SAQA registered qualifications & necessary experience</li>
                     {% if session.selected_council.name == "CPSC" %} 
-                    <li>• Professional counselling experience</li>
+                    <li>• SAQA registered qualifications</li>
                     {% else %}
+                    <li>• SAQA registered qualifications & necessary experience</li>
                     <li>• Professional ministry experience</li>
                     {% endif %}
                     
@@ -169,14 +169,19 @@
               
               <div class="space-y-4 text-left">
                 <p class="text-gray-700 leading-relaxed">
+                  {% if session.selected_council.name == "CPSC" %}
+                  Full-time / part-time students in Pastoral / Christian Counselling / Theology, enrolled at an accredited training institution and <strong> not yet </strong> involved in counselling, may apply.                  
+                  {% else %}
+
                   For full-time or part-time ministry students who are not yet in formal ministry positions.
+                  {% endif %}
                 </p>
                 
                 {% if session.selected_council.name == "CPSC" %}
                   <div class="bg-purple-50 p-4 rounded-lg">
                     <h4 class="font-semibold text-purple-800 mb-2">Who This Is For:</h4>
                     <ul class="text-purple-700 text-sm space-y-1">
-                      <li>• Registered Students in Pastoral / Christian Counselling accredited institutions</li>
+                      <li>• Registered students in Pastoral / Christian Counselling / Theology at accredited training institutions.</li>
                       
                     </ul>
                   </div>
@@ -195,7 +200,11 @@
                 
                 <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
                   <p class="text-yellow-800 text-sm">
-                    <strong>Note:</strong> Those already in formal ministry / counselling should apply as designated affiliates.
+                    {% if session.selected_council.name == "CPSC" %}
+                    Those already involved in formal counselling should apply for designated affiliation.
+                    {% else %}
+                    <strong>Note:</strong> Those already in formal ministry should apply as designated affiliates.
+                    {% endif %}
                   </p>
                 </div>
                 
@@ -226,15 +235,18 @@
               
               <div class="space-y-4 text-left">
                 {% if session.selected_council.name == "CPSC" %}
-                <p class="text-gray-700 leading-relaxed">
-                  This type of affiliation is for those individuals who are not actively involved in pastoral counselling, but who want to stay affiliated to keep abreast of developments, etc.
+                This type of affiliation is for:
+                <p class="text-gray-700 leading-relaxed mt-2">
+                  
+                  • individuals registered with a SAQA-registered body (e.g. ASCHP, HPCSA or SACSSP) that had provided them with a counselling Scope of Practice.
+
                 </p>
                 {% else %}
                 <p class="text-gray-700 leading-relaxed">
                   For persons who are informally or non-professionally involved in ministry, who want to be associated with the professional body.
                 </p>
                 {% endif %}
-                {% if session.selected_council.name == "CGMP" %}
+                {% if session.selected_council.name == "CGMP" or session.selected_council.name == "CGMP" %}
                 <div class="bg-blue-50 p-4 rounded-lg">
                   <h4 class="font-semibold text-blue-800 mb-2">Who This Is For:</h4>
                   <ul class="text-blue-700 text-sm space-y-1">
@@ -245,12 +257,10 @@
                   </ul>
                 </div>
                 {% else %}
-                  <div class="bg-blue-50 p-4 rounded-lg">
-                      <h4 class="font-semibold text-blue-800 mb-2">Who This Is For:</h4>
-                      <ul class="text-blue-700 text-sm space-y-1">
-                        <li>• People who belong to another professional body with a similar counselling scope of practice.</li>
+                  
+                      <ul class="text-gray-700 space-y-1 mb-2">
+                        <li>• individuals no longer actively involved in pastoral counselling e.g. retirees, pensioners, etc.</li>
                       </ul>
-                    </div>
                 {% endif %}
                 
                 <div class="flex items-center justify-center mt-6">

@@ -33,6 +33,9 @@ urlpatterns = [
     # AJAX endpoints for role management
     path("roles/delete/<int:role_id>/", views.delete_role, name="delete_role"),
     path("roles/check-dependencies/<int:role_id>/", views.check_role_dependencies, name="check_role_dependencies"),
+    path('my-profile/', views.my_profile, name='my_profile'),
+    path('my-profile/edit/', views.edit_profile, name='edit_profile'),
+    path('profile/<int:user_id>/', views.user_profile, name='user_profile'),
     
 
     

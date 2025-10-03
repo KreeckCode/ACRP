@@ -816,100 +816,6 @@
                             </div>
 
 
-                        
-                        {% if session.selected_council.name == "CPSC" %}
-                            <!-- Postal Address -->
-                            <h5 class="mt-4 mb-3">Postal Address</h5>
-                            <div class="field-row">
-                                {% if form.postal_address_line1 %}
-                                <div class="form-group field-full">
-                                    <label for="{{ form.postal_address_line1.id_for_label }}">
-                                        {{ form.postal_address_line1.label }}
-                                        {% if form.postal_address_line1.field.required %}<span class="required">*</span>{% endif %}
-                                    </label>
-                                    {{ form.postal_address_line1 }}
-                                    {% if form.postal_address_line1.errors %}
-                                        <div class="invalid-feedback">
-                                            {% for error in form.postal_address_line1.errors %}{{ error }}{% endfor %}
-                                        </div>
-                                    {% endif %}
-
-                                    {% if form.postal_address_line1.help_text %}
-                                        <div class="form-text">{{ form.postal_address.help_text }}</div>
-                                    {% endif %}
-                                </div>
-                                {% endif %}
-                            </div>
-
-                            <div class="field-row">
-                                {% if form.postal_address_line2 %}
-                                <div class="form-group field-full">
-                                    <label for="{{ form.postal_address_line2.id_for_label }}">
-                                        {{ form.postal_address_line2.label }}
-                                        {% if form.postal_address_line2.field.required %}<span class="required">*</span>{% endif %}
-                                    </label>
-                                    {{ form.postal_address_line2 }}
-                                    {% if form.postal_address_line2.errors %}
-                                        <div class="invalid-feedback">
-                                            {% for error in form.postal_address_line2.errors %}{{ error }}{% endfor %}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                {% endif %}
-                            </div>
-
-                            
-
-                            <div class="field-row two-cols">
-                                {% if form.postal_code %}
-                                <div class="form-group">
-                                    <label for="{{ form.postal_code.id_for_label }}">
-                                        {{ form.postal_code.label }}
-                                        {% if form.postal_code.field.required %}<span class="required">*</span>{% endif %}
-                                    </label>
-                                    {{ form.postal_code }}
-                                    {% if form.postal_code.errors %}
-                                        <div class="invalid-feedback">
-                                            {% for error in form.postal_code.errors %}{{ error }}{% endfor %}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                {% endif %}
-                                
-                                {% if form.postal_country %}
-                                <div class="form-group">
-                                    <label for="{{ form.postal_country.id_for_label }}">
-                                        {{ form.postal_country.label }}
-                                        {% if form.postal_country.field.required %}<span class="required">*</span>{% endif %}
-                                    </label>
-                                    {{ form.postal_country }}
-                                    {% if form.postal_country.errors %}
-                                        <div class="invalid-feedback">
-                                            {% for error in form.postal_country.errors %}{{ error }}{% endfor %}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                {% endif %}
-                            </div>
-
-                            <!-- Physical Address Checkbox -->
-                            {% if form.physical_same_as_postal %}
-                            <div class="field-row">
-                                <div class="form-group">
-                                    <div class="form-check">
-                                        {{ form.physical_same_as_postal }}
-                                        <label class="form-check-label" for="{{ form.physical_same_as_postal.id_for_label }}">
-                                            {{ form.physical_same_as_postal.label }}
-                                        </label>
-                                    </div>
-                                    {% if form.physical_same_as_postal.help_text %}
-                                        <div class="form-text">{{ form.physical_same_as_postal.help_text }}</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        {% endif %}
-
-                        {% endif %}
                     </div>
                 </div>
 
@@ -1046,7 +952,6 @@
                             <div class="form-group field-full">
                                 <label for="{{ form.work_description.id_for_label }}">
                                     {{ form.work_description.label }}
-                                    {% if form.work_description.field.required %}<span class="required">*</span>{% endif %}
                                 </label>
                                 {{ form.work_description }}
                                 {% if form.work_description.errors %}
@@ -1137,15 +1042,15 @@
                         <!-- Reference Letter Requirements Note -->
                         <div class="alert alert-info mb-4">
                             <h5 class="alert-heading"><i class="bi bi-info-circle"></i> Reference Letters Requirements</h5>
-                            <p class="mb-0"><strong>TWO</strong> reference letters must be submitted with this application. </p>
+                            <p class="mb-0"><strong>TWO</strong> reference letters must be submitted with this application.</p>
                             <ul class="mb-0 mt-2">
-                                <li>It is important that the letters of reference or testimonials report on your work ethics, as well as your involvement in clerical activities.</li>
-                                <li>The letters of reference or testimonials from these two individuals must be hand-signed.</li>
+                                <li>It is important that the letters of reference or testimonials report on your work ethics, as well as your involvement in counselling activities.</li>
+                                <li>The letters of reference or testimonials must be hand-signed.</li>
                                 <li>The letters of reference or testimonials must be on formal letterheads.</li>
                                 <li>Family members, friends and/or clients may not write a testimonial for you. Your pastor/other religious leader, employer, supervisor, or chairperson of the church council at the congregation you belong to, are all good choices to act as references.</li>
                                 <li>At least one of these testimonials must be less than one year old.</li>
-                                <li>Indicate the details (name, contact details, position) of the person signing the letter</li>
-                                <li>Testimonials can be addressed to: CPSC Evaluation and Registration Committee</li>
+                                <li>Indicate the details (name, contact details, position) of the person signing the letter.</li>
+                                <li>Testimonials can be addressed to: CPSC Evaluation and Registration Committee.</li>
                             </ul>
                         </div>
                         {% else %}
@@ -1204,10 +1109,37 @@
                             Academic Qualifications
                         </h3>
                         <i class="bi bi-chevron-down toggle-icon"></i>
-                        {% if session.selected_council.name == "CMTP" or session.selected_council.name == "CGMP" %}
-                        <p class="form-text">Note: Please indicate your highest School education, Ministry / theological training and other Ministry relevant training in this section. The certificates for these qualifications / training must be submitted with this application.</p>
+                        <p class="form-text">Note: Please indicate your highest school education,{% if session.selected_council.name == "CPSC" %} accredited Christian Pastoral Counselling {%else%} Ministry {%endif%}/ Theological training and other {% if session.selected_council.name == "CPSC" %} Counselling {%else%} Ministry {%endif%} relevant training in this section. The certificates for these qualifications / training must be submitted with this application.</p>
+
+                        {% if session.selected_council.name == "CPSC" %}
+                        <!-- Reference Letter Requirements Note -->
+                        <div class="alert alert-info mb-4">
+                            <h5 class="alert-heading"><i class="bi bi-info-circle"></i> Note</h5>
+                            <p class="mb-0"><strong>What is an accredited qualification?</strong> </p>
+                            <ul class="mb-0 mt-2">
+                                <li>It is a qualification that was awarded by a South African Quality Council that is registered with the Department of Higher Education & Training, QCTO or HWSETA, that offers formal qualifications that have been registered with SAQA.</li>
+                               
+                            </ul>
+                            <p class="mb-0 mt-4"><strong>If I only have informal (unaccredited) qualifications and experience, may I still apply?</strong> </p>
+                            <ul class="mb-0 mt-2">
+                                <li>Yes, you may if you are of the opinion that your training is relevant. This is known as recognition of prior learning (RPL) and means that your informal and non-formal learning and work experience may be evaluated against the outcomes expected of a counsellor in a certain category. You may be asked to complete some additional prescribed courses.</li>
+                               
+                            </ul>
+                        </div>
                         {% else %}
-                        <p class="form-text">Note: Please indicate your highest School education, Accredited Christian Pastoral Counselling /theological training and other Counselling relevant training in this section. The certificates for these qualifications / training must be submitted with this application.</p>
+                        <div class="alert alert-info mb-4">
+                            <h5 class="alert-heading"><i class="bi bi-info-circle"></i> Note</h5>
+                            <p class="mb-0"><strong>What is an accredited qualification?</strong> </p>
+                            <ul class="mb-0 mt-2">
+                                <li>It is a qualification that was awarded by a South African Quality Council that is registered with the Department of Higher Education & Training, QCTO or HWSETA, that offers formal qualifications that have been registered with SAQA.</li>
+                               
+                            </ul>
+                            <p class="mb-0 mt-4"><strong>If I only have informal (unaccredited) qualifications and experience, may I still apply?</strong> </p>
+                            <ul class="mb-0 mt-2">
+                                <li>Yes, you may if you are of the opinion that your training is relevant. This is known as recognition of prior learning (RPL) and means that your informal and non-formal learning and work experience may be evaluated against the outcomes expected of a ministry practitioner in a certain category. </li>
+                               
+                            </ul>
+                        </div>
                         {% endif %}
                     </div>
                     <div class="section-content" id="content-qualifications">
@@ -1251,8 +1183,8 @@
                             <p class="mb-0">Please ensure you have the following documents ready to upload:</p>
                             <ul class="mb-0 mt-2">
                                 <li>ID Document or Passport</li>
-                                <li>Highest School Certificate</li>
-                                <li>Copy of student registration at the {% if session.selected_council.name == "CPSC"%} Accredited {%endif%} training institution currently enrolled at</li>
+                                <li>Highest school certificate</li>
+                                <li>Copy of student registration at the {% if session.selected_council.name == "CPSC"%} accredited {%endif%} training institution currently enrolled at</li>
                                 <li>Copies of previous training/qualification certificates (if applicable)</li>
                                 <li>Proof of Payment</li>
                                 {% if session.selected_council.name == "CPSC"%}<li>2 Reference letters</li> {%endif%}

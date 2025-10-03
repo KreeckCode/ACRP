@@ -1,0 +1,308 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}My Digital Card{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 lg:p-8">
+    
+    <!-- Page Header -->
+    <div class="mb-8">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <div>
+                <h1 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+                    My Digital Affiliation Card
+                </h1>
+                <p class="text-gray-600 text-lg">
+                    Manage your ACRP digital card, download, verify and track usage
+                </p>
+            </div>
+            <div class="mt-4 lg:mt-0">
+                <div class="flex items-center space-x-4">
+                    <div class="bg-white rounded-lg px-4 py-2 shadow-sm border">
+                        <span class="text-sm text-gray-500">Today</span>
+                        <div class="font-semibold text-gray-900">{% now "F d, Y" %}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="mb-6 space-y-3">
+        {% for message in messages %}
+        <div class="flex items-center p-4 rounded-lg border-l-4 {% if message.tags == 'success' %}bg-green-50 border-green-400 text-green-700{% elif message.tags == 'error' %}bg-red-50 border-red-400 text-red-700{% elif message.tags == 'warning' %}bg-yellow-50 border-yellow-400 text-yellow-700{% else %}bg-blue-50 border-blue-400 text-blue-700{% endif %}">
+            <div class="flex-shrink-0">
+                {% if message.tags == 'success' %}
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                {% elif message.tags == 'error' %}
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                </svg>
+                {% else %}
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                </svg>
+                {% endif %}
+            </div>
+            <div class="ml-3 text-sm font-medium">{{ message }}</div>
+            <button type="button" class="ml-auto -mx-1.5 -my-1.5 rounded-lg p-1.5 inline-flex h-8 w-8 hover:bg-gray-200" onclick="this.parentElement.remove()">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                </svg>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if not has_card %}
+    <!-- No Card State -->
+    <div class="bg-white rounded-xl shadow-lg p-12 text-center">
+        <svg class="w-24 h-24 text-gray-300 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+        </svg>
+        <h2 class="text-2xl font-bold text-gray-900 mb-3">No Digital Card Found</h2>
+        <p class="text-gray-600 mb-6 max-w-md mx-auto">{{ message }}</p>
+        <p class="text-sm text-gray-500">{{ help_text }}</p>
+    </div>
+    {% else %}
+
+    <!-- Alert Section -->
+    {% if alerts %}
+    <div class="mb-8 space-y-4">
+        {% for alert in alerts %}
+        <div class="{% if alert.type == 'error' %}bg-gradient-to-r from-red-50 to-red-100 border-red-300{% elif alert.type == 'warning' %}bg-gradient-to-r from-amber-50 to-amber-100 border-amber-300{% elif alert.type == 'info' %}bg-gradient-to-r from-blue-50 to-blue-100 border-blue-300{% else %}bg-gradient-to-r from-gray-50 to-gray-100 border-gray-300{% endif %} border-l-4 rounded-xl p-6 shadow-md">
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <svg class="w-8 h-8 {% if alert.type == 'error' %}text-red-600{% elif alert.type == 'warning' %}text-amber-600{% elif alert.type == 'info' %}text-blue-600{% else %}text-gray-600{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        {% if alert.icon == 'clock' %}
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        {% elif alert.icon == 'x-circle' %}
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        {% elif alert.icon == 'info-circle' %}
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        {% elif alert.icon == 'ban' %}
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                        {% endif %}
+                    </svg>
+                </div>
+                <div class="ml-4 flex-1">
+                    <h3 class="text-lg font-bold {% if alert.type == 'error' %}text-red-900{% elif alert.type == 'warning' %}text-amber-900{% elif alert.type == 'info' %}text-blue-900{% else %}text-gray-900{% endif %} mb-2">
+                        {{ alert.title }}
+                    </h3>
+                    <p class="{% if alert.type == 'error' %}text-red-800{% elif alert.type == 'warning' %}text-amber-800{% elif alert.type == 'info' %}text-blue-800{% else %}text-gray-800{% endif %} mb-2">
+                        {{ alert.message }}
+                    </p>
+                    <p class="text-sm {% if alert.type == 'error' %}text-red-700{% elif alert.type == 'warning' %}text-amber-700{% elif alert.type == 'info' %}text-blue-700{% else %}text-gray-700{% endif %}">
+                        {{ alert.action }}
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {% for stat in quick_stats %}
+        <div class="bg-gradient-to-r from-{{ stat.color }}-500 to-{{ stat.color }}-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-{{ stat.color }}-100 text-sm font-medium">{{ stat.label }}</p>
+                    <p class="text-3xl font-bold mt-2">{{ stat.value }}</p>
+                    <p class="text-{{ stat.color }}-100 text-xs mt-2">{{ stat.description }}</p>
+                </div>
+                <div class="bg-{{ stat.color }}-400 bg-opacity-50 rounded-lg p-3">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        {% if stat.icon == 'credit-card' %}
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                        {% elif stat.icon == 'shield-check' %}
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                        {% elif stat.icon == 'calendar' %}
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        {% elif stat.icon == 'hashtag' %}
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/>
+                        {% endif %}
+                    </svg>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+        <h2 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+            <svg class="w-6 h-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+            Quick Actions
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {% for action in quick_actions %}
+            <a href="{{ action.url }}" class="flex items-center p-4 bg-{{ action.color }}-50 hover:bg-{{ action.color }}-100 rounded-lg transition-colors duration-200 group {% if action.primary %}ring-2 ring-{{ action.color }}-500{% else %}border-2 border-{{ action.color }}-200 hover:border-{{ action.color }}-300{% endif %}">
+                <div class="bg-{{ action.color }}-500 rounded-lg p-3 mr-4">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        {% if action.icon == 'download' %}
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        {% elif action.icon == 'qrcode' %}
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+                        {% elif action.icon == 'clock-history' %}
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        {% elif action.icon == 'exclamation-triangle' %}
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L12.732 4.5c-.77-.833-2.694-.833-3.464 0L1.349 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                        {% endif %}
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <h3 class="font-semibold text-gray-900 group-hover:text-{{ action.color }}-700 mb-1">{{ action.title }}</h3>
+                    <p class="text-sm text-gray-600">{{ action.description }}</p>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        
+        <!-- Card Details -->
+        <div class="lg:col-span-2 bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="bg-gradient-to-r from-indigo-600 to-indigo-800 px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-white">Card Information</h3>
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <div>
+                            <p class="text-sm text-gray-600 mb-1">Card Number</p>
+                            <p class="text-lg font-bold text-gray-900 font-mono">{{ card_details.card_number }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600 mb-1">Full Name</p>
+                            <p class="text-lg font-semibold text-gray-900">{{ card_details.full_name }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600 mb-1">Email Address</p>
+                            <p class="text-gray-900">{{ card_details.email }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600 mb-1">Phone Number</p>
+                            <p class="text-gray-900">{{ card_details.phone }}</p>
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <p class="text-sm text-gray-600 mb-1">Council</p>
+                            <p class="text-lg font-semibold text-gray-900">{{ card_details.council }}</p>
+                            <p class="text-sm text-gray-500">{{ card_details.council_code }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600 mb-1">Affiliation Type</p>
+                            <p class="text-lg font-semibold text-indigo-600">{{ card_details.affiliation_type }}</p>
+                        </div>
+                        {% if card_details.date_issued %}
+                        <div>
+                            <p class="text-sm text-gray-600 mb-1">Date Issued</p>
+                            <p class="text-gray-900">{{ card_details.date_issued|date:"F d, Y" }}</p>
+                        </div>
+                        {% endif %}
+                        {% if card_details.date_expires %}
+                        <div>
+                            <p class="text-sm text-gray-600 mb-1">Valid Until</p>
+                            <p class="text-gray-900 font-semibold">{{ card_details.date_expires|date:"F d, Y" }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <a href="{% url 'affiliationcard:learner_card_detail' %}" class="inline-flex items-center text-indigo-600 hover:text-indigo-700 font-medium">
+                        View Complete Card Details
+                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Verification Stats & Recent Activity -->
+        <div class="space-y-6">
+            <!-- Verification Statistics -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="bg-gradient-to-r from-purple-500 to-purple-600 px-6 py-4">
+                    <div class="flex items-center">
+                        <div class="bg-purple-400 bg-opacity-50 rounded-lg p-2 mr-3">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-white">Verification Stats</h3>
+                    </div>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Total Verifications</span>
+                        <span class="text-2xl font-bold text-purple-600">{{ verification_stats.total_verifications }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Last 30 Days</span>
+                        <span class="text-lg font-semibold text-gray-900">{{ verification_stats.last_30_days }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Last 7 Days</span>
+                        <span class="text-lg font-semibold text-gray-900">{{ verification_stats.last_7_days }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Last 24 Hours</span>
+                        <span class="text-lg font-semibold text-gray-900">{{ verification_stats.last_24_hours }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Verifications -->
+            {% if recent_verifications %}
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
+                    <h3 class="text-lg font-semibold text-white">Recent Verifications</h3>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-3">
+                        {% for verification in recent_verifications %}
+                        <div class="flex items-start p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                            <div class="flex-shrink-0 w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3"></div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-gray-900">{{ verification.get_verification_type_display }}</p>
+                                <p class="text-xs text-gray-500">{{ verification.verified_at|timesince }} ago</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <a href="{% url 'affiliationcard:learner_verification_history' %}" class="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center">
+                            View Full History
+                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% endif %}
+</div>
+{% endblock %}

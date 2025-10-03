@@ -175,3 +175,69 @@ class UserRegistrationForm(forms.ModelForm):
             user.set_password(self.cleaned_data["password"])
             user.save()
         return user
+
+
+
+class ProfileEditForm(forms.ModelForm):
+    """
+    Form for users to edit their own profile information.
+    Restricts fields to only those users should be able to modify themselves.
+    """
+    
+    class Meta:
+        model = User
+        fields = [
+            'first_name',
+            'last_name', 
+            'email',
+            'phone',
+            'picture',
+        ]
+        widgets = {
+            'first_name': forms.TextInput(attrs={
+                'class': 'form-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': 'First Name'
+            }),
+            'last_name': forms.TextInput(attrs={
+                'class': 'form-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': 'Last Name'
+            }),
+            'email': forms.EmailInput(attrs={
+                'class': 'form-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': 'email@example.com'
+            }),
+            'phone': forms.TextInput(attrs={
+                'class': 'form-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': '+27 12 345 6789'
+            }),
+            'picture': forms.FileInput(attrs={
+                'class': 'form-input w-full px-3 py-2 border border-gray-300 rounded-md',
+                'accept': 'image/*'
+            }),
+        }
+        help_texts = {
+            'email': 'Your email address for notifications and account recovery',
+            'phone': 'Contact number for important communications',
+            'picture': 'Upload a profile picture (JPG, PNG). Max 5MB. Will be resized to 300x300px.',
+        }
+    
+    def clean_email(self):
+        """Ensure email uniqueness excluding current user"""
+        email = self.cleaned_data.get('email')
+        if User.objects.exclude(pk=self.instance.pk).filter(email=email).exists():
+            raise forms.ValidationError('This email address is already in use.')
+        return email
+    
+    def clean_picture(self):
+        """Validate uploaded image"""
+        picture = self.cleaned_data.get('picture')
+        if picture:
+            # Check file size (5MB limit)
+            if picture.size > 5 * 1024 * 1024:
+                raise forms.ValidationError('Image file size cannot exceed 5MB.')
+            
+            # Check file type
+            if not picture.content_type.startswith('image/'):
+                raise forms.ValidationError('Please upload a valid image file.')
+        
+        return picture

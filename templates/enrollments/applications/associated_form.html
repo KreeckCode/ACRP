@@ -823,7 +823,7 @@
                     <div class="section-header" onclick="toggleSection('background')">
                         <h3>
                             <i class="bi bi-mortarboard"></i>
-                            {% if session.selected_council.name == "CPSC" %}Professional Christian Pastoral Counselling involvement 
+                            {% if session.selected_council.name == "CPSC" %}Professional Christian Pastoral Counselling Involvement 
                             {% elif session.selected_council.name == "CGMP" or session.selected_council.name == "CMTP" %}Present Occupation/Position
                             {% else %}Present Occupation/Position {% endif %}
                             
@@ -875,9 +875,9 @@
                                 {% if form.years_in_ministry %}
                                 <div class="form-group">
                                     <label for="{{ form.years_in_ministry.id_for_label }}">
-                                        {% if session.selected_council.name == "CPSC" %} Years in Full time Counselling 
-                                        {% elif session.selected_council.name == "CGMP" or session.selected_council.name == "CMTP" %} Years in Full time Ministry
-                                        {% else %} Years in Ministry {% endif %}
+                                        {% if session.selected_council.name == "CPSC" %} Years in full-time Counselling 
+                                        {% elif session.selected_council.name == "CGMP" or session.selected_council.name == "CMTP" %} Years in full-time Ministry
+                                        {% else %} Years in full-time Ministry {% endif %}
                                         {% if form.years_in_ministry.field.required %}<span class="required">*</span>{% endif %}
                                     </label>
                                     {{ form.years_in_ministry }}
@@ -887,7 +887,7 @@
                                         </div>
                                     {% endif %}
                                     {% if form.years_in_ministry.help_text %}
-                                        <div class="form-text">{{ form.years_in_ministry.help_text }}</div>
+                                        <div class="form-text">Total years in full-time counselling</div>
                                     {% endif %}
                                 </div>
                                 {% endif %}
@@ -897,9 +897,9 @@
                                 {% if form.years_in_part_time_ministry %}
                                 <div class="form-group">
                                     <label for="{{ form.years_in_part_time_ministry.id_for_label }}">
-                                        {% if session.selected_council.name == "CPSC" %} Years in Part Ministry / Counselling 
+                                        {% if session.selected_council.name == "CPSC" %} Years in part-time Counselling 
                                         {% elif session.selected_council.name == "CGMP" or session.selected_council.name == "CMTP" %} Years in Part Ministry
-                                        {% else %} Years in Part Ministry {% endif %}
+                                        {% else %} Years in part-time Ministry {% endif %}
                                         {% if form.years_in_part_time_ministry.field.required %}<span class="required">*</span>{% endif %}
                                     </label>
                                     {{ form.years_in_part_time_ministry }}
@@ -909,7 +909,7 @@
                                         </div>
                                     {% endif %}
                                     {% if form.years_in_part_time_ministry.help_text %}
-                                        <div class="form-text">{{ form.years_in_part_time_ministry.help_text }}</div>
+                                        <div class="form-text">Total years in part-time counselling </div>
                                     {% endif %}
                                 </div>
                                 {% endif %}
@@ -923,7 +923,7 @@
                                     <label for="{{ form.work_description.id_for_label }}">
                                         {% if session.selected_council.name == "CPSC" %} Work description {% else %} Work description & Why you would like to join {% endif %}
                                         
-                                        {% if form.work_description.field.required %}<span class="required">*</span>{% endif %}
+                                        {% if form.work_description.field.required %}{% endif %}
                                     </label>
                                     {{ form.work_description }}
                                     {% if form.work_description.errors %}
@@ -1125,13 +1125,13 @@
                                 <h5 class="alert-heading"><i class="bi bi-info-circle"></i> Reference Letters Requirements</h5>
                                 <p class="mb-0"><strong>TWO</strong> reference letters must be submitted with this application.</p>
                                 <ul class="mb-0 mt-2">
-                                    <li>It is important that the letters of reference or testimonials report on your work ethics, as well as your involvement in clerical activities.</li>
-                                    <li>The letters of reference or testimonials from these two individuals must be hand-signed.</li>
+                                    <li>It is important that the letters of reference or testimonials report on your work ethics, as well as your involvement in counselling activities.</li>
+                                    <li>The letters of reference or testimonials must be hand-signed.</li>
                                     <li>The letters of reference or testimonials must be on formal letterheads.</li>
                                     <li>Family members, friends and/or clients may not write a testimonial for you. Your pastor/other religious leader, employer, supervisor, or chairperson of the church council at the congregation you belong to, are all good choices to act as references.</li>
                                     <li>At least one of these testimonials must be less than one year old.</li>
-                                    <li>Indicate the details (name, contact details, position) of the person signing the letter</li>
-                                    <li>Testimonials can be addressed to: CPSC Evaluation and Registration Committee</li>
+                                    <li>Indicate the details (name, contact details, position) of the person signing the letter.</li>
+                                    <li>Testimonials can be addressed to: CPSC Evaluation and Registration Committee.</li>
                                 </ul>
                             </div>
                             {% else %}
@@ -1201,8 +1201,13 @@
                             <ul class="mb-0 mt-2">
                                 <li>ID Document or Passport</li>
                                 <li>Reference Letters</li>
-                                <li>Proof of your registration at another professionaln/ statutory council / body</li>
-                                <li>Proof of Payment</li>
+                                <li>Proof of registration with SAQA-registered body (e.g. ASCHP, HPCSA or SACSSP).</li>
+                                <li>Proof of Payment of full amount (Application + Annual Fee ) <a href="https://www.acrp.org.za/affiliation/affiliation-of-persons/fee-structure" 
+                                        class="text-blue-600 hover:text-blue-700 underline" 
+                                        target="_blank"> 
+                                        Click here to View Full Fee Structure
+                                    </a> 
+                                </li>
                             </ul>
 
                             {%else%}
@@ -1246,7 +1251,7 @@
                             
                             <div class="formset-container">
                                 <div class="formset-header">
-                                    <h4 class="formset-title">Upload Academic & Identity Documents</h4>
+                                    <h4 class="formset-title">Upload Supporting Documents</h4>
                                     <button type="button" class="formset-add" onclick="addFormsetItem('documents')">
                                         <i class="bi bi-plus-circle"></i>
                                         Add Document

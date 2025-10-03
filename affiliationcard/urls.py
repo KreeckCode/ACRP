@@ -22,6 +22,14 @@ public_patterns = [
     # Optional: Download expired/invalid pages
     # path('download/expired/', views.download_expired, name='download_expired'),
     # path('download/invalid/', views.download_invalid, name='download_invalid'),
+
+    # Learner/Student views
+    path('my-card/', views.learner_card_dashboard, name='learner_dashboard'),
+    path('my-card/download/', views.learner_download_card, name='learner_download_card'),
+    path('my-card/verify-info/', views.learner_verify_info, name='learner_verify_info'),
+    path('my-card/history/', views.learner_verification_history, name='learner_verification_history'),
+    path('my-card/report-issue/', views.learner_report_issue, name='learner_report_issue'),
+    path('my-card/details/', views.learner_card_detail, name='learner_card_detail'),
 ]
 
 # ============================================================================

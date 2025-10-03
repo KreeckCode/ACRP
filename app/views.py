@@ -368,7 +368,7 @@ def learner_dashboard(request):
     
     learner_profile = {
         'username': user.username,
-        'full_name': user.get_full_name() if hasattr(user, 'get_full_name') else user.username,
+        'full_name': f"{user.first_name} {user.last_name}".strip() or user.username,
         'email': user.email,
         'registration_number': getattr(user, 'employee_code', user.username),
         'phone': getattr(user, 'phone', 'Not provided'),
@@ -395,8 +395,8 @@ def learner_dashboard(request):
                     'affiliation_type': application.onboarding_session.selected_affiliation_type.name,
                 }
                 break
-    except:
-        pass
+    except Exception as e:
+        logger.warning(f"Could not fetch application info for learner: {e}")
     
     # ============================================================================
     # DIGITAL CARD STATUS
@@ -407,26 +407,27 @@ def learner_dashboard(request):
         from affiliationcard.models import AffiliationCard
         
         # Find card associated with this learner's email
-        digital_card = AffiliationCard.objects.filter(
+        card_obj = AffiliationCard.objects.filter(
             Q(email=user.email) | Q(registration_number=user.username)
         ).first()
         
-        if digital_card:
+        if card_obj:
             # Calculate days until expiry
-            days_until_expiry = (digital_card.date_expires - timezone.now().date()).days if digital_card.date_expires else None
+            days_until_expiry = None
+            if card_obj.date_expires:
+                days_until_expiry = (card_obj.date_expires - timezone.now().date()).days
             
-            digital_card_info = {
-                'card_number': digital_card.card_number,
-                'status': digital_card.get_status_display(),
-                'issue_date': digital_card.date_issued,
-                'expiry_date': digital_card.date_expires,
+            digital_card = {
+                'card_number': card_obj.card_number,
+                'status': card_obj.get_status_display(),
+                'issue_date': card_obj.date_issued,
+                'expiry_date': card_obj.date_expires,
                 'days_until_expiry': days_until_expiry,
                 'is_expiring_soon': days_until_expiry and days_until_expiry <= 30,
-                'url': f'/affiliationcard/cards/{digital_card.pk}/',
+                'url': f'/affiliationcard/cards/{card_obj.pk}/',
             }
-            digital_card = digital_card_info
-    except:
-        pass
+    except Exception as e:
+        logger.warning(f"Could not fetch digital card for learner: {e}")
     
     # ============================================================================
     # CPD PROGRESS TRACKING
@@ -442,7 +443,7 @@ def learner_dashboard(request):
     }
     
     try:
-        from cpd.models import CPDRecord, CPDActivity
+        from cpd.models import CPDRecord
         
         current_year = timezone.now().year
         
@@ -482,8 +483,8 @@ def learner_dashboard(request):
         # Get recent CPD activities (last 5)
         cpd_progress['recent_activities'] = year_records.order_by('-completion_date')[:5]
         
-    except:
-        pass
+    except Exception as e:
+        logger.warning(f"Could not fetch CPD progress for learner: {e}")
     
     # ============================================================================
     # LEARNING ACTIVITIES (COURSES, ASSIGNMENTS, ETC.)
@@ -504,20 +505,28 @@ def learner_dashboard(request):
     # UPCOMING EVENTS AND WORKSHOPS
     # ============================================================================
     
-    upcoming_events = Event.objects.filter(
-        start_time__gte=timezone.now(),
-        start_time__lte=timezone.now() + timedelta(days=30),
-        is_active=True
-    ).order_by('start_time')[:5]
+    upcoming_events = []
+    try:
+        upcoming_events = Event.objects.filter(
+            start_time__gte=timezone.now(),
+            start_time__lte=timezone.now() + timedelta(days=30),
+            is_active=True
+        ).order_by('start_time')[:5]
+    except Exception as e:
+        logger.warning(f"Could not fetch upcoming events: {e}")
     
     # ============================================================================
     # RECENT ANNOUNCEMENTS FOR LEARNERS
     # ============================================================================
     
-    announcements = Announcement.objects.filter(
-        published_at__lte=timezone.now(),
-        is_active=True
-    ).order_by('-published_at')[:5]
+    announcements = []
+    try:
+        announcements = Announcement.objects.filter(
+            published_at__lte=timezone.now(),
+            is_active=True
+        ).order_by('-published_at')[:5]
+    except Exception as e:
+        logger.warning(f"Could not fetch announcements: {e}")
     
     # ============================================================================
     # ACTION ITEMS FOR LEARNER
@@ -567,7 +576,7 @@ def learner_dashboard(request):
         {
             'title': 'My Courses',
             'description': 'View enrolled courses',
-            'url': '/learning/courses/',  # Placeholder URL
+            'url': '/learning/courses/',
             'icon': 'book',
             'color': 'blue',
         },
@@ -608,8 +617,25 @@ def learner_dashboard(request):
         },
     ]
     
-
-
+    # ============================================================================
+    # CONTEXT ASSEMBLY AND RENDER
+    # ============================================================================
+    
+    context = {
+        'learner_profile': learner_profile,
+        'application_info': application_info,
+        'digital_card': digital_card,
+        'cpd_progress': cpd_progress,
+        'learning_stats': learning_stats,
+        'upcoming_events': upcoming_events,
+        'announcements': announcements,
+        'action_items': action_items,
+        'quick_links': quick_links,
+        'page_title': 'My Learning Dashboard',
+        'current_year': timezone.now().year,
+    }
+    
+    return render(request, 'app/learner_dashboard.html', context)
 
 
 @login_required

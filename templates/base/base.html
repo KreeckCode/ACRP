@@ -270,7 +270,7 @@
                         </button>
                         <div class="hidden absolute right-0 z-10 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5" id="user-menu-dropdown">
                             <div class="py-1">
-                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <a href="{% url "accounts:my_profile" %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                     <i class="bi bi-person mr-2"></i>My Profile
                                 </a>
                                 <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
@@ -314,7 +314,7 @@
                     </a>
                     
                     <!-- My Profile -->
-                    <a href="javascript:void(0)" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                    <a href="{% url "accounts:my_profile" %}" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
                         <i class="bi bi-person mr-3 text-lg"></i>
                         My Profile
                     </a>
@@ -356,7 +356,7 @@
                     </div>
                     
                     <!-- Digital Card -->
-                    <a href="{% url 'affiliationcard:dashboard' %}" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                    <a href="{% url 'affiliationcard:learner_dashboard' %}" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
                         <i class="bi bi-credit-card mr-3 text-lg"></i>
                         My Digital Card
                     </a>
@@ -405,7 +405,7 @@
                     </a>
                     
                     <!-- My Profile -->
-                    <a href="javascript:void(0)" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                    <a href="{% url "accounts:my_profile" %}" class="sidebar-link text-gray-300 hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-md">
                         <i class="bi bi-person mr-3 text-lg"></i>
                         My Profile
                     </a>

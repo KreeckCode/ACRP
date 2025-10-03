@@ -524,6 +524,10 @@ class BaseApplicationForm(forms.ModelForm):
                 "class": "form-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors",
                 "min": "0", "max": "70"
             }),
+            'years_in_part_time_ministry': forms.NumberInput(attrs={
+                "class": "form-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors",
+                "min": "0", "max": "70"
+            }),
             'disciplinary_action': CHECKBOX_WIDGET,
             'disciplinary_description': TEXTAREA_WIDGET,
             'actively_involved_pastoral_counselling': CHECKBOX_WIDGET,

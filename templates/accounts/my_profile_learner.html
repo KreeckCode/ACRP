@@ -1,0 +1,334 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 lg:p-8">
+    
+    <!-- Profile Header -->
+    <div class="mb-8">
+        <div class="bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl shadow-lg p-8">
+            <div class="flex flex-col lg:flex-row items-center lg:items-start space-y-6 lg:space-y-0 lg:space-x-8">
+                <!-- Profile Picture -->
+                <div class="flex-shrink-0">
+                    <div class="relative">
+                        <img src="{{ profile_data.picture_url }}" 
+                             alt="{{ profile_data.full_name }}"
+                             class="w-32 h-32 lg:w-40 lg:h-40 rounded-full border-4 border-white shadow-xl object-cover">
+                        <div class="absolute bottom-0 right-0 bg-green-500 w-6 h-6 rounded-full border-4 border-white"></div>
+                    </div>
+                </div>
+                
+                <!-- Profile Info -->
+                <div class="flex-1 text-center lg:text-left">
+                    <h1 class="text-3xl lg:text-4xl font-bold text-white mb-2">
+                        {{ profile_data.full_name }}
+                    </h1>
+                    <p class="text-blue-100 text-lg mb-4">
+                        <i class="bi bi-person-badge me-2"></i>
+                        {{ profile_data.acrp_role }}
+                    </p>
+                    <div class="flex flex-col lg:flex-row lg:items-center space-y-2 lg:space-y-0 lg:space-x-6 text-blue-100">
+                        <div class="flex items-center justify-center lg:justify-start">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                            {{ profile_data.email }}
+                        </div>
+                        {% if profile_data.phone != 'Not provided' %}
+                        <div class="flex items-center justify-center lg:justify-start">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                            </svg>
+                            {{ profile_data.phone }}
+                        </div>
+                        {% endif %}
+                        <div class="flex items-center justify-center lg:justify-start">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"/>
+                            </svg>
+                            {{ profile_data.registration_number }}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Edit Button -->
+                <div class="flex-shrink-0">
+                    <a href="{% url 'accounts:edit_profile' %}" 
+                       class="inline-flex items-center px-6 py-3 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-all duration-300 shadow-lg hover:shadow-xl">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                        Edit Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {% for stat in quick_stats %}
+        <div class="bg-gradient-to-r from-{{ stat.color }}-500 to-{{ stat.color }}-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-{{ stat.color }}-100 text-sm font-medium">{{ stat.label }}</p>
+                    <p class="text-3xl font-bold">{{ stat.value }}</p>
+                </div>
+                <div class="bg-{{ stat.color }}-400 bg-opacity-50 rounded-lg p-3">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        {% if stat.icon == 'award' %}
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                        {% elif stat.icon == 'credit-card' %}
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                        {% elif stat.icon == 'calendar' %}
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        {% endif %}
+                    </svg>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        
+        <!-- Application Status -->
+        {% if application_status %}
+        <div class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden">
+            <div class="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
+                <div class="flex items-center">
+                    <div class="bg-blue-400 bg-opacity-50 rounded-lg p-2 mr-3">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-white">Application Status</h3>
+                </div>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <p class="text-sm text-gray-600 mb-1">Application Number</p>
+                        <p class="text-xl font-bold text-gray-900">{{ application_status.application_number }}</p>
+                    </div>
+                    
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <p class="text-sm text-gray-600 mb-2">Status</p>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
+                            {% if application_status.status_class == 'approved' %}bg-green-100 text-green-800
+                            {% elif application_status.status_class == 'submitted' %}bg-blue-100 text-blue-800
+                            {% elif application_status.status_class == 'under_review' %}bg-yellow-100 text-yellow-800
+                            {% elif application_status.status_class == 'rejected' %}bg-red-100 text-red-800
+                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ application_status.status }}
+                        </span>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-gray-50 rounded-lg p-3">
+                            <p class="text-xs text-gray-600 mb-1">Council</p>
+                            <p class="font-semibold text-gray-900">{{ application_status.council_code }}</p>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-3">
+                            <p class="text-xs text-gray-600 mb-1">Type</p>
+                            <p class="font-semibold text-gray-900 text-sm">{{ application_status.affiliation_type }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- CPD Progress -->
+        <div class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden">
+            <div class="bg-gradient-to-r from-purple-500 to-purple-600 px-6 py-4">
+                <div class="flex items-center">
+                    <div class="bg-purple-400 bg-opacity-50 rounded-lg p-2 mr-3">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-white">CPD Progress {{ cpd_summary.current_year }}</h3>
+                </div>
+            </div>
+            <div class="p-6">
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm font-medium text-gray-600">Progress</span>
+                        <span class="text-lg font-bold text-purple-600">
+                            {{ cpd_summary.total_hours }} / {{ cpd_summary.required_hours }} hours
+                        </span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-4">
+                        <div class="bg-gradient-to-r from-purple-500 to-purple-600 h-4 rounded-full transition-all duration-500 flex items-center justify-end pr-2" 
+                             style="width: {{ cpd_summary.completion_percentage }}%">
+                            <span class="text-xs font-bold text-white">{{ cpd_summary.completion_percentage }}%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="space-y-3 mb-4">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Approved Hours</span>
+                        <span class="font-semibold text-green-600">{{ cpd_summary.approved_hours }}</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Pending Hours</span>
+                        <span class="font-semibold text-yellow-600">{{ cpd_summary.pending_hours }}</span>
+                    </div>
+                </div>
+                
+                <a href="/cpd/activities/" 
+                   class="block text-center px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-semibold shadow-md">
+                    <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                    </svg>
+                    Log CPD Activity
+                </a>
+            </div>
+        </div>
+        
+        <!-- Digital Card -->
+        {% if digital_card %}
+        <div class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden">
+            <div class="bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 py-4">
+                <div class="flex items-center">
+                    <div class="bg-emerald-400 bg-opacity-50 rounded-lg p-2 mr-3">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-white">Digital Card</h3>
+                </div>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4 mb-4">
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <p class="text-sm text-gray-600 mb-1">Card Number</p>
+                        <p class="text-xl font-bold text-gray-900 font-mono">{{ digital_card.card_number }}</p>
+                    </div>
+                    
+                    <div class="flex justify-between items-center bg-gray-50 rounded-lg p-4">
+                        <div>
+                            <p class="text-sm text-gray-600 mb-1">Status</p>
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
+                                {% if digital_card.status_class == 'active' %}bg-green-100 text-green-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ digital_card.status }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    {% if digital_card.expiry_date %}
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <p class="text-sm text-gray-600 mb-1">Expires</p>
+                        <p class="font-semibold text-gray-900">{{ digital_card.expiry_date|date:"F d, Y" }}</p>
+                        {% if digital_card.is_expiring_soon %}
+                        <div class="mt-2 flex items-center text-amber-600 text-sm">
+                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                            </svg>
+                            Expires in {{ digital_card.days_until_expiry }} days
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <a href="{{ digital_card.card_url }}" 
+                   class="block text-center px-4 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-semibold shadow-md">
+                    <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                    </svg>
+                    View Card
+                </a>
+            </div>
+        </div>
+        {% else %}
+        <!-- No Card Yet -->
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="bg-gradient-to-r from-gray-500 to-gray-600 px-6 py-4">
+                <div class="flex items-center">
+                    <div class="bg-gray-400 bg-opacity-50 rounded-lg p-2 mr-3">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-white">Digital Card</h3>
+                </div>
+            </div>
+            <div class="p-6 text-center">
+                <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                </svg>
+                <p class="text-gray-600 mb-2">No digital card assigned yet</p>
+                <p class="text-sm text-gray-500">Your card will be issued after application approval</p>
+            </div>
+        </div>
+        {% endif %}
+        
+    </div>
+    
+    <!-- Account Settings -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+        <h3 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+            <svg class="w-6 h-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            Account Settings & Information
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="border-2 border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors">
+                <div class="text-sm text-gray-600 mb-1">Username</div>
+                <div class="font-semibold text-gray-900">{{ profile_data.username }}</div>
+            </div>
+            <div class="border-2 border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors">
+                <div class="text-sm text-gray-600 mb-1">Registration Number</div>
+                <div class="font-semibold text-gray-900">{{ profile_data.registration_number }}</div>
+            </div>
+            <div class="border-2 border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors">
+                <div class="text-sm text-gray-600 mb-1">Member Since</div>
+                <div class="font-semibold text-gray-900">{{ profile_data.date_joined|date:"F Y" }}</div>
+            </div>
+            {% if profile_data.last_login %}
+            <div class="border-2 border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors">
+                <div class="text-sm text-gray-600 mb-1">Last Login</div>
+                <div class="font-semibold text-gray-900">{{ profile_data.last_login|date:"M d, Y" }}</div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="mt-6 pt-6 border-t border-gray-200">
+            <div class="flex flex-wrap gap-3">
+                <a href="{% url 'accounts:change_password' %}" 
+                   class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                    </svg>
+                    Change Password
+                </a>
+                <a href="/cpd/dashboard/" 
+                   class="inline-flex items-center px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors font-medium">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                    </svg>
+                    View CPD Dashboard
+                </a>
+                {% if digital_card %}
+                <a href="{{ digital_card.card_url }}" 
+                   class="inline-flex items-center px-4 py-2 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 transition-colors font-medium">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                    </svg>
+                    View Digital Card
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+</div>
+{% endblock %}

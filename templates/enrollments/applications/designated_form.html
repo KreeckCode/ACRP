@@ -864,9 +864,9 @@
                     <div class="section-header" onclick="toggleSection('background')">
                         <h3>
                             <i class="bi bi-mortarboard"></i>
-                            {% if session.selected_council.name == "CPSC" %}Professional Christian Pastoral Counselling involvement 
-                            {% elif session.selected_council.name == "CGMP" or session.selected_council.name == "CMTP" %}Professional Ministry involvement
-                            {% else %}Professional Ministry involvement {% endif %}
+                            {% if session.selected_council.name == "CPSC" %}Professional Christian Pastoral Counselling Involvement 
+                            {% elif session.selected_council.name == "CGMP" or session.selected_council.name == "CMTP" %}Professional Ministry Involvement
+                            {% else %}Professional Ministry Involvement {% endif %}
                             
                         </h3>
                         <i class="bi bi-chevron-down toggle-icon"></i>
@@ -916,9 +916,9 @@
                             {% if form.years_in_ministry %}
                             <div class="form-group">
                                 <label for="{{ form.years_in_ministry.id_for_label }}">
-                                    {% if session.selected_council.name == "CPSC" %} Years in Part Time Ministry / Counselling 
-                                    {% elif session.selected_council.name == "CGMP" or session.selected_council.name == "CMTP" %} Years in Full Time Ministry
-                                    {% else %} Years in Full Time Ministry {% endif %}
+                                    {% if session.selected_council.name == "CPSC" %} Years in full-time Counselling / Ministry
+                                    {% elif session.selected_council.name == "CGMP" or session.selected_council.name == "CMTP" %} Years in full-time Ministry
+                                    {% else %} Years in full-time Ministry {% endif %}
                                     {% if form.years_in_ministry.field.required %}<span class="required">*</span>{% endif %}
                                 </label>
                                 {{ form.years_in_ministry }}
@@ -928,7 +928,12 @@
                                     </div>
                                 {% endif %}
                                 {% if form.years_in_ministry.help_text %}
-                                    <div class="form-text">Total years involved in Full time ministry work</div>
+                                    {% if session.selected_council.name == "CPSC" %}
+                                    <div class="form-text">Total years involved in full-time counselling</div>
+                                    {% else %}
+                                    <div class="form-text">Total years involved in full-time ministry work</div>
+                                    {% endif %}
+                                    
                                 {% endif %}
                             </div>
                             {% endif %}
@@ -936,9 +941,9 @@
                             {% if form.years_in_part_time_ministry %}
                             <div class="form-group">
                                 <label for="{{ form.years_in_part_time_ministry.id_for_label }}">
-                                    {% if session.selected_council.name == "CPSC" %} Years in Part Time Ministry / Counselling 
-                                    {% elif session.selected_council.name == "CGMP" or session.selected_council.name == "CMTP" %} Years in Part Time Ministry
-                                    {% else %} Years in Part Time Ministry {% endif %}
+                                    {% if session.selected_council.name == "CPSC" %} Years in part-time Counselling / Ministry
+                                    {% elif session.selected_council.name == "CGMP" or session.selected_council.name == "CMTP" %} Years in part-time Ministry
+                                    {% else %} Years in part-ime Ministry {% endif %}
                                     {% if form.years_in_part_time_ministry.field.required %}<span class="required">*</span>{% endif %}
                                 </label>
                                 {{ form.years_in_part_time_ministry }}
@@ -948,7 +953,12 @@
                                     </div>
                                 {% endif %}
                                 {% if form.years_in_part_time_ministry.help_text %}
-                                    <div class="form-text">{{ form.years_in_part_time_ministry.help_text }}</div>
+                                    {% if session.selected_council.name == "CPSC" %}
+                                        <div class="form-text">Total years involved in part-time counselling</div>
+                                        {% else %}
+                                        <div class="form-text">Total years involved in part-time ministry</div>
+                                    {% endif %}
+                                    
                                 {% endif %}
                             </div>
                             {% endif %}
@@ -960,7 +970,7 @@
                                 <div class="form-group field-full">
                                     <label for="{{ form.work_description.id_for_label }}">
                                         {{ form.work_description.label }}
-                                        {% if form.work_description.field.required %}<span class="required">*</span>{% endif %}
+                                        {% if form.work_description.field.required %}<span class="required"></span>{% endif %}
                                     </label>
                                     {{ form.work_description }}
                                     {% if form.work_description.errors %}
@@ -991,7 +1001,7 @@
                             {% if form.ministry_name %}
                             <div class="form-group">
                                 <label for="{{ form.ministry_name.id_for_label }}">
-                                    Current Ministry Name
+                                    Current Ministry name
                                     <span class="required">*</span>
                                 </label>
                                 {{ form.ministry_name }}
@@ -1135,7 +1145,7 @@
                     <div class="section-header" onclick="toggleSection('supervision')">
                         <h3>
                             <i class="bi bi-person-badge"></i>
-                            Professional Supervision (if Applicable)
+                            Professional Supervision (if applicable)
                         </h3>
                         <i class="bi bi-chevron-down toggle-icon"></i>
                     </div>
@@ -1279,7 +1289,38 @@
                             Academic Qualifications
                         </h3>
                         <i class="bi bi-chevron-down toggle-icon"></i>
-                        <p class="form-text">Note: Please indicate your highest School education,{% if session.selected_council.name == "CPSC" %} Accredited Christian Pastoral Counselling {%else%} Ministry {%endif%}/ theological training and other {% if session.selected_council.name == "CPSC" %} Counselling {%else%} Ministry {%endif%} relevant training in this section. The certificates for these qualifications / training must be submitted with this application.</p>
+                        <p class="form-text">Note: Please indicate your highest school education,{% if session.selected_council.name == "CPSC" %} accredited Christian Pastoral Counselling {%else%} Ministry {%endif%}/ Theological training and other {% if session.selected_council.name == "CPSC" %} Counselling {%else%} Ministry {%endif%} relevant training in this section. The certificates for these qualifications / training must be submitted with this application.</p>
+                    
+                        {% if session.selected_council.name == "CPSC" %}
+                        <!-- Reference Letter Requirements Note -->
+                        <div class="alert alert-info mb-4">
+                            <h5 class="alert-heading"><i class="bi bi-info-circle"></i> Note</h5>
+                            <p class="mb-0"><strong>What is an accredited qualification?</strong> </p>
+                            <ul class="mb-0 mt-2">
+                                <li>It is a qualification that was awarded by a South African Quality Council that is registered with the Department of Higher Education & Training, QCTO or HWSETA, that offers formal qualifications that have been registered with SAQA.</li>
+                               
+                            </ul>
+                            <p class="mb-0 mt-4"><strong>If I only have informal (unaccredited) qualifications and experience, may I still apply?</strong> </p>
+                            <ul class="mb-0 mt-2">
+                                <li>Yes, you may if you are of the opinion that your training is relevant. This is known as recognition of prior learning (RPL) and means that your informal and non-formal learning and work experience may be evaluated against the outcomes expected of a counsellor in a certain category. You may be asked to complete some additional prescribed courses.</li>
+                               
+                            </ul>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info mb-4">
+                            <h5 class="alert-heading"><i class="bi bi-info-circle"></i> Note</h5>
+                            <p class="mb-0"><strong>What is an accredited qualification?</strong> </p>
+                            <ul class="mb-0 mt-2">
+                                <li>It is a qualification that was awarded by a South African Quality Council that is registered with the Department of Higher Education & Training, QCTO or HWSETA, that offers formal qualifications that have been registered with SAQA.</li>
+                               
+                            </ul>
+                            <p class="mb-0 mt-4"><strong>If I only have informal (unaccredited) qualifications and experience, may I still apply?</strong> </p>
+                            <ul class="mb-0 mt-2">
+                                <li>Yes, you may if you are of the opinion that your training is relevant. This is known as recognition of prior learning (RPL) and means that your informal and non-formal learning and work experience may be evaluated against the outcomes expected of a ministry practitioner in a certain category. </li>
+                               
+                            </ul>
+                        </div>
+                        {% endif %}
                     </div>
                     <div class="section-content" id="content-qualifications">
                         
@@ -1311,7 +1352,7 @@
                         <div class="section-header" onclick="toggleSection('experience')">
                             <h3>
                                 <i class="bi bi-briefcase"></i>
-                                Practical Experience (If Applicable)
+                                Practical Experience (if applicable)
                             </h3>
                             <i class="bi bi-chevron-down toggle-icon"></i>
                         </div>
@@ -1357,13 +1398,13 @@
                             <h5 class="alert-heading"><i class="bi bi-info-circle"></i> Reference Letters Requirements</h5>
                             <p class="mb-0"><strong>TWO</strong> reference letters must be submitted with this application.</p>
                             <ul class="mb-0 mt-2">
-                                <li>It is important that the letters of reference or testimonials report on your work ethics, as well as your involvement in clerical activities.</li>
-                                <li>The letters of reference or testimonials from these two individuals must be hand-signed.</li>
+                                <li>It is important that the letters of reference or testimonials report on your work ethics, as well as your involvement in counselling activities.</li>
+                                <li>The letters of reference or testimonials must be hand-signed.</li>
                                 <li>The letters of reference or testimonials must be on formal letterheads.</li>
                                 <li>Family members, friends and/or clients may not write a testimonial for you. Your pastor/other religious leader, employer, supervisor, or chairperson of the church council at the congregation you belong to, are all good choices to act as references.</li>
                                 <li>At least one of these testimonials must be less than one year old.</li>
-                                <li>Indicate the details (name, contact details, position) of the person signing the letter</li>
-                                <li>Testimonials can be addressed to: CPSC Evaluation and Registration Committee</li>
+                                <li>Indicate the details (name, contact details, position) of the person signing the letter.</li>
+                                <li>Testimonials can be addressed to: CPSC Evaluation and Registration Committee.</li>
                             </ul>
                         </div>
                         {% else %}
@@ -1425,7 +1466,7 @@
 
                         
                         <div class="section-content" id="content-documents">
-                            <!-- Reference Letter Requirements Note -->
+                            
                              
                         <div class="alert alert-info mb-4">
                             <h5 class="alert-heading"><i class="bi bi-info-circle"></i> Required Supporting Documents</h5>
@@ -1436,6 +1477,7 @@
                                 <li>Highest School Certificate</li>
                                 <li>Accredited Qualification / Training Certificates</li>
                                 <li>Reference Letters</li>
+                                <li>Letter of supervision (if applicable)</li>
                                 <li>Proof of Payment</li>
                             </ul>
                             {% else %} 
