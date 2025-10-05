@@ -15,7 +15,7 @@ from django.http import (
 )
 from django.utils import timezone
 from datetime import timedelta
-
+from app.notification_utils import create_notification, notify_users
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import get_user_model
@@ -41,6 +41,14 @@ from .models import *
 from .utils import (
     log_activity, send_notification, check_permission,
     get_user_workload, calculate_project_health, generate_activity_feed
+)
+from django.views.decorators.http import require_http_methods
+from .notification_utils import (
+    get_unread_count,
+    mark_notification_read, 
+    mark_all_read, 
+    delete_notification,
+    get_recent_notifications
 )
 
 User = get_user_model()
@@ -337,6 +345,8 @@ def dashboard(request):
         'announcements': announcements,
         'events': events,
         'projects': projects,
+        'unread_notifications_count': get_unread_count(request.user),
+        'recent_notifications': get_recent_notifications(request.user, limit=5),
         'stats': stats,
         'pending_items': pending_items,
         'user_role': getattr(getattr(user, 'role', None), 'title', 'Member') if hasattr(user, 'role') else 'Member',
@@ -349,7 +359,6 @@ def dashboard(request):
     }
     
     return render(request, 'app/dashboard.html', context)
-
 
 @login_required
 def learner_dashboard(request):
@@ -381,6 +390,7 @@ def learner_dashboard(request):
         from django.contrib.contenttypes.models import ContentType
         
         # Try to find application linked to this user's email or registration number
+        # Applications use 'email' and 'registration_number' fields
         for model in [StudentApplication, AssociatedApplication, DesignatedApplication]:
             application = model.objects.filter(
                 Q(email=user.email) | Q(registration_number=user.username)
@@ -406,10 +416,35 @@ def learner_dashboard(request):
     try:
         from affiliationcard.models import AffiliationCard
         
-        # Find card associated with this learner's email
-        card_obj = AffiliationCard.objects.filter(
-            Q(email=user.email) | Q(registration_number=user.username)
-        ).first()
+        # Find card associated with this learner
+        # Try multiple lookup strategies for maximum compatibility
+        card_obj = None
+        
+        # Strategy 1: Look up by affiliate_email
+        if not card_obj:
+            card_obj = AffiliationCard.objects.filter(
+                affiliate_email=user.email
+            ).first()
+        
+        # Strategy 2: Look up by internal_id or affiliate_id_number
+        if not card_obj:
+            card_obj = AffiliationCard.objects.filter(
+                Q(internal_id=user.username) | 
+                Q(affiliate_id_number=getattr(user, 'employee_code', user.username))
+            ).first()
+        
+        # Strategy 3: Look up through application relationship (most reliable)
+        if not card_obj and application_info:
+            # Get the actual application object we found earlier
+            for model in [StudentApplication, AssociatedApplication, DesignatedApplication]:
+                application = model.objects.filter(
+                    Q(email=user.email) | Q(registration_number=user.username)
+                ).first()
+                if application:
+                    card_obj = AffiliationCard.objects.filter(
+                        application=application
+                    ).first()
+                    break
         
         if card_obj:
             # Calculate days until expiry
@@ -540,8 +575,8 @@ def learner_dashboard(request):
         action_items.append({
             'type': 'cpd',
             'priority': 'high' if hours_needed > 10 else 'medium',
-            'title': 'Complete CPD Hours',
-            'description': f'You need {hours_needed} more CPD hours to meet annual requirements',
+            'title': 'Complete CPD Points',
+            'description': f'You need {hours_needed} more CPD points to meet annual requirements',
             'url': '/cpd/activities/',
             'icon': 'award',
         })
@@ -574,9 +609,9 @@ def learner_dashboard(request):
     
     quick_links = [
         {
-            'title': 'My Courses',
+            'title': 'Learn',
             'description': 'View enrolled courses',
-            'url': '/learning/courses/',
+            'url': '/learn/',
             'icon': 'book',
             'color': 'blue',
         },
@@ -633,6 +668,8 @@ def learner_dashboard(request):
         'quick_links': quick_links,
         'page_title': 'My Learning Dashboard',
         'current_year': timezone.now().year,
+        'unread_notifications_count': get_unread_count(request.user),
+        'recent_notifications': get_recent_notifications(request.user, limit=5),
     }
     
     return render(request, 'app/learner_dashboard.html', context)
@@ -848,7 +885,6 @@ def workspace_dashboard(request):
         
         # Communication and collaboration
         'recent_comments': recent_comments,
-        'mentions': mentions,
         'unread_notifications': unread_notifications,
         
         # Schedule and events
@@ -2505,85 +2541,399 @@ def error_400(request, exception):
 
 
 
-
-
 @login_required
 def event_list(request):
-    events = Event.objects.all()
+    """
+    Display and filter events with comprehensive filtering options.
+    Accessible to all authenticated users with proper scoping.
+    """
+    # Base queryset - only show active events
+    events = Event.objects.select_related(
+        'created_by', 'related_project'
+    ).prefetch_related(
+        'participants', 'tags'
+    ).filter(is_active=True)
     
-    # Handle filters
-    query = request.GET.get('q', '')
-    status = request.GET.get('status', '')
-    mandatory = request.GET.get('mandatory', '')
+    # Apply filters
+    search_query = request.GET.get('q', '').strip()
+    status_filter = request.GET.get('status', '')
+    mandatory_filter = request.GET.get('mandatory', '')
+    event_type_filter = request.GET.get('event_type', '')
     
-    if query:
-        events = events.filter(title__icontains=query)
+    if search_query:
+        events = events.filter(
+            Q(title__icontains=search_query) |
+            Q(description__icontains=search_query) |
+            Q(location__icontains=search_query)
+        )
     
-    if status == 'upcoming':
-        events = events.filter(start_time__gte=timezone.now())
-    elif status == 'past':
-        events = events.filter(start_time__lt=timezone.now())
-    elif status == 'today':
-        today = timezone.now().date()
-        events = events.filter(start_time__date=today)
+    # Date-based filters
+    now = timezone.now()
+    if status_filter == 'upcoming':
+        events = events.filter(start_time__gte=now)
+    elif status_filter == 'past':
+        events = events.filter(end_time__lt=now)
+    elif status_filter == 'today':
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        today_end = today_start + timedelta(days=1)
+        events = events.filter(
+            start_time__gte=today_start,
+            start_time__lt=today_end
+        )
+    elif status_filter == 'this_week':
+        week_start = now - timedelta(days=now.weekday())
+        week_end = week_start + timedelta(days=7)
+        events = events.filter(
+            start_time__gte=week_start,
+            start_time__lt=week_end
+        )
     
-    if mandatory == 'mandatory':
+    # Mandatory filter
+    if mandatory_filter == 'mandatory':
         events = events.filter(is_mandatory=True)
-    elif mandatory == 'optional':
+    elif mandatory_filter == 'optional':
         events = events.filter(is_mandatory=False)
     
-    return render(request, 'app/event_list.html', {'events': events})
+    # Event type filter
+    if event_type_filter:
+        events = events.filter(event_type=event_type_filter)
+    
+    # Order by start time (upcoming first)
+    events = events.order_by('start_time')
+    
+    # Pagination
+    paginator = Paginator(events, 20)
+    page = request.GET.get('page', 1)
+    
+    try:
+        events_page = paginator.page(page)
+    except PageNotAnInteger:
+        events_page = paginator.page(1)
+    except EmptyPage:
+        events_page = paginator.page(paginator.num_pages)
+    
+    context = {
+        'events': events_page,
+        'event_types': Event.EVENT_TYPES,
+        'current_filters': {
+            'search': search_query,
+            'status': status_filter,
+            'mandatory': mandatory_filter,
+            'event_type': event_type_filter,
+        }
+    }
+    
+    return render(request, 'app/event_list.html', context)
 
 
 @login_required
-@permission_required('apps.manage_events', raise_exception=True)
+@permission_required('app.manage_events', raise_exception=True)
 def create_event(request):
+    """
+    Create a new event with comprehensive validation and error handling.
+    Handles both one-time and recurring events with participant notifications.
+    """
     if request.method == 'POST':
-        form = EventForm(request.POST)
+        form = EventForm(request.POST, user=request.user)
+        
         if form.is_valid():
-            event = form.save(commit=False)
-            event.created_by = request.user
-            event.save()
-            form.save_m2m()  # for participants
-            messages.success(request, 'Event created successfully.')
-            return redirect('common:event_list')
+            try:
+                with transaction.atomic():
+                    # Create event instance
+                    event = form.save(commit=False)
+                    event.created_by = request.user
+                    
+                    event.save()
+                    
+                    # Save many-to-many relationships
+                    form.save_m2m()
+                    
+                    # Log activity
+                    logger.info(
+                        f"Event created: {event.title} (ID: {event.id}) by {request.user.username}"
+                    )
+                    
+                    # Send notifications to participants if requested
+                    if form.cleaned_data.get('send_notifications', False):
+                        try:
+                            send_event_notifications(event, request.user)
+                        except Exception as e:
+                            logger.error(f"Failed to send event notifications: {e}")
+                            # Don't fail the entire operation if notifications fail
+                            messages.warning(
+                                request,
+                                'Event created successfully, but some notifications failed to send.'
+                            )
+                    
+                    messages.success(
+                        request,
+                        f'Event "{event.title}" created successfully!'
+                    )
+                    return redirect('common:event_detail', pk=event.id)
+                    
+            except Exception as e:
+                logger.error(f"Error creating event: {e}", exc_info=True)
+                messages.error(
+                    request,
+                    'An error occurred while creating the event. Please try again.'
+                )
+        else:
+            # Form validation failed
+            messages.error(
+                request,
+                'Please correct the errors below.'
+            )
+            logger.warning(
+                f"Event creation form validation failed for user {request.user.username}: {form.errors}"
+            )
     else:
-        form = EventForm()
-    return render(request, 'app/event_form.html', {'form': form})
+        # Initialize form with user context
+        form = EventForm(user=request.user)
+        
+        # Set default start time to next hour
+        next_hour = (timezone.now() + timedelta(hours=1)).replace(
+            minute=0, second=0, microsecond=0
+        )
+        form.initial['start_time'] = next_hour
+        form.initial['end_time'] = next_hour + timedelta(hours=1)
+    
+    context = {
+        'form': form,
+        'page_title': 'Create Event',
+        'submit_text': 'Create Event',
+    }
+    
+    return render(request, 'app/event_form.html', context)
+
 
 @login_required
-def event_detail(request, event_id):
-    event = get_object_or_404(Event, id=event_id)
-    return render(request, 'app/event_detail.html', {'event': event})
+def event_detail(request, pk):
+    """
+    Display detailed event information with participation tracking.
+    Shows different information based on user's relationship to the event.
+    """
+    event = get_object_or_404(
+        Event.objects.select_related(
+            'created_by', 'related_project'
+        ).prefetch_related(
+            'participants', 'tags', 'attachments'
+        ),
+        pk=pk,
+        is_active=True
+    )
+    
+    # Check if user is a participant
+    is_participant = request.user in event.participants.all()
+    
+    # Get user's RSVP status if participant
+    rsvp_status = None
+    if is_participant:
+        try:
+            participation = EventParticipation.objects.get(
+                event=event,
+                user=request.user
+            )
+            rsvp_status = participation.rsvp_status
+        except EventParticipation.DoesNotExist:
+            pass
+    
+    # Calculate event statistics
+    participant_count = event.participants.count()
+    accepted_count = EventParticipation.objects.filter(
+        event=event,
+        rsvp_status='accepted'
+    ).count()
+    
+    context = {
+        'event': event,
+        'is_participant': is_participant,
+        'rsvp_status': rsvp_status,
+        'participant_count': participant_count,
+        'accepted_count': accepted_count,
+        'can_edit': (
+            request.user == event.created_by or
+            request.user.has_perm('app.manage_events')
+        ),
+    }
+    
+    return render(request, 'app/event_detail.html', context)
+
 
 @login_required
-@permission_required('apps.manage_events', raise_exception=True)
-def edit_event(request, event_id):
-    event = get_object_or_404(Event, id=event_id)
+@permission_required('app.manage_events', raise_exception=True)
+def edit_event(request, pk):
+    """
+    Edit existing event with validation and change tracking.
+    Notifies participants of significant changes.
+    """
+    event = get_object_or_404(Event, pk=pk, is_active=True)
+    
+    # Check permissions
+    if not (event.created_by == request.user or request.user.has_perm('app.manage_events')):
+        messages.error(request, 'You do not have permission to edit this event.')
+        return redirect('common:event_detail', pk=event.id)
+    
+    # Track original values for change detection
+    original_start = event.start_time
+    original_location = event.location
+    
     if request.method == 'POST':
-        form = EventForm(request.POST, instance=event)
+        form = EventForm(request.POST, instance=event, user=request.user)
+        
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Event updated successfully.')
-            return redirect('common:event_detail', event_id=event.id)
+            try:
+                with transaction.atomic():
+                    updated_event = form.save()
+                    
+                    # Detect significant changes
+                    changes = []
+                    if updated_event.start_time != original_start:
+                        changes.append('start time')
+                    if updated_event.location != original_location:
+                        changes.append('location')
+                    
+                    # Notify participants of changes
+                    if changes and form.cleaned_data.get('send_notifications', False):
+                        try:
+                            notify_event_changes(updated_event, changes, request.user)
+                        except Exception as e:
+                            logger.error(f"Failed to send change notifications: {e}")
+                    
+                    logger.info(
+                        f"Event updated: {updated_event.title} (ID: {updated_event.id}) "
+                        f"by {request.user.username}"
+                    )
+                    
+                    messages.success(request, 'Event updated successfully!')
+                    return redirect('common:event_detail', pk=updated_event.id)
+                    
+            except Exception as e:
+                logger.error(f"Error updating event: {e}", exc_info=True)
+                messages.error(
+                    request,
+                    'An error occurred while updating the event. Please try again.'
+                )
+        else:
+            messages.error(request, 'Please correct the errors below.')
     else:
-        form = EventForm(instance=event)
-    return render(request, 'app/event_form.html', {'form': form, 'event': event})
+        form = EventForm(instance=event, user=request.user)
+    
+    context = {
+        'form': form,
+        'event': event,
+        'page_title': 'Edit Event',
+        'submit_text': 'Update Event',
+    }
+    
+    return render(request, 'app/event_form.html', context)
+
 
 @login_required
-@permission_required('apps.manage_events', raise_exception=True)
-def delete_event(request, event_id):
-    event = get_object_or_404(Event, id=event_id)
+@permission_required('app.manage_events', raise_exception=True)
+def delete_event(request, pk):
+    """
+    Soft delete event with participant notification.
+    Actually performs soft delete (sets is_active=False) rather than hard delete.
+    """
+    event = get_object_or_404(Event, pk=pk, is_active=True)
+    
+    # Check permissions
+    if not (event.created_by == request.user or request.user.has_perm('app.manage_events')):
+        messages.error(request, 'You do not have permission to delete this event.')
+        return redirect('common:event_detail', pk=event.id)
+    
     if request.method == 'POST':
-        event.delete()
-        messages.success(request, 'Event deleted successfully.')
-        return redirect('common:event_list')
-    return render(request, 'app/confirm_delete.html', {
-        'object': event, 'type': 'Event',
-        'cancel_url': 'event_detail', 'cancel_id': event.id
-    })
+        try:
+            with transaction.atomic():
+                # Soft delete
+                event.is_active = False
+                event.save(update_fields=['is_active', 'updated_at'])
+                
+                # Notify participants
+                try:
+                    notify_event_cancellation(event, request.user)
+                except Exception as e:
+                    logger.error(f"Failed to send cancellation notifications: {e}")
+                
+                logger.info(
+                    f"Event deleted: {event.title} (ID: {event.id}) by {request.user.username}"
+                )
+                
+                messages.success(
+                    request,
+                    f'Event "{event.title}" has been deleted and participants have been notified.'
+                )
+                return redirect('common:event_list')
+                
+        except Exception as e:
+            logger.error(f"Error deleting event: {e}", exc_info=True)
+            messages.error(
+                request,
+                'An error occurred while deleting the event. Please try again.'
+            )
+            return redirect('common:event_detail', pk=event.id)
+    
+    context = {
+        'object': event,
+        'type': 'Event',
+        'cancel_url': 'common:event_detail',
+        'cancel_kwargs': {'pk': event.id},
+    }
+    
+    return render(request, 'app/confirm_delete.html', context)
 
 
+# Helper functions for notifications
+
+def send_event_notifications(event, creator):
+    """Send notifications to all event participants."""
+    from .notification_utils import create_notification
+    
+    # Format name from user fields
+    creator_name = f"{creator.first_name} {creator.last_name}".strip() or creator.username
+    
+    for participant in event.participants.exclude(id=creator.id):
+        create_notification(
+            recipient=participant,
+            notification_type='event_reminder',
+            title=f'New Event: {event.title}',
+            message=f'{creator_name} has invited you to "{event.title}" on {event.start_time.strftime("%B %d, %Y at %I:%M %p")}',
+            content_object=event,
+            sender=creator,
+            action_url=event.get_absolute_url()
+        )
+
+
+def notify_event_changes(event, changes, updater):
+    """Notify participants of significant event changes."""
+    from .utils import send_notification
+    
+    changes_text = ', '.join(changes)
+    
+    for participant in event.participants.exclude(id=updater.id):
+        send_notification(
+            recipient=participant,
+            notification_type='event_updated',
+            title=f'Event Updated: {event.title}',
+            message=f'{updater.get_full_name()} has updated the {changes_text} for "{event.title}"',
+            content_object=event,
+            action_url=event.get_absolute_url()
+        )
+
+
+def notify_event_cancellation(event, canceller):
+    """Notify participants of event cancellation."""
+    from .utils import send_notification
+    
+    for participant in event.participants.exclude(id=canceller.id):
+        send_notification(
+            recipient=participant,
+            notification_type='event_cancelled',
+            title=f'Event Cancelled: {event.title}',
+            message=f'{canceller.get_full_name()} has cancelled "{event.title}" scheduled for {event.start_time.strftime("%B %d, %Y at %I:%M %p")}',
+            content_object=event,
+            action_url='/events/'
+        )
 ### ========== ANNOUNCEMENTS ========== ###
 
 @login_required
@@ -2598,7 +2948,7 @@ def create_announcement(request):
         form = AnnouncementForm(request.POST)
         if form.is_valid():
             ann = form.save(commit=False)
-            ann.posted_by = request.user
+            ann.created_by = request.user
             ann.save()
             messages.success(request, 'Announcement posted successfully.')
             return redirect('common:announcement_list')
@@ -2906,6 +3256,108 @@ def delete_resource(request, resource_id):
     return render(request, 'app/confirm_delete.html', {
         'object': resource, 'type': 'Resource',
         'cancel_url': 'resource_detail', 'cancel_id': resource.id
+    })
+
+
+
+### ========== NOTIFICATIONS ========== ###
+@login_required
+def notification_list(request):
+    """Display all notifications for the user."""
+    notifications = Notification.objects.filter(
+        recipient=request.user,
+        is_active=True
+    ).select_related('sender', 'content_type').order_by('-created_at')
+    
+    # Pagination
+    from django.core.paginator import Paginator
+    paginator = Paginator(notifications, 20)
+    page = request.GET.get('page', 1)
+    
+    try:
+        notifications_page = paginator.page(page)
+    except:
+        notifications_page = paginator.page(1)
+    
+    context = {
+        'notifications': notifications_page,
+        'page_title': 'All Notifications',
+    }
+    
+    return render(request, 'app/notifications/list.html', context)
+
+
+@login_required
+@require_http_methods(["POST"])
+def notification_mark_read(request, pk):
+    """Mark a notification as read via AJAX."""
+    success = mark_notification_read(pk, request.user)
+    
+    if success:
+        return JsonResponse({
+            'success': True,
+            'unread_count': get_unread_count(request.user)
+        })
+    
+    return JsonResponse({
+        'success': False,
+        'error': 'Notification not found'
+    }, status=404)
+
+
+@login_required
+@require_http_methods(["POST"])
+def notification_mark_all_read(request):
+    """Mark all notifications as read via AJAX."""
+    count = mark_all_read(request.user)
+    
+    return JsonResponse({
+        'success': True,
+        'marked_count': count,
+        'unread_count': 0
+    })
+
+
+@login_required
+@require_http_methods(["POST"])
+def notification_delete(request, pk):
+    """Delete a notification via AJAX."""
+    success = delete_notification(pk, request.user)
+    
+    if success:
+        return JsonResponse({
+            'success': True,
+            'unread_count': get_unread_count(request.user)
+        })
+    
+    return JsonResponse({
+        'success': False,
+        'error': 'Notification not found'
+    }, status=404)
+
+
+@login_required
+def notification_fetch(request):
+    """Fetch recent notifications via AJAX for real-time updates."""
+    notifications = get_recent_notifications(request.user, limit=10)
+    
+    notifications_data = []
+    for notification in notifications:
+        notifications_data.append({
+            'id': str(notification.id),
+            'title': notification.title,
+            'message': notification.message,
+            'type': notification.notification_type,
+            'is_read': notification.is_read,
+            'action_url': notification.action_url,
+            'created_at': notification.created_at.isoformat(),
+            'sender_name': notification.sender.get_full_name() if notification.sender else None,
+        })
+    
+    return JsonResponse({
+        'success': True,
+        'notifications': notifications_data,
+        'unread_count': get_unread_count(request.user)
     })
 
 

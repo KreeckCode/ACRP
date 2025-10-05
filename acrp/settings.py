@@ -147,6 +147,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.media',
                 'django.template.context_processors.static',
+                'app.context_processors.notifications'
             ],
             # Use cached template loader in production for better performance
             'loaders': [
@@ -410,88 +411,386 @@ GRAPH_MODELS = {
 }
 
 
-# LOGGING CONFIGURATION - Comprehensive logging for debugging and monitoring
+# ============================================================================
+# LOGGING CONFIGURATION - Comprehensive and environment-based
+# ============================================================================
 
 
-# Console debug logging flag
-CONSOLE_LOG_DEBUG = config('CONSOLE_LOG_DEBUG', default=False, cast=bool)
+# Ensure logs directory exists BEFORE defining LOGGING
+LOGS_DIR = BASE_DIR / 'logs'
+LOGS_DIR.mkdir(exist_ok=True, parents=True)  # Create directory and any parent directories
+
+# Define the main log file path
+LOG_FILE_PATH = LOGS_DIR / 'acrp.log'
+
+# Create the log file if it doesn't exist (with proper permissions)
+if not LOG_FILE_PATH.exists():
+    LOG_FILE_PATH.touch(mode=0o644)  # rw-r--r--
+    print(f"Created log file: {LOG_FILE_PATH}")
+
+# ============================================================================
+# LOGGING CONFIGURATION
+# ============================================================================
 
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    
+    # ------------------------------------------------------------------------
+    # FORMATTERS - Define how log messages are formatted
+    # ------------------------------------------------------------------------
     'formatters': {
         'verbose': {
-            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            # Detailed format for file logging with all context
+            'format': '[{levelname}] {asctime} | {name} | {module}.{funcName}:{lineno} | {process:d} {thread:d} | {message}',
             'style': '{',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
         },
         'simple': {
-            'format': '{levelname} {message}',
+            # Simple format for console output (easier to read during development)
+            'format': '[{levelname}] {asctime} | {name} | {message}',
             'style': '{',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
         },
         'json': {
-            'format': '{levelname} {asctime} {module} {message}',
+            # JSON format for production log aggregation systems
+            'format': '{levelname} {asctime} {name} {module} {funcName} {lineno} {message}',
             'style': '{',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
         },
     },
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'simple' if DEBUG else 'json',
+    
+    # ------------------------------------------------------------------------
+    # FILTERS - Control which log records are processed
+    # ------------------------------------------------------------------------
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
         },
-        'file': {
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': BASE_DIR / 'logs' / 'acrp.log',
-            'maxBytes': 15728640,  # 15MB
-            'backupCount': 10,
-            'formatter': 'verbose',
-        } if not DEBUG else {
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        },
+    },
+    
+    # ------------------------------------------------------------------------
+    # HANDLERS - Define where log messages go
+    # ------------------------------------------------------------------------
+    'handlers': {
+        # Console handler - Always outputs to console (stdout)
+        'console': {
+            'level': 'DEBUG',
             'class': 'logging.StreamHandler',
             'formatter': 'simple',
         },
+        
+        # File handler - ALWAYS writes to logs/acrp.log
+        'file': {
+            'level': 'INFO',  # Capture INFO and above to file
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': str(LOG_FILE_PATH),  # Convert Path to string
+            'maxBytes': 15728640,  # 15MB per file
+            'backupCount': 10,  # Keep 10 backup files (150MB total)
+            'formatter': 'verbose',
+            'encoding': 'utf-8',
+        },
+        
+        # Error file handler - Separate file for errors only
+        'error_file': {
+            'level': 'ERROR',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': str(LOGS_DIR / 'acrp_errors.log'),
+            'maxBytes': 10485760,  # 10MB per file
+            'backupCount': 20,  # Keep more error logs (200MB total)
+            'formatter': 'verbose',
+            'encoding': 'utf-8',
+        },
+        
+        # Security log handler - Track security events
+        'security_file': {
+            'level': 'WARNING',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': str(LOGS_DIR / 'security.log'),
+            'maxBytes': 10485760,  # 10MB
+            'backupCount': 20,
+            'formatter': 'verbose',
+            'encoding': 'utf-8',
+        },
+        
+        # Email handler - Send critical errors to admins (production only)
         'mail_admins': {
             'level': 'ERROR',
             'class': 'django.utils.log.AdminEmailHandler',
+            'filters': ['require_debug_false'],
             'formatter': 'verbose',
+            'include_html': True,
         },
     },
-    'root': {
-        'level': 'INFO',
-        'handlers': ['console'],
-    },
+    
+    # ------------------------------------------------------------------------
+    # LOGGERS - Configure logging for different parts of the application
+    # ------------------------------------------------------------------------
     'loggers': {
-        'django': {
-            'handlers': ['console', 'file'] if not DEBUG else ['console'],
+        # Root logger - Catches everything not caught by specific loggers
+        '': {
+            'handlers': ['console', 'file'],
             'level': 'INFO',
             'propagate': False,
         },
+        
+        # Django framework logger
+        'django': {
+            'handlers': ['console', 'file', 'error_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        
+        # Django request logger - Logs all HTTP requests
+        'django.request': {
+            'handlers': ['console', 'file', 'error_file', 'mail_admins'],
+            'level': 'WARNING',  # Only log warnings and errors for requests
+            'propagate': False,
+        },
+        
+        # Django database logger - SQL queries
         'django.db.backends': {
-            'handlers': ['console'] if CONSOLE_LOG_DEBUG else [],
-            'level': 'DEBUG' if CONSOLE_LOG_DEBUG else 'WARNING',
+            'handlers': ['console'] if config('SQL_DEBUG', default=False, cast=bool) else ['file'],
+            'level': 'DEBUG' if config('SQL_DEBUG', default=False, cast=bool) else 'WARNING',
             'propagate': False,
         },
+        
+        # Django security logger - Security-related events
+        'django.security': {
+            'handlers': ['console', 'security_file', 'mail_admins'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        
+        # ACRP application logger - Your main application logs
         'acrp': {
-            'handlers': ['console', 'file', 'mail_admins'] if not DEBUG else ['console'],
+            'handlers': ['console', 'file', 'error_file'],
             'level': 'DEBUG' if DEBUG else 'INFO',
             'propagate': False,
         },
+        
+        # CPD tracking logger - Specific to CPD functionality
         'cpd_tracking': {
-            'handlers': ['console', 'file'] if not DEBUG else ['console'],
+            'handlers': ['console', 'file'],
             'level': 'DEBUG' if DEBUG else 'INFO',
             'propagate': False,
         },
-        'affiliationcard': { 
-            'handlers': ['console'],
+        
+        # Affiliation card logger
+        'affiliationcard': {
+            'handlers': ['console', 'file'],
             'level': 'DEBUG',
-            'propagate': True,
+            'propagate': False,
+        },
+        
+        # Enrollment logger
+        'enrollments': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'propagate': False,
+        },
+        
+        # Accounts/Authentication logger
+        'accounts': {
+            'handlers': ['console', 'file', 'security_file'],
+            'level': 'INFO',
+            'propagate': False,
         },
     },
 }
 
-# Ensure logs directory exists for file logging
+# ============================================================================
+# LOGGING UTILITY FUNCTIONS
+# ============================================================================
+
+def get_logger(name: str) -> logging.Logger:
+    """
+    Get a logger instance with the specified name.
+    
+    Usage in your code:
+        from django.conf import settings
+        logger = settings.get_logger(__name__)
+        logger.info("Something happened")
+    
+    Args:
+        name: Logger name (typically __name__ of the module)
+    
+    Returns:
+        Configured logger instance
+    """
+    return logging.getLogger(name)
+
+
+def log_application_startup():
+    """
+    Log application startup information.
+    Call this at the end of settings.py
+    """
+    logger = logging.getLogger('acrp')
+    
+    logger.info("="*70)
+    logger.info(f"ACRP Application Starting")
+    logger.info(f"Environment: {ENVIRONMENT}")
+    logger.info(f"Debug Mode: {DEBUG}")
+    logger.info(f"Database: {DATABASES['default']['ENGINE']}")
+    logger.info(f"Cache Backend: {CACHES['default']['BACKEND']}")
+    logger.info(f"Log File: {LOG_FILE_PATH}")
+    logger.info(f"Static Files: {STATICFILES_STORAGE}")
+    logger.info("="*70)
+
+
+def verify_log_permissions():
+    """
+    Verify that log files are writable.
+    Raises exception if logs cannot be written.
+    """
+    import tempfile
+    
+    try:
+        # Test write permissions on log file
+        with open(LOG_FILE_PATH, 'a') as f:
+            f.write(f"\n# Log verification at {logging.Formatter().formatTime(logging.LogRecord('test', 0, '', 0, '', (), None))}\n")
+        
+        logger = logging.getLogger('acrp')
+        logger.info("✓ Log file permissions verified")
+        return True
+        
+    except PermissionError as e:
+        print(f"ERROR: Cannot write to log file {LOG_FILE_PATH}")
+        print(f"Permission Error: {e}")
+        print(f"Please check file permissions: chmod 644 {LOG_FILE_PATH}")
+        raise
+    except Exception as e:
+        print(f"ERROR: Unexpected error with log file: {e}")
+        raise
+
+
+# ============================================================================
+# ADDITIONAL LOG FILES SETUP
+# ============================================================================
+
+# Create additional log files if they don't exist
+ADDITIONAL_LOG_FILES = [
+    LOGS_DIR / 'acrp_errors.log',
+    LOGS_DIR / 'security.log',
+]
+
+for log_file in ADDITIONAL_LOG_FILES:
+    if not log_file.exists():
+        log_file.touch(mode=0o644)
+        print(f"Created log file: {log_file}")
+
+
+# ============================================================================
+# LOG FILE CLEANUP UTILITIES
+# ============================================================================
+
+def cleanup_old_logs(days: int = 30):
+    """
+    Clean up log files older than specified days.
+    
+    Usage:
+        python manage.py shell
+        >>> from django.conf import settings
+        >>> settings.cleanup_old_logs(30)
+    
+    Args:
+        days: Delete log files older than this many days
+    """
+    import time
+    from datetime import datetime, timedelta
+    
+    cutoff_time = time.time() - (days * 86400)
+    deleted_count = 0
+    deleted_size = 0
+    
+    logger = logging.getLogger('acrp')
+    
+    for log_file in LOGS_DIR.glob('*.log*'):
+        if log_file.stat().st_mtime < cutoff_time:
+            file_size = log_file.stat().st_size
+            log_file.unlink()
+            deleted_count += 1
+            deleted_size += file_size
+            logger.info(f"Deleted old log file: {log_file.name} ({file_size / 1024:.2f} KB)")
+    
+    if deleted_count > 0:
+        logger.info(f"Cleanup complete: {deleted_count} files deleted, {deleted_size / 1024 / 1024:.2f} MB freed")
+    else:
+        logger.info(f"No log files older than {days} days found")
+    
+    return deleted_count
+
+
+def get_log_file_sizes():
+    """
+    Get sizes of all log files for monitoring.
+    
+    Returns:
+        Dictionary with log file names and sizes in MB
+    """
+    log_sizes = {}
+    total_size = 0
+    
+    for log_file in LOGS_DIR.glob('*.log*'):
+        size_mb = log_file.stat().st_size / 1024 / 1024
+        log_sizes[log_file.name] = round(size_mb, 2)
+        total_size += size_mb
+    
+    log_sizes['_total_mb'] = round(total_size, 2)
+    return log_sizes
+
+
+# ============================================================================
+# PRODUCTION LOG MONITORING SETUP
+# ============================================================================
+
 if not DEBUG:
-    (BASE_DIR / 'logs').mkdir(exist_ok=True)
+    # In production, also log to syslog for centralized logging
+    try:
+        LOGGING['handlers']['syslog'] = {
+            'level': 'INFO',
+            'class': 'logging.handlers.SysLogHandler',
+            'address': '/dev/log',  # Unix socket for syslog
+            'formatter': 'verbose',
+        }
+        
+        # Add syslog to acrp logger
+        LOGGING['loggers']['acrp']['handlers'].append('syslog')
+        
+    except Exception as e:
+        print(f"Warning: Could not configure syslog handler: {e}")
 
 
+# ============================================================================
+# VERIFICATION & STARTUP
+# ============================================================================
+
+# Verify log file permissions at startup
+try:
+    verify_log_permissions()
+except Exception as e:
+    print(f"CRITICAL: Log file verification failed!")
+    print(f"Error: {e}")
+    # In development, we continue; in production, we should probably exit
+    if not DEBUG:
+        import sys
+        sys.exit(1)
+
+# Log application startup information
+log_application_startup()
+
+# Print confirmation to console
+print(f"\n{'='*70}")
+print(f"✓ Logging configured successfully")
+print(f"✓ Main log file: {LOG_FILE_PATH}")
+print(f"✓ Error log file: {LOGS_DIR / 'acrp_errors.log'}")
+print(f"✓ Security log file: {LOGS_DIR / 'security.log'}")
+print(f"✓ Current log sizes: {get_log_file_sizes()}")
+print(f"{'='*70}\n")
 # DEBUG TOOLBAR CONFIGURATION - Development only
 
 

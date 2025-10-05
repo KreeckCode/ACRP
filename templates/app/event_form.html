@@ -167,61 +167,87 @@
 
                 <!-- Date and Time Information -->
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
-                            <i class="bi bi-clock text-green-600 mr-2"></i>
-                            Date & Time
-                        </h3>
-                        <p class="text-sm text-gray-600 mt-1">Schedule your event timing</p>
-                    </div>
-                    <div class="p-6">
-                        <div class="space-y-6">
-                            <!-- All Day Event Toggle -->
-                            <div class="flex items-center">
-                                <input type="checkbox" 
-                                       name="{{ form.is_all_day.name }}" 
-                                       id="{{ form.is_all_day.id_for_label }}"
-                                       {% if form.is_all_day.value %}checked{% endif %}
-                                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                                       onchange="toggleAllDay()">
-                                <label for="{{ form.is_all_day.id_for_label }}" class="ml-2 block text-sm text-gray-900">
-                                    All-day event
-                                </label>
-                            </div>
-
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <!-- Start Date & Time -->
-                                <div>
-                                    <label for="{{ form.start_time.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
-                                        Start Date & Time <span class="text-red-500">*</span>
+                        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                            <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                                <i class="bi bi-clock text-green-600 mr-2"></i>
+                                Date & Time
+                            </h3>
+                            <p class="text-sm text-gray-600 mt-1">Schedule your event timing</p>
+                        </div>
+                        <div class="p-6">
+                            <div class="space-y-6">
+                                <!-- All Day Event Toggle -->
+                                <div class="flex items-center">
+                                    {{ form.is_all_day }}
+                                    <label for="{{ form.is_all_day.id_for_label }}" class="ml-2 block text-sm text-gray-900">
+                                        All-day event
                                     </label>
-                                    {{ form.start_time }}
-                                    {% if form.start_time.errors %}
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <!-- Start Date & Time -->
+                                    <div>
+                                        <label for="{{ form.start_time.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                            Start Date & Time <span class="text-red-500">*</span>
+                                        </label>
+                                        {{ form.start_time }}
+                                        {% if form.start_time.errors %}
+                                        <div class="mt-1 text-sm text-red-600">
+                                            {% for error in form.start_time.errors %}
+                                            <p>{{ error }}</p>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- End Date & Time -->
+                                    <div>
+                                        <label for="{{ form.end_time.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                            End Date & Time <span class="text-red-500">*</span>
+                                        </label>
+                                        {{ form.end_time }}
+                                        {% if form.end_time.errors %}
+                                        <div class="mt-1 text-sm text-red-600">
+                                            {% for error in form.end_time.errors %}
+                                            <p>{{ error }}</p>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Event Type -->
+                                <div>
+                                    <label for="{{ form.event_type.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Event Type
+                                    </label>
+                                    {{ form.event_type }}
+                                    {% if form.event_type.errors %}
                                     <div class="mt-1 text-sm text-red-600">
-                                        {% for error in form.start_time.errors %}
+                                        {% for error in form.event_type.errors %}
                                         <p>{{ error }}</p>
                                         {% endfor %}
                                     </div>
                                     {% endif %}
                                 </div>
 
-                                <!-- End Date & Time -->
-                                <div id="endTimeContainer">
-                                    <label for="{{ form.end_time.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
-                                        End Date & Time <span class="text-red-500">*</span>
+                                <!-- Virtual Link -->
+                                <div>
+                                    <label for="{{ form.virtual_link.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Virtual Meeting Link
                                     </label>
-                                    {{ form.end_time }}
-                                    {% if form.end_time.errors %}
+                                    {{ form.virtual_link }}
+                                    {% if form.virtual_link.errors %}
                                     <div class="mt-1 text-sm text-red-600">
-                                        {% for error in form.end_time.errors %}
+                                        {% for error in form.virtual_link.errors %}
                                         <p>{{ error }}</p>
                                         {% endfor %}
                                     </div>
                                     {% endif %}
+                                    <p class="mt-1 text-xs text-gray-500">{{ form.virtual_link.help_text }}</p>
                                 </div>
                             </div>
                         </div>
-                    </div>
                 </div>
 
                 <!-- Form Actions -->
@@ -282,6 +308,17 @@
                                     {% endfor %}
                                 </div>
                                 {% endif %}
+                            </div>
+
+                            <!-- Send Notifications -->
+                            <div>
+                                <div class="flex items-center">
+                                    {{ form.send_notifications }}
+                                    <label for="{{ form.send_notifications.id_for_label }}" class="ml-2 block text-sm text-gray-900">
+                                        {{ form.send_notifications.label }}
+                                    </label>
+                                </div>
+                                <p class="mt-1 text-xs text-gray-500">{{ form.send_notifications.help_text }}</p>
                             </div>
 
                             <!-- Event Type Indicator -->
@@ -358,7 +395,7 @@
                             {% endif %}
                         </div>
                         <div class="pt-3 border-t border-gray-200">
-                            <a href="{% url 'common:event_detail' event_id=event.id %}" 
+                            <a href="{% url 'common:event_detail' pk=event.id %}" 
                                class="text-blue-600 hover:text-blue-700 text-sm font-medium">
                                 View Full Event Details →
                             </a>

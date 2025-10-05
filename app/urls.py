@@ -118,6 +118,13 @@ urlpatterns = [
     path('resources/<uuid:resource_id>/detail/', views.resource_detail, name='resource_detail_legacy'),
     path('resources/<uuid:resource_id>/edit/', views.edit_resource, name='edit_resource_legacy'),
     path('resources/<uuid:resource_id>/delete/', views.delete_resource, name='delete_resource_legacy'),
+
+    
+    path('notifications/', views.notification_list, name='notification_list'),
+    path('notifications/<uuid:pk>/read/', views.notification_mark_read, name='notification_mark_read'),
+    path('notifications/mark-all-read/', views.notification_mark_all_read, name='notification_mark_all_read'),
+    path('notifications/<uuid:pk>/delete/', views.notification_delete, name='notification_delete'),
+    path('notifications/fetch/', views.notification_fetch, name='notification_fetch'),
 ]
 
 

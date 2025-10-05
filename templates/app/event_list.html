@@ -4,6 +4,7 @@
 {% block title %}Event Management - ACRP{% endblock %}
 
 {% block content %}
+{% csrf_token %}
 <div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 lg:p-8">
     <!-- Page Header -->
     <div class="mb-8">
@@ -308,20 +309,20 @@
                         <!-- Actions -->
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div class="flex space-x-2">
-                                <a href="{% url 'common:event_detail' event_id=event.id %}" 
+                                <a href="{% url 'common:event_detail' pk=event.id %}" 
                                    class="text-green-600 hover:text-green-900 flex items-center">
                                     <i class="bi bi-eye mr-1"></i>
                                     View
                                 </a>
                                 {% if perms.apps.manage_events %}
                                 <span class="text-gray-300">|</span>
-                                <a href="{% url 'common:edit_event' event_id=event.id %}" 
+                                <a href="{% url 'common:edit_event' pk=event.id %}" 
                                    class="text-blue-600 hover:text-blue-900 flex items-center">
                                     <i class="bi bi-pencil mr-1"></i>
                                     Edit
                                 </a>
                                 <span class="text-gray-300">|</span>
-                                <button onclick="confirmDeleteEvent({{ event.id }}, '{{ event.title|escapejs }}')" 
+                                <button onclick="confirmDeleteEvent('{{ event.id }}', '{{ event.title|escapejs }}')" 
                                         class="text-red-600 hover:text-red-900 flex items-center">
                                     <i class="bi bi-trash mr-1"></i>
                                     Delete
@@ -394,18 +395,18 @@
                     </div>
                     
                     <div class="flex space-x-2">
-                        <a href="{% url 'common:event_detail' event_id=event.id %}" 
+                        <a href="{% url 'common:event_detail' pk=event.id %}" 
                            class="flex-1 text-center bg-green-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-green-700">
                             <i class="bi bi-eye mr-1"></i>
                             View
                         </a>
                         {% if perms.apps.manage_events %}
-                        <a href="{% url 'common:edit_event' event_id=event.id %}" 
+                        <a href="{% url 'common:edit_event' pk=event.id %}" 
                            class="flex-1 text-center bg-blue-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700">
                             <i class="bi bi-pencil mr-1"></i>
                             Edit
                         </a>
-                        <button onclick="confirmDeleteEvent({{ event.id }}, '{{ event.title|escapejs }}')" 
+                        <button onclick="confirmDeleteEvent('{{ event.id }}', '{{ event.title|escapejs }}')" 
                                 class="flex-1 text-center bg-red-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-red-700">
                             <i class="bi bi-trash mr-1"></i>
                             Delete
@@ -489,28 +490,66 @@ function closeDeleteModal() {
 }
 
 /**
- * Executes event deletion
+ * Executes event deletion via AJAX
  */
-function deleteEvent() {
+async function deleteEvent() {
     if (!currentDeleteEventId) return;
     
-    // Create a form and submit it to the delete URL
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = `/events/${currentDeleteEventId}/delete/`;
-    
-    // Add CSRF token
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
-    if (csrfToken) {
-        const csrfInput = document.createElement('input');
-        csrfInput.type = 'hidden';
-        csrfInput.name = 'csrfmiddlewaretoken';
-        csrfInput.value = csrfToken.value;
-        form.appendChild(csrfInput);
+    try {
+        // Get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        const csrftoken = getCookie('csrftoken');
+        
+        const response = await fetch(`/events/${currentDeleteEventId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/json',
+            },
+        });
+        
+        if (response.ok) {
+            // Close modal
+            closeDeleteModal();
+            
+            // Show success message
+            showToast('Event deleted successfully', 'success');
+            
+            // Remove the event row from the table
+            const eventRow = document.querySelector(`tr[data-event-id="${currentDeleteEventId}"]`);
+            if (eventRow) {
+                eventRow.style.opacity = '0';
+                setTimeout(() => {
+                    eventRow.remove();
+                    updateEventCount();
+                }, 300);
+            }
+            
+            // Reload page after short delay
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showToast('Failed to delete event', 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting event:', error);
+        showToast('An error occurred while deleting the event', 'error');
     }
-    
-    document.body.appendChild(form);
-    form.submit();
 }
 
 // Event listeners for modal behavior

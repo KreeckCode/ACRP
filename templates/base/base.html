@@ -243,23 +243,90 @@
                         <i class="bi bi-search text-xl"></i>
                     </button>
                     
+                    
                     <!-- Notifications -->
                     <div class="relative">
                         <button class="p-2 text-gray-400 hover:text-gray-500 relative" onclick="toggleDropdown('notifications')">
                             <i class="bi bi-bell text-xl"></i>
-                            <span class="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400"></span>
+                            {% if unread_notifications_count > 0 %}
+                            <span class="absolute top-0 right-0 block h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">
+                                {{ unread_notifications_count }}
+                            </span>
+                            {% endif %}
                         </button>
-                        <div class="hidden absolute right-0 z-10 mt-2 w-80 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5" id="notifications-dropdown">
-                            <div class="py-1">
-                                <div class="px-4 py-2 text-sm text-gray-700 border-b border-gray-200">
-                                    <strong>Notifications</strong>
+                        <div class="hidden absolute right-0 z-10 mt-2 w-96 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5" id="notifications-dropdown">
+                            <!-- Header -->
+                            <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+                                <strong class="text-sm text-gray-700">Notifications</strong>
+                                <div class="flex items-center space-x-2">
+                                    {% if unread_notifications_count > 0 %}
+                                    <button onclick="markAllNotificationsRead(event)" class="text-xs text-blue-600 hover:text-blue-800">
+                                        Mark all read
+                                    </button>
+                                    {% endif %}
+                                    <a href="{% url 'common:notification_list' %}" class="text-xs text-gray-600 hover:text-gray-800">
+                                        View all
+                                    </a>
                                 </div>
-                                <div class="px-4 py-2 text-sm text-gray-500">
-                                    No new notifications
-                                </div>
+                            </div>
+                            
+                            <!-- Notifications List -->
+                            <div class="max-h-96 overflow-y-auto" id="notifications-list">
+                                {% if recent_notifications %}
+                                    {% for notification in recent_notifications %}
+                                    <div class="{% if not notification.is_read %}bg-blue-50{% endif %} px-4 py-3 hover:bg-gray-50 border-b border-gray-100 cursor-pointer notification-item" 
+                                        data-notification-id="{{ notification.id }}"
+                                        onclick="handleNotificationClick(event, '{{ notification.id }}', '{{ notification.action_url|default:"#" }}')">
+                                        <div class="flex items-start">
+                                            <div class="flex-shrink-0">
+                                                {% if notification.sender %}
+                                                <img class="h-8 w-8 rounded-full" 
+                                                    src="https://ui-avatars.com/api/?name={{ notification.sender.get_full_name|urlencode }}&background=3b82f6&color=fff" 
+                                                    alt="{{ notification.sender.get_full_name }}">
+                                                {% else %}
+                                                <div class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center">
+                                                    <i class="bi bi-bell text-white text-sm"></i>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="ml-3 flex-1">
+                                                <p class="text-sm font-medium text-gray-900">{{ notification.title }}</p>
+                                                <p class="text-xs text-gray-500 mt-1">{{ notification.message|truncatewords:15 }}</p>
+                                                <p class="text-xs text-gray-400 mt-1">
+                                                    <i class="bi bi-clock mr-1"></i>{{ notification.created_at|timesince }} ago
+                                                </p>
+                                            </div>
+                                            {% if not notification.is_read %}
+                                            <div class="flex-shrink-0 ml-2">
+                                                <span class="inline-block h-2 w-2 rounded-full bg-blue-600"></span>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="px-4 py-8 text-center text-sm text-gray-500">
+                                        <i class="bi bi-bell-slash text-2xl mb-2 block text-gray-400"></i>
+                                        No notifications yet
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Footer -->
+                            <div class="px-4 py-3 border-t border-gray-200 text-center">
+                                <a href="{% url 'common:notification_list' %}" class="text-sm text-blue-600 hover:text-blue-800">
+                                    View all notifications →
+                                </a>
                             </div>
                         </div>
                     </div>
+
+
+
+
+
+
+
                     
                     <!-- User menu -->
                     <div class="relative">
@@ -651,6 +718,116 @@
         </footer>
     </div>
     
+    <script>
+        // Notification handling functions
+        function handleNotificationClick(event, notificationId, actionUrl) {
+            event.stopPropagation();
+            
+            // Mark as read
+            markNotificationRead(notificationId);
+            
+            // Navigate if URL provided
+            if (actionUrl && actionUrl !== '#' && actionUrl !== '') {
+                window.location.href = actionUrl;
+            }
+        }
+
+        function markNotificationRead(notificationId) {
+            fetch(`/notifications/${notificationId}/read/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken()
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update notification item UI
+                    const notificationItem = document.querySelector(`[data-notification-id="${notificationId}"]`);
+                    if (notificationItem) {
+                        notificationItem.classList.remove('bg-blue-50');
+                        const indicator = notificationItem.querySelector('.bg-blue-600');
+                        if (indicator) {
+                            indicator.remove();
+                        }
+                    }
+                    
+                    // Update unread count
+                    updateNotificationBadge(data.unread_count);
+                }
+            })
+            .catch(error => console.error('Error marking notification as read:', error));
+        }
+
+        function markAllNotificationsRead(event) {
+            event.stopPropagation();
+            
+            fetch('/notifications/mark-all-read/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken()
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update all notification items UI
+                    document.querySelectorAll('.notification-item').forEach(item => {
+                        item.classList.remove('bg-blue-50');
+                    });
+                    
+                    // Remove all unread indicators
+                    document.querySelectorAll('.notification-item .bg-blue-600').forEach(indicator => {
+                        indicator.remove();
+                    });
+                    
+                    // Update badge
+                    updateNotificationBadge(0);
+                    
+                    showToast('All notifications marked as read', 'success');
+                }
+            })
+            .catch(error => console.error('Error marking all notifications as read:', error));
+        }
+
+        function updateNotificationBadge(count) {
+            const badge = document.querySelector('.bi-bell').parentElement.querySelector('span');
+            
+            if (count > 0) {
+                if (badge) {
+                    badge.textContent = count;
+                } else {
+                    // Create badge if it doesn't exist
+                    const newBadge = document.createElement('span');
+                    newBadge.className = 'absolute top-0 right-0 block h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center';
+                    newBadge.textContent = count;
+                    document.querySelector('.bi-bell').parentElement.appendChild(newBadge);
+                }
+            } else {
+                if (badge) {
+                    badge.remove();
+                }
+            }
+        }
+
+        // Poll for new notifications every 30 seconds
+        setInterval(function() {
+            if (document.hidden) return; // Don't poll when tab is not active
+            
+            fetch('/notifications/fetch/')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updateNotificationBadge(data.unread_count);
+                    }
+                })
+                .catch(error => console.error('Error fetching notifications:', error));
+        }, 30000); // 30 seconds
+    </script>
+
+
     <!-- Additional JavaScript -->
     {% block extra_js %}{% endblock extra_js %}
     

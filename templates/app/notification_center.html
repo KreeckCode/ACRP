@@ -1,0 +1,442 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Notification Center - ACRP{% endblock %}
+
+{% block extra_css %}
+<style>
+    .notification-item:hover {
+        transform: translateX(-2px);
+        transition: transform 0.2s ease;
+    }
+    
+    .notification-unread {
+        border-left: 4px solid #3b82f6;
+    }
+    
+    .notification-read {
+        border-left: 4px solid transparent;
+    }
+    
+    .notification-type-icon {
+        transition: transform 0.2s ease;
+    }
+    
+    .notification-item:hover .notification-type-icon {
+        transform: scale(1.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 lg:p-8">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <div>
+                <h1 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+                    <i class="bi bi-bell mr-3 text-blue-600"></i>
+                    Notification Center
+                </h1>
+                <p class="text-gray-600 text-lg">
+                    Stay updated with all your notifications and activities
+                </p>
+            </div>
+            <div class="mt-4 lg:mt-0 flex flex-wrap gap-3">
+                {% if summary.unread > 0 %}
+                <button onclick="markAllAsRead()" 
+                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                    <i class="bi bi-check-all mr-2"></i>
+                    Mark All as Read
+                </button>
+                {% endif %}
+                <div class="relative">
+                    <button onclick="toggleDropdown('filter')" 
+                            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        <i class="bi bi-funnel mr-2"></i>
+                        Filter
+                        <i class="bi bi-chevron-down ml-2"></i>
+                    </button>
+                    <div id="filter-dropdown" class="hidden absolute right-0 z-10 mt-2 w-56 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5">
+                        <div class="py-1">
+                            <a href="?type=all" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {% if filter_type == 'all' %}bg-blue-50 text-blue-700{% endif %}">
+                                <i class="bi bi-list-ul mr-2"></i>All Notifications
+                            </a>
+                            <a href="?type=unread" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {% if filter_type == 'unread' %}bg-blue-50 text-blue-700{% endif %}">
+                                <i class="bi bi-circle-fill mr-2 text-xs text-blue-600"></i>Unread Only
+                            </a>
+                            <a href="?type=mentions" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {% if filter_type == 'mentions' %}bg-blue-50 text-blue-700{% endif %}">
+                                <i class="bi bi-at mr-2"></i>Mentions
+                            </a>
+                            <a href="?type=tasks" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {% if filter_type == 'tasks' %}bg-blue-50 text-blue-700{% endif %}">
+                                <i class="bi bi-check-square mr-2"></i>Tasks
+                            </a>
+                            <a href="?type=projects" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {% if filter_type == 'projects' %}bg-blue-50 text-blue-700{% endif %}">
+                                <i class="bi bi-folder mr-2"></i>Projects
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
+                        <i class="bi bi-bell text-blue-600 text-xl"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Total</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ summary.total }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
+                        <i class="bi bi-circle-fill text-green-600 text-xl"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Unread</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ summary.unread }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="h-12 w-12 rounded-full bg-purple-100 flex items-center justify-center">
+                        <i class="bi bi-at text-purple-600 text-xl"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Mentions</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ summary.mentions }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="h-12 w-12 rounded-full bg-amber-100 flex items-center justify-center">
+                        <i class="bi bi-check-square text-amber-600 text-xl"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Tasks</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ summary.tasks }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications List -->
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-gray-900">
+                    {% if filter_type == 'unread' %}
+                        Unread Notifications
+                    {% elif filter_type == 'mentions' %}
+                        Mentions
+                    {% elif filter_type == 'tasks' %}
+                        Task Notifications
+                    {% elif filter_type == 'projects' %}
+                        Project Notifications
+                    {% else %}
+                        All Notifications
+                    {% endif %}
+                </h3>
+                <span class="text-sm text-gray-500">
+                    {{ notifications.paginator.count }} total
+                </span>
+            </div>
+        </div>
+
+        <div class="divide-y divide-gray-100">
+            {% for notification in notifications %}
+            <div class="notification-item {% if not notification.is_read %}notification-unread bg-blue-50{% else %}notification-read{% endif %} hover:bg-gray-50 transition-colors duration-150"
+                 data-notification-id="{{ notification.id }}">
+                <div class="px-6 py-4">
+                    <div class="flex items-start space-x-4">
+                        <!-- Notification Icon -->
+                        <div class="flex-shrink-0">
+                            {% if notification.sender %}
+                            <img class="h-10 w-10 rounded-full" 
+                                 src="https://ui-avatars.com/api/?name={{ notification.sender.get_full_name|urlencode }}&background=3b82f6&color=fff" 
+                                 alt="{{ notification.sender.get_full_name }}">
+                            {% else %}
+                            <div class="notification-type-icon h-10 w-10 rounded-full flex items-center justify-center
+                                        {% if notification.notification_type == 'task_assigned' or notification.notification_type == 'task_due' %}bg-blue-100
+                                        {% elif notification.notification_type == 'mention' %}bg-purple-100
+                                        {% elif notification.notification_type == 'event_reminder' %}bg-green-100
+                                        {% elif notification.notification_type == 'system_alert' %}bg-red-100
+                                        {% else %}bg-gray-100{% endif %}">
+                                <i class="bi 
+                                        {% if notification.notification_type == 'task_assigned' or notification.notification_type == 'task_due' %}bi-check-square text-blue-600
+                                        {% elif notification.notification_type == 'mention' %}bi-at text-purple-600
+                                        {% elif notification.notification_type == 'event_reminder' %}bi-calendar-event text-green-600
+                                        {% elif notification.notification_type == 'system_alert' %}bi-exclamation-triangle text-red-600
+                                        {% elif notification.notification_type == 'comment_added' %}bi-chat text-blue-600
+                                        {% else %}bi-bell text-gray-600{% endif %}"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Notification Content -->
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-gray-900 mb-1">
+                                        {{ notification.title }}
+                                    </p>
+                                    <p class="text-sm text-gray-600 mb-2">
+                                        {{ notification.message }}
+                                    </p>
+                                    <div class="flex items-center space-x-4 text-xs text-gray-500">
+                                        <span class="flex items-center">
+                                            <i class="bi bi-clock mr-1"></i>
+                                            {{ notification.created_at|timesince }} ago
+                                        </span>
+                                        {% if notification.sender %}
+                                        <span class="flex items-center">
+                                            <i class="bi bi-person mr-1"></i>
+                                            {{ notification.sender.get_full_name }}
+                                        </span>
+                                        {% endif %}
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
+                                                     {% if notification.notification_type == 'task_assigned' %}bg-blue-100 text-blue-800
+                                                     {% elif notification.notification_type == 'mention' %}bg-purple-100 text-purple-800
+                                                     {% elif notification.notification_type == 'event_reminder' %}bg-green-100 text-green-800
+                                                     {% elif notification.notification_type == 'system_alert' %}bg-red-100 text-red-800
+                                                     {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                            {{ notification.get_notification_type_display }}
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Unread Indicator -->
+                                {% if not notification.is_read %}
+                                <div class="flex-shrink-0 ml-4">
+                                    <span class="inline-block h-2 w-2 rounded-full bg-blue-600"></span>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="mt-3 flex items-center space-x-3">
+                                {% if notification.action_url %}
+                                <a href="{{ notification.action_url }}" 
+                                   onclick="markAsRead('{{ notification.id }}')"
+                                   class="text-sm text-blue-600 hover:text-blue-800 font-medium">
+                                    <i class="bi bi-box-arrow-up-right mr-1"></i>
+                                    View
+                                </a>
+                                {% endif %}
+                                
+                                {% if not notification.is_read %}
+                                <button onclick="markAsRead('{{ notification.id }}')" 
+                                        class="text-sm text-gray-600 hover:text-gray-800">
+                                    <i class="bi bi-check mr-1"></i>
+                                    Mark as read
+                                </button>
+                                {% endif %}
+                                
+                                <button onclick="deleteNotification('{{ notification.id }}')" 
+                                        class="text-sm text-red-600 hover:text-red-800">
+                                    <i class="bi bi-trash mr-1"></i>
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="px-6 py-12 text-center">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+                    <i class="bi bi-bell-slash text-gray-400 text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">No notifications</h3>
+                <p class="text-sm text-gray-500">
+                    {% if filter_type == 'unread' %}
+                        You have no unread notifications. Great job staying on top of things!
+                    {% else %}
+                        When you receive notifications, they'll appear here.
+                    {% endif %}
+                </p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if notifications.paginator.num_pages > 1 %}
+        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
+            <nav class="flex items-center justify-between">
+                <div class="flex-1 flex justify-between sm:hidden">
+                    {% if notifications.has_previous %}
+                    <a href="?page={{ notifications.previous_page_number }}{% if filter_type != 'all' %}&type={{ filter_type }}{% endif %}" 
+                       class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Previous
+                    </a>
+                    {% endif %}
+                    
+                    {% if notifications.has_next %}
+                    <a href="?page={{ notifications.next_page_number }}{% if filter_type != 'all' %}&type={{ filter_type }}{% endif %}" 
+                       class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Next
+                    </a>
+                    {% endif %}
+                </div>
+                
+                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                        <p class="text-sm text-gray-700">
+                            Showing
+                            <span class="font-medium">{{ notifications.start_index }}</span>
+                            to
+                            <span class="font-medium">{{ notifications.end_index }}</span>
+                            of
+                            <span class="font-medium">{{ notifications.paginator.count }}</span>
+                            notifications
+                        </p>
+                    </div>
+                    <div>
+                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                            {% if notifications.has_previous %}
+                            <a href="?page={{ notifications.previous_page_number }}{% if filter_type != 'all' %}&type={{ filter_type }}{% endif %}" 
+                               class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                            {% endif %}
+                            
+                            {% for num in notifications.paginator.page_range %}
+                                {% if notifications.number == num %}
+                                <span class="z-10 bg-blue-50 border-blue-500 text-blue-600 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                                    {{ num }}
+                                </span>
+                                {% elif num > notifications.number|add:'-3' and num < notifications.number|add:'3' %}
+                                <a href="?page={{ num }}{% if filter_type != 'all' %}&type={{ filter_type }}{% endif %}" 
+                                   class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                                    {{ num }}
+                                </a>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if notifications.has_next %}
+                            <a href="?page={{ notifications.next_page_number }}{% if filter_type != 'all' %}&type={{ filter_type }}{% endif %}" 
+                               class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                            {% endif %}
+                        </nav>
+                    </div>
+                </div>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function markAsRead(notificationId) {
+    fetch(`/notifications/${notificationId}/read/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken()
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const item = document.querySelector(`[data-notification-id="${notificationId}"]`);
+            if (item) {
+                item.classList.remove('notification-unread', 'bg-blue-50');
+                item.classList.add('notification-read');
+                const indicator = item.querySelector('.bg-blue-600');
+                if (indicator) indicator.remove();
+            }
+            updateNotificationBadge(data.unread_count);
+            showToast('Notification marked as read', 'success');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Failed to mark notification as read', 'error');
+    });
+}
+
+function markAllAsRead() {
+    if (!confirm('Mark all notifications as read?')) return;
+    
+    fetch('/notifications/mark-all-read/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken()
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.querySelectorAll('.notification-unread').forEach(item => {
+                item.classList.remove('notification-unread', 'bg-blue-50');
+                item.classList.add('notification-read');
+            });
+            document.querySelectorAll('.bg-blue-600').forEach(indicator => {
+                if (indicator.classList.contains('h-2')) indicator.remove();
+            });
+            updateNotificationBadge(0);
+            showToast(`${data.marked_count} notifications marked as read`, 'success');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Failed to mark notifications as read', 'error');
+    });
+}
+
+function deleteNotification(notificationId) {
+    if (!confirm('Delete this notification?')) return;
+    
+    fetch(`/notifications/${notificationId}/delete/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken()
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const item = document.querySelector(`[data-notification-id="${notificationId}"]`);
+            if (item) {
+                item.style.opacity = '0';
+                setTimeout(() => item.remove(), 300);
+            }
+            updateNotificationBadge(data.unread_count);
+            showToast('Notification deleted', 'success');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Failed to delete notification', 'error');
+    });
+}
+
+function getCSRFToken() {
+    return document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+}
+</script>
+{% endblock %}

@@ -4373,21 +4373,21 @@ def learner_report_issue(request):
                 
                 subject = f"Card Issue Report - {card.card_number}"
                 message = f"""
-Card Issue Report Received
+                    Card Issue Report Received
 
-Card Number: {card.card_number}
-Reporter: {user.get_full_name if hasattr(user, 'get_full_name') else user.username}
-Email: {user.email}
-Issue Type: {issue_type}
+                    Card Number: {card.card_number}
+                    Reporter: {user.get_full_name if hasattr(user, 'get_full_name') else user.username}
+                    Email: {user.email}
+                    Issue Type: {issue_type}
 
-Description:
-{description}
+                    Description:
+                    {description}
 
-Preferred Contact Method: {contact_method}
+                    Preferred Contact Method: {contact_method}
 
-Please review and respond to this issue promptly.
-                """
-                
+                    Please review and respond to this issue promptly.
+                                    """
+                                    
                 send_mail(
                     subject=subject,
                     message=message,

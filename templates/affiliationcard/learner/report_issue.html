@@ -1,0 +1,245 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Report Card Issue - ACRP{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 lg:p-8">
+    
+    <!-- Back Navigation -->
+    <div class="mb-6">
+        <a href="{% url 'affiliationcard:learner_dashboard' %}" class="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Page Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+            Report a Card Issue
+        </h1>
+        <p class="text-gray-600 text-lg">
+            Let us know about any problems with your digital card
+        </p>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="mb-6 space-y-3">
+        {% for message in messages %}
+        <div class="flex items-center p-4 rounded-lg border-l-4 {% if message.tags == 'success' %}bg-green-50 border-green-400 text-green-700{% elif message.tags == 'error' %}bg-red-50 border-red-400 text-red-700{% elif message.tags == 'warning' %}bg-yellow-50 border-yellow-400 text-yellow-700{% else %}bg-blue-50 border-blue-400 text-blue-700{% endif %}">
+            <div class="flex-shrink-0">
+                {% if message.tags == 'success' %}
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                {% elif message.tags == 'error' %}
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                </svg>
+                {% else %}
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                </svg>
+                {% endif %}
+            </div>
+            <div class="ml-3 text-sm font-medium">{{ message }}</div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Card Info Sidebar -->
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden sticky top-6">
+                <div class="bg-gradient-to-r from-red-600 to-red-800 px-6 py-4">
+                    <h3 class="text-lg font-semibold text-white flex items-center">
+                        <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"/>
+                        </svg>
+                        Your Card
+                    </h3>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div>
+                        <p class="text-xs font-medium text-gray-500 mb-1">Card Number</p>
+                        <p class="text-lg font-mono font-bold text-gray-900">{{ card.card_number }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium text-gray-500 mb-1">Card Holder</p>
+                        <p class="text-sm font-semibold text-gray-900">{{ card.get_display_name }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium text-gray-500 mb-1">Council</p>
+                        <p class="text-sm text-gray-900">{{ card.council_name }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium text-gray-500 mb-1">Status</p>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if card.status == 'active' %}bg-green-100 text-green-800{% elif card.status == 'assigned' %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ card.get_status_display }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Support Info -->
+                <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                    <h4 class="text-sm font-semibold text-gray-900 mb-3">Need Immediate Help?</h4>
+                    <div class="space-y-2 text-sm text-gray-600">
+                        <p class="flex items-center">
+                            <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                            <a href="mailto:support@acrp.org.za" class="text-indigo-600 hover:text-indigo-700">support@acrp.org.za</a>
+                        </p>
+                        <p class="flex items-center">
+                            <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                            </svg>
+                            +27 (0)12 345 6789
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Issue Report Form -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-xl shadow-lg p-6 lg:p-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                    <svg class="w-7 h-7 text-red-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.349 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    Report Your Issue
+                </h2>
+
+                <form method="POST" action="{% url 'affiliationcard:learner_report_issue' %}">
+                    {% csrf_token %}
+
+                    <!-- Issue Type Selection -->
+                    <div class="mb-8">
+                        <label class="block text-base font-semibold text-gray-900 mb-4">
+                            What type of issue are you experiencing? <span class="text-red-600">*</span>
+                        </label>
+                        
+                        <div class="space-y-3">
+                            {% for issue in issue_types %}
+                            <label class="relative flex items-start p-4 bg-gray-50 rounded-lg border-2 border-gray-200 cursor-pointer hover:bg-gray-100 hover:border-red-300 transition-all duration-200 group">
+                                <input type="radio" name="issue_type" value="{{ issue.value }}" class="mt-1 h-5 w-5 text-red-600 focus:ring-red-500 cursor-pointer" required>
+                                <div class="ml-4 flex-1">
+                                    <div class="flex items-center">
+                                        <svg class="w-5 h-5 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            {% if issue.icon == 'shield-x' %}
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.618 5.984A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016zM15 11l-6 6m0-6l6 6"/>
+                                            {% elif issue.icon == 'file-x' %}
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                            {% elif issue.icon == 'pencil' %}
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                                            {% elif issue.icon == 'download' %}
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                            {% elif issue.icon == 'x-circle' %}
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                            {% elif issue.icon == 'calendar-x' %}
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                            {% elif issue.icon == 'question-circle' %}
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                            {% endif %}
+                                        </svg>
+                                        <span class="text-base font-semibold text-gray-900">{{ issue.label }}</span>
+                                    </div>
+                                </div>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-6">
+                        <label for="description" class="block text-base font-semibold text-gray-900 mb-2">
+                            Describe the issue in detail <span class="text-red-600">*</span>
+                        </label>
+                        <p class="text-sm text-gray-600 mb-3">Please provide as much detail as possible to help us resolve your issue quickly.</p>
+                        <textarea 
+                            id="description" 
+                            name="description" 
+                            rows="6" 
+                            required
+                            minlength="10"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                            placeholder="Describe what happened, when it happened, and any error messages you received..."></textarea>
+                        <p class="text-xs text-gray-500 mt-2">Minimum 10 characters required</p>
+                    </div>
+
+                    <!-- Contact Method -->
+                    <div class="mb-8">
+                        <label class="block text-base font-semibold text-gray-900 mb-3">
+                            How should we contact you? <span class="text-red-600">*</span>
+                        </label>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <label class="relative flex items-center p-4 bg-gray-50 rounded-lg border-2 border-gray-200 cursor-pointer hover:bg-gray-100 hover:border-red-300 transition-all">
+                                <input type="radio" name="contact_method" value="email" class="h-4 w-4 text-red-600 focus:ring-red-500 cursor-pointer" checked required>
+                                <div class="ml-3 flex items-center">
+                                    <svg class="w-5 h-5 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                    </svg>
+                                    <span class="text-sm font-semibold text-gray-900">Email</span>
+                                </div>
+                            </label>
+
+                            <label class="relative flex items-center p-4 bg-gray-50 rounded-lg border-2 border-gray-200 cursor-pointer hover:bg-gray-100 hover:border-red-300 transition-all">
+                                <input type="radio" name="contact_method" value="phone" class="h-4 w-4 text-red-600 focus:ring-red-500 cursor-pointer">
+                                <div class="ml-3 flex items-center">
+                                    <svg class="w-5 h-5 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                                    </svg>
+                                    <span class="text-sm font-semibold text-gray-900">Phone</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Important Notice -->
+                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded-r-lg">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-sm font-medium text-yellow-800">Important Notice</h3>
+                                <div class="mt-2 text-sm text-yellow-700">
+                                    <ul class="list-disc list-inside space-y-1">
+                                        <li>Response time is typically 1-2 business days</li>
+                                        <li>For urgent issues, please call our support line</li>
+                                        <li>Keep your card number handy when contacting support</li>
+                                        <li>Your issue report will be logged for tracking purposes</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Buttons -->
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <button type="submit" class="flex-1 inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors shadow-lg hover:shadow-xl">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                            </svg>
+                            Submit Issue Report
+                        </button>
+                        <a href="{% url 'affiliationcard:learner_dashboard' %}" class="inline-flex items-center justify-center px-6 py-3 border border-gray-300 text-base font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

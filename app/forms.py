@@ -1,3 +1,4 @@
+import logging
 from django import forms
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -13,7 +14,7 @@ from .models import (
     Tag, Comment, TimeEntry, Milestone, ProjectMembership, TaskStatus,
     ProjectStatus, Attachment, Notification
 )
-
+logger = logging.getLogger(__name__)
 User = get_user_model()
 
 ### ========== CUSTOM FORM FIELDS AND WIDGETS ========== ###
@@ -112,183 +113,140 @@ class AnnouncementForm(forms.ModelForm):
 
 
 ### ========== ENHANCED EVENT FORMS ========== ###
-
 class EventForm(forms.ModelForm):
     """
-    Comprehensive event form with recurrence, reminders, and advanced scheduling.
-    Includes intelligent conflict detection and resource booking.
+    Comprehensive event form with HTML5 datetime inputs and smart validation.
     """
     
-    # Custom fields for enhanced functionality
+    # Custom notification field
     send_notifications = forms.BooleanField(
         required=False,
         initial=True,
-        help_text="Send email notifications to all participants"
-    )
-    
-    reminder_time = forms.ChoiceField(
-        choices=[
-            ('', 'No reminder'),
-            ('15', '15 minutes before'),
-            ('30', '30 minutes before'),
-            ('60', '1 hour before'),
-            ('1440', '1 day before'),
-            ('10080', '1 week before'),
-        ],
-        required=False,
-        widget=forms.Select(attrs={'class': 'form-control'})
+        label="Notify participants",
+        help_text="Send email notifications to all selected participants"
     )
     
     class Meta:
         model = Event
         fields = [
             'title', 'description', 'location', 'virtual_link',
-            'start_time', 'end_time', 'timezone', 'is_all_day',
-            'event_type', 'is_mandatory', 'is_public', 'max_participants',
-            'recurrence_type', 'recurrence_interval', 'recurrence_end_date',
-            'participants', 'related_project', 'related_tasks', 'tags'
+            'start_time', 'end_time', 'is_all_day',
+            'event_type', 'is_mandatory', 'is_public',
+            'participants', 'related_project', 'tags'
         ]
         
         widgets = {
-            'description': TinyMCE(attrs={'cols': 80, 'rows': 10}),
-            'start_time': DateTimePickerWidget(),
-            'end_time': DateTimePickerWidget(),
-            'participants': forms.CheckboxSelectMultiple(attrs={
-                'class': 'participant-selector'
+            'title': forms.TextInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': 'Enter event title'
             }),
-            'related_tasks': forms.CheckboxSelectMultiple(),
-            'recurrence_end_date': forms.DateInput(attrs={
-                'type': 'date',
-                'class': 'form-control'
+            'description': forms.Textarea(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'rows': 4,
+                'placeholder': 'Provide detailed information about the event'
             }),
-            'timezone': forms.Select(attrs={'class': 'form-control timezone-select'}),
+            'location': forms.TextInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': 'Event location or address'
+            }),
+            'virtual_link': forms.URLInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'placeholder': 'https://zoom.us/j/...'
+            }),
+            'start_time': forms.DateTimeInput(attrs={
+                'type': 'datetime-local',
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
+            }),
+            'end_time': forms.DateTimeInput(attrs={
+                'type': 'datetime-local',
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
+            }),
+            'event_type': forms.Select(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
+            }),
+            'participants': forms.SelectMultiple(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'size': '10'
+            }),
+            'related_project': forms.Select(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
+            }),
+            'tags': forms.SelectMultiple(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'size': '5'
+            }),
         }
     
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         
-        # Customize participant choices based on user's projects
+        # Customize querysets based on user
         if self.user:
-            # Get all users from user's projects plus all active users
-            project_users = User.objects.filter(
-                Q(managed_projects__team_members=self.user) |
-                Q(projects__manager=self.user) |
-                Q(projects__team_members=self.user)
-            ).distinct()
+            # Limit participants to active users
+            self.fields['participants'].queryset = User.objects.filter(
+                is_active=True
+            ).order_by('first_name', 'last_name')
             
-            self.fields['participants'].queryset = project_users.order_by(
-                'first_name', 'last_name'
-            )
-            
-            # Limit related projects to user's projects
+            # Limit projects to user's projects
             self.fields['related_project'].queryset = Projects.objects.filter(
                 Q(manager=self.user) | Q(team_members=self.user),
                 is_active=True
-            ).distinct()
+            ).distinct().order_by('name')
         
-        # Dynamic task choices based on selected project (handled via JavaScript)
-        self.fields['related_tasks'].queryset = Task.objects.none()
+        # Make fields optional that should be
+        self.fields['description'].required = False
+        self.fields['location'].required = False
+        self.fields['virtual_link'].required = False
+        self.fields['related_project'].required = False
+        self.fields['tags'].required = False
         
-        # Pre-populate timezone with user's timezone if available
-        if hasattr(self.user, 'profile') and hasattr(self.user.profile, 'timezone'):
-            self.fields['timezone'].initial = self.user.profile.timezone
+        # Set help texts
+        self.fields['virtual_link'].help_text = 'Zoom, Teams, or other meeting link'
+        self.fields['is_mandatory'].help_text = 'Require attendance from all participants'
+        self.fields['is_public'].help_text = 'Visible to all workspace members'
     
     def clean(self):
-        """Comprehensive validation for event data."""
+        """Comprehensive validation."""
         cleaned_data = super().clean()
         start_time = cleaned_data.get('start_time')
         end_time = cleaned_data.get('end_time')
-        max_participants = cleaned_data.get('max_participants')
-        participants = cleaned_data.get('participants')
-        recurrence_type = cleaned_data.get('recurrence_type')
-        recurrence_end_date = cleaned_data.get('recurrence_end_date')
+        is_all_day = cleaned_data.get('is_all_day')
         
         # Validate time range
         if start_time and end_time:
-            if start_time >= end_time:
-                raise ValidationError("End time must be after start time.")
+            # Ensure end is after start
+            if end_time <= start_time:
+                raise ValidationError({
+                    'end_time': 'End time must be after start time.'
+                })
             
-            # Check for reasonable duration (not more than 24 hours for single events)
+            # Check duration (max 24 hours for single events)
             duration = end_time - start_time
             if duration.total_seconds() > 86400:  # 24 hours
-                raise ValidationError("Event duration cannot exceed 24 hours.")
+                raise ValidationError({
+                    'end_time': 'Event duration cannot exceed 24 hours. Please create multiple events or use recurring events.'
+                })
             
-            # Check for conflicts with existing events for the user
-            conflicting_events = Event.objects.filter(
-                participants=self.user,
-                start_time__lt=end_time,
-                end_time__gt=start_time,
-                is_active=True
-            )
-            
-            if self.instance.pk:
-                conflicting_events = conflicting_events.exclude(pk=self.instance.pk)
-            
-            if conflicting_events.exists():
-                self.add_error('start_time', 
-                    f"You have conflicting events: {', '.join([e.title for e in conflicting_events[:3]])}")
+            # Warn about past events
+            if start_time < timezone.now():
+                # Allow past events but log a warning
+                logger.warning(f"Creating event in the past: {cleaned_data.get('title')}")
         
-        # Validate participant limit
-        if max_participants and participants:
-            if participants.count() > max_participants:
-                raise ValidationError(
-                    f"Cannot select more than {max_participants} participants."
-                )
+        # Validate location or virtual link
+        location = cleaned_data.get('location')
+        virtual_link = cleaned_data.get('virtual_link')
         
-        # Validate recurrence settings
-        if recurrence_type and recurrence_type != 'none':
-            if not recurrence_end_date:
-                raise ValidationError(
-                    "Recurrence end date is required for recurring events."
-                )
-            
-            if recurrence_end_date and start_time:
-                if recurrence_end_date <= start_time.date():
-                    raise ValidationError(
-                        "Recurrence end date must be after event start date."
-                )
+        if not location and not virtual_link:
+            self.add_warning('Consider adding a location or virtual meeting link.')
         
         return cleaned_data
     
-    def save(self, commit=True):
-        """Enhanced save method with notification and recurrence handling."""
-        event = super().save(commit=False)
-        
-        if commit:
-            event.save()
-            self.save_m2m()
-            
-            # Handle notifications if requested
-            if self.cleaned_data.get('send_notifications'):
-                self._send_event_notifications(event)
-            
-            # Handle recurrence creation
-            if event.recurrence_type != 'none':
-                self._create_recurring_events(event)
-        
-        return event
-    
-    def _send_event_notifications(self, event):
-        """Send notifications to all participants."""
-        from .utils import send_notification
-        
-        for participant in event.participants.all():
-            if participant != self.user:  # Don't notify the creator
-                send_notification(
-                    recipient=participant,
-                    notification_type='event_reminder',
-                    title=f'New event: {event.title}',
-                    message=f'You have been invited to "{event.title}" on {event.start_time.strftime("%B %d, %Y at %I:%M %p")}',
-                    content_object=event,
-                    action_url=event.get_absolute_url()
-                )
-    
-    def _create_recurring_events(self, event):
-        """Create recurring event instances."""
-        # Implementation for creating recurring events
-        # This would create multiple event instances based on recurrence pattern
-        pass
+    def add_warning(self, message):
+        """Add a non-blocking warning message."""
+        if not hasattr(self, '_warnings'):
+            self._warnings = []
+        self._warnings.append(message)
 
 
 ### ========== ENHANCED PROJECT FORMS ========== ###
