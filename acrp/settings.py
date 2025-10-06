@@ -924,8 +924,7 @@ if 'test' in sys.argv or 'pytest' in sys.modules:
     # Use dummy cache for tests
     CACHES['default']['BACKEND'] = 'django.core.cache.backends.dummy.DummyCache'
     
-    # Disable logging during tests to reduce noise
-    LOGGING['root']['level'] = 'CRITICAL'
+    
 
 
 # SETTINGS VALIDATION - Ensure critical settings are properly configured

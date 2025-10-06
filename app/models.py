@@ -324,6 +324,9 @@ class ProjectStatus(models.Model):
     is_active = models.BooleanField(default=True)
     is_initial = models.BooleanField(default=False)
     is_final = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.name}"
     
     class Meta:
         ordering = ['order']

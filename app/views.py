@@ -280,10 +280,7 @@ def dashboard(request):
     announcements = Announcement.objects.filter(is_urgent=True).order_by('-published_at')[:5]
     
     # Mandatory events
-    events = Event.objects.filter(
-        is_mandatory=True,
-        start_time__gte=timezone.now()
-    ).order_by('start_time')[:5]
+    events = Event.objects.filter(is_public=True, start_time__gte=timezone.now()).order_by('start_time')[:5]
     
     # User's projects
     projects = Projects.objects.filter(
@@ -2956,37 +2953,61 @@ def create_announcement(request):
         form = AnnouncementForm()
     return render(request, 'app/announcement_form.html', {'form': form})
 
-@login_required
-def announcement_detail(request, announcement_id):
-    announcement = get_object_or_404(Announcement, id=announcement_id)
-    return render(request, 'app/announcement_detail.html', {'announcement': announcement})
+
 
 @login_required
 @permission_required('apps.manage_announcements', raise_exception=True)
-def edit_announcement(request, announcement_id):
-    announcement = get_object_or_404(Announcement, id=announcement_id)
+def create_announcement(request):
+    if request.method == 'POST':
+        form = AnnouncementForm(request.POST)
+        if form.is_valid():
+            ann = form.save(commit=False)
+            ann.created_by = request.user
+            ann.save()
+            messages.success(request, 'Announcement posted successfully.')
+            return redirect('common:announcement_list')
+    else:
+        form = AnnouncementForm()
+    return render(request, 'app/announcement_form.html', {'form': form})
+
+
+@login_required
+def announcement_detail(request, pk):
+    announcement = get_object_or_404(Announcement, pk=pk)
+    return render(request, 'app/announcement_detail.html', {'announcement': announcement})
+
+
+@login_required
+@permission_required('apps.manage_announcements', raise_exception=True)
+def edit_announcement(request, pk):
+    announcement = get_object_or_404(Announcement, pk=pk)
     if request.method == 'POST':
         form = AnnouncementForm(request.POST, instance=announcement)
         if form.is_valid():
             form.save()
             messages.success(request, 'Announcement updated successfully.')
-            return redirect('common:announcement_detail', announcement_id=announcement.id)
+            return redirect('common:announcement_detail', pk=announcement.pk)
     else:
         form = AnnouncementForm(instance=announcement)
     return render(request, 'app/announcement_form.html', {'form': form})
 
+
 @login_required
-@permission_required('app.manage_announcements', raise_exception=True)
-def delete_announcement(request, announcement_id):
-    announcement = get_object_or_404(Announcement, id=announcement_id)
+@permission_required('apps.manage_announcements', raise_exception=True)
+def delete_announcement(request, pk):
+    announcement = get_object_or_404(Announcement, id=pk)
     if request.method == 'POST':
         announcement.delete()
         messages.success(request, 'Announcement deleted successfully.')
         return redirect('common:announcement_list')
     return render(request, 'app/confirm_delete.html', {
-        'object': announcement, 'type': 'Announcement',
-        'cancel_url': 'announcement_detail', 'cancel_id': announcement.id
+        'object': announcement,
+        'type': 'Announcement',
+        'cancel_url': 'common:announcement_detail',
+        'cancel_id': announcement.id
     })
+
+
 
 
 ### ========== PROJECTS ========== ###

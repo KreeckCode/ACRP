@@ -4,6 +4,35 @@
 {% block title %}Announcement Management - ACRP{% endblock %}
 
 {% block content %}
+
+<style>
+input[type="text"],
+select {
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+input:focus,
+select:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+button,
+a {
+    transition: all 0.2s ease-in-out;
+}
+
+tr:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+</style>
+
 <div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 lg:p-8">
     <!-- Page Header -->
     <div class="mb-8">
@@ -375,23 +404,33 @@
                     
                     <div class="flex space-x-2">
                         <a href="{% url 'common:announcement_detail' pk=announcement.id %}" 
-                           class="flex-1 text-center bg-green-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-green-700">
-                            <i class="bi bi-eye mr-1"></i>
-                            View
+                            class="flex-1 text-center bg-green-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-green-700">
+                            <i class="bi bi-eye mr-1"></i> View
                         </a>
+
                         {% if perms.apps.manage_announcements %}
-                        <a href="{% url 'common:edit_announcement' pk=announcement.id %}" 
-                           class="flex-1 text-center bg-blue-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700">
-                            <i class="bi bi-pencil mr-1"></i>
-                            Edit
-                        </a>
-                        <button onclick="confirmDeleteAnnouncement({{ announcement.id }}, '{{ announcement.title|escapejs }}')" 
-                                class="flex-1 text-center bg-red-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-red-700">
-                            <i class="bi bi-trash mr-1"></i>
-                            Delete
-                        </button>
+                            <a href="{% url 'common:edit_announcement' pk=announcement.id %}" 
+                            class="flex-1 text-center bg-blue-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700">
+                                <i class="bi bi-pencil mr-1"></i> Edit
+                            </a>
+
+                            <!-- Hidden form used to POST the deletion (CSRF token included) -->
+                            <form id="delete-form-{{ announcement.id }}" 
+                                action="{% url 'common:delete_announcement' pk=announcement.id %}" 
+                                method="post" style="display:none;">
+                            {% csrf_token %}
+                            </form>
+
+                            <button type="button"
+                                    onclick="confirmDeleteAnnouncement('{{ announcement.id }}', '{{ announcement.title|escapejs }}')"
+                                    class="flex-1 text-center bg-red-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-red-700">
+                                <i class="bi bi-trash mr-1"></i> Delete
+                            </button>
                         {% endif %}
                     </div>
+
+
+
                 </div>
                 {% endfor %}
             </div>
@@ -500,33 +539,20 @@ function updateAnnouncementCount() {
     });
 }
 </script>
+<script>
+function confirmDeleteAnnouncement(id, title) {
+    const ok = confirm(`Are you sure you want to delete the announcement:\n\n"${title}"\n\nThis action cannot be undone.`);
+    if (!ok) return;
 
-
-<style>
-input[type="text"],
-select {
-    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    const form = document.getElementById(`delete-form-${id}`);
+    if (!form) {
+        alert('Delete form not found. Please refresh the page and try again.');
+        return;
+    }
+    form.submit();
 }
+</script>
 
-input:focus,
-select:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
 
-button,
-a {
-    transition: all 0.2s ease-in-out;
-}
 
-tr:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.loading {
-    opacity: 0.6;
-    pointer-events: none;
-}
-</style>
 {% endblock %}
