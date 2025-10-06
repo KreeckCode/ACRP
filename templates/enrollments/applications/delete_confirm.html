@@ -1,281 +1,329 @@
 {% extends "base/base.html" %}
-{% load crispy_forms_tags %}
 
-{% block title %}{{ page_title }} - {{ block.super }}{% endblock %}
+{% block title %}Delete Application - {{ block.super }}{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <!-- Breadcrumb Navigation -->
-    <nav class="mb-6" aria-label="breadcrumb">
-        <ol class="flex items-center space-x-2 text-sm">
-            {% for breadcrumb_name, breadcrumb_url in breadcrumbs %}
-                {% if breadcrumb_url %}
-                    <li class="flex items-center">
-                        <a href="{{ breadcrumb_url }}" class="text-blue-600 hover:text-blue-800 transition-colors">
-                            {{ breadcrumb_name }}
-                        </a>
-                        {% if not forloop.last %}
-                            <svg class="ml-2 w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
-                            </svg>
-                        {% endif %}
-                    </li>
-                {% else %}
-                    <li class="text-gray-500 font-medium">{{ breadcrumb_name }}</li>
-                {% endif %}
-            {% endfor %}
-        </ol>
-    </nav>
-
-    <div class="flex justify-center">
-        <div class="w-full max-w-4xl">
-            <!-- Danger Alert Header -->
-            <div class="bg-white shadow-lg rounded-lg border-2 border-red-200 overflow-hidden">
-                <div class="bg-red-600 text-white px-6 py-4">
-                    <h4 class="text-xl font-semibold flex items-center">
-                        <i class="fas fa-exclamation-triangle mr-3"></i>
-                        Confirm Application Deletion
-                    </h4>
+<div class="min-h-screen bg-gray-50 py-12">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Warning Header -->
+        <div class="bg-red-50 border-l-4 border-red-400 p-6 mb-8">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <i class="bi bi-exclamation-triangle-fill text-red-400 text-3xl"></i>
                 </div>
-                
-                <div class="p-6 space-y-6">
-                    <!-- Warning Message -->
-                    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-                        <div class="flex items-start">
-                            <i class="fas fa-skull-crossbones text-red-500 mt-1 mr-3"></i>
+                <div class="ml-4">
+                    <h1 class="text-2xl font-bold text-red-900">
+                        Confirm Application Deletion
+                    </h1>
+                    <p class="mt-2 text-red-700">
+                        This action cannot be undone. All data will be permanently deleted.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Application Summary Card -->
+        <div class="bg-white shadow-lg rounded-lg overflow-hidden mb-8">
+            <div class="px-6 py-4 bg-gray-100 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-900">Application to Delete</h2>
+            </div>
+            
+            <div class="px-6 py-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Application Details -->
+                    <div>
+                        <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide mb-4">
+                            Application Details
+                        </h3>
+                        <dl class="space-y-3">
                             <div>
-                                <h5 class="text-red-800 font-semibold text-lg mb-2">
-                                    PERMANENT DELETION WARNING
-                                </h5>
-                                <p class="text-red-700">
-                                    You are about to <strong>permanently delete</strong> this application 
-                                    and all associated data. This action <strong>cannot be undone</strong>.
-                                </p>
+                                <dt class="text-sm font-medium text-gray-500">Application Number</dt>
+                                <dd class="mt-1 text-lg font-semibold text-gray-900">
+                                    {{ application.application_number }}
+                                </dd>
                             </div>
-                        </div>
-                    </div>
-
-                    <!-- Submission Warning (if applicable) -->
-                    {% if submission_warning %}
-                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                            <div class="flex items-start">
-                                <i class="fas fa-clock text-yellow-500 mt-1 mr-3"></i>
-                                <div>
-                                    <h6 class="text-yellow-800 font-semibold mb-2">
-                                        Submitted Application
-                                    </h6>
-                                    <p class="text-yellow-700">{{ submission_warning }}</p>
-                                </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Applicant Name</dt>
+                                <dd class="mt-1 text-sm text-gray-900">
+                                    {{ application.get_full_name }}
+                                </dd>
                             </div>
-                        </div>
-                    {% endif %}
-
-                    <!-- Application Details Summary -->
-                    <div class="grid md:grid-cols-2 gap-6">
-                        <div>
-                            <h6 class="text-gray-600 font-medium text-sm uppercase tracking-wide mb-3">Application Details</h6>
-                            <div class="space-y-3">
-                                <div class="flex justify-between py-2 border-b border-gray-100">
-                                    <span class="font-medium text-gray-700">Application Number:</span>
-                                    <span class="text-gray-900">{{ application.application_number }}</span>
-                                </div>
-                                <div class="flex justify-between py-2 border-b border-gray-100">
-                                    <span class="font-medium text-gray-700">Type:</span>
-                                    <span class="text-gray-900">{{ app_type|title }}</span>
-                                </div>
-                                <div class="flex justify-between py-2 border-b border-gray-100">
-                                    <span class="font-medium text-gray-700">Applicant:</span>
-                                    <span class="text-gray-900">{{ application.get_display_name }}</span>
-                                </div>
-                                <div class="flex justify-between py-2 border-b border-gray-100">
-                                    <span class="font-medium text-gray-700">Email:</span>
-                                    <span class="text-gray-900 break-all">{{ application.email }}</span>
-                                </div>
-                                <div class="flex justify-between py-2">
-                                    <span class="font-medium text-gray-700">Status:</span>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Email</dt>
+                                <dd class="mt-1 text-sm text-gray-900">
+                                    {{ application.email }}
+                                </dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Application Type</dt>
+                                <dd class="mt-1">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                        {{ app_type|title }}
+                                    </span>
+                                </dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Council</dt>
+                                <dd class="mt-1 text-sm text-gray-900">
+                                    {{ application.onboarding_session.selected_council.name }}
+                                </dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Status</dt>
+                                <dd class="mt-1">
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                                         {% if application.status == 'approved' %}bg-green-100 text-green-800
-                                        {% elif application.status == 'pending' or application.status == 'submitted' %}bg-yellow-100 text-yellow-800
-                                        {% elif application.status == 'under_review' %}bg-blue-100 text-blue-800
                                         {% elif application.status == 'rejected' %}bg-red-100 text-red-800
-                                        {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                        {% elif application.status == 'under_review' %}bg-blue-100 text-blue-800
+                                        {% else %}bg-yellow-100 text-yellow-800{% endif %}">
                                         {{ application.get_status_display }}
+                                    </span>
+                                </dd>
+                            </div>
+                        </dl>
+                    </div>
+                    
+                    <!-- Deletion Impact -->
+                    <div>
+                        <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide mb-4">
+                            What Will Be Deleted
+                        </h3>
+                        <div class="bg-red-50 rounded-lg p-4 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-700">Application Record</span>
+                                <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
+                                    1 item
+                                </span>
+                            </div>
+                            
+                            {% if stats.documents_count > 0 %}
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-700">Documents</span>
+                                <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
+                                    {{ stats.documents_count }} item{{ stats.documents_count|pluralize }}
+                                </span>
+                            </div>
+                            {% endif %}
+                            
+                            {% if stats.references_count > 0 %}
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-700">References</span>
+                                <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
+                                    {{ stats.references_count }} item{{ stats.references_count|pluralize }}
+                                </span>
+                            </div>
+                            {% endif %}
+                            
+                            {% if stats.qualifications_count %}
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-700">Academic Qualifications</span>
+                                <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
+                                    {{ stats.qualifications_count }} item{{ stats.qualifications_count|pluralize }}
+                                </span>
+                            </div>
+                            {% endif %}
+                            
+                            {% if stats.experiences_count %}
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-700">Practical Experiences</span>
+                                <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
+                                    {{ stats.experiences_count }} item{{ stats.experiences_count|pluralize }}
+                                </span>
+                            </div>
+                            {% endif %}
+                            
+                            {% if stats.affiliation_cards_count > 0 %}
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-700 font-semibold">
+                                    Affiliation Cards
+                                    {% if stats.has_active_cards %}
+                                    <i class="bi bi-exclamation-circle text-red-600 ml-1" title="Active cards will be deleted!"></i>
+                                    {% endif %}
+                                </span>
+                                <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-600 text-white">
+                                    {{ stats.affiliation_cards_count }} card{{ stats.affiliation_cards_count|pluralize }}
+                                </span>
+                            </div>
+                            {% endif %}
+                            
+                            {% if stats.has_files %}
+                            <div class="flex items-center justify-between border-t border-red-200 pt-3">
+                                <span class="text-sm text-gray-700">
+                                    <i class="bi bi-file-earmark text-red-600 mr-1"></i>
+                                    Physical Files from Storage
+                                </span>
+                                <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-600 text-white">
+                                    All files
+                                </span>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="border-t border-red-200 pt-3 mt-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm font-bold text-gray-900">Total Items to Delete</span>
+                                    <span class="inline-flex items-center px-3 py-1 rounded text-sm font-bold bg-red-600 text-white">
+                                        {{ total_items }} item{{ total_items|pluralize }}
                                     </span>
                                 </div>
                             </div>
                         </div>
-                        
-                        <div>
-                            <h6 class="text-gray-600 font-medium text-sm uppercase tracking-wide mb-3">Council & Dates</h6>
-                            <div class="space-y-3">
-                                <div class="flex justify-between py-2 border-b border-gray-100">
-                                    <span class="font-medium text-gray-700">Council:</span>
-                                    <span class="text-gray-900">{{ application.onboarding_session.selected_council.name }}</span>
-                                </div>
-                                <div class="flex justify-between py-2 border-b border-gray-100">
-                                    <span class="font-medium text-gray-700">Created:</span>
-                                    <span class="text-gray-900">{{ application.created_at|date:"M d, Y H:i" }}</span>
-                                </div>
-                                {% if application.submitted_at %}
-                                <div class="flex justify-between py-2 border-b border-gray-100">
-                                    <span class="font-medium text-gray-700">Submitted:</span>
-                                    <span class="text-gray-900">{{ application.submitted_at|date:"M d, Y H:i" }}</span>
-                                </div>
-                                {% endif %}
-                                {% if application.reviewed_at %}
-                                <div class="flex justify-between py-2">
-                                    <span class="font-medium text-gray-700">Reviewed:</span>
-                                    <span class="text-gray-900">{{ application.reviewed_at|date:"M d, Y H:i" }}</span>
-                                </div>
-                                {% endif %}
-                            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Warnings -->
+        {% if submission_warning %}
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="bi bi-exclamation-triangle text-yellow-400"></i>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-yellow-700">
+                        {{ submission_warning }}
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if stats.has_active_cards %}
+        <div class="bg-red-100 border-l-4 border-red-600 p-4 mb-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="bi bi-credit-card-fill text-red-600"></i>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-bold text-red-900">
+                        Active Affiliation Cards Detected!
+                    </p>
+                    <p class="text-sm text-red-700 mt-1">
+                        This application has {{ stats.affiliation_cards_count }} active affiliation card(s). 
+                        Deleting this application will also permanently delete all associated cards. 
+                        Members will lose access to their digital cards.
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Deletion Form -->
+        <form method="post" id="deleteForm" class="bg-white shadow-lg rounded-lg overflow-hidden">
+            {% csrf_token %}
+            
+            <div class="px-6 py-6 space-y-6">
+                <!-- Deletion Reason -->
+                <div>
+                    <label for="deletion_reason" class="block text-sm font-medium text-gray-700 mb-2">
+                        Reason for Deletion <span class="text-red-600">*</span>
+                    </label>
+                    <textarea 
+                        name="deletion_reason" 
+                        id="deletion_reason" 
+                        rows="3" 
+                        required
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
+                        placeholder="Please provide a reason for deleting this application (required for audit trail)"
+                    ></textarea>
+                    <p class="mt-1 text-xs text-gray-500">
+                        This information will be logged for audit purposes and cannot be changed later.
+                    </p>
+                </div>
+
+                <!-- Password Confirmation -->
+                <div class="bg-gray-50 border-2 border-gray-300 rounded-lg p-4">
+                    <div class="flex items-start mb-4">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-shield-lock-fill text-gray-600 text-2xl"></i>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-bold text-gray-900">Security Verification Required</h3>
+                            <p class="text-xs text-gray-600 mt-1">
+                                Enter your account password to confirm this deletion. This ensures only authorized users can delete applications.
+                            </p>
                         </div>
                     </div>
+                    
+                    <label for="confirm_password" class="block text-sm font-medium text-gray-700 mb-2">
+                        Your Password <span class="text-red-600">*</span>
+                    </label>
+                    <input 
+                        type="password" 
+                        name="confirm_password" 
+                        id="confirm_password" 
+                        required
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
+                        placeholder="Enter your password to confirm"
+                        autocomplete="current-password"
+                    >
+                    <p class="mt-2 text-xs text-gray-500">
+                        <i class="bi bi-info-circle mr-1"></i>
+                        Currently logged in as: <strong>{{ current_user.username }}</strong> ({{ current_user.email }})
+                    </p>
+                </div>
 
-                    <!-- Related Data Summary -->
-                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <div class="flex items-start">
-                            <i class="fas fa-database text-blue-500 mt-1 mr-3"></i>
-                            <div class="flex-1">
-                                <h6 class="text-blue-800 font-semibold mb-3">
-                                    Related Data That Will Be Deleted
-                                </h6>
-                                <div class="grid md:grid-cols-2 gap-4">
-                                    <div>
-                                        <ul class="space-y-2 text-blue-700">
-                                            <li class="flex items-center">
-                                                <i class="fas fa-file-alt mr-2 text-blue-500"></i>
-                                                <strong>{{ stats.documents_count }}</strong> document(s)
-                                                {% if stats.has_files %}
-                                                    <span class="ml-1 text-blue-600 text-sm">(including uploaded files)</span>
-                                                {% endif %}
-                                            </li>
-                                            <li class="flex items-center">
-                                                <i class="fas fa-user-friends mr-2 text-blue-500"></i>
-                                                <strong>{{ stats.references_count }}</strong> reference(s)
-                                            </li>
-                                        </ul>
-                                    </div>
-                                    {% if app_type == 'designated' %}
-                                    <div>
-                                        <ul class="space-y-2 text-blue-700">
-                                            <li class="flex items-center">
-                                                <i class="fas fa-graduation-cap mr-2 text-blue-500"></i>
-                                                <strong>{{ stats.qualifications_count }}</strong> qualification(s)
-                                            </li>
-                                            <li class="flex items-center">
-                                                <i class="fas fa-briefcase mr-2 text-blue-500"></i>
-                                                <strong>{{ stats.experiences_count }}</strong> experience(s)
-                                            </li>
-                                        </ul>
-                                    </div>
-                                    {% endif %}
-                                </div>
-                            </div>
+                <!-- Final Confirmation Checkbox -->
+                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            <input 
+                                type="checkbox" 
+                                name="confirm_delete" 
+                                id="confirm_delete" 
+                                value="yes"
+                                required
+                                class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                            >
                         </div>
-                    </div>
-
-                    <!-- Deletion Form -->
-                    <form method="post" class="space-y-6">
-                        {% csrf_token %}
-                        
-                        <!-- Deletion Reason -->
-                        <div>
-                            <label for="deletion_reason" class="block text-sm font-medium text-gray-700 mb-2">
-                                <strong>Reason for Deletion</strong> 
-                                <span class="text-gray-500 font-normal">(Optional but recommended for audit trail)</span>
+                        <div class="ml-3">
+                            <label for="confirm_delete" class="text-sm font-medium text-gray-900">
+                                I understand that this action is permanent and cannot be undone
                             </label>
-                            <textarea 
-                                name="deletion_reason" 
-                                id="deletion_reason" 
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors" 
-                                rows="4" 
-                                placeholder="Please provide a reason for deleting this application (e.g., 'Duplicate application', 'Requested by applicant', etc.)"
-                            ></textarea>
+                            <p class="text-xs text-gray-600 mt-1">
+                                All {{ total_items }} item{{ total_items|pluralize }} listed above will be permanently deleted from the system and storage.
+                            </p>
                         </div>
-
-                        <!-- Final Confirmation Checkbox -->
-                        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-                            <div class="flex items-start">
-                                <input 
-                                    class="mt-1 h-4 w-4 text-red-600 focus:ring-red-500 border-red-300 rounded" 
-                                    type="checkbox" 
-                                    id="confirmDeletion" 
-                                    required
-                                >
-                                <label class="ml-3 text-red-800 font-medium leading-5" for="confirmDeletion">
-                                    I understand that this action will permanently delete application 
-                                    <strong>{{ application.application_number }}</strong> and all related data, 
-                                    and this action cannot be undone.
-                                </label>
-                            </div>
-                        </div>
-
-                        <!-- Hidden confirmation field -->
-                        <input type="hidden" name="confirm_delete" value="yes">
-
-                        <!-- Action Buttons -->
-                        <div class="flex justify-between items-center pt-6 border-t border-gray-200">
-                            <a 
-                                href="{% url 'enrollments:application_detail' pk=application.pk app_type=app_type %}" 
-                                class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
-                            >
-                                <i class="fas fa-arrow-left mr-2"></i>
-                                Cancel
-                            </a>
-                            
-                            <button 
-                                type="submit" 
-                                class="inline-flex items-center px-6 py-3 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200" 
-                                id="deleteButton" 
-                                disabled
-                            >
-                                <i class="fas fa-trash-alt mr-2"></i>
-                                Permanently Delete Application
-                            </button>
-                        </div>
-                    </form>
+                    </div>
                 </div>
             </div>
 
-            <!-- Additional Safety Information -->
-            <div class="mt-6">
-                <div class="bg-white border border-blue-200 rounded-lg shadow">
-                    <div class="bg-blue-600 text-white px-6 py-3 rounded-t-lg">
-                        <h6 class="font-semibold flex items-center">
-                            <i class="fas fa-info-circle mr-2"></i>
-                            Alternative Options
-                        </h6>
-                    </div>
-                    <div class="p-6">
-                        <p class="text-gray-700 mb-3">
-                            <strong>Consider these alternatives before deletion:</strong>
-                        </p>
-                        <ul class="space-y-2 text-gray-600">
-                            <li class="flex items-start">
-                                <span class="flex-shrink-0 w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3"></span>
-                                <div>
-                                    <strong class="text-gray-700">Archive:</strong> Mark the application as archived instead of deleting
-                                </div>
-                            </li>
-                            <li class="flex items-start">
-                                <span class="flex-shrink-0 w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3"></span>
-                                <div>
-                                    <strong class="text-gray-700">Reject:</strong> Change status to rejected with appropriate reason
-                                </div>
-                            </li>
-                            <li class="flex items-start">
-                                <span class="flex-shrink-0 w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3"></span>
-                                <div>
-                                    <strong class="text-gray-700">Data Export:</strong> Export application data before deletion for records
-                                </div>
-                            </li>
-                            <li class="flex items-start">
-                                <span class="flex-shrink-0 w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3"></span>
-                                <div>
-                                    <strong class="text-gray-700">Admin Notes:</strong> Add administrative notes for future reference
-                                </div>
-                            </li>
+            <!-- Form Actions -->
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+                <a 
+                    href="{% url 'enrollments:application_detail' pk=application.pk app_type=app_type %}" 
+                    class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                    <i class="bi bi-arrow-left mr-2"></i>
+                    Cancel
+                </a>
+                
+                <button 
+                    type="submit" 
+                    id="deleteButton"
+                    class="inline-flex items-center px-6 py-2 border border-transparent text-sm font-bold rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    <i class="bi bi-trash-fill mr-2"></i>
+                    Permanently Delete Application
+                </button>
+            </div>
+        </form>
+
+        <!-- Information Footer -->
+        <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="bi bi-info-circle-fill text-blue-400"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-blue-900">Alternative Options</h3>
+                    <div class="mt-2 text-sm text-blue-700">
+                        <p>Consider these alternatives to permanent deletion:</p>
+                        <ul class="list-disc pl-5 mt-2 space-y-1">
+                            <li>Change the application status to "Rejected" instead of deleting</li>
+                            <li>Archive the application for historical records</li>
+                            <li>Export the application data before deletion</li>
                         </ul>
                     </div>
                 </div>
@@ -284,34 +332,55 @@
     </div>
 </div>
 
-<!-- JavaScript for Enhanced UX -->
 <script>
+// Form validation and UX enhancements
 document.addEventListener('DOMContentLoaded', function() {
-    // Enable/disable delete button based on confirmation checkbox
-    const confirmCheckbox = document.getElementById('confirmDeletion');
+    const form = document.getElementById('deleteForm');
     const deleteButton = document.getElementById('deleteButton');
+    const confirmCheckbox = document.getElementById('confirm_delete');
+    const passwordInput = document.getElementById('confirm_password');
+    const reasonTextarea = document.getElementById('deletion_reason');
     
-    confirmCheckbox.addEventListener('change', function() {
-        deleteButton.disabled = !this.checked;
+    // Enable/disable delete button based on form validity
+    function updateDeleteButton() {
+        const isValid = confirmCheckbox.checked && 
+                       passwordInput.value.length > 0 && 
+                       reasonTextarea.value.trim().length > 0;
         
-        if (this.checked) {
-            deleteButton.classList.remove('bg-red-600', 'hover:bg-red-700');
-            deleteButton.classList.add('bg-red-700', 'hover:bg-red-800');
-        } else {
-            deleteButton.classList.remove('bg-red-700', 'hover:bg-red-800');
-            deleteButton.classList.add('bg-red-600', 'hover:bg-red-700');
-        }
-    });
+        deleteButton.disabled = !isValid;
+    }
     
-    // Add final confirmation dialog
-    deleteButton.addEventListener('click', function(e) {
-        if (!confirm('Are you absolutely sure? This is your final chance to cancel.')) {
+    // Listen for changes
+    confirmCheckbox.addEventListener('change', updateDeleteButton);
+    passwordInput.addEventListener('input', updateDeleteButton);
+    reasonTextarea.addEventListener('input', updateDeleteButton);
+    
+    // Initial check
+    updateDeleteButton();
+    
+    // Confirm before submission
+    form.addEventListener('submit', function(e) {
+        if (!confirm(
+            'FINAL WARNING: Are you absolutely sure you want to delete this application? ' +
+            'This action cannot be undone and will delete {{ total_items }} items.'
+        )) {
             e.preventDefault();
+            return false;
         }
+        
+        // Disable button to prevent double submission
+        deleteButton.disabled = true;
+        deleteButton.innerHTML = '<i class="bi bi-hourglass-split mr-2 animate-spin"></i>Deleting...';
     });
     
-    // Auto-focus on reason textarea
-    document.getElementById('deletion_reason').focus();
+    // Prevent accidental page closure
+    window.addEventListener('beforeunload', function(e) {
+        if (reasonTextarea.value.trim().length > 0 || passwordInput.value.length > 0) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
 });
 </script>
+
 {% endblock %}

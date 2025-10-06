@@ -386,28 +386,29 @@
                                             </a>
                                             
                                             <!-- Actions Dropdown -->
-                                            <div class="relative">
-                                                <button class="inline-flex items-center px-2 py-1 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors" onclick="toggleDropdown(this)">
+                                            <div class="relative dropdown-container">
+                                                <button type="button" 
+                                                        class="dropdown-trigger inline-flex items-center px-2 py-1 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors">
                                                     <i class="bi bi-three-dots"></i>
                                                 </button>
-                                                <div class="hidden absolute right-0 z-10 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200">
+                                                <div class="dropdown-menu hidden absolute right-0 z-10 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200">
                                                     <div class="py-1">
                                                         <a href="{% url 'enrollments:application_update' pk=application.id app_type=application.app_type %}" 
-                                                           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                                                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
                                                             <i class="bi bi-pencil mr-2"></i>Edit
                                                         </a>
-                                                        {% if can_approve_applications %}
+                                                        
                                                         <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
                                                             <i class="bi bi-check-circle mr-2"></i>Review
                                                         </a>
-                                                        {% endif %}
+                                                        
                                                         <div class="border-t border-gray-100"></div>
-                                                        {% if can_delete_applications %}
+                                                        
                                                         <a href="{% url 'enrollments:application_delete' pk=application.id app_type=application.app_type %}" 
-                                                           class="block px-4 py-2 text-sm text-red-700 hover:bg-red-50 transition-colors">
+                                                        class="block px-4 py-2 text-sm text-red-700 hover:bg-red-50 transition-colors">
                                                             <i class="bi bi-trash mr-2"></i>Delete
                                                         </a>
-                                                        {% endif %}
+                                                        
                                                     </div>
                                                 </div>
                                             </div>
@@ -469,115 +470,127 @@
         </main>
     </div>
 
-    <script>
-        // Export dropdown functionality
-        function toggleExportDropdown() {
-            const menu = document.getElementById('exportMenu');
-            menu.classList.toggle('hidden');
-        }
 
-        // Close export dropdown when clicking outside
-        document.addEventListener('click', function(event) {
-            const dropdown = document.getElementById('exportDropdown');
-            const menu = document.getElementById('exportMenu');
-            
-            if (!dropdown.contains(event.target)) {
-                menu.classList.add('hidden');
-            }
+
+    <!-- COMPLETE DROPDOWN FIX - Replace ALL your dropdown JavaScript with this -->
+
+<script>
+// Wait for DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Dropdown script loaded and ready');
+    
+    // Use event delegation for ALL dropdown buttons
+    document.addEventListener('click', function(event) {
+        // Check if clicked element is a dropdown trigger (or child of one)
+        const dropdownBtn = event.target.closest('.dropdown-trigger');
+        const exportBtn = event.target.closest('.export-trigger');
+        
+        if (dropdownBtn) {
+            event.preventDefault();
+            event.stopPropagation();
+            handleDropdownClick(dropdownBtn);
+        } else if (exportBtn) {
+            event.preventDefault();
+            event.stopPropagation();
+            handleExportClick();
+        } else if (!event.target.closest('.dropdown-container') && !event.target.closest('#exportDropdown')) {
+            // Close all dropdowns when clicking outside
+            closeAllDropdowns();
+        }
+    });
+    
+    function handleDropdownClick(button) {
+        // Find the parent container
+        const container = button.closest('.dropdown-container');
+        if (!container) {
+            console.error('Dropdown container not found for button:', button);
+            return;
+        }
+        
+        // Find the dropdown menu within this container
+        const dropdown = container.querySelector('.dropdown-menu');
+        if (!dropdown) {
+            console.error('Dropdown menu not found in container:', container);
+            return;
+        }
+        
+        // Check if this dropdown is currently open
+        const isOpen = !dropdown.classList.contains('hidden');
+        
+        // Close all dropdowns first
+        closeAllDropdowns();
+        
+        // If it wasn't open, open it
+        if (!isOpen) {
+            dropdown.classList.remove('hidden');
+        }
+    }
+    
+    function handleExportClick() {
+        const exportMenu = document.getElementById('exportMenu');
+        if (!exportMenu) {
+            console.error('Export menu not found');
+            return;
+        }
+        
+        // Check if export menu is currently open
+        const isOpen = !exportMenu.classList.contains('hidden');
+        
+        // Close all dropdowns first
+        closeAllDropdowns();
+        
+        // If it wasn't open, open it
+        if (!isOpen) {
+            exportMenu.classList.remove('hidden');
+        }
+    }
+    
+    function closeAllDropdowns() {
+        // Close all dropdown menus
+        document.querySelectorAll('.dropdown-menu').forEach(menu => {
+            menu.classList.add('hidden');
         });
-
-        // Export applications with format and current filters
-        function exportApplications(format) {
-            // Get current filter values
-            const formData = new FormData(document.getElementById('filterForm'));
-            const params = new URLSearchParams(formData);
-            params.append('format', format);
-            
-            // Show loading state
-            showAlert('Preparing ' + format.replace('_', ' ') + ' export...', 'info');
-            
-            // Create export URL with filters
-            const exportUrl = '{% url "enrollments:export_applications" %}?' + params.toString();
-            
-            // Close dropdown
-            document.getElementById('exportMenu').classList.add('hidden');
-            
-            // Trigger download
-            window.location.href = exportUrl;
-            
-            // Show success message after delay
-            setTimeout(() => {
-                showAlert('Export completed successfully!', 'success');
-            }, 2000);
+        
+        // Close export menu
+        const exportMenu = document.getElementById('exportMenu');
+        if (exportMenu) {
+            exportMenu.classList.add('hidden');
         }
-
-        // Toggle sidebar on mobile
-        function toggleSidebar() {
-            const sidebar = document.querySelector('.sidebar');
-            sidebar.classList.toggle('open');
-        }
-
-        // Toggle submenu
-        function toggleSubmenu(menuId) {
-            const submenu = document.getElementById(menuId + '-submenu');
-            const icon = document.getElementById(menuId + '-icon');
-            
-            submenu.classList.toggle('hidden');
-            icon.classList.toggle('rotate-180');
-        }
-
-        // Toggle dropdown
-        function toggleDropdown(button) {
-            const dropdown = button.nextElementSibling;
-            
-            // Close all other dropdowns
-            document.querySelectorAll('.relative .absolute').forEach(d => {
-                if (d !== dropdown) d.classList.add('hidden');
-            });
-            
-            dropdown.classList.toggle('hidden');
-        }
-
-        // Close dropdowns when clicking outside
-        document.addEventListener('click', function(event) {
-            if (!event.target.closest('.relative')) {
-                document.querySelectorAll('.relative .absolute').forEach(d => {
-                    d.classList.add('hidden');
-                });
-            }
-        });
-
-        // Show alert
-        function showAlert(message, type) {
-            const colors = {
-                success: 'bg-green-500',
-                info: 'bg-blue-500',
-                warning: 'bg-yellow-500',
-                error: 'bg-red-500'
-            };
-            
-            const alert = document.createElement('div');
-            alert.className = `fixed top-4 right-4 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-50`;
-            alert.innerHTML = `<i class="bi bi-check-circle mr-2"></i>${message}`;
-            
-            document.body.appendChild(alert);
-            
-            setTimeout(() => {
-                alert.remove();
-            }, 3000);
-        }
-
-        // Close sidebar when clicking outside on mobile
-        document.addEventListener('click', function(event) {
-            const sidebar = document.querySelector('.sidebar');
-            const menuButton = document.querySelector('button[onclick="toggleSidebar()"]');
-            
-            if (window.innerWidth < 768 && sidebar.classList.contains('open')) {
-                if (!sidebar.contains(event.target) && !menuButton.contains(event.target)) {
-                    sidebar.classList.remove('open');
-                }
-            }
-        });
-    </script>
+    }
+    
+    // Export applications function
+    window.exportApplications = function(format) {
+        const params = new URLSearchParams(new FormData(document.getElementById('filterForm')));
+        params.append('format', format);
+        showAlert('Preparing export...', 'info');
+        closeAllDropdowns();
+        window.location.href = '/enrollments/export/applications/?' + params;
+        setTimeout(() => showAlert('Export completed!', 'success'), 2000);
+    }
+    
+    // Show alert function
+    window.showAlert = function(message, type) {
+        const colors = { 
+            success: 'bg-green-500', 
+            info: 'bg-blue-500', 
+            warning: 'bg-yellow-500', 
+            error: 'bg-red-500' 
+        };
+        const icons = { 
+            success: 'bi-check-circle', 
+            info: 'bi-info-circle', 
+            warning: 'bi-exclamation-triangle', 
+            error: 'bi-x-circle' 
+        };
+        
+        const alert = document.createElement('div');
+        alert.className = `fixed top-4 right-4 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center`;
+        alert.innerHTML = `<i class="bi ${icons[type]} mr-2"></i>${message}`;
+        document.body.appendChild(alert);
+        
+        setTimeout(() => alert.remove(), 3000);
+    }
+});
+</script>
 
 {% endblock %}

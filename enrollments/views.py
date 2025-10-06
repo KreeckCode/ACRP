@@ -309,7 +309,7 @@ def get_client_ip(request):
     return request.META.get('REMOTE_ADDR')
 
 
-def rate_limit(max_requests=550, window=3600):
+def rate_limit(max_requests=50, window=3600):
     """Simple rate limiting decorator"""
     def decorator(view_func):
         def wrapper(request, *args, **kwargs):
@@ -3151,19 +3151,30 @@ def application_update(request, pk, app_type):
     
     return render(request, template, context)
 
+
+
+from django.contrib.auth import authenticate
+
 @login_required
 @permission_required('enrollments.delete_baseapplication', raise_exception=True)
 @transaction.atomic
 def application_delete(request, pk, app_type):
     """
-    Comprehensive application deletion view with safety checks and audit trail.
+    Comprehensive application deletion with password confirmation.
     
-    This view handles the deletion of applications with the following considerations:
-    - Proper permission validation (only admins can delete)
-    - Confirmation flow to prevent accidental deletions
-    - Audit trail logging for compliance
-    - Cascade handling for related objects (documents, references, etc.)
-    - Soft delete option for data retention (configurable)
+    Security Features:
+    - Requires user to enter their password to confirm deletion
+    - Admin/Manager only access
+    - Complete audit trail
+    - Transaction-wrapped for data integrity
+    
+    Cascade Deletion:
+    - All documents (with physical file cleanup)
+    - All references
+    - All academic qualifications (designated only)
+    - All practical experiences (designated only)
+    - All affiliation cards (if affiliationcard app is installed)
+    - Onboarding session (optional, configurable)
     
     Args:
         request: HTTP request object
@@ -3173,7 +3184,11 @@ def application_delete(request, pk, app_type):
     Returns:
         HttpResponse: Redirect to application list on success, or confirmation form
     """
-    # Define model mapping following the existing pattern
+    # ========================================================================
+    # STEP 1: MODEL VALIDATION & PERMISSION CHECK
+    # ========================================================================
+    
+    # Define model mapping
     model_map = {
         'associated': AssociatedApplication,
         'designated': DesignatedApplication,
@@ -3183,11 +3198,10 @@ def application_delete(request, pk, app_type):
     # Validate application type
     model = model_map.get(app_type)
     if not model:
-        logger.warning(f"Invalid application type requested for deletion: {app_type}")
+        logger.warning(f"Invalid application type for deletion: {app_type}")
         raise Http404("Invalid application type")
     
-    # Get application with optimized query to include related data for display
-    # We select_related the essential fields for the confirmation display
+    # Get application with all related data
     application = get_object_or_404(
         model.objects.select_related(
             'onboarding_session__selected_council',
@@ -3196,14 +3210,13 @@ def application_delete(request, pk, app_type):
             'reviewed_by',
             'approved_by'
         ).prefetch_related(
-            'documents',  # For counting related objects
-            'references'  # For counting related objects
+            'documents',
+            'references'
         ),
         pk=pk
     )
     
-    # Enhanced permission check - only allow admins/managers to delete
-    # Applications are sensitive data and deletion should be restricted
+    # Enhanced permission check - only admins/managers
     if not is_admin_or_manager(request.user):
         logger.warning(
             f"Unauthorized deletion attempt by user {request.user.id} "
@@ -3214,115 +3227,229 @@ def application_delete(request, pk, app_type):
             "Please contact an administrator."
         )
     
+    # ========================================================================
+    # STEP 2: HANDLE PASSWORD CONFIRMATION (POST REQUEST)
+    # ========================================================================
     
-    # Check if application has been submitted and warn user
-    submission_warning = None
-    if application.submitted_at:
-        submission_warning = (
-            f"This application was submitted on {application.submitted_at.strftime('%B %d, %Y')} "
-            "and may contain important data. Consider archiving instead of deleting."
-        )
-    
-    # Handle POST request (actual deletion)
     if request.method == 'POST':
-        # Double-check confirmation
+        # Verify password first
+        password = request.POST.get('confirm_password', '')
+        
+        if not password:
+            messages.error(request, "Password is required to confirm deletion.")
+            return redirect('enrollments:application_delete', pk=pk, app_type=app_type)
+        
+        # Authenticate user with their password
+        user_authenticated = authenticate(
+            username=request.user.username,
+            password=password
+        )
+        
+        if not user_authenticated:
+            logger.warning(
+                f"Failed password verification for deletion by {request.user.username}"
+            )
+            messages.error(
+                request,
+                "Incorrect password. Deletion cancelled for security."
+            )
+            return redirect('enrollments:application_delete', pk=pk, app_type=app_type)
+        
+        # Double-check deletion confirmation checkbox
         if request.POST.get('confirm_delete') != 'yes':
             messages.error(request, "Deletion not confirmed. Application was not deleted.")
             return redirect('enrollments:application_detail', pk=pk, app_type=app_type)
         
-        # Collect related object counts for logging
+        # ====================================================================
+        # STEP 3: COLLECT RELATED OBJECT INFORMATION FOR LOGGING
+        # ====================================================================
+        
         related_counts = {
             'documents': application.documents.count(),
             'references': application.references.count(),
         }
         
-        # Add specific counts for designated applications
+        # Add designated-specific counts
         if app_type == 'designated':
             related_counts.update({
                 'qualifications': application.academic_qualifications.count(),
                 'experiences': application.practical_experiences.count(),
             })
         
-        # Store application details for logging (before deletion)
+        # Check for affiliation cards
+        affiliation_cards = []
+        try:
+            from affiliationcard.models import AffiliationCard
+            
+            content_type = ContentType.objects.get_for_model(application)
+            affiliation_cards = AffiliationCard.objects.filter(
+                content_type=content_type,
+                object_id=application.pk
+            )
+            related_counts['affiliation_cards'] = affiliation_cards.count()
+            
+        except ImportError:
+            logger.info("affiliationcard app not installed, skipping card deletion")
+            related_counts['affiliation_cards'] = 0
+        
+        # Store application details for logging
         app_details = {
             'application_number': application.application_number,
             'app_type': app_type,
             'email': application.email,
+            'full_name': application.get_full_name(),
             'status': application.status,
             'council': application.onboarding_session.selected_council.code,
-            'created_at': application.created_at,
-            'submitted_at': application.submitted_at,
+            'affiliation_type': application.onboarding_session.selected_affiliation_type.code,
+            'created_at': str(application.created_at),
+            'submitted_at': str(application.submitted_at) if application.submitted_at else None,
             'related_counts': related_counts,
             'deleted_by': request.user.email,
+            'deleted_by_username': request.user.username,
             'deletion_reason': request.POST.get('deletion_reason', 'No reason provided'),
+            'deletion_timestamp': str(timezone.now()),
         }
         
+        # ====================================================================
+        # STEP 4: COMPREHENSIVE CASCADE DELETION
+        # ====================================================================
+        
         try:
-            # Option 1: Soft Delete (Recommended for audit trails)
-            # Uncomment this section if you want to implement soft delete
-            """
-            application.deleted = True
-            application.deleted_at = timezone.now()
-            application.deleted_by = request.user
-            application.deletion_reason = request.POST.get('deletion_reason', '')
-            application.save(update_fields=['deleted', 'deleted_at', 'deleted_by', 'deletion_reason'])
+            # Track files to delete
+            files_to_delete = []
             
-            # Also soft delete related objects if they support it
-            application.documents.update(deleted=True, deleted_at=timezone.now())
-            application.references.update(deleted=True, deleted_at=timezone.now())
-            """
-            
-            # Option 2: Hard Delete (Current implementation)
-            # This permanently removes the application and all related data
-            
-            # Handle file cleanup for documents
-            # Get all document files before deletion to clean up storage
-            document_files = []
+            # ------------------------------------------------------------------
+            # 4.1: Collect document files for cleanup
+            # ------------------------------------------------------------------
             for document in application.documents.all():
                 if document.file and hasattr(document.file, 'path'):
-                    document_files.append(document.file.path)
+                    try:
+                        file_path = document.file.path
+                        if os.path.exists(file_path):
+                            files_to_delete.append(file_path)
+                    except Exception as e:
+                        logger.error(f"Error accessing document file path: {e}")
             
-            # Perform the deletion
-            # Django will handle CASCADE deletes for related objects
+            # ------------------------------------------------------------------
+            # 4.2: Collect reference document files
+            # ------------------------------------------------------------------
+            for reference in application.references.all():
+                for doc in reference.documents.all():
+                    if doc.file and hasattr(doc.file, 'path'):
+                        try:
+                            file_path = doc.file.path
+                            if os.path.exists(file_path):
+                                files_to_delete.append(file_path)
+                        except Exception as e:
+                            logger.error(f"Error accessing reference document path: {e}")
+            
+            # ------------------------------------------------------------------
+            # 4.3: Delete affiliation cards (if exist)
+            # ------------------------------------------------------------------
+            if affiliation_cards.exists():
+                card_details = []
+                for card in affiliation_cards:
+                    card_details.append({
+                        'card_number': card.card_number if hasattr(card, 'card_number') else 'N/A',
+                        'status': card.status if hasattr(card, 'status') else 'N/A',
+                    })
+                
+                cards_deleted = affiliation_cards.count()
+                affiliation_cards.delete()
+                
+                logger.info(
+                    f"Deleted {cards_deleted} affiliation card(s) for application "
+                    f"{application.application_number}: {card_details}"
+                )
+                app_details['deleted_cards'] = card_details
+            
+            # ------------------------------------------------------------------
+            # 4.4: Delete the application (cascades to related models)
+            # ------------------------------------------------------------------
+            # This will automatically delete:
+            # - Documents (via GenericRelation)
+            # - References (via GenericRelation)
+            # - AcademicQualifications (via CASCADE ForeignKey)
+            # - PracticalExperiences (via CASCADE ForeignKey)
+            
+            application_number = application.application_number
             application.delete()
             
-            # Clean up physical files from storage
-            # This prevents orphaned files in the media directory
-            for file_path in document_files:
+            logger.info(f"Application deleted from database: {application_number}")
+            
+            # ------------------------------------------------------------------
+            # 4.5: Clean up physical files from storage
+            # ------------------------------------------------------------------
+            files_deleted = 0
+            files_failed = 0
+            
+            for file_path in files_to_delete:
                 try:
                     if os.path.exists(file_path):
                         os.remove(file_path)
-                        logger.info(f"Cleaned up file: {file_path}")
+                        files_deleted += 1
+                        logger.debug(f"Deleted file: {file_path}")
                 except OSError as e:
+                    files_failed += 1
                     logger.error(f"Failed to delete file {file_path}: {e}")
             
-            # Comprehensive audit logging
+            app_details['files_deleted'] = files_deleted
+            app_details['files_failed'] = files_failed
+            
+            # ------------------------------------------------------------------
+            # 4.6: Comprehensive audit logging
+            # ------------------------------------------------------------------
             logger.info(
-                f"Application deleted successfully. Details: {json.dumps(app_details, default=str)}"
+                f"APPLICATION DELETION COMPLETED | "
+                f"App: {application_number} | "
+                f"Type: {app_type} | "
+                f"User: {request.user.username} | "
+                f"Details: {json.dumps(app_details, indent=2, default=str)}"
             )
             
-            # User feedback with summary
+            # ------------------------------------------------------------------
+            # 4.7: User feedback
+            # ------------------------------------------------------------------
             messages.success(
                 request,
-                f"Application {app_details['application_number']} has been permanently deleted. "
-                f"Removed {related_counts['documents']} documents and {related_counts['references']} references."
+                f"✓ Application {application_number} has been permanently deleted. "
+                f"Removed: {related_counts['documents']} documents, "
+                f"{related_counts['references']} references"
+                + (f", {related_counts['affiliation_cards']} affiliation card(s)" 
+                   if related_counts['affiliation_cards'] > 0 else "")
+                + f", {files_deleted} files from storage."
             )
             
-            # Redirect to application list
-            return redirect('enrollments:enrollment_dashboard')
+            # Redirect to dashboard
+            return redirect('enrollments:application_list')
             
         except Exception as e:
             # Handle any deletion errors
             logger.error(
-                f"Failed to delete application {application.application_number}: {str(e)}"
+                f"DELETION FAILED for application {application.application_number}: "
+                f"{str(e)}",
+                exc_info=True
             )
             messages.error(
                 request,
-                f"Failed to delete application: {str(e)}. Please try again or contact support."
+                f"Failed to delete application: {str(e)}. "
+                "Please try again or contact support if the problem persists."
             )
             return redirect('enrollments:application_detail', pk=pk, app_type=app_type)
     
-    # Handle GET request (show confirmation form)
+    # ========================================================================
+    # STEP 5: DISPLAY CONFIRMATION FORM (GET REQUEST)
+    # ========================================================================
+    
+    # Check for submission warning
+    submission_warning = None
+    if application.submitted_at:
+        submission_warning = (
+            f"⚠️ This application was submitted on "
+            f"{application.submitted_at.strftime('%B %d, %Y at %H:%M')} "
+            "and may contain important data. Consider archiving instead of deleting."
+        )
+    
     # Calculate statistics for confirmation display
     stats = {
         'documents_count': application.documents.count(),
@@ -3337,18 +3464,45 @@ def application_delete(request, pk, app_type):
             'experiences_count': application.practical_experiences.count(),
         })
     
+    # Check for affiliation cards
+    try:
+        from affiliationcard.models import AffiliationCard
+        content_type = ContentType.objects.get_for_model(application)
+        cards = AffiliationCard.objects.filter(
+            content_type=content_type,
+            object_id=application.pk
+        )
+        stats['affiliation_cards_count'] = cards.count()
+        stats['has_active_cards'] = cards.filter(status__in=['assigned', 'active']).exists()
+    except ImportError:
+        stats['affiliation_cards_count'] = 0
+        stats['has_active_cards'] = False
+    
+    # Calculate total items to be deleted
+    total_items = (
+        stats['documents_count'] + 
+        stats['references_count'] + 
+        stats.get('qualifications_count', 0) + 
+        stats.get('experiences_count', 0) +
+        stats['affiliation_cards_count'] +
+        1  # The application itself
+    )
+    
     # Prepare context for confirmation template
     context = {
         'application': application,
         'app_type': app_type,
         'stats': stats,
+        'total_items': total_items,
         'submission_warning': submission_warning,
         'page_title': f'Delete {app_type.title()} Application',
+        'current_user': request.user,
         'breadcrumbs': [
             ('Applications', reverse('enrollments:application_list')),
             (
                 f'Application {application.application_number}',
-                reverse('enrollments:application_detail', kwargs={'pk': pk, 'app_type': app_type})
+                reverse('enrollments:application_detail', 
+                       kwargs={'pk': pk, 'app_type': app_type})
             ),
             ('Delete', None)
         ],
