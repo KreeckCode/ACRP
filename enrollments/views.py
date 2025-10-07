@@ -194,32 +194,17 @@ def create_learner_account(application, registration_number):
 def send_login_credentials_email(application, registration_number, password, request=None):
     """
     Send email with login credentials to newly approved learner.
-    
-    This email contains:
-    - Registration number (username)
-    - Generated password
-    - Login instructions
-    - Link to student portal
-    
-    Args:
-        application: The approved application instance
-        registration_number: The assigned registration number (username)
-        password: The generated password
-        request: HTTP request object for building URLs
-    
-    Returns:
-        bool: True if email sent successfully, False otherwise
     """
     try:
         from django.template.loader import render_to_string
         from django.core.mail import EmailMultiAlternatives
         from django.conf import settings
         
-        # Build login URL (adjust to your actual login URL)
+        # Build login URL
         if request:
             login_url = request.build_absolute_uri('/accounts/login/')
         else:
-            login_url = f"{settings.SITE_URL}/accounts/login/" if hasattr(settings, 'SITE_URL') else "Login to your account"
+            login_url = f"{getattr(settings, 'SITE_URL', 'http://localhost:8000')}/accounts/login/"
         
         # Context for email template
         context = {
@@ -234,13 +219,98 @@ def send_login_credentials_email(application, registration_number, password, req
         }
         
         # Render HTML email template
-        subject = f"Your Login Credentials - Registration Number: {registration_number}"
+        subject = f"Your ACRP Login Credentials - Registration: {registration_number}"
         html_content = render_to_string('email_templates/enrollment/login_credentials_email.html', context)
         
-        # Create email with HTML only
+        # Create plain text version
+        plain_text = f"""CONGRATULATIONS! Your ACRP Application Has Been Approved
+
+            Dear {context['applicant_name']},
+
+            We're excited to inform you that your application has been approved and your learner account has been created!
+
+            ═══════════════════════════════════════════════════════════════
+            YOUR LOGIN CREDENTIALS
+            ═══════════════════════════════════════════════════════════════
+
+            Username (Registration Number): {registration_number}
+            Temporary Password: {password}
+
+            ⚠️ IMPORTANT: This is a temporary password. Please change it immediately after your first login.
+
+            ═══════════════════════════════════════════════════════════════
+            HOW TO LOGIN
+            ═══════════════════════════════════════════════════════════════
+
+            1. Visit: {login_url}
+            2. Enter your username: {registration_number}
+            3. Enter your temporary password (shown above)
+            4. You'll be prompted to change your password
+            5. Complete your profile and start exploring!
+
+            ═══════════════════════════════════════════════════════════════
+            SECURITY GUIDELINES
+            ═══════════════════════════════════════════════════════════════
+
+            - Change your password immediately after logging in
+            - Never share your credentials with anyone
+            - Use a strong password (8+ characters, numbers, special characters)
+            - Delete this email after saving your credentials securely
+
+            ═══════════════════════════════════════════════════════════════
+            WHAT YOU CAN DO IN THE PORTAL
+            ═══════════════════════════════════════════════════════════════
+
+            ✓ Access your digital affiliation card
+            ✓ View your application status and documents
+            ✓ Update your profile and contact information
+            ✓ Access learning resources and materials
+            ✓ Connect with other members
+            ✓ Download certificates and transcripts
+            ✓ Register for events and workshops
+            ✓ Access CPD resources
+
+            ═══════════════════════════════════════════════════════════════
+            NEED HELP?
+            ═══════════════════════════════════════════════════════════════
+
+            Forgot Password: Use the "Forgot Password" link on the login page
+            Login Issues: Contact support with your registration number
+
+            Technical Support:
+            Email: ams@acrp.org.za
+            Phone: (+27) 065 214 1536
+            Hours: Monday - Friday, 8:00 AM - 5:00 PM SAST
+
+            ═══════════════════════════════════════════════════════════════
+            YOUR ACCOUNT DETAILS
+            ═══════════════════════════════════════════════════════════════
+
+            Registration Number: {registration_number}
+            Council: {context['council'].name}
+            Affiliation Type: {context['affiliation_type'].name}
+            Status: Active
+
+            ═══════════════════════════════════════════════════════════════
+
+            Once again, congratulations on your approval! We look forward to supporting you on your professional journey with ACRP.
+
+            Blessings,
+            The ACRP Team
+            Association of Christian Religious Practitioners
+
+            ---
+            © {context['current_year']} ACRP. All rights reserved.
+
+            SECURITY NOTICE: This email contains sensitive login credentials.
+            Please delete this email after securely saving your credentials.
+
+            This is an automated message from the ACRP Application Management System."""
+        
+        # Create email with both HTML and plain text
         email = EmailMultiAlternatives(
             subject=subject,
-            body='',  # Empty body since we're using HTML only
+            body=plain_text,
             from_email=settings.DEFAULT_FROM_EMAIL,
             to=[application.email],
             reply_to=[settings.DEFAULT_FROM_EMAIL],
@@ -257,7 +327,6 @@ def send_login_credentials_email(application, registration_number, password, req
         logger.error(f"Failed to send login credentials email for {registration_number}: {str(e)}")
         return False
     
-
 
 def make_naive_datetime(dt):
     """
@@ -3713,6 +3782,59 @@ def get_application_timeline(application):
 # APPLICATION REVIEW AND APPROVAL
 # ============================================================================
 
+
+def get_user_display_name(user, fallback='ACRP Review Team'):
+    """
+    Safely get a user's full name with multiple fallback strategies.
+    
+    This handles different User model implementations and edge cases.
+    
+    Args:
+        user: User object or None
+        fallback: Default name if user is None or name cannot be determined
+    
+    Returns:
+        str: User's display name or fallback
+    """
+    if not user:
+        return fallback
+    
+    try:
+        # Strategy 1: Try get_full_name() method (Django default)
+        if callable(getattr(user, 'get_full_name', None)):
+            name = user.get_full_name()
+            if name and name.strip():
+                return name.strip()
+        
+        # Strategy 2: Try get_full_name property (custom implementation)
+        elif hasattr(user, 'get_full_name'):
+            name = user.get_full_name
+            if name and isinstance(name, str) and name.strip():
+                return name.strip()
+        
+        # Strategy 3: Construct from first_name and last_name
+        if hasattr(user, 'first_name') and hasattr(user, 'last_name'):
+            first = getattr(user, 'first_name', '').strip()
+            last = getattr(user, 'last_name', '').strip()
+            if first or last:
+                return f"{first} {last}".strip()
+        
+        # Strategy 4: Use email if available
+        if hasattr(user, 'email') and user.email:
+            return user.email.split('@')[0].replace('.', ' ').replace('_', ' ').title()
+        
+        # Strategy 5: Use username
+        if hasattr(user, 'username') and user.username:
+            return user.username
+        
+        # Strategy 6: Use string representation
+        return str(user)
+    
+    except Exception as e:
+        logger.warning(f"Error getting user display name: {e}, using fallback")
+        return fallback
+    
+
 def send_clarification_request_email(application, clarification_notes, request=None):
     """
     Send email to applicant requesting clarification on their application.
@@ -3751,7 +3873,7 @@ def send_clarification_request_email(application, clarification_notes, request=N
             'application_url': application_url,
             'council': application.onboarding_session.selected_council,
             'affiliation_type': application.onboarding_session.selected_affiliation_type,
-            'reviewer_name': application.reviewed_by.get_full_name() if application.reviewed_by else 'ACRP Review Team',
+            'reviewer_name': get_user_display_name(application.reviewed_by, 'ACRP Review Team'),
             'current_year': timezone.now().year,
             'contact_email': settings.DEFAULT_FROM_EMAIL,
             'contact_phone': '(+27) 065 214 1536',
