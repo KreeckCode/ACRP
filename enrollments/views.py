@@ -1104,7 +1104,6 @@ def extract_reference_data_from_post(request):
                 'reference_names': request.POST.get(f'references-{i}-reference_names', ''),
                 'reference_email': request.POST.get(f'references-{i}-reference_email', ''),
                 'reference_phone': request.POST.get(f'references-{i}-reference_phone', ''),
-                'reference_address': request.POST.get(f'references-{i}-reference_address', ''),
                 'nature_of_relationship': request.POST.get(f'references-{i}-nature_of_relationship', ''),
                 'letter_required': request.POST.get(f'references-{i}-letter_required') == 'on',
             })
@@ -1178,7 +1177,6 @@ def save_extracted_references(reference_data, application, content_type):
                 reference_names=ref_data['reference_names'],
                 reference_email=ref_data['reference_email'],
                 reference_phone=ref_data['reference_phone'],
-                reference_address=ref_data['reference_address'],
                 nature_of_relationship=ref_data['nature_of_relationship'],
                 letter_required=ref_data['letter_required'],
             )
@@ -1301,6 +1299,8 @@ def send_welcome_email(application):
     """
     Send welcome email to the applicant after successful application submission.
     
+    FIXED: Now accesses designation fields from application, not session
+    
     Args:
         application: The application instance (AssociatedApplication, DesignatedApplication, or StudentApplication)
     
@@ -1316,6 +1316,16 @@ def send_welcome_email(application):
         if hasattr(application, 'preferred_name') and application.preferred_name:
             applicant_name = f"{application.preferred_name} {getattr(application, 'surname', '')}"
         
+        # FIXED: Get designation info from application, not session
+        designation_category = None
+        designation_subcategory = None
+        
+        if hasattr(application, 'designation_category') and application.designation_category:
+            designation_category = application.designation_category.name
+        
+        if hasattr(application, 'designation_subcategory') and application.designation_subcategory:
+            designation_subcategory = application.designation_subcategory.name
+        
         # Prepare email context data with correct field names
         context = {
             'applicant_name': applicant_name.strip(),
@@ -1325,8 +1335,8 @@ def send_welcome_email(application):
             'affiliation_code': session.selected_affiliation_type.code,
             'council_name': session.selected_council.name,
             'council_code': session.selected_council.code,
-            'designation_category': session.selected_designation_category.name if session.selected_designation_category else None,
-            'designation_subcategory': session.selected_designation_subcategory.name if session.selected_designation_subcategory else None,
+            'designation_category': designation_category,  # FIXED: From application
+            'designation_subcategory': designation_subcategory,  # FIXED: From application
             'submission_date': application.created_at,
             'current_year': timezone.now().year,
         }
@@ -1340,24 +1350,24 @@ def send_welcome_email(application):
         # Create plain text version (fallback)
         plain_text = f"""Dear {context['applicant_name']},
 
-Thank you for submitting your application to join the Association of Christian Religious Practitioners (ACRP).
+            Thank you for submitting your application to join the Association of Christian Religious Practitioners (ACRP).
 
-Application Details:
-- Application Number: {context['application_number']}
-- Council: {context['council_name']} ({context['council_code']})
-- Affiliation Type: {context['affiliation_type']}
-- Submission Date: {context['submission_date'].strftime('%B %d, %Y')}
+            Application Details:
+            - Application Number: {context['application_number']}
+            - Council: {context['council_name']} ({context['council_code']})
+            - Affiliation Type: {context['affiliation_type']}
+            - Submission Date: {context['submission_date'].strftime('%B %d, %Y')}
 
-Your application is now under review by our {context['council_name']} team. We will contact you within 5-10 business days with an update.
+            Your application is now under review by our {context['council_name']} team. We will contact you within 5-10 business days with an update.
 
-For any questions, please contact us at ams@acrp.org.za or (+27) 065 214 1536.
+            For any questions, please contact us at ams@acrp.org.za or (+27) 065 214 1536.
 
-Best regards,
-The ACRP Team
-Association of Christian Religious Practitioners
+            Best regards,
+            The ACRP Team
+            Association of Christian Religious Practitioners
 
----
-This is an automated message. Please do not reply directly to this email."""
+            ---
+            This is an automated message. Please do not reply directly to this email."""
         
         # Create email message
         email = EmailMultiAlternatives(
@@ -1381,15 +1391,13 @@ This is an automated message. Please do not reply directly to this email."""
         logger.error(f"Failed to send welcome email for application {application.application_number}: {str(e)}")
         logger.error(f"Application fields available: {[field for field in dir(application) if not field.startswith('_')]}")
         return False
-    
-
-
-
 
 
 def send_admin_notification(application):
     """
     Send notification email to admin staff when a new application is submitted.
+    
+    FIXED: Now accesses designation fields from application, not session
     
     Args:
         application: The application instance (AssociatedApplication, DesignatedApplication, or StudentApplication)
@@ -1423,6 +1431,16 @@ def send_admin_notification(application):
             getattr(application, 'work_description', None)
         )
         
+        # FIXED: Get designation info from application, not session
+        designation_category = None
+        designation_subcategory = None
+        
+        if hasattr(application, 'designation_category') and application.designation_category:
+            designation_category = application.designation_category.name
+        
+        if hasattr(application, 'designation_subcategory') and application.designation_subcategory:
+            designation_subcategory = application.designation_subcategory.name
+        
         # Prepare comprehensive email context data with correct field names
         context = {
             # Application identification
@@ -1442,9 +1460,9 @@ def send_admin_notification(application):
             'affiliation_type': session.selected_affiliation_type.name,
             'affiliation_code': session.selected_affiliation_type.code,
             
-            # Designation information (for designated applications)
-            'designation_category': session.selected_designation_category.name if session.selected_designation_category else None,
-            'designation_subcategory': session.selected_designation_subcategory.name if session.selected_designation_subcategory else None,
+            # Designation information (for designated applications) - FIXED
+            'designation_category': designation_category,  # From application
+            'designation_subcategory': designation_subcategory,  # From application
             
             # Admin action URLs (adjust these based on your URL patterns)
             'application_url': f"{getattr(settings, 'SITE_URL', 'http://localhost:8000')}/admin/applications/view/{application.pk}/",
@@ -1474,24 +1492,24 @@ def send_admin_notification(application):
         # Create clean plain text version
         plain_text = f"""NEW ACRP APPLICATION SUBMITTED
 
-            Application Details:
-            - Application Number: {context['application_number']}
-            - Council: {context['council_name']} ({context['council_code']})
-            - Affiliation Type: {context['affiliation_type']}
-            - Applicant: {contact_info}
-            - Submission Date: {context['submission_date'].strftime('%B %d, %Y at %I:%M %p')}
-            {designation_info}
-            Action Required:
-            This application requires review and processing by the {context['council_name']} team.
+                Application Details:
+                - Application Number: {context['application_number']}
+                - Council: {context['council_name']} ({context['council_code']})
+                - Affiliation Type: {context['affiliation_type']}
+                - Applicant: {contact_info}
+                - Submission Date: {context['submission_date'].strftime('%B %d, %Y at %I:%M %p')}
+                {designation_info}
+                Action Required:
+                This application requires review and processing by the {context['council_name']} team.
 
-            Please review this application within 5-10 business days to maintain our service commitments.
+                Please review this application within 5-10 business days to maintain our service commitments.
 
-            Review Application: {context['application_url']}
-            Admin Dashboard: {context['admin_dashboard_url']}
+                Review Application: {context['application_url']}
+                Admin Dashboard: {context['admin_dashboard_url']}
 
-            ---
-            ACRP Admin Notification System
-            This is an automated notification."""
+                ---
+                ACRP Admin Notification System
+                This is an automated notification."""
         
         # Create email subject with council code for easy filtering
         subject = f"New {context['council_code']} Application: {context['application_number']}"
@@ -1526,6 +1544,7 @@ def send_admin_notification(application):
         )
         logger.error(f"Application fields available: {[field for field in dir(application) if not field.startswith('_')]}")
         return False
+    
 
 
 def send_application_emails(application):
@@ -3660,6 +3679,16 @@ def get_application_timeline(application):
             'color': 'warning'
         })
     
+    # Clarification Requested
+    if hasattr(application, 'clarification_requested_at') and application.clarification_requested_at:
+        timeline.append({
+            'status': 'Clarification Requested',
+            'date': application.clarification_requested_at,
+            'user': application.reviewed_by,
+            'icon': 'question-circle',
+            'color': 'warning'
+        })
+    
     # Approved/Rejected
     if application.approved_at:
         timeline.append({
@@ -3673,26 +3702,166 @@ def get_application_timeline(application):
         timeline.append({
             'status': 'Rejected',
             'date': application.rejected_at,
-            'user': application.rejected_by,
+            'user': application.reviewed_by,
             'icon': 'x-circle-fill',
             'color': 'danger'
         })
     
     return timeline
 
-
 # ============================================================================
 # APPLICATION REVIEW AND APPROVAL
 # ============================================================================
+
+def send_clarification_request_email(application, clarification_notes, request=None):
+    """
+    Send email to applicant requesting clarification on their application.
+    
+    This email should be clear, professional, and provide specific guidance
+    on what information is needed and how to respond.
+    
+    Args:
+        application: The application instance
+        clarification_notes: Specific clarification requests from reviewer
+        request: HTTP request object for building URLs
+    
+    Returns:
+        bool: True if email sent successfully, False otherwise
+    """
+    try:
+        from django.template.loader import render_to_string
+        from django.core.mail import EmailMultiAlternatives
+        from django.conf import settings
+        
+        # Build application URL for applicant to review
+        if request:
+            application_url = request.build_absolute_uri(
+                reverse('enrollments:application_detail', 
+                       kwargs={'pk': application.pk, 'app_type': application.get_affiliation_type()})
+            )
+        else:
+            application_url = f"{getattr(settings, 'SITE_URL', 'http://localhost:8000')}/enrollments/application/{application.pk}/{application.get_affiliation_type()}/"
+        
+        # Context for email template
+        context = {
+            'application': application,
+            'applicant_name': application.get_display_name(),
+            'application_number': application.application_number,
+            'clarification_notes': clarification_notes,
+            'application_url': application_url,
+            'council': application.onboarding_session.selected_council,
+            'affiliation_type': application.onboarding_session.selected_affiliation_type,
+            'reviewer_name': application.reviewed_by.get_full_name() if application.reviewed_by else 'ACRP Review Team',
+            'current_year': timezone.now().year,
+            'contact_email': settings.DEFAULT_FROM_EMAIL,
+            'contact_phone': '(+27) 065 214 1536',
+        }
+        
+        # Render HTML email template
+        subject = f"Clarification Needed - Application {application.application_number}"
+        html_content = render_to_string(
+            'email_templates/enrollment/clarification_request_email.html',
+            context
+        )
+        
+        # Create plain text fallback
+        plain_text = f"""Dear {context['applicant_name']},
+
+        Thank you for your application to the Association of Christian Religious Practitioners (ACRP).
+
+        CLARIFICATION NEEDED
+
+        We have reviewed your application ({application.application_number}) and need some additional information to proceed with your application.
+
+        WHAT WE NEED:
+
+        {clarification_notes}
+
+        NEXT STEPS:
+
+        1. Review the clarification requests above carefully
+        2. Prepare the requested information or documents
+        3. Contact us to provide the clarification
+
+        You can:
+        - Reply to this email with the requested information
+        - Call us at {context['contact_phone']}
+        - View your application at: {application_url}
+
+        IMPORTANT NOTES:
+
+        - Please respond within 14 days to avoid delays in processing
+        - Include your application number ({application.application_number}) in all correspondence
+        - If you have questions about what's needed, please don't hesitate to contact us
+
+        We're here to help you through this process. Once we receive the requested clarification, we'll continue processing your application promptly.
+
+        Best regards,
+        {context['reviewer_name']}
+        ACRP Review Team
+
+        ---
+        Application Number: {application.application_number}
+        Council: {context['council'].name}
+        Affiliation Type: {context['affiliation_type'].name}
+
+        Contact Us:
+        Email: {context['contact_email']}
+        Phone: {context['contact_phone']}
+
+        This is an automated message from the ACRP Application Management System."""
+        
+        # Create email message
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body=plain_text,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[application.email],
+            reply_to=[settings.DEFAULT_FROM_EMAIL]
+        )
+        
+        # Attach HTML version
+        email.attach_alternative(html_content, "text/html")
+        
+        # Send the email
+        email.send()
+        
+        logger.info(
+            f"Clarification request email sent successfully to {application.email} "
+            f"for application {application.application_number}"
+        )
+        
+        return True
+        
+    except Exception as e:
+        logger.error(
+            f"Failed to send clarification request email for application "
+            f"{application.application_number}: {str(e)}",
+            exc_info=True
+        )
+        return False
+    
+
+
 
 @login_required
 @permission_required('enrollments.change_baseapplication', raise_exception=True)
 @transaction.atomic
 def application_review(request, pk, app_type):
     """
-    Handle application status updates, registration number assignment, and learner account creation.
-    This view processes the review form submission from application_detail.
+    This function handles:
+    - Status transitions with proper timestamps
+    - Registration number assignment
+    - Category/subcategory assignment (designated apps)
+    - User account creation (approved apps)
+    - Digital card assignment (approved apps)
+    - Email notifications for all status changes
+    - Comprehensive audit logging
     """
+    # ========================================================================
+    # INITIALIZATION & VALIDATION
+    # ========================================================================
+    
     model_map = {
         'associated': AssociatedApplication,
         'designated': DesignatedApplication,
@@ -3701,126 +3870,296 @@ def application_review(request, pk, app_type):
     
     model = model_map.get(app_type)
     if not model:
+        logger.error(f"Invalid application type requested: {app_type}")
         raise Http404("Invalid application type")
     
     application = get_object_or_404(model, pk=pk)
     
-    if request.method == 'POST':
-        logger.info(f"=== APPLICATION REVIEW POST ===")
-        logger.info(f"Application: {application.application_number}")
-        
-        form = ApplicationReviewForm(request.POST, application=application)
-        
-        if form.is_valid():
-            old_status = application.status
-            new_status = form.cleaned_data['status']
-            registration_number = form.cleaned_data.get('registration_number')
-            assign_card = form.cleaned_data.get('assign_digital_card', False)
-            
-            logger.info(f"Status change: {old_status} -> {new_status}")
-            
-            application.status = new_status
-            application.reviewer_notes = form.cleaned_data['reviewer_notes']
-            application.reviewed_by = request.user
-            application.reviewed_at = timezone.now()
-            
-            # REJECTION WORKFLOW
-            if new_status == 'rejected':
-                application.rejection_reason = form.cleaned_data['rejection_reason']
-                application.rejected_at = timezone.now()
-                application.save()
-                
-                try:
-                    send_application_rejected_email(application, application.rejection_reason, request)
-                except Exception as e:
-                    logger.error(f"Failed to send rejection email: {e}")
-                
-                messages.warning(request, f"Application {application.application_number} has been rejected.")
-                return redirect('enrollments:application_detail', pk=pk, app_type=app_type)
-            
-            # APPROVAL WORKFLOW
-            if new_status == 'approved':
-                application.approved_by = request.user
-                application.approved_at = timezone.now()
-                
-                if registration_number:
-                    application.registration_number = registration_number
-                    logger.info(f"Registration number {registration_number} assigned")
-                
-                application.save()
-                
-                # CREATE LEARNER ACCOUNT
-                user_account = None
-                generated_password = None
-                
-                if registration_number:
-                    logger.info(f"Creating learner account for {registration_number}")
-                    try:
-                        user_account, generated_password = create_learner_account(application, registration_number)
-                        
-                        if user_account and generated_password:
-                            logger.info(f"Learner account created: {user_account.username}")
-                        elif user_account and not generated_password:
-                            logger.info(f"Learner account already exists: {user_account.username}")
-                            messages.info(request, f"User account for {registration_number} already exists.")
-                        else:
-                            logger.error(f"Failed to create learner account")
-                            messages.warning(request, "Application approved but learner account creation failed.")
-                    except Exception as e:
-                        logger.error(f"Exception creating learner account: {e}")
-                        messages.warning(request, f"Application approved but account creation failed: {str(e)}")
-                
-                # SEND APPROVAL EMAIL
-                try:
-                    send_application_approved_email(application, request)
-                    logger.info(f"Approval email sent")
-                except Exception as e:
-                    logger.error(f"Failed to send approval email: {e}")
-                
-                # SEND LOGIN CREDENTIALS EMAIL
-                if user_account and generated_password:
-                    try:
-                        send_login_credentials_email(application, registration_number, generated_password, request)
-                        logger.info(f"Login credentials email sent")
-                    except Exception as e:
-                        logger.error(f"Failed to send credentials email: {e}")
-                        messages.warning(request, "Account created but credentials email failed.")
-                
-                # DIGITAL CARD ASSIGNMENT
-                if assign_card:
-                    logger.info(f"Assigning digital card")
-                    try:
-                        card = assign_digital_card_to_application(application, request.user)
-                        if card:
-                            logger.info(f"Card {card.card_number} assigned")
-                            messages.success(request, f"Application approved, account created (Username: {registration_number}), and card {card.card_number} assigned.")
-                        else:
-                            messages.warning(request, "Application approved and account created, but card assignment failed.")
-                    except Exception as e:
-                        logger.error(f"Card assignment failed: {e}")
-                        messages.warning(request, f"Application approved and account created, but card failed: {str(e)}")
-                else:
-                    if user_account and generated_password:
-                        messages.success(request, f"Application approved and learner account created. Username: {registration_number}")
-                    else:
-                        messages.success(request, f"Application approved with registration: {registration_number}")
-            
-            else:
-                # OTHER STATUS CHANGES
-                application.save()
-                messages.success(request, f"Application status updated to {new_status}.")
-            
-            return redirect('enrollments:application_detail', pk=pk, app_type=app_type)
-        
-        else:
-            logger.error(f"Form validation failed: {form.errors}")
-            messages.error(request, "Please correct the errors in the form.")
-            return redirect('enrollments:application_detail', pk=pk, app_type=app_type)
+    if request.method != 'POST':
+        # Only POST allowed for review actions
+        return redirect('enrollments:application_detail', pk=pk, app_type=app_type)
     
-    return redirect('enrollments:application_detail', pk=pk, app_type=app_type)
-
-
-
+    # ========================================================================
+    # FORM PROCESSING
+    # ========================================================================
+    
+    logger.info(f"{'='*60}")
+    logger.info(f"APPLICATION REVIEW INITIATED")
+    logger.info(f"{'='*60}")
+    logger.info(f"Application: {application.application_number}")
+    logger.info(f"Type: {app_type}")
+    logger.info(f"Current Status: {application.status}")
+    logger.info(f"Reviewer: {request.user.username} ({request.user.email})")
+    logger.info(f"Timestamp: {timezone.now().isoformat()}")
+    
+    form = ApplicationReviewForm(request.POST, application=application)
+    
+    if not form.is_valid():
+        logger.error(f"Form validation failed: {form.errors}")
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(request, f"{field}: {error}")
+        return redirect('enrollments:application_detail', pk=pk, app_type=app_type)
+    
+    # ========================================================================
+    # EXTRACT FORM DATA
+    # ========================================================================
+    
+    old_status = application.status
+    new_status = form.cleaned_data['status']
+    registration_number = form.cleaned_data.get('registration_number')
+    reviewer_notes = form.cleaned_data.get('reviewer_notes', '')
+    rejection_reason = form.cleaned_data.get('rejection_reason', '')
+    assign_card = form.cleaned_data.get('assign_digital_card', False)
+    designation_category = form.cleaned_data.get('designation_category')
+    designation_subcategory = form.cleaned_data.get('designation_subcategory')
+    
+    logger.info(f"Status Transition: {old_status} → {new_status}")
+    
+    # ========================================================================
+    # COMMON UPDATES FOR ALL STATUS CHANGES
+    # ========================================================================
+    
+    application.status = new_status
+    application.reviewer_notes = reviewer_notes
+    application.reviewed_by = request.user
+    application.reviewed_at = timezone.now()
+    
+    # Update designation fields if provided (for designated applications)
+    if hasattr(application, 'designation_category'):
+        if designation_category:
+            old_category = application.designation_category
+            application.designation_category = designation_category
+            logger.info(f"Category updated: {old_category} → {designation_category.name}")
+        
+        if designation_subcategory:
+            old_subcategory = application.designation_subcategory
+            application.designation_subcategory = designation_subcategory
+            logger.info(f"Subcategory updated: {old_subcategory} → {designation_subcategory.name}")
+    
+    # ========================================================================
+    # STATUS-SPECIFIC WORKFLOWS
+    # ========================================================================
+    
+    # ------------------------------------------------------------------------
+    # WORKFLOW 1: UNDER REVIEW
+    # ------------------------------------------------------------------------
+    if new_status == 'under_review':
+        logger.info("Processing UNDER_REVIEW workflow")
+        
+        application.save()
+        
+        logger.info(f"Application {application.application_number} moved to under review")
+        messages.info(
+            request, 
+            f"Application {application.application_number} is now under review."
+        )
+        
+        return redirect('enrollments:application_detail', pk=pk, app_type=app_type)
+    
+    # ------------------------------------------------------------------------
+    # WORKFLOW 2: REQUIRES CLARIFICATION
+    # ------------------------------------------------------------------------
+    elif new_status == 'requires_clarification':
+        logger.info("Processing REQUIRES_CLARIFICATION workflow")
+        
+        # Set clarification timestamp
+        application.clarification_requested_at = timezone.now()
+        application.save()
+        
+        logger.info(f"Clarification requested for application {application.application_number}")
+        logger.info(f"Clarification notes: {reviewer_notes[:100]}...")
+        
+        # Send clarification request email to applicant
+        try:
+            email_sent = send_clarification_request_email(
+                application=application,
+                clarification_notes=reviewer_notes,
+                request=request
+            )
+            
+            if email_sent:
+                logger.info(f"Clarification email sent successfully to {application.email}")
+                messages.success(
+                    request,
+                    f"Clarification request sent to {application.get_display_name()}. "
+                    f"Email sent to {application.email}"
+                )
+            else:
+                logger.warning(f"Clarification email failed to send to {application.email}")
+                messages.warning(
+                    request,
+                    f"Clarification request saved, but email notification failed. "
+                    f"Please contact the applicant directly."
+                )
+        
+        except Exception as e:
+            logger.error(f"Exception sending clarification email: {str(e)}", exc_info=True)
+            messages.warning(
+                request,
+                f"Clarification request saved, but email notification failed: {str(e)}"
+            )
+        
+        return redirect('enrollments:application_detail', pk=pk, app_type=app_type)
+    
+    # ------------------------------------------------------------------------
+    # WORKFLOW 3: REJECTED
+    # ------------------------------------------------------------------------
+    elif new_status == 'rejected':
+        logger.info("Processing REJECTED workflow")
+        
+        application.rejection_reason = rejection_reason
+        application.rejected_at = timezone.now()
+        application.save()
+        
+        logger.info(f"Application {application.application_number} rejected")
+        logger.info(f"Rejection reason: {rejection_reason[:100]}...")
+        
+        # Send rejection email to applicant
+        try:
+            send_application_rejected_email(
+                application=application,
+                rejection_reason=rejection_reason,
+                request=request
+            )
+            logger.info(f"Rejection email sent to {application.email}")
+        except Exception as e:
+            logger.error(f"Failed to send rejection email: {str(e)}", exc_info=True)
+            messages.warning(request, "Application rejected, but email notification failed.")
+        
+        messages.warning(
+            request,
+            f"Application {application.application_number} has been rejected."
+        )
+        
+        return redirect('enrollments:application_detail', pk=pk, app_type=app_type)
+    
+    # ------------------------------------------------------------------------
+    # WORKFLOW 4: APPROVED (Most Complex)
+    # ------------------------------------------------------------------------
+    elif new_status == 'approved':
+        logger.info("Processing APPROVED workflow")
+        
+        application.approved_by = request.user
+        application.approved_at = timezone.now()
+        
+        if registration_number:
+            application.registration_number = registration_number
+            logger.info(f"Registration number assigned: {registration_number}")
+        
+        application.save()
+        
+        # Sub-workflow: Create learner account
+        user_account = None
+        generated_password = None
+        account_creation_success = False
+        
+        if registration_number:
+            logger.info(f"Initiating learner account creation for {registration_number}")
+            
+            try:
+                user_account, generated_password = create_learner_account(
+                    application=application,
+                    registration_number=registration_number
+                )
+                
+                if user_account and generated_password:
+                    account_creation_success = True
+                    logger.info(f"✓ Learner account created: {user_account.username}")
+                elif user_account and not generated_password:
+                    logger.warning(f"⚠ Account already exists: {user_account.username}")
+                    messages.info(
+                        request,
+                        f"User account for {registration_number} already exists."
+                    )
+                else:
+                    logger.error("✗ Failed to create learner account")
+                    messages.warning(
+                        request,
+                        "Application approved but learner account creation failed. "
+                        "Please create account manually."
+                    )
+            
+            except Exception as e:
+                logger.error(f"✗ Exception during account creation: {str(e)}", exc_info=True)
+                messages.warning(
+                    request,
+                    f"Application approved but account creation failed: {str(e)}"
+                )
+        
+        # Sub-workflow: Send approval email
+        try:
+            send_application_approved_email(application=application, request=request)
+            logger.info(f"✓ Approval email sent to {application.email}")
+        except Exception as e:
+            logger.error(f"✗ Failed to send approval email: {str(e)}", exc_info=True)
+            messages.warning(request, "Approval email failed to send.")
+        
+        # Sub-workflow: Send login credentials email
+        if account_creation_success and generated_password:
+            try:
+                send_login_credentials_email(
+                    application=application,
+                    registration_number=registration_number,
+                    password=generated_password,
+                    request=request
+                )
+                logger.info(f"✓ Login credentials email sent to {application.email}")
+            except Exception as e:
+                logger.error(f"✗ Failed to send credentials email: {str(e)}", exc_info=True)
+                messages.warning(
+                    request,
+                    "Account created but credentials email failed. "
+                    "Please share credentials manually."
+                )
+        
+        # Sub-workflow: Assign digital card (if requested)
+        card_assigned = False
+        if assign_card:
+            logger.info("Initiating digital card assignment")
+            
+            try:
+                card = assign_digital_card_to_application(
+                    application=application,
+                    assigned_by=request.user
+                )
+                
+                if card:
+                    card_assigned = True
+                    logger.info(f"✓ Digital card assigned: {card.card_number}")
+                else:
+                    logger.warning("⚠ Card assignment returned None")
+                    messages.warning(request, "Card assignment failed.")
+            
+            except Exception as e:
+                logger.error(f"✗ Card assignment exception: {str(e)}", exc_info=True)
+                messages.warning(request, f"Card assignment failed: {str(e)}")
+        
+        # Final success message
+        success_parts = [f"Application {application.application_number} approved"]
+        
+        if account_creation_success:
+            success_parts.append(f"account created (Username: {registration_number})")
+        
+        if card_assigned:
+            success_parts.append(f"digital card assigned")
+        
+        messages.success(request, " and ".join(success_parts) + ".")
+        
+        logger.info(f"{'='*60}")
+        logger.info(f"APPROVAL WORKFLOW COMPLETED SUCCESSFULLY")
+        logger.info(f"{'='*60}")
+        
+        return redirect('enrollments:application_detail', pk=pk, app_type=app_type)
+    
+    # ------------------------------------------------------------------------
+    # FALLBACK: Unknown Status
+    # ------------------------------------------------------------------------
+    else:
+        logger.warning(f"Unknown status transition attempted: {new_status}")
+        messages.error(request, f"Unknown status: {new_status}")
+        return redirect('enrollments:application_detail', pk=pk, app_type=app_type)
+    
 
 def assign_digital_card_to_application(application, assigned_by):
     """

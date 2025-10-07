@@ -934,8 +934,398 @@
                     </div>
                 </div>
 
-                <!-- Continue with remaining sections... -->
-                <!-- For brevity, I'll include key sections. The pattern continues for all other sections -->
+                <!-- Ministry & Professional Details -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">
+                            <i class="bi bi-briefcase"></i>
+                            Ministry & Professional Details
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-label">Ministry Name</span>
+                                <div class="info-value {% if not application.ministry_name %}empty{% endif %}">
+                                    {{ application.ministry_name|default:"Not provided" }}
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Denomination</span>
+                                <div class="info-value {% if not application.denomination %}empty{% endif %}">
+                                    {{ application.denomination|default:"Not provided" }}
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Ministry Type</span>
+                                <div class="info-value {% if not application.ministry_type %}empty{% endif %}">
+                                    {{ application.get_ministry_type_display|default:"Not provided" }}
+                                </div>
+                            </div>
+                            {% if application.ministry_type == 'Other' and application.ministry_type_other %}
+                            <div class="info-item">
+                                <span class="info-label">Ministry Type (Other)</span>
+                                <div class="info-value">{{ application.ministry_type_other }}</div>
+                            </div>
+                            {% endif %}
+                            <div class="info-item">
+                                <span class="info-label">Years in Full-Time Ministry</span>
+                                <div class="info-value">{{ application.years_in_ministry }} years</div>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Years in Part-Time Ministry</span>
+                                <div class="info-value">{{ application.years_in_part_time_ministry }} years</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FOR DESIGNATED APPLICATIONS ONLY -->
+                {% if app_type == 'designated' %}
+                <!-- Supervisor Information -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">
+                            <i class="bi bi-person-badge"></i>
+                            Supervisor Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-label">Supervisor Name</span>
+                                <div class="info-value {% if not application.supervisor_name %}empty{% endif %}">
+                                    {{ application.supervisor_name|default:"Not provided" }}
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Supervisor Qualification</span>
+                                <div class="info-value {% if not application.supervisor_qualification %}empty{% endif %}">
+                                    {{ application.supervisor_qualification|default:"Not provided" }}
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Supervisor Email</span>
+                                <div class="info-value {% if not application.supervisor_email %}empty{% endif %}">
+                                    {% if application.supervisor_email %}
+                                        <a href="mailto:{{ application.supervisor_email }}">{{ application.supervisor_email }}</a>
+                                    {% else %}
+                                        Not provided
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Supervisor Phone</span>
+                                <div class="info-value {% if not application.supervisor_phone %}empty{% endif %}">
+                                    {{ application.supervisor_phone|default:"Not provided" }}
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Supervision Hours</span>
+                                <div class="info-value">{{ application.supervision_hours_received|default:"0" }} hours</div>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Supervision Period</span>
+                                <div class="info-value">
+                                    {% if application.supervision_period_start %}
+                                        {{ application.supervision_period_start|date:"M Y" }} - 
+                                        {% if application.supervision_period_end %}
+                                            {{ application.supervision_period_end|date:"M Y" }}
+                                        {% else %}
+                                            Present
+                                        {% endif %}
+                                    {% else %}
+                                        Not provided
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if application.supervisor_address %}
+                                <h6 class="mt-4 mb-3 text-primary">
+                                    <i class="bi bi-geo-alt me-2"></i>Supervisor Address
+                                </h6>
+                                <div class="info-item" style="margin-bottom: 0;">
+                                    <span class="info-label">Address</span>
+                                    <div class="info-value">{{ application.supervisor_address }}</div>
+                                </div>
+                                {% endif %}
+                                
+                                {% if application.professional_development_plans %}
+                                <h6 class="mt-4 mb-3 text-primary">
+                                    <i class="bi bi-graph-up me-2"></i>Professional Development Plans
+                                </h6>
+                                <div class="info-item" style="margin-bottom: 0;">
+                                    <span class="info-label">Development Plans</span>
+                                    <div class="info-value">{{ application.professional_development_plans }}</div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Academic Qualifications -->
+                        {% if application.academic_qualifications.exists %}
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title">
+                                    <i class="bi bi-mortarboard"></i>
+                                    Academic Qualifications
+                                    <span class="badge bg-secondary ms-2">{{ application.academic_qualifications.count }}</span>
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                {% for qualification in application.academic_qualifications.all %}
+                                <div class="list-item">
+                                    <div class="item-title">
+                                        <i class="bi bi-award me-2"></i>
+                                        {{ qualification.qualification_name }}
+                                    </div>
+                                    <div class="item-meta">
+                                        <span><i class="bi bi-building me-1"></i>{{ qualification.institution_name }}</span>
+                                        <span><i class="bi bi-calendar me-1"></i>{{ qualification.date_awarded|date:"Y" }}</span>
+                                        {% if qualification.grade_or_class %}
+                                        <span><i class="bi bi-trophy me-1"></i>{{ qualification.grade_or_class }}</span>
+                                        {% endif %}
+                                    </div>
+                                    {% if qualification.institution_address %}
+                                    <div class="item-description">
+                                        <small><i class="bi bi-geo-alt me-1"></i>{{ qualification.institution_address }}</small>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Practical Experience -->
+                        {% if application.practical_experiences.exists %}
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title">
+                                    <i class="bi bi-briefcase-fill"></i>
+                                    Practical Experience
+                                    <span class="badge bg-secondary ms-2">{{ application.practical_experiences.count }}</span>
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                {% for experience in application.practical_experiences.all %}
+                                <div class="list-item">
+                                    <div class="item-title">
+                                        <i class="bi bi-building me-2"></i>
+                                        {{ experience.institution_name }}
+                                    </div>
+                                    <div class="item-meta">
+                                        <span><i class="bi bi-calendar me-1"></i>
+                                            {{ experience.start_date|date:"M Y" }} - 
+                                            {% if experience.end_date %}
+                                                {{ experience.end_date|date:"M Y" }}
+                                            {% else %}
+                                                Present
+                                            {% endif %}
+                                        </span>
+                                        <span><i class="bi bi-hourglass me-1"></i>{{ experience.get_duration_display }}</span>
+                                        {% if experience.hours_per_week %}
+                                        <span><i class="bi bi-clock me-1"></i>{{ experience.hours_per_week }} hrs/week</span>
+                                        {% endif %}
+                                    </div>
+                                    {% if experience.basic_nature_of_work %}
+                                    <div class="item-description">
+                                        {{ experience.basic_nature_of_work }}
+                                    </div>
+                                    {% endif %}
+                                    {% if experience.contact_person_name %}
+                                    <div class="mt-2">
+                                        <small class="text-muted">
+                                            <i class="bi bi-person me-1"></i>Contact: {{ experience.contact_person_name }}
+                                            {% if experience.contact_person_email %}
+                                                - <a href="mailto:{{ experience.contact_person_email }}">{{ experience.contact_person_email }}</a>
+                                            {% endif %}
+                                            {% if experience.contact_person_phone %}
+                                                - {{ experience.contact_person_phone }}
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- High School Information (if provided) -->
+                        {% if application.high_school_name or application.high_school_year_completed %}
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title">
+                                    <i class="bi bi-book"></i>
+                                    High School Education
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="info-grid">
+                                    <div class="info-item">
+                                        <span class="info-label">High School Name</span>
+                                        <div class="info-value">{{ application.high_school_name|default:"Not provided" }}</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">Year Completed</span>
+                                        <div class="info-value">{{ application.high_school_year_completed|default:"Not provided" }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% endif %}
+
+                        <!-- FOR STUDENT APPLICATIONS ONLY -->
+                        {% if app_type == 'student' %}
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title">
+                                    <i class="bi bi-mortarboard"></i>
+                                    Student Information
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="info-grid">
+                                    <div class="info-item">
+                                        <span class="info-label">Current Institution</span>
+                                        <div class="info-value">{{ application.current_institution }}</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">Course of Study</span>
+                                        <div class="info-value">{{ application.course_of_study }}</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">Expected Graduation</span>
+                                        <div class="info-value">{{ application.expected_graduation|date:"M Y" }}</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">Student Number</span>
+                                        <div class="info-value {% if not application.student_number %}empty{% endif %}">
+                                            {{ application.student_number|default:"Not provided" }}
+                                        </div>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">Year of Study</span>
+                                        <div class="info-value {% if not application.year_of_study %}empty{% endif %}">
+                                            {{ application.year_of_study|default:"Not provided" }}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {% if application.academic_supervisor_name %}
+                                <h6 class="mt-4 mb-3 text-primary">
+                                    <i class="bi bi-person-badge me-2"></i>Academic Supervisor
+                                </h6>
+                                <div class="info-grid">
+                                    <div class="info-item">
+                                        <span class="info-label">Supervisor Name</span>
+                                        <div class="info-value">{{ application.academic_supervisor_name }}</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">Supervisor Email</span>
+                                        <div class="info-value {% if not application.academic_supervisor_email %}empty{% endif %}">
+                                            {% if application.academic_supervisor_email %}
+                                                <a href="mailto:{{ application.academic_supervisor_email }}">{{ application.academic_supervisor_email }}</a>
+                                            {% else %}
+                                                Not provided
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">Supervisor Phone</span>
+                                        <div class="info-value {% if not application.academic_supervisor_phone %}empty{% endif %}">
+                                            {{ application.academic_supervisor_phone|default:"Not provided" }}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- References Section -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title">
+                                    <i class="bi bi-people"></i>
+                                    References
+                                    <span class="badge bg-secondary ms-2">{{ reference_stats.total }}</span>
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                {% if application.references.exists %}
+                                    {% for reference in application.references.all %}
+                                    <div class="list-item {% if reference.letter_received %}verified{% else %}pending{% endif %}">
+                                        <div class="row align-items-center">
+                                            <div class="col-lg-8">
+                                                <div class="item-title">
+                                                    <i class="bi bi-person-circle me-2"></i>
+                                                    {{ reference.reference_title }} {{ reference.get_reference_full_name }}
+                                                </div>
+                                                <div class="item-meta">
+                                                    <span><i class="bi bi-envelope me-1"></i>{{ reference.reference_email }}</span>
+                                                    <span><i class="bi bi-phone me-1"></i>{{ reference.reference_phone }}</span>
+                                                </div>
+                                                <div class="item-description">
+                                                    <strong>Relationship:</strong> {{ reference.nature_of_relationship }}
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-4 text-end">
+                                                {% if reference.letter_received %}
+                                                    <span class="status-indicator status-verified">
+                                                        <i class="bi bi-check-circle"></i> Letter Received
+                                                    </span>
+                                                    {% if reference.letter_received_date %}
+                                                    <div class="mt-2">
+                                                        <small class="text-muted">{{ reference.letter_received_date|timesince }} ago</small>
+                                                    </div>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <span class="status-indicator status-pending">
+                                                        <i class="bi bi-clock"></i> Pending
+                                                    </span>
+                                                    {% if can_review %}
+                                                    <div class="mt-2">
+                                                        <button class="btn btn-sm btn-success" onclick="approveReference({{ reference.pk }})">
+                                                            <i class="bi bi-check"></i> Mark Received
+                                                        </button>
+                                                    </div>
+                                                    {% endif %}
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Reference Documents -->
+                                        {% if reference.documents.exists %}
+                                        <div class="mt-3 p-3 bg-light border rounded">
+                                            <strong class="text-success"><i class="bi bi-paperclip me-1"></i>Attached Documents:</strong>
+                                            <ul class="mb-0 mt-2">
+                                                {% for doc in reference.documents.all %}
+                                                <li>
+                                                    <a href="{{ doc.file.url }}" target="_blank" class="text-decoration-none">
+                                                        <i class="bi bi-file-earmark-pdf me-1"></i>{{ doc.title }}
+                                                    </a>
+                                                    <small class="text-muted">({{ doc.get_file_size_display }})</small>
+                                                </li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                <div class="text-center py-5 text-muted">
+                                    <i class="bi bi-people display-1"></i>
+                                    <h6 class="mt-3">No references added yet</h6>
+                                    <p>References will appear here once added by the applicant.</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+        
 
                 <!-- Documents Section -->
                 <div class="card">
@@ -1044,6 +1434,14 @@
                                         <small class="text-muted">
                                             <i class="bi bi-person me-1"></i>{{ event.user.get_full_name }}
                                         </small>
+                                        {% endif %}
+                                        
+                                        <!-- NEW: Show clarification notes in timeline -->
+                                        {% if event.status == 'Clarification Requested' and application.reviewer_notes %}
+                                        <div class="mt-3 p-3 bg-amber-50 border-start border-warning border-3 rounded">
+                                            <strong class="text-warning">Clarification Needed:</strong><br>
+                                            <small class="text-muted">{{ application.reviewer_notes }}</small>
+                                        </div>
                                         {% endif %}
                                     </div>
                                     <i class="bi bi-{{ event.icon }} text-{{ event.color }} fs-4"></i>
@@ -1160,6 +1558,68 @@
                                     <div class="text-danger mt-1">{{ review_form.registration_number.errors.0 }}</div>
                                 {% endif %}
                             </div>
+
+                            <!-- CATEGORY ASSIGNMENT SECTION (for designated applications) -->
+                            {% if app_type == 'designated' %}
+                            <div class="card border-info mb-3">
+                                <div class="card-header bg-info text-dark">
+                                    <h6 class="mb-0">
+                                        <i class="bi bi-award me-2"></i>
+                                        Designation Category Assignment
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Current Assignment Display -->
+                                    {% if application.designation_category or application.designation_subcategory %}
+                                    <div class="alert alert-info mb-3">
+                                        <strong>Current Assignment:</strong><br>
+                                        {% if application.designation_category %}
+                                            <i class="bi bi-check-circle me-1"></i>Category: {{ application.designation_category.name }}<br>
+                                        {% endif %}
+                                        {% if application.designation_subcategory %}
+                                            <i class="bi bi-check-circle me-1"></i>Subcategory: {{ application.designation_subcategory.name }}
+                                        {% endif %}
+                                    </div>
+                                    {% else %}
+                                    <div class="alert alert-warning mb-3">
+                                        <i class="bi bi-exclamation-triangle me-2"></i>
+                                        <strong>No category assigned yet</strong>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <!-- Category Selection -->
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">
+                                            {{ review_form.designation_category.label }}
+                                        </label>
+                                        {{ review_form.designation_category }}
+                                        <small class="form-text text-muted d-block mt-1">
+                                            {{ review_form.designation_category.help_text }}
+                                        </small>
+                                        {% if review_form.designation_category.errors %}
+                                            <div class="text-danger mt-1">{{ review_form.designation_category.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <!-- Subcategory Selection (only for CPSC) -->
+                                    {% if council.has_subcategories %}
+                                    <div class="mb-3" id="subcategory-field">
+                                        <label class="form-label fw-bold">
+                                            {{ review_form.designation_subcategory.label }}
+                                        </label>
+                                        {{ review_form.designation_subcategory }}
+                                        <small class="form-text text-muted d-block mt-1">
+                                            {{ review_form.designation_subcategory.help_text }}
+                                        </small>
+                                        {% if review_form.designation_subcategory.errors %}
+                                            <div class="text-danger mt-1">{{ review_form.designation_subcategory.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endif %}
+
                             
                             <!-- Reviewer Notes -->
                             <div class="mb-3">
@@ -1175,7 +1635,7 @@
                             
                             <!-- DIGITAL CARD SECTION - NOW INSIDE THE FORM -->
                             <div class="card border-primary mb-3">
-                                <div class="card-header bg-primary text-white">
+                                <div class="card-header bg-primary text-dark">
                                     <h6 class="mb-0">
                                         <i class="bi bi-credit-card me-2"></i>
                                         Digital Affiliation Card
@@ -1503,6 +1963,58 @@
                 });
             }
         }
+
+        // Dynamic subcategory loading based on category selection
+const categoryField = document.getElementById('id_designation_category');
+const subcategoryField = document.getElementById('id_designation_subcategory');
+
+if (categoryField && subcategoryField) {
+    categoryField.addEventListener('change', function() {
+        const categoryId = this.value;
+        const councilId = subcategoryField.dataset.councilId;
+        
+        if (!categoryId) {
+            // Clear subcategory options
+            subcategoryField.innerHTML = '<option value="">-- Select Subcategory --</option>';
+            subcategoryField.disabled = true;
+            return;
+        }
+        
+        // Fetch subcategories via AJAX
+        fetch(`/enrollments/ajax/subcategories/?category_id=${categoryId}&council_id=${councilId}`)
+            .then(response => response.json())
+            .then(data => {
+                // Clear existing options
+                subcategoryField.innerHTML = '<option value="">-- Select Subcategory --</option>';
+                
+                // Add new options
+                if (data.subcategories && data.subcategories.length > 0) {
+                    data.subcategories.forEach(sub => {
+                        const option = document.createElement('option');
+                        option.value = sub.id;
+                        option.textContent = sub.name;
+                        if (sub.description) {
+                            option.textContent += ` - ${sub.description}`;
+                        }
+                        subcategoryField.appendChild(option);
+                    });
+                    subcategoryField.disabled = false;
+                } else {
+                    subcategoryField.disabled = true;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading subcategories:', error);
+                subcategoryField.disabled = true;
+            });
+    });
+    
+    // Initial check - if category is already selected on page load, trigger change
+    if (categoryField.value) {
+        categoryField.dispatchEvent(new Event('change'));
+    }
+}
+
 
     </script>
     

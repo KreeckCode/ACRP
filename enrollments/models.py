@@ -355,6 +355,11 @@ class BaseApplication(models.Model):
     reviewed_at = models.DateTimeField(null=True, blank=True)
     approved_at = models.DateTimeField(null=True, blank=True)
     rejected_at = models.DateTimeField(null=True, blank=True)
+    clarification_requested_at = models.DateTimeField(
+        null=True, 
+        blank=True,
+        help_text="When clarification was last requested from applicant"
+    )
     
     # Staff assignments
     submitted_by = models.ForeignKey(
@@ -533,12 +538,12 @@ class BaseApplication(models.Model):
     ]
     postal_province = models.CharField(max_length=50, choices=PROVINCE_CHOICES)
     postal_code = models.CharField(max_length=10)
-    postal_country = models.CharField(max_length=50, default='South Africa')
+    postal_country = models.CharField(max_length=50, default='South Africa', blank=True)
     
     # Physical address (if different from postal)
     physical_same_as_postal = models.BooleanField(
         default=True,
-        help_text="Check if physical address is the same as postal address"
+        help_text="Check if physical address is the same as postal address", blank=True
     )
     physical_address_line1 = models.CharField(max_length=100, blank=True)
     physical_address_line2 = models.CharField(max_length=100, blank=True)
@@ -615,7 +620,7 @@ class BaseApplication(models.Model):
         help_text="Institution where you obtained your highest qualification", blank=True
     )
     qualification_date = models.DateField(
-        help_text="Date when qualification was awarded", blank=True
+        help_text="Date when qualification was awarded", blank=True, null=True
     )
     
     # ========================================================================
@@ -627,7 +632,7 @@ class BaseApplication(models.Model):
         help_text="Your current job title or occupation"
     )
     work_description = models.TextField(
-        help_text="Detailed description of your current work responsibilities"
+        help_text="Detailed description of your current work responsibilities", blank=True
     )
     years_in_ministry = models.PositiveIntegerField(
         default=0,
@@ -757,17 +762,7 @@ class BaseApplication(models.Model):
             if not getattr(self, field):
                 errors[field] = _(f"You must accept {description} to continue")
         
-        # Validate physical address if different from postal
-        if not self.physical_same_as_postal:
-            required_physical_fields = [
-                'physical_address_line1', 'physical_city', 
-                'physical_province', 'physical_code'
-            ]
-            for field in required_physical_fields:
-                if not getattr(self, field):
-                    errors[field] = _(
-                        "This field is required when physical address differs from postal"
-                    )
+        
         
         if errors:
             raise ValidationError(errors)
@@ -775,7 +770,6 @@ class BaseApplication(models.Model):
     def generate_application_number(self):
         """Generate unique application number"""
         # Format: {COUNCIL_CODE}{AFFILIATION_CODE}{YEAR}{SEQUENCE}
-        # Example: CGMPAS240001, CPSCDE240002, CMTPST240003
         council_code = self.get_council().code
         affiliation_code = self.get_affiliation_type()[:2].upper()
         year = timezone.now().year % 100  # Last 2 digits of year

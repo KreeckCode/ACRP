@@ -1161,6 +1161,9 @@ class ApplicationSearchForm(forms.Form):
         help_text="Applications submitted to this date"
     )
 
+
+
+
 class ApplicationReviewForm(forms.Form):
     """Form for reviewing and updating application status with digital card assignment"""
     
@@ -1180,6 +1183,23 @@ class ApplicationReviewForm(forms.Form):
         required=False,
         widget=TEXT_INPUT_WIDGET,
         help_text="Assign registration number (required for approval - will become username)"
+    )
+    
+    # ADD THESE NEW FIELDS FOR CATEGORY ASSIGNMENT
+    designation_category = forms.ModelChoiceField(
+        queryset=DesignationCategory.objects.filter(is_active=True),
+        required=False,
+        empty_label="-- Select Category --",
+        widget=SELECT_WIDGET,
+        help_text="Assign designation category (for designated applications)"
+    )
+    
+    designation_subcategory = forms.ModelChoiceField(
+        queryset=DesignationSubcategory.objects.none(),  # Will be populated dynamically
+        required=False,
+        empty_label="-- Select Subcategory --",
+        widget=SELECT_WIDGET,
+        help_text="Assign subcategory (only for CPSC designated applications)"
     )
     
     reviewer_notes = forms.CharField(
@@ -1213,15 +1233,42 @@ class ApplicationReviewForm(forms.Form):
             self.fields['registration_number'].widget.attrs['readonly'] = True
             self.fields['registration_number'].help_text = "Registration number already assigned"
         
+        # NEW: Pre-populate designation fields if application is designated type
+        if self.application and hasattr(self.application, 'designation_category'):
+            # Set initial values
+            if self.application.designation_category:
+                self.fields['designation_category'].initial = self.application.designation_category
+            
+            # Configure subcategory queryset based on council and current category
+            council = self.application.onboarding_session.selected_council
+            if council and council.has_subcategories:
+                # Show subcategory field
+                self.fields['designation_subcategory'].widget.attrs['data-council-id'] = council.pk
+                
+                # If category is already set, filter subcategories
+                if self.application.designation_category:
+                    self.fields['designation_subcategory'].queryset = DesignationSubcategory.objects.filter(
+                        category=self.application.designation_category,
+                        council=council,
+                        is_active=True
+                    )
+                    if self.application.designation_subcategory:
+                        self.fields['designation_subcategory'].initial = self.application.designation_subcategory
+            else:
+                # Hide subcategory field for councils that don't use it
+                self.fields['designation_subcategory'].widget = forms.HiddenInput()
+        else:
+            # Hide category fields for non-designated applications
+            self.fields['designation_category'].widget = forms.HiddenInput()
+            self.fields['designation_subcategory'].widget = forms.HiddenInput()
+        
         # Check for existing card and modify form accordingly
         if self.application:
             existing_card = self.check_existing_card()
             if existing_card:
-                # Card already exists - hide the checkbox and show info
                 self.fields['assign_digital_card'].widget = forms.HiddenInput()
                 self.fields['assign_digital_card'].initial = True
                 self.fields['assign_digital_card'].help_text = f"Card already assigned: {existing_card.card_number}"
-                # Add a flag to indicate card exists
                 self.existing_card = existing_card
             else:
                 self.existing_card = None
@@ -1242,42 +1289,45 @@ class ApplicationReviewForm(forms.Form):
                 status__in=['assigned', 'active']
             ).first()
         except ImportError:
-            # affiliationcard app not available
             return None
     
-    #msdnfsd
-
     def clean(self):
         """Validate review form"""
         cleaned_data = super().clean()
         
         status = cleaned_data.get('status')
         rejection_reason = cleaned_data.get('rejection_reason')
-        registration_number = cleaned_data.get('registration_number')  # FIX: Get it from cleaned_data FIRST
+        registration_number = cleaned_data.get('registration_number')
+        reviewer_notes = cleaned_data.get('reviewer_notes')
         assign_card = cleaned_data.get('assign_digital_card', False)
+        designation_category = cleaned_data.get('designation_category')
+        designation_subcategory = cleaned_data.get('designation_subcategory')
         
-        # Validate rejection reason
+        # Validate rejection reason when rejecting
         if status == 'rejected' and not rejection_reason:
             raise ValidationError({
                 'rejection_reason': 'Rejection reason is required when rejecting an application.'
             })
         
-        # Validate registration number is provided when approving
+        # Validate clarification notes when requesting clarification
+        if status == 'requires_clarification' and not reviewer_notes:
+            raise ValidationError({
+                'reviewer_notes': 'You must specify what clarification is needed from the applicant.'
+            })
+        
+        # Validate registration number when approving
         if status == 'approved' and not registration_number:
             raise ValidationError({
                 'registration_number': 'Registration number is required when approving an application.'
             })
         
-        # Validate registration number format (customize as needed)
+        # Validate registration number format
         if registration_number:
-            # Remove spaces and convert to uppercase for consistency
             registration_number = registration_number.strip().upper()
             cleaned_data['registration_number'] = registration_number
             
-            # Check if registration number already exists (exclude current application)
+            # Check if registration number already exists
             existing = None
-            
-            # Check across all application types
             for model in [AssociatedApplication, DesignatedApplication, StudentApplication]:
                 query = model.objects.filter(registration_number=registration_number)
                 if self.application:
@@ -1291,10 +1341,24 @@ class ApplicationReviewForm(forms.Form):
                     'registration_number': f'Registration number already assigned to another application.'
                 })
         
-        # Validate card assignment - only allow if approving
+        # Validate designation fields for designated applications
+        if self.application and hasattr(self.application, 'designation_category'):
+            if designation_subcategory and not designation_category:
+                raise ValidationError({
+                    'designation_subcategory': 'You must select a category before selecting a subcategory.'
+                })
+            
+            if designation_subcategory and designation_category:
+                if designation_subcategory.category != designation_category:
+                    raise ValidationError({
+                        'designation_subcategory': 'Selected subcategory does not belong to the selected category.'
+                    })
+        
+        # Validate card assignment
         if assign_card and status != 'approved':
             raise ValidationError({
                 'assign_digital_card': 'Digital cards can only be assigned when approving applications.'
             })
         
         return cleaned_data
+        
