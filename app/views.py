@@ -3364,6 +3364,7 @@ def notification_fetch(request):
     
     notifications_data = []
     for notification in notifications:
+        sender_name = None
         notifications_data.append({
             'id': str(notification.id),
             'title': notification.title,
@@ -3372,7 +3373,7 @@ def notification_fetch(request):
             'is_read': notification.is_read,
             'action_url': notification.action_url,
             'created_at': notification.created_at.isoformat(),
-            'sender_name': notification.sender.get_full_name() if notification.sender else None,
+            'sender_name': sender_name,
         })
     
     return JsonResponse({

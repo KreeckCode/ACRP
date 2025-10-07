@@ -516,14 +516,6 @@ LOGGING = {
             'encoding': 'utf-8',
         },
         
-        # Email handler - Send critical errors to admins (production only)
-        'mail_admins': {
-            'level': 'ERROR',
-            'class': 'django.utils.log.AdminEmailHandler',
-            'filters': ['require_debug_false'],
-            'formatter': 'verbose',
-            'include_html': True,
-        },
     },
     
     # ------------------------------------------------------------------------
