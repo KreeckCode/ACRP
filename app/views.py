@@ -199,7 +199,7 @@ def dashboard(request):
     user = request.user
     
     # Check if user is a learner - route to student dashboard
-    if hasattr(user, 'acrp_role') and user.acrp_role == 'LEARNER':
+    if hasattr(user, 'acrp_role') and user.acrp_role == User.ACRPRole.LEARNER:
         return learner_dashboard(request)
     
     # Otherwise, show the admin/staff dashboard
@@ -622,16 +622,9 @@ def learner_dashboard(request):
         {
             'title': 'My Digital Card',
             'description': 'View your affiliation card',
-            'url': digital_card['url'] if digital_card else '/affiliationcard/dashboard/',
+            'url': '/card/my-card/',
             'icon': 'credit-card',
             'color': 'green',
-        },
-        {
-            'title': 'Resource Library',
-            'description': 'Access learning resources',
-            'url': '/app/resources/',
-            'icon': 'folder',
-            'color': 'amber',
         },
         {
             'title': 'Events & Workshops',
@@ -639,13 +632,6 @@ def learner_dashboard(request):
             'url': '/app/events/',
             'icon': 'calendar',
             'color': 'indigo',
-        },
-        {
-            'title': 'My Certificates',
-            'description': 'View earned certificates',
-            'url': '/cpd/certificates/',
-            'icon': 'file-badge',
-            'color': 'teal',
         },
     ]
     

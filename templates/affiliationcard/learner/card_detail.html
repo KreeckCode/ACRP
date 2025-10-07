@@ -1,0 +1,692 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% comment %}
+ACRP Learner Card Detail Template
+==================================
+
+Learner-focused view of their digital affiliation card.
+Simple, intuitive interface for students to view, download, and use their card.
+
+Template Features:
+- Visual card preview with QR code
+- Download and print functionality
+- Verification link sharing
+- Expiration status and alerts
+- Usage instructions
+- Help and support links
+- Mobile-responsive design
+
+Data Context:
+- card: User's AffiliationCard instance
+- verification_count: Number of times card has been verified (optional)
+{% endcomment %}
+
+{% block title %}My Digital Card - ACRP{% endblock %}
+
+{% block meta_description %}View and manage your ACRP digital affiliation card.{% endblock %}
+
+{% block page_title %}My Digital Card{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Digital Card Styling */
+    .digital-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 16px;
+        padding: 30px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .digital-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 15px 50px rgba(102, 126, 234, 0.4);
+    }
+    
+    .digital-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="white" opacity="0.05"/></svg>') repeat;
+        background-size: 30px 30px;
+    }
+    
+    .card-content {
+        position: relative;
+        z-index: 1;
+    }
+    
+    /* QR Code Styling */
+    .qr-code-box {
+        width: 100px;
+        height: 100px;
+        background: white;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Status Badges */
+    .status-active { @apply bg-green-100 text-green-800 border-green-200; }
+    .status-pending { @apply bg-yellow-100 text-yellow-800 border-yellow-200; }
+    .status-assigned { @apply bg-blue-100 text-blue-800 border-blue-200; }
+    .status-expired { @apply bg-red-100 text-red-800 border-red-200; }
+    .status-expiring { @apply bg-orange-100 text-orange-800 border-orange-200; }
+    
+    /* Action Cards */
+    .action-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .action-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    }
+    
+    /* Info Pills */
+    .info-pill {
+        @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800;
+    }
+    
+    /* Alert Boxes */
+    .alert-box {
+        border-left: 4px solid;
+        border-radius: 0.5rem;
+    }
+    
+    .alert-warning {
+        @apply bg-yellow-50 border-yellow-400 text-yellow-800;
+    }
+    
+    .alert-info {
+        @apply bg-blue-50 border-blue-400 text-blue-800;
+    }
+    
+    .alert-success {
+        @apply bg-green-50 border-green-400 text-green-800;
+    }
+    
+    /* Print Styles */
+    @media print {
+        .no-print { display: none !important; }
+        .digital-card {
+            box-shadow: none !important;
+            transform: none !important;
+        }
+        body { background: white; }
+    }
+    
+    /* Mobile Optimizations */
+    @media (max-width: 640px) {
+        .digital-card {
+            padding: 20px;
+        }
+        .qr-code-box {
+            width: 80px;
+            height: 80px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block page_header %}
+<div class="mb-6">
+    <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <a href="{% url 'app:learner_dashboard' %}" 
+               class="text-gray-400 hover:text-gray-600 transition-colors no-print">
+                <i class="bi bi-arrow-left text-xl"></i>
+            </a>
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">My Digital Card</h1>
+                <p class="text-sm text-gray-600 mt-1">
+                    Card Number: <span class="font-mono font-medium">{{ card.card_number }}</span>
+                </p>
+            </div>
+        </div>
+        
+        <!-- Status Badge -->
+        <div class="no-print">
+            <span class="status-{{ card.status|lower }} px-4 py-2 rounded-full text-sm font-semibold border shadow-sm">
+                <i class="bi bi-circle-fill text-xs mr-1"></i>
+                {{ card.get_status_display }}
+            </span>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    
+    <!-- Expiration Alert -->
+    {% if card.status == 'active' %}
+        {% with days=card.days_until_expiry %}
+            {% if days <= 30 and days >= 0 %}
+            <div class="alert-box alert-warning p-4">
+                <div class="flex items-start">
+                    <i class="bi bi-exclamation-triangle-fill text-xl mr-3"></i>
+                    <div>
+                        <h4 class="font-semibold mb-1">Card Expiring Soon</h4>
+                        <p class="text-sm">
+                            Your card will expire in <strong>{{ days }} day{{ days|pluralize }}</strong> 
+                            on {{ card.date_expires|date:"F d, Y" }}. 
+                            Please contact support if you need to renew.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% elif days < 0 %}
+            <div class="alert-box alert-warning p-4">
+                <div class="flex items-start">
+                    <i class="bi bi-exclamation-circle-fill text-xl mr-3"></i>
+                    <div>
+                        <h4 class="font-semibold mb-1">Card Expired</h4>
+                        <p class="text-sm">
+                            Your card expired on {{ card.date_expires|date:"F d, Y" }}. 
+                            Please contact <a href="mailto:ams@acrp.org.za" class="underline font-medium">support</a> 
+                            to renew your card.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        {% endwith %}
+    {% endif %}
+    
+    <!-- Main Card Display -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Digital Card Preview -->
+        <div class="lg:col-span-2">
+            <div class="digital-card">
+                <div class="card-content">
+                    <!-- Card Header -->
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <div class="text-xs opacity-75 mb-1 uppercase tracking-wider">
+                                ACRP Digital Affiliation Card
+                            </div>
+                            <div class="text-2xl font-bold tracking-wide">
+                                {{ card.card_number }}
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-sm font-medium opacity-90">{{ card.council_code }}</div>
+                            <div class="text-xs opacity-75">{{ card.council_name }}</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Cardholder Information -->
+                    <div class="space-y-3 mb-6">
+                        <div>
+                            <div class="text-xs opacity-75 mb-1">Cardholder</div>
+                            <div class="text-xl font-semibold">{{ card.get_display_name }}</div>
+                        </div>
+                        <div>
+                            <div class="text-xs opacity-75 mb-1">Affiliation Type</div>
+                            <div class="text-base font-medium">{{ card.affiliation_type|title }}</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Card Footer -->
+                    <div class="flex justify-between items-end">
+                        <div class="space-y-1">
+                            <div class="text-xs opacity-75">
+                                Issued: {{ card.date_issued|date:"M d, Y"|default:"Pending" }}
+                            </div>
+                            {% if card.date_expires %}
+                            <div class="text-xs opacity-75">
+                                Expires: {{ card.date_expires|date:"M d, Y" }}
+                            </div>
+                            {% else %}
+                            <div class="text-xs opacity-75">
+                                No Expiration
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- QR Code Placeholder -->
+                        <div class="qr-code-box">
+                            <i class="bi bi-qr-code text-4xl text-indigo-600"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 no-print">
+                <button type="button" 
+                        onclick="window.print()"
+                        class="action-card bg-white border border-gray-200 rounded-lg p-4 text-center hover:border-indigo-300">
+                    <i class="bi bi-printer text-2xl text-indigo-600 mb-2"></i>
+                    <div class="text-sm font-medium text-gray-900">Print</div>
+                </button>
+                
+                <button type="button" 
+                        onclick="downloadCard()"
+                        class="action-card bg-white border border-gray-200 rounded-lg p-4 text-center hover:border-indigo-300">
+                    <i class="bi bi-download text-2xl text-indigo-600 mb-2"></i>
+                    <div class="text-sm font-medium text-gray-900">Download</div>
+                </button>
+                
+                <button type="button" 
+                        onclick="shareCard()"
+                        class="action-card bg-white border border-gray-200 rounded-lg p-4 text-center hover:border-indigo-300">
+                    <i class="bi bi-share text-2xl text-indigo-600 mb-2"></i>
+                    <div class="text-sm font-medium text-gray-900">Share</div>
+                </button>
+                
+                <button type="button" 
+                        onclick="reportIssue()"
+                        class="action-card bg-white border border-gray-200 rounded-lg p-4 text-center hover:border-red-300">
+                    <i class="bi bi-flag text-2xl text-red-600 mb-2"></i>
+                    <div class="text-sm font-medium text-gray-900">Report</div>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Card Information Sidebar -->
+        <div class="lg:col-span-1 space-y-6">
+            
+            <!-- Card Details -->
+            <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Card Details</h3>
+                <dl class="space-y-3">
+                    <div>
+                        <dt class="text-xs font-medium text-gray-500 uppercase tracking-wider">Status</dt>
+                        <dd class="mt-1">
+                            <span class="status-{{ card.status|lower }} px-2 py-1 rounded-full text-xs font-medium border">
+                                {{ card.get_status_display }}
+                            </span>
+                        </dd>
+                    </div>
+                    
+                    <div>
+                        <dt class="text-xs font-medium text-gray-500 uppercase tracking-wider">Email</dt>
+                        <dd class="mt-1 text-sm text-gray-900 break-all">
+                            {{ card.affiliate_email|default:"Not available" }}
+                        </dd>
+                    </div>
+                    
+                    <div>
+                        <dt class="text-xs font-medium text-gray-500 uppercase tracking-wider">Issue Date</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                            {% if card.date_issued %}
+                                {{ card.date_issued|date:"F d, Y" }}
+                            {% else %}
+                                <span class="text-gray-400">Pending</span>
+                            {% endif %}
+                        </dd>
+                    </div>
+                    
+                    {% if card.date_expires %}
+                    <div>
+                        <dt class="text-xs font-medium text-gray-500 uppercase tracking-wider">Expiration</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                            {{ card.date_expires|date:"F d, Y" }}
+                            {% with days=card.days_until_expiry %}
+                                {% if days >= 0 %}
+                                    <span class="block text-xs text-gray-500 mt-1">
+                                        {{ days }} day{{ days|pluralize }} remaining
+                                    </span>
+                                {% else %}
+                                    <span class="block text-xs text-red-500 mt-1">
+                                        Expired {{ days|slice:"1:" }} day{{ days|slice:"1:"|pluralize }} ago
+                                    </span>
+                                {% endif %}
+                            {% endwith %}
+                        </dd>
+                    </div>
+                    {% endif %}
+                </dl>
+            </div>
+            
+            <!-- Verification Link -->
+            <div class="bg-indigo-50 rounded-lg border border-indigo-200 p-6">
+                <div class="flex items-start">
+                    <i class="bi bi-shield-check text-2xl text-indigo-600 mr-3"></i>
+                    <div>
+                        <h4 class="text-sm font-semibold text-indigo-900 mb-2">Verification</h4>
+                        <p class="text-xs text-indigo-700 mb-3">
+                            Others can verify your card using this link:
+                        </p>
+                        <a href="{% url 'affiliationcard:verify_token' token=card.verification_token %}" 
+                           target="_blank"
+                           class="inline-flex items-center text-xs font-medium text-indigo-600 hover:text-indigo-800">
+                            <i class="bi bi-link-45deg mr-1"></i>
+                            Verify This Card
+                            <i class="bi bi-box-arrow-up-right text-xs ml-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Usage Stats (if verification count is available) -->
+            {% if verification_count %}
+            <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+                <h4 class="text-sm font-semibold text-gray-900 mb-3">Usage Statistics</h4>
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">Times Verified</span>
+                    <span class="text-2xl font-bold text-indigo-600">{{ verification_count }}</span>
+                </div>
+            </div>
+            {% endif %}
+            
+        </div>
+    </div>
+    
+    <!-- How to Use Your Card -->
+    <div class="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <i class="bi bi-info-circle text-indigo-600 mr-2"></i>
+            How to Use Your Card
+        </h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="bi bi-phone text-2xl text-indigo-600"></i>
+                </div>
+                <h4 class="font-medium text-gray-900 mb-2">Show on Mobile</h4>
+                <p class="text-sm text-gray-600">
+                    Access this page on your phone to show your digital card when needed.
+                </p>
+            </div>
+            
+            <div class="text-center">
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="bi bi-printer text-2xl text-green-600"></i>
+                </div>
+                <h4 class="font-medium text-gray-900 mb-2">Print Physical Copy</h4>
+                <p class="text-sm text-gray-600">
+                    Use the print button to create a physical copy of your card for backup.
+                </p>
+            </div>
+            
+            <div class="text-center">
+                <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="bi bi-share text-2xl text-purple-600"></i>
+                </div>
+                <h4 class="font-medium text-gray-900 mb-2">Share Verification</h4>
+                <p class="text-sm text-gray-600">
+                    Share your verification link so others can confirm your membership.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Important Information -->
+    <div class="alert-box alert-info p-4 no-print">
+        <div class="flex items-start">
+            <i class="bi bi-lightbulb-fill text-xl mr-3"></i>
+            <div class="flex-1">
+                <h4 class="font-semibold mb-2">Important Information</h4>
+                <ul class="text-sm space-y-1 list-disc list-inside">
+                    <li>This is your official ACRP digital affiliation card</li>
+                    <li>Keep your card number confidential and secure</li>
+                    <li>Report any issues or suspicious activity immediately</li>
+                    <li>Check your card status regularly to ensure it remains valid</li>
+                    {% if card.date_expires %}
+                    <li>Remember to renew before {{ card.date_expires|date:"F d, Y" }}</li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Need Help Section -->
+    <div class="bg-gray-50 rounded-lg border border-gray-200 p-6 no-print">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Need Help?</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="flex items-start">
+                <i class="bi bi-envelope text-xl text-gray-400 mr-3 mt-1"></i>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-900 mb-1">Email Support</h4>
+                    <a href="mailto:ams@acrp.org.za" class="text-sm text-indigo-600 hover:text-indigo-800">
+                        ams@acrp.org.za
+                    </a>
+                </div>
+            </div>
+            
+            <div class="flex items-start">
+                <i class="bi bi-telephone text-xl text-gray-400 mr-3 mt-1"></i>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-900 mb-1">Phone Support</h4>
+                    <a href="tel:+27652141536" class="text-sm text-indigo-600 hover:text-indigo-800">
+                        (+27) 065 214 1536
+                    </a>
+                </div>
+            </div>
+            
+            <div class="flex items-start">
+                <i class="bi bi-clock text-xl text-gray-400 mr-3 mt-1"></i>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-900 mb-1">Business Hours</h4>
+                    <p class="text-sm text-gray-600">
+                        Monday - Friday<br>
+                        8:00 AM - 5:00 PM SAST
+                    </p>
+                </div>
+            </div>
+            
+            <div class="flex items-start">
+                <i class="bi bi-question-circle text-xl text-gray-400 mr-3 mt-1"></i>
+                <div>
+                    <h4 class="text-sm font-medium text-gray-900 mb-1">FAQs</h4>
+                    <a href="#" class="text-sm text-indigo-600 hover:text-indigo-800">
+                        View common questions
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Download Card Function
+    function downloadCard() {
+        // Show loading toast
+        showToast('Preparing your card for download...', 'info');
+        
+        // In production, this would trigger actual download
+        // For now, we'll simulate it
+        setTimeout(() => {
+            showToast('Download feature coming soon! For now, use Print to save your card.', 'info');
+            // Actual implementation would be:
+        }, 1000);
+    }
+    
+    // Share Card Function
+    function shareCard() {
+        const shareUrl = "{% url 'affiliationcard:verify_token' token=card.verification_token %}";
+        const shareText = "Verify my ACRP membership card";
+        
+        // Try native share API first (mobile)
+        if (navigator.share) {
+            navigator.share({
+                title: shareText,
+                text: 'You can verify my ACRP affiliation card using this link:',
+                url: shareUrl
+            }).then(() => {
+                showToast('Card verification link shared!', 'success');
+            }).catch((error) => {
+                // If sharing fails, fall back to copy
+                copyToClipboard(shareUrl);
+            });
+        } else {
+            // Desktop: Copy to clipboard
+            copyToClipboard(shareUrl);
+        }
+    }
+    
+    // Copy to Clipboard Helper
+    function copyToClipboard(text) {
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('Verification link copied to clipboard!', 'success');
+            }).catch(() => {
+                fallbackCopy(text);
+            });
+        } else {
+            fallbackCopy(text);
+        }
+    }
+    
+    // Fallback Copy Method
+    function fallbackCopy(text) {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.select();
+        
+        try {
+            document.execCommand('copy');
+            showToast('Verification link copied!', 'success');
+        } catch (err) {
+            showToast('Unable to copy link. Please copy manually.', 'error');
+        }
+        
+        document.body.removeChild(textArea);
+    }
+    
+    // Report Issue Function
+    function reportIssue() {
+        const subject = encodeURIComponent('Card Issue Report - {{ card.card_number }}');
+        const body = encodeURIComponent(`I would like to report an issue with my digital card.
+
+Card Number: {{ card.card_number }}
+Card Status: {{ card.get_status_display }}
+
+Issue Description:
+[Please describe your issue here]
+
+Thank you!`);
+        
+        window.location.href = `mailto:ams@acrp.org.za?subject=${subject}&body=${body}`;
+    }
+    
+    // Toast Notification Function
+    function showToast(message, type = 'info') {
+        // Create toast element
+        const toast = document.createElement('div');
+        toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in-up ${
+            type === 'success' ? 'bg-green-500' :
+            type === 'error' ? 'bg-red-500' :
+            'bg-blue-500'
+        } text-white font-medium`;
+        toast.textContent = message;
+        
+        document.body.appendChild(toast);
+        
+        // Remove after 3 seconds
+        setTimeout(() => {
+            toast.classList.add('animate-fade-out');
+            setTimeout(() => {
+                document.body.removeChild(toast);
+            }, 300);
+        }, 3000);
+    }
+    
+    // Add animation styles
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes fade-in-up {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fade-out {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+            }
+        }
+        
+        .animate-fade-in-up {
+            animation: fade-in-up 0.3s ease-out;
+        }
+        
+        .animate-fade-out {
+            animation: fade-out 0.3s ease-out;
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(event) {
+        // Ctrl/Cmd + P = Print
+        if ((event.ctrlKey || event.metaKey) && event.key === 'p') {
+            event.preventDefault();
+            window.print();
+        }
+        
+        // Ctrl/Cmd + D = Download
+        if ((event.ctrlKey || event.metaKey) && event.key === 'd') {
+            event.preventDefault();
+            downloadCard();
+        }
+        
+        // Ctrl/Cmd + S = Share
+        if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+            event.preventDefault();
+            shareCard();
+        }
+    });
+    
+    // Auto-check expiration on load
+    document.addEventListener('DOMContentLoaded', function() {
+        {% with days=card.days_until_expiry %}
+            {% if days <= 7 and days >= 0 %}
+                setTimeout(() => {
+                    showToast('⚠️ Your card expires in {{ days }} day{{ days|pluralize }}!', 'error');
+                }, 1000);
+            {% endif %}
+        {% endwith %}
+    });
+</script>
+{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "DigitalDocument",
+    "name": "ACRP Digital Affiliation Card",
+    "identifier": "{{ card.card_number }}",
+    "dateCreated": "{{ card.created_at|date:'Y-m-d' }}",
+    "creator": {
+        "@type": "Organization",
+        "name": "ACRP",
+        "url": "https://acrp.org.za"
+    },
+    "about": {
+        "@type": "Person",
+        "name": "{{ card.get_display_name }}"
+    }
+}
+</script>
+{% endblock %}
