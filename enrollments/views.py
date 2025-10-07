@@ -1285,8 +1285,8 @@ ADMIN_EMAIL_LIST = [
     'riana.andersen@acrp.org.za',
     'ams@acrp.org.za',
     'andrea.leipoldt@acrp.org.za',
-    'gerhard.botha@acrp.org.za',
-    'theto.maunatlala@acrp.org.za'
+    #'gerhard.botha@acrp.org.za',
+    #'theto.maunatlala@acrp.org.za'
 ]
 
 # Email configuration
@@ -1474,24 +1474,24 @@ def send_admin_notification(application):
         # Create clean plain text version
         plain_text = f"""NEW ACRP APPLICATION SUBMITTED
 
-Application Details:
-- Application Number: {context['application_number']}
-- Council: {context['council_name']} ({context['council_code']})
-- Affiliation Type: {context['affiliation_type']}
-- Applicant: {contact_info}
-- Submission Date: {context['submission_date'].strftime('%B %d, %Y at %I:%M %p')}
-{designation_info}
-Action Required:
-This application requires review and processing by the {context['council_name']} team.
+            Application Details:
+            - Application Number: {context['application_number']}
+            - Council: {context['council_name']} ({context['council_code']})
+            - Affiliation Type: {context['affiliation_type']}
+            - Applicant: {contact_info}
+            - Submission Date: {context['submission_date'].strftime('%B %d, %Y at %I:%M %p')}
+            {designation_info}
+            Action Required:
+            This application requires review and processing by the {context['council_name']} team.
 
-Please review this application within 5-10 business days to maintain our service commitments.
+            Please review this application within 5-10 business days to maintain our service commitments.
 
-Review Application: {context['application_url']}
-Admin Dashboard: {context['admin_dashboard_url']}
+            Review Application: {context['application_url']}
+            Admin Dashboard: {context['admin_dashboard_url']}
 
----
-ACRP Admin Notification System
-This is an automated notification."""
+            ---
+            ACRP Admin Notification System
+            This is an automated notification."""
         
         # Create email subject with council code for easy filtering
         subject = f"New {context['council_code']} Application: {context['application_number']}"
