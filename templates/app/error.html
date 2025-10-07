@@ -7,108 +7,411 @@
   <meta name="robots" content="noindex,nofollow">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    html,body { height:100%; }
-    body { -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
-    pre { white-space: pre-wrap; word-wrap: break-word; }
+    /* Custom styling for smooth animations and enhanced UX */
+    html, body { 
+      height: 100%; 
+      scroll-behavior: smooth;
+    }
+    
+    body { 
+      -webkit-font-smoothing: antialiased; 
+      -moz-osx-font-smoothing: grayscale; 
+    }
+    
+    /* Preserve whitespace in preformatted text for debug output */
+    pre { 
+      white-space: pre-wrap; 
+      word-wrap: break-word; 
+    }
+    
+    /* Subtle pulse animation for the error code to draw attention */
+    @keyframes pulse-subtle {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.8; }
+    }
+    
+    .pulse-subtle {
+      animation: pulse-subtle 3s ease-in-out infinite;
+    }
+    
+    /* Gradient animation for the background */
+    @keyframes gradient-shift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    
+    .gradient-animated {
+      background-size: 200% 200%;
+      animation: gradient-shift 8s ease infinite;
+    }
+    
+    /* Copy button success state */
+    .copied {
+      background-color: #10b981 !important;
+      border-color: #10b981 !important;
+      color: white !important;
+    }
+    
+    /* Info grid styling for better visual structure */
+    .info-grid {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+    
+    /* Monospace font for technical details */
+    .mono {
+      font-family: 'Courier New', monospace;
+      letter-spacing: -0.02em;
+    }
   </style>
 </head>
-<body class="min-h-screen bg-gray-50 flex items-center justify-center">
-  <main class="w-full max-w-4xl mx-4">
-    <section class="bg-white shadow-lg rounded-lg overflow-hidden">
-      <div class="sm:flex">
-        <aside class="sm:w-1/3 p-8 flex items-center justify-center bg-gradient-to-b from-gray-50 to-white">
-          {% comment %} Icon per error code {% endcomment %}
-          {% if error_code == '404' %}
-            <svg class="w-36 h-36 text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <circle cx="10" cy="10" r="6" stroke="currentColor" stroke-width="1.5" fill="none" />
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-4.35-4.35" />
-            </svg>
-          {% elif error_code == '500' %}
-            <svg class="w-36 h-36 text-red-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" fill="none" />
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l2 2" />
-            </svg>
-          {% elif error_code == '403' %}
-            <svg class="w-36 h-36 text-yellow-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <rect x="6" y="11" width="12" height="9" rx="2" stroke="currentColor" stroke-width="1.5" fill="none" />
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 11c1.657 0 3-1.567 3-3.5S13.657 4 12 4s-3 1.567-3 3.5S10.343 11 12 11z" />
-            </svg>
-          {% else %}
-            <svg class="w-36 h-36 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" fill="none" />
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01" />
-            </svg>
-          {% endif %}
-        </aside>
-
-        <div class="p-8 sm:w-2/3">
-          <div class="flex items-start justify-between">
-            <div>
-              <h1 class="text-3xl font-extrabold text-gray-900">Error {{ error_code|default:"—" }}</h1>
-              <p class="mt-2 text-lg text-gray-600">{{ error_message|default:"An unexpected error occurred." }}</p>
-
-              <div class="mt-6">
-                <div class="flex flex-wrap gap-3">
-                  {% if suggestions %}
-                    {% for label, url in suggestions %}
-                      <a href="{{ url }}" class="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium border border-gray-200 bg-white hover:bg-gray-50 shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">{{ label }}</a>
-                    {% endfor %}
-                  {% else %}
-                    <a href="/" class="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium border border-gray-200 bg-white hover:bg-gray-50 shadow-sm">Home</a>
-                  {% endif %}
-
-                  <a href="/support/" class="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium bg-blue-600 text-white hover:bg-blue-700">Contact support</a>
-
-                  <button id="copyUrlBtn" class="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium border border-gray-200 bg-white hover:bg-gray-50 shadow-sm">Copy URL</button>
+<body class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
+  
+  <!-- Main container with centered content and responsive padding -->
+  <main class="min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8">
+    <div class="w-full max-w-5xl">
+      
+      <!-- Primary error card with shadow and rounded corners -->
+      <section class="bg-white shadow-2xl rounded-2xl overflow-hidden border border-gray-100">
+        
+        <!-- Hero section with gradient background and error code display -->
+        <div class="relative gradient-animated bg-gradient-to-r 
+          {% if error_code == '404' %}from-blue-500 via-blue-600 to-indigo-600
+          {% elif error_code == '500' %}from-red-500 via-red-600 to-pink-600
+          {% elif error_code == '403' %}from-yellow-500 via-orange-500 to-red-500
+          {% else %}from-gray-500 via-gray-600 to-slate-600
+          {% endif %} p-8 sm:p-12 text-white">
+          
+          <!-- Decorative grid pattern overlay for visual interest -->
+          <div class="absolute inset-0 opacity-10" style="background-image: linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px); background-size: 20px 20px;"></div>
+          
+          <div class="relative z-10">
+            <!-- Large, bold error code display -->
+            <div class="flex items-center gap-4 mb-4">
+              <h1 class="text-7xl sm:text-8xl font-black tracking-tight pulse-subtle">
+                {{ error_code|default:"—" }}
+              </h1>
+              
+              <!-- Icon matching the error type -->
+              <div class="hidden sm:block">
+                {% if error_code == '404' %}
+                  <svg class="w-20 h-20 opacity-75" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <circle cx="10" cy="10" r="6" stroke="currentColor" stroke-width="1.5" fill="none" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-4.35-4.35" />
+                  </svg>
+                {% elif error_code == '500' %}
+                  <svg class="w-20 h-20 opacity-75" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                {% elif error_code == '403' %}
+                  <svg class="w-20 h-20 opacity-75" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <rect x="6" y="11" width="12" height="9" rx="2" stroke="currentColor" stroke-width="1.5" fill="none" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 11c1.657 0 3-1.567 3-3.5S13.657 4 12 4s-3 1.567-3 3.5S10.343 11 12 11z" />
+                  </svg>
+                {% else %}
+                  <svg class="w-20 h-20 opacity-75" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" fill="none" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01" />
+                  </svg>
+                {% endif %}
+              </div>
+            </div>
+            
+            <!-- Error message with clear typography -->
+            <p class="text-2xl sm:text-3xl font-semibold leading-tight mb-2">
+              {{ error_message|default:"An unexpected error occurred." }}
+            </p>
+            
+            <!-- Additional context message -->
+            <p class="text-lg opacity-90">
+              {% if error_code == '404' %}
+                The page you're looking for doesn't exist or has been moved.
+              {% elif error_code == '500' %}
+                Our server encountered an internal error and couldn't complete your request.
+              {% elif error_code == '403' %}
+                You don't have permission to access this resource.
+              {% else %}
+                Something went wrong while processing your request.
+              {% endif %}
+            </p>
+          </div>
+        </div>
+        
+        <!-- Main content area with technical details -->
+        <div class="p-8 sm:p-10 space-y-8">
+          
+          <!-- Request information grid -->
+          <div>
+            <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Request Information</h2>
+            <div class="info-grid">
+              
+              <!-- Request ID card -->
+              <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-5 border border-blue-100">
+                <div class="text-xs font-medium text-blue-600 uppercase tracking-wide mb-2">Request ID</div>
+                <div class="font-bold text-gray-900 mono text-sm break-all">
+                  {{ request_id|default:"N/A" }}
                 </div>
-
-                <p class="mt-4 text-sm text-gray-500">If this keeps happening, please report it to support with the URL and request ID below.</p>
-
-                <div class="mt-4 text-xs text-gray-500 space-y-1">
-                  <div>Request ID: <span class="font-medium text-gray-700">{{ request_id|default:"N/A" }}</span></div>
-                  <div>Time: <span class="font-medium text-gray-700">{% now "j M Y H:i:s" %}</span></div>
+              </div>
+              
+              <!-- Timestamp card -->
+              <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-5 border border-purple-100">
+                <div class="text-xs font-medium text-purple-600 uppercase tracking-wide mb-2">Timestamp</div>
+                <div class="font-bold text-gray-900 mono text-sm">
+                  {% now "Y-m-d H:i:s T" %}
+                </div>
+              </div>
+              
+              <!-- Server time card -->
+              <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-5 border border-green-100">
+                <div class="text-xs font-medium text-green-600 uppercase tracking-wide mb-2">Server Time</div>
+                <div class="font-bold text-gray-900 mono text-sm">
+                  {% now "H:i:s" %}
+                </div>
+              </div>
+              
+              <!-- HTTP Status card -->
+              <div class="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-5 border border-orange-100">
+                <div class="text-xs font-medium text-orange-600 uppercase tracking-wide mb-2">HTTP Status</div>
+                <div class="font-bold text-gray-900 text-sm">
+                  {{ error_code|default:"—" }} 
+                  {% if error_code == '404' %}Not Found
+                  {% elif error_code == '500' %}Internal Server Error
+                  {% elif error_code == '403' %}Forbidden
+                  {% elif error_code == '400' %}Bad Request
+                  {% elif error_code == '401' %}Unauthorized
+                  {% elif error_code == '503' %}Service Unavailable
+                  {% endif %}
                 </div>
               </div>
             </div>
-
-            <div class="hidden sm:block text-right text-xs text-gray-400">
-              <div class="uppercase tracking-wide font-semibold">Need help?</div>
-              <div class="mt-2">Email <a href="mailto:support@example.com" class="underline text-blue-600">support@example.com</a></div>
+          </div>
+          
+          <!-- Technical details section -->
+          <div>
+            <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Technical Details</h2>
+            <div class="bg-gray-50 rounded-xl p-6 border border-gray-200 space-y-3">
+              
+              <!-- Current URL display -->
+              <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                <span class="text-sm font-medium text-gray-600 min-w-[120px]">Current URL:</span>
+                <code class="flex-1 text-sm bg-white px-3 py-2 rounded-lg border border-gray-200 mono text-gray-800 break-all">
+                  {{ request.build_absolute_uri|default:"/" }}
+                </code>
+              </div>
+              
+              <!-- Request method -->
+              <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                <span class="text-sm font-medium text-gray-600 min-w-[120px]">Method:</span>
+                <code class="text-sm bg-white px-3 py-2 rounded-lg border border-gray-200 mono text-gray-800 inline-block">
+                  {{ request.method|default:"GET" }}
+                </code>
+              </div>
+              
+              <!-- User agent (if available) -->
+              <div class="flex flex-col sm:flex-row sm:items-start gap-2">
+                <span class="text-sm font-medium text-gray-600 min-w-[120px]">User Agent:</span>
+                <code class="flex-1 text-xs bg-white px-3 py-2 rounded-lg border border-gray-200 mono text-gray-800 break-all">
+                  {{ request.META.HTTP_USER_AGENT|default:"N/A" }}
+                </code>
+              </div>
+              
+              <!-- Referrer (if available) -->
+              {% if request.META.HTTP_REFERER %}
+              <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                <span class="text-sm font-medium text-gray-600 min-w-[120px]">Referrer:</span>
+                <code class="flex-1 text-sm bg-white px-3 py-2 rounded-lg border border-gray-200 mono text-gray-800 break-all">
+                  {{ request.META.HTTP_REFERER }}
+                </code>
+              </div>
+              {% endif %}
             </div>
           </div>
-
-          {% if debug and error_debug %}
-            <div class="mt-6 border border-red-100 bg-red-50 rounded-md p-4 text-sm text-red-800">
-              <div class="font-medium mb-2">Debug details (visible only when debug is enabled):</div>
-              <pre class="text-xs">{{ error_debug }}</pre>
+          
+          <!-- Actions section with copy button -->
+          <div>
+            <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Actions</h2>
+            <div class="flex flex-wrap gap-3">
+              
+              <!-- Copy URL button with icon -->
+              <button id="copyUrlBtn" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                <span id="copyBtnText">Copy Error URL</span>
+              </button>
+              
+              <!-- Refresh page button -->
+              <button onclick="location.reload()" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold bg-white text-gray-700 border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 shadow-sm hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-200">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Refresh Page
+              </button>
             </div>
+            
+            <!-- Help text -->
+            <p class="mt-4 text-sm text-gray-600 leading-relaxed">
+              If this error persists, please copy the URL and error details above to share with technical support. The Request ID will help our team investigate the issue quickly.
+            </p>
+          </div>
+          
+         
+          {% if debug and error_debug %}
+          <div>
+            <h2 class="text-sm font-semibold text-red-600 uppercase tracking-wider mb-4 flex items-center gap-2">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              Debug Information
+            </h2>
+            <div class="bg-gradient-to-br from-red-50 to-pink-50 rounded-xl p-6 border-2 border-red-200">
+              <div class="flex items-start gap-3 mb-4">
+                <div class="flex-shrink-0 w-2 h-2 mt-2 bg-red-500 rounded-full"></div>
+                <div>
+                  <div class="font-semibold text-red-900 mb-1">Development Mode Warning</div>
+                  <div class="text-sm text-red-700">
+                    This debug information is only visible because DEBUG=True. Never enable debug mode in production.
+                  </div>
+                </div>
+              </div>
+              <pre class="text-xs mono bg-white p-4 rounded-lg border border-red-200 text-red-900 overflow-auto max-h-96">{{ error_debug }}</pre>
+            </div>
+          </div>
           {% endif %}
+          
+          <!-- Additional context section -->
+          <div>
+            <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">What This Means</h2>
+            <div class="bg-blue-50 rounded-xl p-6 border border-blue-100">
+              <div class="prose prose-sm max-w-none text-gray-700">
+                {% if error_code == '404' %}
+                  <p class="mb-3"><strong>404 Not Found</strong> means the server cannot find the requested resource. This could happen if:</p>
+                  <ul class="space-y-1 text-sm ml-5 list-disc">
+                    <li>The URL was typed incorrectly</li>
+                    <li>The page has been moved or deleted</li>
+                    <li>The link you followed is outdated</li>
+                    <li>The resource never existed at this location</li>
+                  </ul>
+                {% elif error_code == '500' %}
+                  <p class="mb-3"><strong>500 Internal Server Error</strong> indicates the server encountered an unexpected condition. Common causes include:</p>
+                  <ul class="space-y-1 text-sm ml-5 list-disc">
+                    <li>Server configuration issues</li>
+                    <li>Database connection problems</li>
+                    <li>Unhandled exceptions in application code</li>
+                    <li>Resource exhaustion (memory, disk space)</li>
+                  </ul>
+                {% elif error_code == '403' %}
+                  <p class="mb-3"><strong>403 Forbidden</strong> means you don't have permission to access this resource. This occurs when:</p>
+                  <ul class="space-y-1 text-sm ml-5 list-disc">
+                    <li>Authentication is required but not provided</li>
+                    <li>Your account lacks necessary permissions</li>
+                    <li>Access is restricted to specific IP addresses or users</li>
+                    <li>The resource is protected by access controls</li>
+                  </ul>
+                {% else %}
+                  <p class="mb-3">An <strong>HTTP {{ error_code }}</strong> error occurred. This indicates an issue processing your request. The specific meaning depends on the error code returned by the server.</p>
+                  <p class="text-sm">Please check the technical details above and contact support if you need assistance.</p>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          
         </div>
-      </div>
-
-      <footer class="bg-gray-50 border-t border-gray-100 p-4 text-xs text-gray-500 flex items-center justify-between">
-        <div>&copy; {% now "Y" %} Your Organisation</div>
-        <div>Version: <span class="font-mono">{{ version|default:"dev" }}</span></div>
-      </footer>
-    </section>
+        
+        <!-- Footer with app information -->
+        <footer class="bg-gradient-to-r from-gray-50 to-slate-50 border-t border-gray-200 p-6">
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="text-sm text-gray-600">
+              &copy; {% now "Y" %} ACRP. All rights reserved.
+            </div>
+            <div class="flex items-center gap-6 text-xs text-gray-500">
+              <div class="flex items-center gap-2">
+                <span class="font-medium">Version:</span>
+                <code class="mono bg-white px-2 py-1 rounded border border-gray-200">{{ version|default:"dev" }}</code>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="font-medium">Environment:</span>
+                <code class="mono bg-white px-2 py-1 rounded border border-gray-200">{% if debug %}Development{% else %}Production{% endif %}</code>
+              </div>
+            </div>
+          </div>
+        </footer>
+        
+      </section>
+      
+    </div>
   </main>
 
   <script>
+    
     document.getElementById('copyUrlBtn').addEventListener('click', function() {
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(window.location.href).then(function() {
-          alert('URL copied to clipboard');
-        }, function() {
-          alert('Could not copy URL');
-        });
+      const button = this;
+      const buttonText = document.getElementById('copyBtnText');
+      const originalText = buttonText.textContent;
+      
+      // Attempt to copy using modern Clipboard API
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(window.location.href)
+          .then(function() {
+            // Success - update UI to show confirmation
+            button.classList.add('copied');
+            buttonText.textContent = 'Copied!';
+            
+            // Reset button after 2 seconds
+            setTimeout(function() {
+              button.classList.remove('copied');
+              buttonText.textContent = originalText;
+            }, 2000);
+          })
+          .catch(function(err) {
+            // Failed - show error feedback
+            console.error('Failed to copy:', err);
+            buttonText.textContent = 'Copy failed';
+            setTimeout(function() {
+              buttonText.textContent = originalText;
+            }, 2000);
+          });
       } else {
-        // Fallback
-        var el = document.createElement('textarea');
-        el.value = window.location.href;
-        document.body.appendChild(el);
-        el.select();
-        try { document.execCommand('copy'); alert('URL copied to clipboard'); } catch(e) { alert('Could not copy URL'); }
-        document.body.removeChild(el);
+        // Fallback method for older browsers
+        // Creates temporary textarea, selects it, and executes copy command
+        const textarea = document.createElement('textarea');
+        textarea.value = window.location.href;
+        textarea.style.position = 'fixed';  // Prevent scrolling
+        textarea.style.opacity = '0';       // Make invisible
+        document.body.appendChild(textarea);
+        
+        try {
+          textarea.select();
+          textarea.setSelectionRange(0, 99999); // For mobile devices
+          
+          const successful = document.execCommand('copy');
+          
+          if (successful) {
+            button.classList.add('copied');
+            buttonText.textContent = 'Copied!';
+            
+            setTimeout(function() {
+              button.classList.remove('copied');
+              buttonText.textContent = originalText;
+            }, 2000);
+          } else {
+            buttonText.textContent = 'Copy failed';
+            setTimeout(function() {
+              buttonText.textContent = originalText;
+            }, 2000);
+          }
+        } catch (err) {
+          console.error('Fallback copy failed:', err);
+          buttonText.textContent = 'Copy not supported';
+          setTimeout(function() {
+            buttonText.textContent = originalText;
+          }, 2000);
+        } finally {
+          // Clean up temporary element
+          document.body.removeChild(textarea);
+        }
       }
     });
   </script>
