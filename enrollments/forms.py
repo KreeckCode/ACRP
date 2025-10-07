@@ -405,17 +405,6 @@ class BaseApplicationForm(forms.ModelForm):
                 "disciplinary_description": "Please provide details about the disciplinary action."
             })
         
-        # Validate physical address fields if different from postal
-        if not cleaned_data.get("physical_same_as_postal"):
-            required_physical_fields = [
-                'physical_address_line1', 'physical_city', 
-                'physical_province', 'physical_code'
-            ]
-            for field in required_physical_fields:
-                if not cleaned_data.get(field):
-                    raise ValidationError({
-                        field: "This field is required when physical address differs from postal address."
-                    })
         
         # Validate legal agreements
         required_agreements = [

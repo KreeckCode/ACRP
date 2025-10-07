@@ -538,7 +538,7 @@ class BaseApplication(models.Model):
     # Physical address (if different from postal)
     physical_same_as_postal = models.BooleanField(
         default=True,
-        help_text="Check if physical address is the same as postal address", blank=True
+        help_text="Check if physical address is the same as postal address"
     )
     physical_address_line1 = models.CharField(max_length=100, blank=True)
     physical_address_line2 = models.CharField(max_length=100, blank=True)
