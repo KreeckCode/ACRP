@@ -538,7 +538,7 @@ LOGGING = {
         
         # Django request logger - Logs all HTTP requests
         'django.request': {
-            'handlers': ['console', 'file', 'error_file', 'mail_admins'],
+            'handlers': ['console', 'file', 'error_file'],
             'level': 'WARNING',  # Only log warnings and errors for requests
             'propagate': False,
         },
@@ -552,7 +552,7 @@ LOGGING = {
         
         # Django security logger - Security-related events
         'django.security': {
-            'handlers': ['console', 'security_file', 'mail_admins'],
+            'handlers': ['console', 'security_file'],
             'level': 'WARNING',
             'propagate': False,
         },
