@@ -856,9 +856,6 @@ MANAGERS = ADMINS
 
 
 
-# MONITORING AND ANALYTICS - Optional production monitoring
-
-
 # Application monitoring with Sentry (optional)
 MONITORING_ENABLED = config('MONITORING_ENABLED', default=True, cast=bool)
 
@@ -868,20 +865,36 @@ if MONITORING_ENABLED and config('SENTRY_DSN', default=None):
         from sentry_sdk.integrations.django import DjangoIntegration
         from sentry_sdk.integrations.logging import LoggingIntegration
         
+        # Configure Sentry logging integration
         sentry_logging = LoggingIntegration(
-            level=logging.INFO,
-            event_level=logging.ERROR
+            level=logging.INFO,        # Capture info and above as breadcrumbs
+            event_level=logging.ERROR  # Send errors as events to Sentry
         )
         
+        # Initialize Sentry SDK
         sentry_sdk.init(
-            dsn='dsn="https://c4bea8401743f05e60cd6d8bff36c8ad@o4510151471202304.ingest.us.sentry.io/4510151474085888",',
-            integrations=[DjangoIntegration(), sentry_logging],
-            traces_sample_rate=0.1,
+            # FIXED: Remove extra 'dsn=' prefix, quotes, and trailing comma
+            dsn='https://c4bea8401743f05e60cd6d8bff36c8ad@o4510151471202304.ingest.us.sentry.io/4510151474085888',
+            integrations=[
+                DjangoIntegration(),
+                sentry_logging       
+            ],
+            traces_sample_rate=0.1, 
             send_default_pii=True,
             environment=ENVIRONMENT,
         )
+        
+        logger = logging.getLogger(__name__)
+        logger.info(f"✓ Sentry monitoring initialized for environment: {ENVIRONMENT}")
+        
     except ImportError:
-        pass
+        # Sentry SDK not installed - skip monitoring
+        logger = logging.getLogger(__name__)
+        logger.warning("Sentry SDK not installed. Error monitoring disabled.")
+    except Exception as e:
+        # Handle any other Sentry initialization errors gracefully
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to initialize Sentry: {e}")
 
 # Performance monitoring thresholds
 PERFORMANCE_MONITORING = {
