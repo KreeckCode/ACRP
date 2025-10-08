@@ -128,8 +128,3 @@ urlpatterns = [
 ]
 
 
-# Custom error handlers (configured in main URLs)
-handler404 = 'app.views.error_404'
-handler500 = 'app.views.error_500'
-handler403 = 'app.views.error_403'
-handler400 = 'app.views.error_400'

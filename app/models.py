@@ -1,3 +1,4 @@
+import traceback
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils import timezone
@@ -1252,3 +1253,646 @@ class QuizResponse(models.Model):
     
     class Meta:
         unique_together = ['attempt', 'question']
+
+
+
+
+
+
+
+
+
+### ========== ERROR LOGGING SYSTEM ========== ###
+from django.db import models
+from django.contrib.auth import get_user_model
+from django.contrib.postgres.fields import JSONField  # Use JSONField if on PostgreSQL
+from django.utils import timezone
+from django.db.models import Count, Q
+from django.db.models.functions import TruncDate
+
+User = get_user_model()
+
+
+class ErrorLogManager(models.Manager):
+    """
+    Custom manager for ErrorLog with advanced querying capabilities.
+    
+    Provides convenient methods for common error analysis queries
+    like finding recurring errors, error trends, and top error types.
+    """
+    
+    def recent_errors(self, hours=24):
+        """
+        Get errors from the last N hours.
+        
+        Args:
+            hours: Number of hours to look back (default: 24)
+            
+        Returns:
+            QuerySet of recent errors
+        """
+        since = timezone.now() - timezone.timedelta(hours=hours)
+        return self.filter(timestamp__gte=since).order_by('-timestamp')
+    
+    def unresolved(self):
+        """
+        Get all unresolved errors.
+        
+        Returns:
+            QuerySet of unresolved errors
+        """
+        return self.filter(resolved=False).order_by('-timestamp')
+    
+    def by_error_type(self, error_type):
+        """
+        Get all errors of a specific type.
+        
+        Args:
+            error_type: The error type/exception name
+            
+        Returns:
+            QuerySet of errors matching the type
+        """
+        return self.filter(error_type=error_type).order_by('-timestamp')
+    
+    def error_frequency(self, days=7):
+        """
+        Get error frequency statistics over the past N days.
+        
+        Args:
+            days: Number of days to analyze (default: 7)
+            
+        Returns:
+            QuerySet annotated with error counts per day
+        """
+        since = timezone.now() - timezone.timedelta(days=days)
+        return (
+            self.filter(timestamp__gte=since)
+            .annotate(date=TruncDate('timestamp'))
+            .values('date')
+            .annotate(count=Count('id'))
+            .order_by('date')
+        )
+    
+    def top_errors(self, limit=10, days=7):
+        """
+        Get the most common errors in the past N days.
+        
+        Args:
+            limit: Maximum number of error types to return
+            days: Number of days to analyze
+            
+        Returns:
+            List of dictionaries with error type and count
+        """
+        since = timezone.now() - timezone.timedelta(days=days)
+        return (
+            self.filter(timestamp__gte=since)
+            .values('error_type', 'error_code')
+            .annotate(count=Count('id'))
+            .order_by('-count')[:limit]
+        )
+    
+    def errors_by_user(self, user, days=7):
+        """
+        Get errors encountered by a specific user.
+        
+        Args:
+            user: User instance
+            days: Number of days to look back
+            
+        Returns:
+            QuerySet of errors for the user
+        """
+        since = timezone.now() - timezone.timedelta(days=days)
+        return self.filter(
+            user=user,
+            timestamp__gte=since
+        ).order_by('-timestamp')
+
+
+class ErrorLog(models.Model):
+    """
+    Comprehensive error log model for tracking all application errors.
+    
+    This model captures detailed information about errors including:
+    - Error identification and classification
+    - Request context and user information
+    - Stack traces and debugging data
+    - Resolution tracking
+    - Performance metrics
+    
+    The stored data enables:
+    - Historical error analysis
+    - Pattern detection and recurring error identification
+    - User impact assessment
+    - Resolution workflow management
+    - Performance debugging
+    """
+    
+    # ========== Primary Identification ==========
+    error_id = models.CharField(
+        max_length=32,
+        unique=True,
+        db_index=True,
+        help_text="Unique identifier for this error instance"
+    )
+    
+    timestamp = models.DateTimeField(
+        default=timezone.now,
+        db_index=True,
+        help_text="When the error occurred"
+    )
+    
+    # ========== Error Classification ==========
+    error_type = models.CharField(
+        max_length=255,
+        db_index=True,
+        help_text="Exception class name (e.g., ValueError, KeyError)"
+    )
+    
+    error_code = models.CharField(
+        max_length=10,
+        db_index=True,
+        help_text="HTTP status code (e.g., 404, 500)"
+    )
+    
+    error_message = models.TextField(
+        help_text="Human-readable error message"
+    )
+    
+    exception_message = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Technical exception message from Python"
+    )
+    
+    # ========== Request Context ==========
+    path = models.CharField(
+        max_length=500,
+        db_index=True,
+        help_text="URL path where error occurred"
+    )
+    
+    full_path = models.CharField(
+        max_length=1000,
+        help_text="Full URL including query parameters"
+    )
+    
+    method = models.CharField(
+        max_length=10,
+        default='GET',
+        help_text="HTTP method (GET, POST, etc.)"
+    )
+    
+    query_params = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text="Query string parameters"
+    )
+    
+    # ========== User Context ==========
+    user = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='error_logs',
+        help_text="User who encountered the error"
+    )
+    
+    user_agent = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Browser user agent string"
+    )
+    
+    ip_address = models.GenericIPAddressField(
+        null=True,
+        blank=True,
+        help_text="Client IP address"
+    )
+    
+    referrer = models.CharField(
+        max_length=1000,
+        blank=True,
+        null=True,
+        help_text="HTTP referrer URL"
+    )
+    
+    # ========== Technical Details ==========
+    stack_trace = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Full Python stack trace"
+    )
+    
+    request_context = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text="Complete request context including headers, session, etc."
+    )
+    
+    additional_context = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text="Custom application context data"
+    )
+    
+    # ========== Resolution Tracking ==========
+    resolved = models.BooleanField(
+        default=False,
+        db_index=True,
+        help_text="Whether this error has been resolved"
+    )
+    
+    resolved_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When the error was marked as resolved"
+    )
+    
+    resolved_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='resolved_errors',
+        help_text="Developer who resolved this error"
+    )
+    
+    resolution_notes = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Notes about how the error was resolved"
+    )
+    
+    # ========== Classification & Metadata ==========
+    severity = models.CharField(
+        max_length=20,
+        choices=[
+            ('critical', 'Critical'),
+            ('error', 'Error'),
+            ('warning', 'Warning'),
+            ('info', 'Info'),
+        ],
+        default='error',
+        db_index=True,
+        help_text="Error severity level"
+    )
+    
+    category = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        db_index=True,
+        help_text="Error category for grouping (e.g., 'database', 'authentication')"
+    )
+    
+    tags = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="Tags for categorization and filtering"
+    )
+    
+    # ========== Performance Metrics ==========
+    response_time = models.FloatField(
+        null=True,
+        blank=True,
+        help_text="Time taken to generate error response (seconds)"
+    )
+    
+    # ========== Tracking & Notification ==========
+    notified = models.BooleanField(
+        default=False,
+        help_text="Whether admin notification was sent"
+    )
+    
+    sentry_id = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="Sentry event ID if using Sentry"
+    )
+    
+    occurrence_count = models.PositiveIntegerField(
+        default=1,
+        help_text="Number of times this error pattern has occurred"
+    )
+    
+    first_seen = models.DateTimeField(
+        default=timezone.now,
+        help_text="First time this error pattern was seen"
+    )
+    
+    last_seen = models.DateTimeField(
+        default=timezone.now,
+        help_text="Most recent occurrence of this error pattern"
+    )
+    
+    # Custom manager
+    objects = ErrorLogManager()
+    
+    class Meta:
+        verbose_name = "Error Log"
+        verbose_name_plural = "Error Logs"
+        ordering = ['-timestamp']
+        indexes = [
+            models.Index(fields=['-timestamp', 'resolved']),
+            models.Index(fields=['error_type', '-timestamp']),
+            models.Index(fields=['error_code', '-timestamp']),
+            models.Index(fields=['user', '-timestamp']),
+            models.Index(fields=['path', '-timestamp']),
+            models.Index(fields=['severity', '-timestamp']),
+        ]
+    
+    def __str__(self):
+        return f"{self.error_code} - {self.error_type} at {self.path} ({self.timestamp})"
+    
+    def mark_resolved(self, user, notes=None):
+        """
+        Mark this error as resolved.
+        
+        Args:
+            user: User who resolved the error
+            notes: Optional resolution notes
+        """
+        self.resolved = True
+        self.resolved_at = timezone.now()
+        self.resolved_by = user
+        if notes:
+            self.resolution_notes = notes
+        self.save(update_fields=['resolved', 'resolved_at', 'resolved_by', 'resolution_notes'])
+    
+    def increment_occurrence(self):
+        """Increment the occurrence count for this error pattern."""
+        self.occurrence_count += 1
+        self.last_seen = timezone.now()
+        self.save(update_fields=['occurrence_count', 'last_seen'])
+    
+    def get_similar_errors(self, limit=10):
+        """
+        Find similar errors based on error type and path.
+        
+        Args:
+            limit: Maximum number of similar errors to return
+            
+        Returns:
+            QuerySet of similar errors
+        """
+        return ErrorLog.objects.filter(
+            error_type=self.error_type,
+            path=self.path
+        ).exclude(id=self.id).order_by('-timestamp')[:limit]
+    
+    @classmethod
+    def log_error(cls, request, exception, error_id, error_code, context=None):
+        """
+        Create a new error log entry.
+        
+        This is a convenience method for creating error logs from
+        exception handlers.
+        
+        Args:
+            request: HttpRequest object
+            exception: Exception instance
+            error_id: Unique error identifier
+            error_code: HTTP status code
+            context: Additional context dictionary
+            
+        Returns:
+            ErrorLog instance
+        """
+        from app.errors import capture_request_context, get_client_ip
+        
+        # Capture request context
+        request_context = capture_request_context(request)
+        
+        # Determine severity based on error code
+        severity_map = {
+            '400': 'warning',
+            '401': 'warning',
+            '403': 'warning',
+            '404': 'info',
+            '500': 'critical',
+            '503': 'critical',
+        }
+        severity = severity_map.get(error_code, 'error')
+        
+        # Create error log
+        error_log = cls.objects.create(
+            error_id=error_id,
+            error_type=type(exception).__name__,
+            error_code=error_code,
+            error_message=str(exception),
+            exception_message=str(exception),
+            path=request.path,
+            full_path=request.get_full_path(),
+            method=request.method,
+            query_params=dict(request.GET.items()),
+            user=request.user if request.user.is_authenticated else None,
+            user_agent=request.META.get('HTTP_USER_AGENT', ''),
+            ip_address=get_client_ip(request),
+            referrer=request.META.get('HTTP_REFERER'),
+            stack_trace=traceback.format_exc() if hasattr(exception, '__traceback__') else None,
+            request_context=request_context,
+            additional_context=context or {},
+            severity=severity,
+        )
+        
+        return error_log
+
+
+class ErrorPattern(models.Model):
+    """
+    Track recurring error patterns for proactive monitoring.
+    
+    This model groups similar errors together and tracks their frequency,
+    enabling early detection of systemic issues and helping prioritize
+    bug fixes based on user impact.
+    """
+    
+    pattern_id = models.CharField(
+        max_length=64,
+        unique=True,
+        db_index=True,
+        help_text="Hash identifying this error pattern"
+    )
+    
+    error_type = models.CharField(
+        max_length=255,
+        db_index=True,
+        help_text="Exception type for this pattern"
+    )
+    
+    path_pattern = models.CharField(
+        max_length=500,
+        help_text="URL pattern (may use regex or wildcards)"
+    )
+    
+    signature = models.TextField(
+        help_text="Unique signature derived from stack trace"
+    )
+    
+    # Statistics
+    occurrence_count = models.PositiveIntegerField(
+        default=0,
+        help_text="Total number of occurrences"
+    )
+    
+    affected_users = models.ManyToManyField(
+        User,
+        blank=True,
+        related_name='error_patterns',
+        help_text="Users who encountered this error"
+    )
+    
+    first_seen = models.DateTimeField(
+        default=timezone.now,
+        help_text="First occurrence of this pattern"
+    )
+    
+    last_seen = models.DateTimeField(
+        default=timezone.now,
+        help_text="Most recent occurrence"
+    )
+    
+    # Resolution
+    resolved = models.BooleanField(
+        default=False,
+        db_index=True
+    )
+    
+    priority = models.CharField(
+        max_length=20,
+        choices=[
+            ('critical', 'Critical'),
+            ('high', 'High'),
+            ('medium', 'Medium'),
+            ('low', 'Low'),
+        ],
+        default='medium',
+        help_text="Priority for fixing this error"
+    )
+    
+    class Meta:
+        verbose_name = "Error Pattern"
+        verbose_name_plural = "Error Patterns"
+        ordering = ['-occurrence_count', '-last_seen']
+    
+    def __str__(self):
+        return f"{self.error_type} ({self.occurrence_count} occurrences)"
+    
+    def update_statistics(self):
+        """Update occurrence statistics from related error logs."""
+        related_errors = ErrorLog.objects.filter(
+            error_type=self.error_type,
+            path__icontains=self.path_pattern.replace('*', '')
+        )
+        
+        self.occurrence_count = related_errors.count()
+        if self.occurrence_count > 0:
+            self.last_seen = related_errors.order_by('-timestamp').first().timestamp
+        
+        self.save()
+
+
+# ============================================================================
+# ADMIN INTERFACE CONFIGURATION
+# ============================================================================
+
+from django.contrib import admin
+
+
+@admin.register(ErrorLog)
+class ErrorLogAdmin(admin.ModelAdmin):
+    """
+    Admin interface for viewing and managing error logs.
+    
+    Provides filtering, search, and bulk actions for error management.
+    """
+    
+    list_display = [
+        'error_id', 'error_code', 'error_type', 'path',
+        'user', 'timestamp', 'resolved', 'severity'
+    ]
+    
+    list_filter = [
+        'resolved', 'error_code', 'error_type', 'severity',
+        'timestamp', 'method'
+    ]
+    
+    search_fields = [
+        'error_id', 'error_message', 'path', 'user__username',
+        'ip_address'
+    ]
+    
+    readonly_fields = [
+        'error_id', 'timestamp', 'error_type', 'stack_trace',
+        'request_context', 'first_seen', 'last_seen'
+    ]
+    
+    fieldsets = (
+        ('Error Information', {
+            'fields': ('error_id', 'timestamp', 'error_type', 'error_code',
+                      'error_message', 'exception_message', 'severity')
+        }),
+        ('Request Details', {
+            'fields': ('path', 'full_path', 'method', 'query_params',
+                      'referrer')
+        }),
+        ('User Information', {
+            'fields': ('user', 'ip_address', 'user_agent')
+        }),
+        ('Technical Details', {
+            'fields': ('stack_trace', 'request_context', 'additional_context'),
+            'classes': ('collapse',)
+        }),
+        ('Resolution', {
+            'fields': ('resolved', 'resolved_at', 'resolved_by',
+                      'resolution_notes')
+        }),
+        ('Tracking', {
+            'fields': ('occurrence_count', 'first_seen', 'last_seen',
+                      'notified', 'sentry_id'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    actions = ['mark_as_resolved', 'mark_as_unresolved']
+    
+    def mark_as_resolved(self, request, queryset):
+        """Bulk action to mark errors as resolved."""
+        count = queryset.update(
+            resolved=True,
+            resolved_at=timezone.now(),
+            resolved_by=request.user
+        )
+        self.message_user(request, f"{count} errors marked as resolved.")
+    mark_as_resolved.short_description = "Mark selected errors as resolved"
+    
+    def mark_as_unresolved(self, request, queryset):
+        """Bulk action to mark errors as unresolved."""
+        count = queryset.update(
+            resolved=False,
+            resolved_at=None,
+            resolved_by=None
+        )
+        self.message_user(request, f"{count} errors marked as unresolved.")
+    mark_as_unresolved.short_description = "Mark selected errors as unresolved"
+
+
+@admin.register(ErrorPattern)
+class ErrorPatternAdmin(admin.ModelAdmin):
+    """Admin interface for error patterns."""
+    
+    list_display = [
+        'pattern_id', 'error_type', 'occurrence_count',
+        'priority', 'resolved', 'last_seen'
+    ]
+    
+    list_filter = ['resolved', 'priority', 'error_type', 'last_seen']
+    
+    search_fields = ['pattern_id', 'error_type', 'path_pattern']
+    
+    readonly_fields = ['pattern_id', 'occurrence_count', 'first_seen', 'last_seen']

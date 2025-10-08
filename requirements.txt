@@ -118,3 +118,4 @@ whitenoise
 Whoosh
 django-anymail
 mailjet-rest
+python-json-logger

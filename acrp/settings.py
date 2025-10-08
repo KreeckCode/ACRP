@@ -5,7 +5,7 @@ import logging
 from pathlib import Path
 from decouple import config
 import os
-
+import sentry_sdk
 
 # CORE DJANGO SETTINGS
 
@@ -116,6 +116,7 @@ MIDDLEWARE = [
     
     # Clickjacking protection middleware
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'app.errors.EnhancedErrorHandlingMiddleware',
 ]
 
 # Add development middleware only in DEBUG mode
@@ -163,6 +164,10 @@ TEMPLATES = [
     },
 ]
 
+
+ERROR_DB_LOGGING = True
+ERROR_EMAIL_ALERTS = False
+VERSION = '1.0.0'
 
 
 # DATABASE CONFIGURATION - Environment-based with PostgreSQL optimization
@@ -267,6 +272,11 @@ LOGOUT_REDIRECT_URL = '/'
 # Password reset settings
 PASSWORD_RESET_TIMEOUT = 86400  # 24 hours
 
+handler404 = 'app.views.error_404'
+handler500 = 'app.views.error_500'
+handler403 = 'app.views.error_403'
+handler400 = 'app.views.error_400'
+
 
 # Static files configuration
 STATIC_URL = '/static/'
@@ -354,6 +364,7 @@ USE_TZ = True
 DATETIME_FORMAT = 'Y-m-d H:i:s'
 DATE_FORMAT = 'Y-m-d'
 TIME_FORMAT = 'H:i:s'
+
 
 
 # DJANGO REST FRAMEWORK CONFIGURATION
@@ -588,6 +599,12 @@ LOGGING = {
         # Accounts/Authentication logger
         'accounts': {
             'handlers': ['console', 'file', 'security_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+
+        'app.errors': {
+            'handlers': ['console', 'file', 'error_file'],
             'level': 'INFO',
             'propagate': False,
         },
@@ -857,14 +874,13 @@ if MONITORING_ENABLED and config('SENTRY_DSN', default=None):
         )
         
         sentry_sdk.init(
-            dsn=config('SENTRY_DSN'),
+            dsn='dsn="https://c4bea8401743f05e60cd6d8bff36c8ad@o4510151471202304.ingest.us.sentry.io/4510151474085888",',
             integrations=[DjangoIntegration(), sentry_logging],
             traces_sample_rate=0.1,
             send_default_pii=True,
             environment=ENVIRONMENT,
         )
     except ImportError:
-        # Sentry not installed, skip monitoring
         pass
 
 # Performance monitoring thresholds
