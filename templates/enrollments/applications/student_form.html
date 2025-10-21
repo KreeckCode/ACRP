@@ -1382,6 +1382,319 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
+        // ============================================================================
+        // FORM AUTOSAVE & RESTORE FUNCTIONALITY
+        // ============================================================================
+        
+        const AUTOSAVE_KEY = 'student_application_autosave_{{ session.session_id }}';
+        const AUTOSAVE_INTERVAL = 30000; // 30 seconds
+        let autosaveTimer = null;
+        let formChanged = false;
+        let filesSelected = false;
+
+        // Save form data to localStorage
+        function saveFormToLocalStorage() {
+            const form = document.getElementById('applicationForm');
+            if (!form) return;
+
+            const formData = {};
+            
+            // Save all text inputs, textareas, selects, and checkboxes
+            form.querySelectorAll('input:not([type="file"]), textarea, select').forEach(field => {
+                if (field.type === 'checkbox') {
+                    formData[field.name] = field.checked;
+                } else if (field.type === 'radio') {
+                    if (field.checked) {
+                        formData[field.name] = field.value;
+                    }
+                } else {
+                    formData[field.name] = field.value;
+                }
+            });
+
+            // Save formset counts
+            ['documents', 'references', 'academic_qualifications'].forEach(formsetName => {
+                const totalFormsField = document.querySelector(`input[name="${formsetName}-TOTAL_FORMS"]`);
+                if (totalFormsField) {
+                    formData[`${formsetName}-TOTAL_FORMS`] = totalFormsField.value;
+                }
+            });
+
+            // Save to localStorage
+            localStorage.setItem(AUTOSAVE_KEY, JSON.stringify({
+                data: formData,
+                timestamp: new Date().toISOString(),
+                hasFiles: filesSelected
+            }));
+
+            console.log('✓ Form data auto-saved to localStorage');
+            showAutosaveIndicator();
+        }
+
+        // Restore form data from localStorage
+        function restoreFormFromLocalStorage() {
+            const savedData = localStorage.getItem(AUTOSAVE_KEY);
+            if (!savedData) return false;
+
+            try {
+                const { data, timestamp, hasFiles } = JSON.parse(savedData);
+                const savedDate = new Date(timestamp);
+                const now = new Date();
+                const hoursSince = (now - savedDate) / (1000 * 60 * 60);
+
+                // Don't restore if older than 24 hours
+                if (hoursSince > 24) {
+                    localStorage.removeItem(AUTOSAVE_KEY);
+                    return false;
+                }
+
+                // Ask user if they want to restore
+                const message = `Found auto-saved data from ${savedDate.toLocaleString()}.\n\nRestore your previous session?` +
+                            (hasFiles ? '\n\n Note: You will need to re-upload files.' : '');
+                
+                if (!confirm(message)) {
+                    return false;
+                }
+
+                // Restore form fields
+                Object.entries(data).forEach(([name, value]) => {
+                    const field = document.querySelector(`[name="${name}"]`);
+                    if (!field) return;
+
+                    if (field.type === 'checkbox') {
+                        field.checked = value;
+                    } else if (field.type === 'radio') {
+                        if (field.value === value) {
+                            field.checked = true;
+                        }
+                    } else {
+                        field.value = value;
+                    }
+                });
+
+                // Restore formsets
+                ['academic_qualifications', 'references', 'documents'].forEach(formsetName => {
+                    const totalForms = data[`${formsetName}-TOTAL_FORMS`];
+                    if (totalForms && parseInt(totalForms) > 0) {
+                        // Recreate formset items
+                        for (let i = 0; i < parseInt(totalForms); i++) {
+                            addFormsetItem(formsetName);
+                            
+                            // Restore formset field values
+                            Object.entries(data).forEach(([name, value]) => {
+                                if (name.startsWith(`${formsetName}-${i}-`)) {
+                                    const field = document.querySelector(`[name="${name}"]`);
+                                    if (field && field.type !== 'file') {
+                                        if (field.type === 'checkbox') {
+                                            field.checked = value;
+                                        } else {
+                                            field.value = value;
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                    }
+                });
+
+                console.log('✓ Form data restored from localStorage');
+                showRestoreNotification();
+                return true;
+
+            } catch (error) {
+                console.error('Error restoring form data:', error);
+                localStorage.removeItem(AUTOSAVE_KEY);
+                return false;
+            }
+        }
+
+        // Start autosave timer
+        function startAutosave() {
+            if (autosaveTimer) {
+                clearInterval(autosaveTimer);
+            }
+
+            autosaveTimer = setInterval(() => {
+                if (formChanged) {
+                    saveFormToLocalStorage();
+                    formChanged = false;
+                }
+            }, AUTOSAVE_INTERVAL);
+
+            console.log('✓ Autosave started (every 30 seconds)');
+        }
+
+        // Show autosave indicator
+        function showAutosaveIndicator() {
+            let indicator = document.getElementById('autosave-indicator');
+            if (!indicator) {
+                indicator = document.createElement('div');
+                indicator.id = 'autosave-indicator';
+                indicator.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: #198754;
+                    color: white;
+                    padding: 10px 20px;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                    z-index: 10000;
+                    animation: slideIn 0.3s ease-out;
+                `;
+                document.body.appendChild(indicator);
+            }
+
+            indicator.innerHTML = '<i class="bi bi-cloud-check"></i> Auto-saved';
+            indicator.style.display = 'block';
+
+            setTimeout(() => {
+                indicator.style.display = 'none';
+            }, 2000);
+        }
+
+        // Show restore notification
+        function showRestoreNotification() {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: #0d6efd;
+                color: white;
+                padding: 15px 30px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                z-index: 10000;
+                animation: slideDown 0.3s ease-out;
+            `;
+            notification.innerHTML = '<i class="bi bi-info-circle"></i> <strong>Form data restored!</strong> Please review and re-upload any files.';
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+        }
+
+        // Warn before leaving with unsaved changes
+        function setupBeforeUnloadWarning() {
+            window.addEventListener('beforeunload', (e) => {
+                if (formChanged || filesSelected) {
+                    e.preventDefault();
+                    e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+                    return e.returnValue;
+                }
+            });
+        }
+
+        // Track form changes
+        function setupFormChangeTracking() {
+            const form = document.getElementById('applicationForm');
+            if (!form) return;
+
+            // Track text inputs, textareas, selects
+            form.addEventListener('input', (e) => {
+                if (e.target.matches('input:not([type="file"]), textarea, select')) {
+                    formChanged = true;
+                }
+            });
+
+            // Track checkboxes and radios
+            form.addEventListener('change', (e) => {
+                if (e.target.matches('input[type="checkbox"], input[type="radio"]')) {
+                    formChanged = true;
+                }
+            });
+
+            // Track file uploads
+            form.addEventListener('change', (e) => {
+                if (e.target.matches('input[type="file"]') && e.target.files.length > 0) {
+                    filesSelected = true;
+                    formChanged = true;
+                }
+            });
+        }
+
+        // Clear autosave data after successful submission
+        function clearAutosaveData() {
+            localStorage.removeItem(AUTOSAVE_KEY);
+            console.log('✓ Autosave data cleared');
+        }
+
+        // Manual save draft function (enhanced)
+        function saveDraft() {
+            // First save to localStorage
+            saveFormToLocalStorage();
+
+            // Show loading state
+            const draftBtn = event.target;
+            const originalText = draftBtn.innerHTML;
+            draftBtn.disabled = true;
+            draftBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Saving...';
+
+            // Save to server (implement this endpoint)
+            const form = document.getElementById('applicationForm');
+            const formData = new FormData(form);
+            formData.append('action', 'save_draft');
+
+            fetch(window.location.href, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('✓ Draft saved successfully to server!\n\nYou can safely close this page and continue later.');
+                    formChanged = false;
+                } else {
+                    alert('✗ Failed to save draft: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Draft save error:', error);
+                alert('✓ Draft saved to your browser!\n\nNote: Server save failed, but your data is stored locally.');
+            })
+            .finally(() => {
+                draftBtn.disabled = false;
+                draftBtn.innerHTML = originalText;
+            });
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('=== Form Autosave System Initializing ===');
+            
+            // Restore saved data if available
+            const restored = restoreFormFromLocalStorage();
+            
+            // Setup change tracking
+            setupFormChangeTracking();
+            
+            // Setup before unload warning
+            setupBeforeUnloadWarning();
+            
+            // Start autosave
+            startAutosave();
+
+            // Clear autosave on successful submission
+            const form = document.getElementById('applicationForm');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    // Don't prevent submission, just clear data on success
+                    setTimeout(() => {
+                        // Only clear if we're redirecting (success)
+                        if (document.querySelector('.alert-success')) {
+                            clearAutosaveData();
+                        }
+                    }, 1000);
+                });
+            }
+
+            console.log('✓ Autosave system ready');
+        });
+
         // Section toggle functionality
         function toggleSection(sectionName) {
             const header = document.querySelector(`#section-${sectionName} .section-header`);

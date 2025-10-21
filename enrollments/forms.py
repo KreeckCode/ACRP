@@ -607,37 +607,10 @@ class AssociatedApplicationForm(BaseApplicationForm):
         return cleaned_data
     
     class Meta(BaseApplicationForm.Meta):
-        model = DesignatedApplication
-        fields = BaseApplicationForm.Meta.fields + [
-            'designation_category', 'designation_subcategory',
-            'high_school_name', 'high_school_year_completed',
-            'supervisor_name', 'supervisor_qualification', 'supervisor_email', 
-            'supervisor_phone', 'supervisor_address',
-            'supervision_hours_received', 'supervision_period_start', 'supervision_period_end',
-            'professional_development_plans', 'other_professional_memberships'
-        ]
+        model = AssociatedApplication 
+        fields = BaseApplicationForm.Meta.fields 
         widgets = {
             **BaseApplicationForm.Meta.widgets,
-            'designation_category': SELECT_WIDGET,
-            'designation_subcategory': SELECT_WIDGET,
-            'high_school_name': TEXT_INPUT_WIDGET,
-            'high_school_year_completed': forms.NumberInput(attrs={
-                "class": "form-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors",
-                "min": "1950", "max": str(timezone.now().year)
-            }),
-            'supervisor_name': TEXT_INPUT_WIDGET,
-            'supervisor_qualification': TEXT_INPUT_WIDGET,
-            'supervisor_email': EMAIL_WIDGET,
-            'supervisor_phone': TEXT_INPUT_WIDGET,
-            'supervisor_address': TEXTAREA_WIDGET,
-            'supervision_hours_received': forms.NumberInput(attrs={
-                "class": "form-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors",
-                "min": "0"
-            }),
-            'supervision_period_start': DATE_WIDGET,
-            'supervision_period_end': DATE_WIDGET,
-            'professional_development_plans': TEXTAREA_WIDGET,
-            'other_professional_memberships': TEXTAREA_WIDGET,
         }
 
 
@@ -1065,11 +1038,13 @@ class BulkDocumentUploadForm(forms.Form):
 # ============================================================================
 
 # Academic Qualifications Formset (for designated applications)
-AcademicQualificationFormSet = inlineformset_factory(
-    DesignatedApplication,
+AcademicQualificationFormSet = generic_inlineformset_factory(
     AcademicQualification,
     form=AcademicQualificationForm,
-    fields=['qualification_type', 'qualification_name', 'institution_name', 'institution_address', 'date_awarded', 'grade_or_class'],
+    ct_field='content_type',
+    fk_field='object_id',
+    fields=['qualification_type', 'qualification_name', 'institution_name', 
+            'institution_address', 'date_awarded', 'grade_or_class'],
     extra=2,
     can_delete=True,
     max_num=10,

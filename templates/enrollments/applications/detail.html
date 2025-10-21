@@ -1535,7 +1535,7 @@
                         </div>
                         {% endif %}
                         
-                        <!-- FIXED: Single form containing ALL review fields including digital card -->
+                        <!-- Single form containing ALL review fields including digital card -->
                         <form method="post" action="{% url 'enrollments:application_review' pk=application.pk app_type=app_type %}">
                             {% csrf_token %}
                             
@@ -1560,7 +1560,12 @@
                             </div>
 
                             <!-- CATEGORY ASSIGNMENT SECTION (for designated applications) -->
-                            {% if app_type == 'designated' %}
+                            {% if is_designated_application %}
+                            <div class="alert alert-warning">
+                                <strong>Debug Info:</strong><br>
+                                app_type: {{ app_type }}<br>
+                                is_designated_application: {{ is_designated_application }}<br>
+                            </div>
                             <div class="card border-info mb-3">
                                 <div class="card-header bg-info text-dark">
                                     <h6 class="mb-0">

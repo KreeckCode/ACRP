@@ -637,12 +637,12 @@ class BaseApplication(models.Model):
     years_in_ministry = models.PositiveIntegerField(
         default=0,
         validators=[MinValueValidator(0), MaxValueValidator(70)],
-        help_text="Full time ministry work"
+        help_text="Full time ministry work", null=True, blank=True
     )
     years_in_part_time_ministry = models.PositiveIntegerField(
         default=0,
         validators=[MinValueValidator(0), MaxValueValidator(70)],
-        help_text="Total years involved in Part time ministry work"
+        help_text="Total years involved in Part time ministry work", null=True, blank=True
     )
     
     # ========================================================================
@@ -691,9 +691,6 @@ class BaseApplication(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
-    # Generic relation to documents
-    documents = GenericRelation('Document')
-    references = GenericRelation('Reference')
     
     class Meta:
         abstract = True
@@ -847,8 +844,11 @@ class AssociatedApplication(BaseApplication):
     Used by all three councils (CGMP, CPSC, CMTP).
     """
     
-    # No additional fields beyond BaseApplication
-    # The associated application uses only the common fields
+    
+    documents = GenericRelation('Document', related_query_name='associated_applications')
+    references = GenericRelation('Reference', related_query_name='associated_applications')
+    academic_qualifications = GenericRelation('AcademicQualification', related_query_name='associated_applications')
+    
     
     class Meta:
         verbose_name = "Associated Affiliation Application"
@@ -893,6 +893,13 @@ class StudentApplication(BaseApplication):
     academic_supervisor_name = models.CharField(max_length=200, blank=True)
     academic_supervisor_email = models.EmailField(blank=True)
     academic_supervisor_phone = models.CharField(max_length=20, blank=True)
+
+    # Generic relations - ADD THESE AT THE END
+    documents = GenericRelation('Document', related_query_name='associated_applications')
+    references = GenericRelation('Reference', related_query_name='associated_applications')
+    academic_qualifications = GenericRelation('AcademicQualification', related_query_name='associated_applications')
+    
+
     
     class Meta:
         verbose_name = "Student Affiliation Application"
@@ -988,7 +995,12 @@ class DesignatedApplication(BaseApplication):
         blank=True,
         help_text="List other professional bodies you are affiliated with"
     )
+    # Generic relations - ADD THESE AT THE END
+    documents = GenericRelation('Document', related_query_name='associated_applications')
+    references = GenericRelation('Reference', related_query_name='associated_applications')
+    academic_qualifications = GenericRelation('AcademicQualification', related_query_name='associated_applications')
     
+
     class Meta:
         verbose_name = "Designated Affiliation Application"
         verbose_name_plural = "Designated Affiliation Applications"
@@ -1031,16 +1043,20 @@ class DesignatedApplication(BaseApplication):
 
 class AcademicQualification(models.Model):
     """
-    Academic qualifications for designated applications.
+    Academic qualifications for any application type.
     
     Supports multiple qualifications per application including
     high school, college, seminary, university, and other qualifications.
+    
+    Uses GenericForeignKey to support all application types:
+    - AssociatedApplication
+    - DesignatedApplication  
+    - StudentApplication
     """
-    application = models.ForeignKey(
-        DesignatedApplication, 
-        on_delete=models.CASCADE,
-        related_name='academic_qualifications'
-    )
+    # Generic relationship to any application type
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True)
+    object_id = models.PositiveBigIntegerField(null=True)
+    application = GenericForeignKey('content_type', 'object_id')
     
     QUALIFICATION_TYPES = [
         ('high_school', 'High School'),
@@ -1052,15 +1068,16 @@ class AcademicQualification(models.Model):
     
     qualification_type = models.CharField(
         max_length=20, 
-        choices=QUALIFICATION_TYPES,blank=True
+        choices=QUALIFICATION_TYPES,
+        blank=True
     )
     qualification_name = models.CharField(
         max_length=200,
         help_text="e.g., BSc Theology, Diploma in Pastoral Care"
     )
-    institution_name = models.CharField(max_length=200,blank=True)
+    institution_name = models.CharField(max_length=200, blank=True)
     institution_address = models.TextField(blank=True)
-    date_awarded = models.DateField(blank=True)
+    date_awarded = models.DateField(blank=True, null=True)
     
     # Additional details
     grade_or_class = models.CharField(
@@ -1069,14 +1086,19 @@ class AcademicQualification(models.Model):
         help_text="Grade achieved or class of degree"
     )
     
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
     class Meta:
         ordering = ['-date_awarded']
         verbose_name = "Academic Qualification"
         verbose_name_plural = "Academic Qualifications"
     
     def __str__(self):
-        return f"{self.qualification_name} - {self.institution_name} ({self.date_awarded.year})"
-
+        year = self.date_awarded.year if self.date_awarded else 'N/A'
+        return f"{self.qualification_name} - {self.institution_name} ({year})"
+    
 
 class Reference(models.Model):
     """

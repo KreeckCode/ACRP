@@ -646,6 +646,101 @@ def onboarding_subcategory(request, session_id):
 # APPLICATION CREATION VIEWS
 # ============================================================================
 
+def extract_academic_qualification_data_from_post(request):
+    """Extract academic qualification data from POST request manually."""
+    academic_data = []
+    
+    total_forms = int(request.POST.get('academic_qualifications-TOTAL_FORMS', 0))
+    
+    for i in range(total_forms):
+        qualification_name = request.POST.get(f'academic_qualifications-{i}-qualification_name')
+        
+        if qualification_name:  # Only process if qualification name exists
+            academic_data.append({
+                'index': i,
+                'qualification_type': request.POST.get(f'academic_qualifications-{i}-qualification_type', ''),
+                'qualification_name': qualification_name,
+                'institution_name': request.POST.get(f'academic_qualifications-{i}-institution_name', ''),
+                'institution_address': request.POST.get(f'academic_qualifications-{i}-institution_address', ''),
+                'date_awarded': request.POST.get(f'academic_qualifications-{i}-date_awarded', ''),
+                'grade_or_class': request.POST.get(f'academic_qualifications-{i}-grade_or_class', ''),
+            })
+    
+    return academic_data
+
+
+def validate_extracted_academic_qualifications(academic_data):
+    """Validate extracted academic qualification data."""
+    errors = []
+    
+    for qual in academic_data:
+        if not qual['qualification_name']:
+            errors.append(f"Qualification {qual['index'] + 1}: Name is required")
+        if not qual['institution_name']:
+            errors.append(f"Qualification {qual['index'] + 1}: Institution is required")
+        if not qual['date_awarded']:
+            errors.append(f"Qualification {qual['index'] + 1}: Date awarded is required")
+    
+    return len(errors) == 0, errors
+
+
+def save_extracted_academic_qualifications(academic_data, application, content_type):
+    """Save academic qualifications manually."""
+    saved_count = 0
+    
+    for qual_data in academic_data:
+        try:
+            # Parse date
+            date_awarded = None
+            if qual_data['date_awarded']:
+                from datetime import datetime
+                date_awarded = datetime.strptime(qual_data['date_awarded'], '%Y-%m-%d').date()
+            
+            qualification = AcademicQualification.objects.create(
+                content_type=content_type,
+                object_id=application.pk,
+                qualification_type=qual_data['qualification_type'],
+                qualification_name=qual_data['qualification_name'],
+                institution_name=qual_data['institution_name'],
+                institution_address=qual_data['institution_address'],
+                date_awarded=date_awarded,
+                grade_or_class=qual_data['grade_or_class'],
+            )
+            logger.info(f"Created academic qualification: {qualification.qualification_name} (ID: {qualification.pk})")
+            saved_count += 1
+        except Exception as e:
+            logger.error(f"Error saving qualification {qual_data['qualification_name']}: {str(e)}")
+    
+    return saved_count
+
+
+def create_mock_academic_qualification_formset():
+    """Create a mock formset for template rendering."""
+    class MockFormset:
+        def __init__(self):
+            self.management_form = self.MockManagementForm()
+            self.forms = []
+            self.errors = []
+            self.non_form_errors = lambda: []
+            
+        def __iter__(self):
+            return iter(self.forms)
+            
+        def __len__(self):
+            return len(self.forms)
+    
+        class MockManagementForm:
+            def __str__(self):
+                return '''
+                <input type="hidden" name="academic_qualifications-TOTAL_FORMS" value="0" id="id_academic_qualifications-TOTAL_FORMS">
+                <input type="hidden" name="academic_qualifications-INITIAL_FORMS" value="0" id="id_academic_qualifications-INITIAL_FORMS">
+                <input type="hidden" name="academic_qualifications-MIN_NUM_FORMS" value="0" id="id_academic_qualifications-MIN_NUM_FORMS">
+                <input type="hidden" name="academic_qualifications-MAX_NUM_FORMS" value="1000" id="id_academic_qualifications-MAX_NUM_FORMS">
+                '''
+    
+    return MockFormset()
+
+
 from django.contrib.contenttypes.models import ContentType
 import traceback 
 
@@ -663,9 +758,6 @@ def application_create(request, session_id):
     These fields are now managed differently in the application flow.
     """
     try:
-        # FIXED: Removed select_related for deleted fields
-        # Before: select_related('selected_designation_category', 'selected_designation_subcategory')
-        # After: Only select existing fields
         session = OnboardingSession.objects.select_related(
             'selected_affiliation_type', 
             'selected_council'
@@ -717,10 +809,7 @@ def application_create(request, session_id):
         logger.info(f"Session has affiliation type: {session.selected_affiliation_type}")
         logger.info(f"Session has council: {session.selected_council}")
         
-        # FIXED: No longer try to access deleted fields
-        # These fields were removed in migration 0005:
-        # - session.selected_designation_category (DELETED)
-        # - session.selected_designation_subcategory (DELETED)
+       
         
         # Create main form
         form = form_class(request.POST, request=request, onboarding_session=session)
@@ -728,9 +817,6 @@ def application_create(request, session_id):
         # This prevents RelatedObjectDoesNotExist errors during model.clean()
         form.instance.onboarding_session = session
         
-        # FIXED: Handle designation category/subcategory differently
-        # Since these fields were removed from OnboardingSession,
-        # they should now be set directly on the application or handled elsewhere
         if session.selected_affiliation_type.code == 'designated':
             # OPTION 1: Get from form data if the form handles these fields
             designation_category_id = request.POST.get('designation_category')
@@ -754,8 +840,8 @@ def application_create(request, session_id):
         # Extract document data manually instead of using generic formset
         document_data = extract_document_data_from_post(request)
         reference_data = extract_reference_data_from_post(request)
+        academic_data = extract_academic_qualification_data_from_post(request)
         
-        # FIXED: Initialize non-generic formsets with CORRECT prefixes to match template
         formsets = {}
         if session.selected_affiliation_type.code == 'designated':
             # Initialize formsets with proper prefix and instance
@@ -821,13 +907,6 @@ def application_create(request, session_id):
                 application = form.save(commit=False)
                 # onboarding_session is already set above, but we'll keep this for clarity
                 application.onboarding_session = session
-                
-                # FIXED: No longer set designation fields from session
-                # These were removed from OnboardingSession in migration 0005
-                # The fields should now be set directly from form data (handled above)
-                # if session.selected_affiliation_type.code == 'designated':
-                #     application.designation_category = session.selected_designation_category  # DELETED FIELD
-                #     application.designation_subcategory = session.selected_designation_subcategory  # DELETED FIELD
                 
                 application.save()
                 logger.info(f"Application saved with ID: {application.pk}")
@@ -1320,7 +1399,7 @@ def create_mock_document_formset():
 
 def application_success(request):
     """
-    Success page after application submission.
+    Enhanced success page after application submission with full applicant details.
     """
     success_data = request.session.get('application_success')
     
@@ -1329,20 +1408,108 @@ def application_success(request):
         messages.info(request, "Please complete an application first.")
         return redirect('enrollments:onboarding_start')
     
-    # Clear the success data from session after use
-    del request.session['application_success']
+    # Get the full application object with all details
+    application_id = success_data.get('application_id')
+    app_type = success_data.get('app_type')
     
-    context = {
-        'application_number': success_data.get('application_number'),
-        'affiliation_type': success_data.get('affiliation_type'),
-        'council_name': success_data.get('council_name'),
-        'application_id': success_data.get('application_id'),
-        'app_type': success_data.get('app_type'),
-        'page_title': 'Application Submitted Successfully',
+    # Model mapping
+    model_map = {
+        'associated': AssociatedApplication,
+        'designated': DesignatedApplication,
+        'student': StudentApplication,
     }
     
-    return render(request, 'enrollments/applications/success.html', context)
-
+    model = model_map.get(app_type)
+    if not model:
+        # Fallback to basic success page
+        del request.session['application_success']
+        context = {
+            'application_number': success_data.get('application_number'),
+            'affiliation_type': success_data.get('affiliation_type'),
+            'council_name': success_data.get('council_name'),
+            'page_title': 'Application Submitted Successfully',
+        }
+        return render(request, 'enrollments/applications/success.html', context)
+    
+    try:
+        # Fetch application with all related data
+        application = model.objects.select_related(
+            'onboarding_session__selected_council',
+            'onboarding_session__selected_affiliation_type'
+        ).prefetch_related(
+            'documents',
+            'references'
+        ).get(pk=application_id)
+        
+        # Calculate statistics
+        total_documents = application.documents.count()
+        total_references = application.references.count()
+        
+        # Build comprehensive context
+        context = {
+            'application': application,
+            'application_number': application.application_number,
+            'affiliation_type': application.onboarding_session.selected_affiliation_type.name,
+            'council_name': application.onboarding_session.selected_council.name,
+            'council_code': application.onboarding_session.selected_council.code,
+            'council_description': application.onboarding_session.selected_council.description,
+            'app_type': app_type,
+            
+            # Applicant information
+            'applicant_name': application.get_display_name(),
+            'applicant_email': application.email,
+            'applicant_phone': application.cell_phone,
+            'applicant_title': application.get_title_display() if hasattr(application, 'get_title_display') else application.title,
+            
+            # Additional details for designated applications
+            'designation_category': application.designation_category.name if hasattr(application, 'designation_category') and application.designation_category else None,
+            'designation_subcategory': application.designation_subcategory.name if hasattr(application, 'designation_subcategory') and application.designation_subcategory else None,
+            
+            # Additional details for student applications
+            'current_institution': application.current_institution if hasattr(application, 'current_institution') else None,
+            'course_of_study': application.course_of_study if hasattr(application, 'course_of_study') else None,
+            
+            # Statistics
+            'total_documents': total_documents,
+            'total_references': total_references,
+            
+            # Address information
+            'city': application.postal_city,
+            'province': application.postal_province,
+            
+            # Professional information
+            'current_occupation': application.current_occupation,
+            'years_in_ministry': application.years_in_ministry if application.years_in_ministry > 0 else None,
+            
+            # Submission details
+            'submitted_date': application.created_at,
+            'submission_time': application.created_at.strftime('%I:%M %p'),
+            
+            # Login prompt
+            'show_login_prompt': not request.user.is_authenticated,
+            
+            # Page metadata
+            'page_title': 'Application Submitted Successfully',
+        }
+        
+        # Clear the success data from session after fetching full details
+        del request.session['application_success']
+        
+        return render(request, 'enrollments/applications/success.html', context)
+        
+    except model.DoesNotExist:
+        # Application not found, show basic success page
+        del request.session['application_success']
+        messages.warning(request, "Application details could not be retrieved, but your submission was successful.")
+        
+        context = {
+            'application_number': success_data.get('application_number'),
+            'affiliation_type': success_data.get('affiliation_type'),
+            'council_name': success_data.get('council_name'),
+            'page_title': 'Application Submitted Successfully',
+        }
+        return render(request, 'enrollments/applications/success.html', context)
+    
 
 # Admin email list - all staff who should receive application notifications
 ADMIN_EMAIL_LIST = [
@@ -1353,7 +1520,7 @@ ADMIN_EMAIL_LIST = [
     'ams@acrp.org.za',
     'andrea.leipoldt@acrp.org.za',
     #'gerhard.botha@acrp.org.za',
-    #'theto.maunatlala@acrp.org.za'
+    'theto.maunatlala@acrp.org.za'
 ]
 
 # Email configuration
@@ -3093,6 +3260,10 @@ def application_detail(request, pk, app_type):
         'can_review': can_review,
         'can_edit': can_edit,
         'review_form': review_form,
+        # ADD THESE LINES - check the actual model instance type:
+        'is_designated_application': application.__class__.__name__ == 'DesignatedApplication',
+        'is_associated_application': application.__class__.__name__ == 'AssociatedApplication',
+        'is_student_application': application.__class__.__name__ == 'StudentApplication',
         'existing_card': existing_card,
         'completion_percentage': completion_percentage,
         'status_timeline': status_timeline,
