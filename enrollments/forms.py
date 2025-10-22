@@ -537,83 +537,69 @@ class AssociatedApplicationForm(BaseApplicationForm):
     Form for Associated Affiliation applications.
     
     Uses only the base fields - no additional requirements.
-    This is the simplest application type.
+    This is the simplest application type for basic church/ministry workers.
     """
     
     def __init__(self, *args, **kwargs):
-        # Extract onboarding_session before calling super()
+        """
+        Initialize the Associated Application form.
+        
+        Associated applications are the simplest type - they only require
+        basic personal information, contact details, and ministry background.
+        No academic qualifications or supervision requirements.
+        """
+        # Extract custom kwargs before calling super()
         self.onboarding_session = kwargs.pop('onboarding_session', None)
         
         super().__init__(*args, **kwargs)
         
-        # CRITICAL FIX: Auto-populate designation fields from onboarding session
-        if self.onboarding_session:
-            if 'designation_category' in self.fields and self.onboarding_session.selected_designation_category:
-                self.fields['designation_category'].initial = self.onboarding_session.selected_designation_category
-                self.initial['designation_category'] = self.onboarding_session.selected_designation_category.pk
-                
-            if 'designation_subcategory' in self.fields and self.onboarding_session.selected_designation_subcategory:
-                self.fields['designation_subcategory'].initial = self.onboarding_session.selected_designation_subcategory
-                self.initial['designation_subcategory'] = self.onboarding_session.selected_designation_subcategory.pk
+        # Make some base fields optional for associated applications
+        optional_fields = [
+            'preferred_name',
+            'other_languages',
+            'passport_number',
+            'work_description',
+            'disciplinary_description',
+        ]
         
-        # Set some fields as optional
-        self.fields['high_school_name'].required = False
-        self.fields['high_school_year_completed'].required = False
-        self.fields['supervision_period_end'].required = False
-        self.fields['other_professional_memberships'].required = False
+        for field_name in optional_fields:
+            if field_name in self.fields:
+                self.fields[field_name].required = False
         
-        # CRITICAL: Make designation fields optional since they're set from onboarding session
-        if 'designation_category' in self.fields:
-            self.fields['designation_category'].required = False
-            self.fields['designation_category'].help_text = 'Set during onboarding process'
-            
-        if 'designation_subcategory' in self.fields:
-            self.fields['designation_subcategory'].required = False
-            self.fields['designation_subcategory'].help_text = 'Set during onboarding process'
+        # Associated applications don't require years in ministry
+        if 'years_in_ministry' in self.fields:
+            self.fields['years_in_ministry'].required = False
+            self.fields['years_in_ministry'].help_text = 'Optional for associated members'
     
     def clean(self):
-        """Designated application specific validation"""
+        """
+        Associated application specific validation.
+        
+        Minimal validation since this is the simplest application type.
+        """
         cleaned_data = super().clean()
         
-        # CRITICAL: Force designation fields from onboarding session
-        if self.onboarding_session:
-            if self.onboarding_session.selected_designation_category:
-                cleaned_data['designation_category'] = self.onboarding_session.selected_designation_category
-            if self.onboarding_session.selected_designation_subcategory:
-                cleaned_data['designation_subcategory'] = self.onboarding_session.selected_designation_subcategory
+        # Ensure onboarding session is set
+        if not self.onboarding_session:
+            raise ValidationError(
+                'Invalid application session. Please start the application process again.'
+            )
         
-        # Validate supervision period
-        start_date = cleaned_data.get('supervision_period_start')
-        end_date = cleaned_data.get('supervision_period_end')
-        
-        if start_date and end_date and end_date <= start_date:
+        # Validate years in ministry if provided
+        years_in_ministry = cleaned_data.get('years_in_ministry', 0)
+        if years_in_ministry and years_in_ministry < 0:
             raise ValidationError({
-                'supervision_period_end': 'End date must be after start date.'
+                'years_in_ministry': 'Years in ministry cannot be negative.'
             })
-        
-        # Validate high school year
-        high_school_year = cleaned_data.get('high_school_year_completed')
-        if high_school_year:
-            current_year = timezone.now().year
-            if high_school_year > current_year:
-                raise ValidationError({
-                    'high_school_year_completed': 'Year cannot be in the future.'
-                })
-            elif high_school_year < 1950:
-                raise ValidationError({
-                    'high_school_year_completed': 'Please verify the year.'
-                })
         
         return cleaned_data
     
     class Meta(BaseApplicationForm.Meta):
-        model = AssociatedApplication 
-        fields = BaseApplicationForm.Meta.fields 
+        model = AssociatedApplication
+        fields = BaseApplicationForm.Meta.fields
         widgets = {
             **BaseApplicationForm.Meta.widgets,
         }
-
-
 
 class StudentApplicationForm(BaseApplicationForm):
     """

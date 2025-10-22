@@ -316,58 +316,341 @@
     </div>
   </div>
 
-  <script>
-    // Global variables for debugging
-    let selectedType = null;
-    let debugMode = true; // Set to false in production
+  <!-- Document Requirements Modal -->
+  <div id="documentModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center p-4 hidden z-50">
+    <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div class="p-8">
+        <div class="flex justify-between items-start mb-6">
+          <div class="flex items-center">
+            <div id="docModalIcon" class="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mr-4">
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+            </div>
+            <div>
+              <h2 class="text-3xl font-bold text-gray-800">Document Requirements</h2>
+              <p class="text-gray-600 text-lg" id="docModalSubtitle">Required documents for your application</p>
+            </div>
+          </div>
+          <button onclick="closeDocumentModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        
+        <div class="space-y-6">
+          <!-- Document List -->
+          <div class="bg-blue-50 p-6 rounded-lg border border-blue-200">
+            <h3 class="text-xl font-bold text-blue-800 mb-4 flex items-center">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              Required Supporting Documents
+            </h3>
+            <p class="text-blue-700 mb-4">Please ensure you have the following documents ready to upload:</p>
+            
+            <ul class="text-blue-800 space-y-2" id="documentList">
+              <!-- Will be populated by JavaScript -->
+            </ul>
+            
+            <div class="mt-4 p-3 bg-yellow-50 rounded border border-yellow-200">
+              <p class="text-yellow-800 text-sm" id="documentNote">
+                <strong>Note:</strong> All documents must be clearly legible and in PDF format
+              </p>
+            </div>
+          </div>
+          
+          <!-- Additional Information -->
+          <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+            <h4 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              Important Information
+            </h4>
+            <ul class="list-disc list-inside text-gray-700 space-y-1">
+              <li>Have all documents prepared before starting your application</li>
+              <li>Ensure documents are clear, legible, and properly scanned</li>
+              <li>Large files may take longer to upload</li>
+              <li>You can upload documents during the application process</li>
+            </ul>
+          </div>
 
-    // Enhanced logging function
-    function log(message, data = null) {
-      if (debugMode) {
-        if (data) {
-          console.log(`[ACRP Debug] ${message}:`, data);
-        } else {
-          console.log(`[ACRP Debug] ${message}`);
+          <!-- Fee Structure Link -->
+          <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+            <p class="text-green-800 flex items-center">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+              </svg>
+              <a href="https://www.acrp.org.za/affiliation/affiliation-of-persons/fee-structure" 
+                class="text-green-700 hover:text-green-900 underline font-medium" 
+                target="_blank">
+                View Full Fee Structure
+              </a>
+            </p>
+          </div>
+        </div>
+        
+        <div class="mt-8">
+          <button onclick="closeDocumentModal()" 
+                  class="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-purple-600 transition-colors">
+            I Understand - Continue
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    /**
+    * ============================================================================
+    * DOCUMENT REQUIREMENTS MODAL SYSTEM
+    * ============================================================================
+    */
+
+    // Document Requirements Data
+    const documentRequirements = {
+      associated: {
+        title: 'Associated Affiliation',
+        subtitle: 'Required documents for Associated membership',
+        iconColor: 'from-blue-500 to-blue-600',
+        documents: [
+          'ID Document or Passport',
+          'Reference Letters',
+          'Proof of registration with SAQA-registered body (e.g. ASCHP, HPCSA or SACSSP)',
+          'Proof of Payment of full amount (Application + Annual Fee)'
+        ],
+        note: '<strong>Note:</strong> All documents must be clearly legible and in PDF format'
+      },
+      designated: {
+        title: 'Designated Affiliation',
+        subtitle: 'Required documents for Designated membership',
+        iconColor: 'from-green-500 to-green-600',
+        documents: [
+          'ID Document or Passport',
+          'Highest School Certificate',
+          'Accredited Qualification / Training Certificates',
+          'Reference Letters',
+          'Letter of supervision (if applicable)',
+          'Proof of Payment'
+        ],
+        note: '<strong>Note:</strong> All documents must be clearly legible and in PDF format'
+      },
+      student: {
+        title: 'Student Affiliation',
+        subtitle: 'Required documents for Student membership',
+        iconColor: 'from-purple-500 to-purple-600',
+        documents: [],
+        note: '<strong>Note:</strong> All documents must be clearly legible and in PDF, DOC, DOCX, JPG, or PNG format'
+      }
+    };
+
+    const studentDocumentsByCouncil = {
+      'CPSC': [
+        'ID Document or Passport',
+        'Highest school certificate',
+        'Copy of student registration at the accredited training institution currently enrolled at',
+        'Copies of previous training/qualification certificates (if applicable)',
+        'Proof of Payment',
+        '2 Reference letters'
+      ],
+      'CGMP': [
+        'ID Document or Passport',
+        'Highest school certificate',
+        'Copy of student registration at the training institution currently enrolled at',
+        'Copies of previous training/qualification certificates (if applicable)',
+        'Proof of Payment',
+        'Reference letters'
+      ],
+      'CMTP': [
+        'ID Document or Passport',
+        'Highest school certificate',
+        'Copy of student registration at the training institution currently enrolled at',
+        'Copies of previous training/qualification certificates (if applicable)',
+        'Proof of Payment',
+        'Reference letters'
+      ]
+    };
+
+    function getDocumentRequirements(affiliationType) {
+      const baseRequirements = documentRequirements[affiliationType];
+      
+      if (affiliationType === 'student') {
+        const councilName = '{{ session.selected_council.name }}';
+        const studentDocs = studentDocumentsByCouncil[councilName] || studentDocumentsByCouncil['CGMP'];
+        
+        return {
+          ...baseRequirements,
+          documents: studentDocs
+        };
+      }
+      
+      return baseRequirements;
+    }
+
+    function openDocumentModal() {
+      console.log('[Document Modal] Opening document modal');
+      
+      const checkedRadio = document.querySelector('input[name="affiliation_type"]:checked');
+      let affiliationToUse = window.selectedType;
+      
+      if (checkedRadio) {
+        const card = checkedRadio.closest('.affiliation-card');
+        if (card) {
+          affiliationToUse = card.dataset.value;
+          window.selectedType = affiliationToUse;
+        }
+      }
+      
+      if (!affiliationToUse) {
+        alert('Please select an affiliation type first to view the required documents.');
+        return;
+      }
+      
+      console.log(`[Document Modal] Showing requirements for: ${affiliationToUse}`);
+      
+      const requirements = getDocumentRequirements(affiliationToUse);
+      updateDocumentModal(requirements);
+      
+      const modal = document.getElementById('documentModal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        console.log(`[Document Modal] ✅ Modal opened for ${affiliationToUse}`);
+      } else {
+        console.error('[Document Modal] ❌ Modal element not found!');
+      }
+    }
+
+    function updateDocumentModal(requirements) {
+      console.log('[Document Modal] Updating modal content');
+      
+      const subtitleElement = document.getElementById('docModalSubtitle');
+      if (subtitleElement) {
+        subtitleElement.textContent = requirements.subtitle;
+      }
+      
+      const iconDiv = document.getElementById('docModalIcon');
+      if (iconDiv) {
+        iconDiv.className = `w-12 h-12 bg-gradient-to-r ${requirements.iconColor} rounded-full flex items-center justify-center mr-4`;
+        if (!iconDiv.querySelector('svg')) {
+          iconDiv.innerHTML = `
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+          `;
+        }
+      }
+      
+      const documentList = document.getElementById('documentList');
+      if (documentList && requirements.documents) {
+        documentList.innerHTML = requirements.documents.map(doc => `
+          <li class="flex items-start">
+            <svg class="w-5 h-5 mr-2 mt-0.5 flex-shrink-0 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+            </svg>
+            <span>${doc}</span>
+          </li>
+        `).join('');
+      }
+      
+      const noteElement = document.getElementById('documentNote');
+      if (noteElement) {
+        noteElement.innerHTML = requirements.note;
+      }
+      
+      console.log('[Document Modal] ✅ Modal content updated');
+    }
+
+    function closeDocumentModal() {
+      console.log('[Document Modal] Closing document modal');
+      
+      const modal = document.getElementById('documentModal');
+      if (modal) {
+        modal.classList.add('hidden');
+      }
+      
+      if (window.selectedType) {
+        const selectedCard = document.getElementById(`card-${window.selectedType}`);
+        if (selectedCard) {
+          selectedCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
       }
     }
 
-    // Enhanced card selection function with extensive logging
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('[Document Modal] Initializing');
+      
+      const documentModal = document.getElementById('documentModal');
+      if (!documentModal) {
+        console.error('[Document Modal] Modal element not found!');
+        return;
+      }
+      
+      documentModal.addEventListener('click', function(e) {
+        if (e.target === this) {
+          closeDocumentModal();
+        }
+      });
+      
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          const modal = document.getElementById('documentModal');
+          if (modal && !modal.classList.contains('hidden')) {
+            closeDocumentModal();
+          }
+        }
+      });
+      
+      console.log('[Document Modal] ✅ Initialized');
+    });
+
+    window.testDocumentModal = function(type) {
+      console.log(`[Document Modal] 🧪 Testing ${type}`);
+      window.selectedType = type;
+      openDocumentModal();
+    };
+    </script>
+
+
+  <script>
+    // Global variables
+    let selectedType = null;
+    let debugMode = true;
+
+    function log(message, data = null) {
+      if (debugMode) {
+        if (data) {
+          console.log(`[ACRP] ${message}:`, data);
+        } else {
+          console.log(`[ACRP] ${message}`);
+        }
+      }
+    }
+
     function selectCard(type) {
-      log(`selectCard called with type: ${type}`);
+      log(`selectCard called: ${type}`);
       
       try {
-        // Clear all selections first
         clearAllSelections();
         
-        // Find the specific card and radio button
         const cardElement = document.getElementById(`card-${type}`);
         const radioElement = document.getElementById(`radio-${type}`);
         const cardInner = cardElement?.querySelector('.card-inner');
         const checkDot = cardElement?.querySelector('.check-dot');
         
-        log('Found elements', {
-          cardElement: !!cardElement,
-          radioElement: !!radioElement,
-          cardInner: !!cardInner,
-          checkDot: !!checkDot
-        });
-        
         if (!cardElement || !radioElement || !cardInner) {
-          log('Missing required elements!');
+          log('❌ Missing elements!');
           return false;
         }
         
-        // Set the radio button as checked
         radioElement.checked = true;
         selectedType = type;
+        window.selectedType = type; // Make it globally accessible
         
-        log(`Radio button ${type} set to checked: ${radioElement.checked}`);
+        log(`✅ Radio ${type} checked`);
         
-        // Apply visual styles
         cardInner.classList.remove('border-gray-200');
         
-        // Apply type-specific styling
         if (type === 'associated') {
           cardInner.classList.add('card-selected-blue', 'ring-2', 'ring-blue-500');
         } else if (type === 'designated') {
@@ -376,36 +659,29 @@
           cardInner.classList.add('card-selected-purple', 'ring-2', 'ring-purple-500');
         }
         
-        // Show check indicator
         if (checkDot) {
           checkDot.classList.remove('opacity-0');
           checkDot.classList.add('opacity-100');
         }
         
-        log(`Applied styling for ${type}`);
-        
-        // Trigger change event on radio button
         radioElement.dispatchEvent(new Event('change', { bubbles: true }));
         
-        // Update debug display
-        updateDebugDisplay();
-        
-        // Verify the selection worked
-        const isActuallyChecked = document.querySelector(`input[name="affiliation_type"][value="${type}"]`).checked;
-        log(`Final verification - ${type} is checked: ${isActuallyChecked}`);
+        // 🔥 SHOW DOCUMENT MODAL
+        log('📄 Opening document modal...');
+        setTimeout(() => {
+          openDocumentModal();
+        }, 300);
         
         return true;
         
       } catch (error) {
-        log('Error in selectCard:', error);
+        log('❌ Error in selectCard:', error);
+        console.error('Full error:', error);
         return false;
       }
     }
 
-    // Clear all selections
     function clearAllSelections() {
-      log('Clearing all selections');
-      
       const allCards = document.querySelectorAll('.affiliation-card');
       const allRadios = document.querySelectorAll('input[name="affiliation_type"]');
       
@@ -414,7 +690,6 @@
         const checkDot = card.querySelector('.check-dot');
         
         if (cardInner) {
-          // Remove all selection classes
           cardInner.classList.remove(
             'card-selected-blue', 'card-selected-green', 'card-selected-purple',
             'ring-2', 'ring-blue-500', 'ring-green-500', 'ring-purple-500'
@@ -433,125 +708,77 @@
       });
       
       selectedType = null;
-      log('All selections cleared');
     }
 
-    // Enhanced form validation
     function validateForm() {
-      log('Starting form validation');
-      
       const checkedRadio = document.querySelector('input[name="affiliation_type"]:checked');
       
-      log('Validation check:', {
-        checkedRadio: !!checkedRadio,
-        value: checkedRadio ? checkedRadio.value : null,
-        selectedType: selectedType
-      });
-      
       if (!checkedRadio) {
-        log('Validation failed: No radio button checked');
         alert('Please select an affiliation type to continue.');
-        debugFormState();
         return false;
       }
       
-      log(`Validation passed: ${checkedRadio.value} selected`);
       return true;
     }
 
-    // Event Listeners
     document.addEventListener('DOMContentLoaded', function() {
-      log('Page loaded, initializing...');
+      log('🚀 Page loaded, initializing...');
       
-      // Add click event listeners to all cards
       const cards = document.querySelectorAll('.affiliation-card');
-      log(`Found ${cards.length} affiliation cards`);
+      log(`Found ${cards.length} cards`);
       
       cards.forEach((card, index) => {
         const type = card.dataset.type;
         log(`Setting up card ${index + 1}: ${type}`);
         
-        // Remove any existing onclick attributes
         card.removeAttribute('onclick');
         
-        // Add new click listener
         card.addEventListener('click', function(e) {
           e.preventDefault();
           e.stopPropagation();
-          log(`Card clicked: ${type}`);
+          log(`🖱️ Card clicked: ${type}`);
           selectCard(type);
         });
         
-        // Also add click listener to the radio button itself
         const radio = card.querySelector('input[type="radio"]');
         if (radio) {
           radio.addEventListener('change', function() {
-            log(`Radio change event: ${this.value}, checked: ${this.checked}`);
             if (this.checked) {
               selectedType = this.value;
-              updateDebugDisplay();
+              window.selectedType = this.value;
             }
           });
         }
       });
       
-      // Form submission handler
       const form = document.getElementById('affiliationForm');
       if (form) {
         form.addEventListener('submit', function(e) {
-          log('Form submission attempted');
-          
           if (!validateForm()) {
             e.preventDefault();
-            log('Form submission prevented due to validation failure');
             return false;
           }
-          
-          log('Form validation passed, submitting...');
           return true;
         });
       }
       
-      // Initial debug
-      setTimeout(() => {
-        debugFormState();
-      }, 500);
+      log('✅ Initialization complete');
       
-      log('Initialization complete');
+      // Test commands
+      console.log(`
+      🧪 Test Commands:
+      • testSelectCard('associated')
+      • testSelectCard('designated')
+      • testSelectCard('student')
+      • testDocumentModal('associated')
+      `);
     });
 
-    // Global functions for manual testing
     window.testSelectCard = function(type) {
-      log(`🧪 Manual test: selecting ${type}`);
+      log(`🧪 Testing: ${type}`);
       selectCard(type);
     };
-
-    window.testFormState = function() {
-      debugFormState();
-    };
-
-    window.testSubmit = function() {
-      const form = document.getElementById('affiliationForm');
-      if (form) {
-        log('🧪 Manual test: submitting form');
-        form.dispatchEvent(new Event('submit'));
-      }
-    };
-
-    // Console helper message
-    setTimeout(() => {
-      if (debugMode) {
-        console.log(`
-        🔧 ACRP Debug Console Commands:
-        • testSelectCard('associated') - Test selecting associated card
-        • testSelectCard('designated') - Test selecting designated card  
-        • testSelectCard('student') - Test selecting student card
-        • testFormState() - Check current form state
-        • testSubmit() - Test form submission
-        `);
-      }
-    }, 1000);
-  </script>
+    </script>
   
 </body>
 </html>
